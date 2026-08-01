@@ -51,12 +51,6 @@ export default async function QuizzesPage() {
           );
         })}
       </ul>
-      <Link
-        href="/dashboard/quizzes/history"
-        className="mt-6 inline-block text-sm underline"
-      >
-        View attempt history →
-      </Link>
     </div>
   );
 }
