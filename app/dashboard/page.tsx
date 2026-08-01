@@ -1,19 +1,25 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAllArticles } from "@/lib/content/articles";
+import { getAllRoadmapSections } from "@/lib/content/roadmap";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims.sub as string;
 
-  const [{ data: progress }, { data: attempts }] = await Promise.all([
-    supabase.from("reading_progress").select("status").eq("user_id", userId),
-    supabase
-      .from("quiz_attempts")
-      .select("score, total_questions")
-      .eq("user_id", userId),
-  ]);
+  const [{ data: progress }, { data: attempts }, { data: roadmapProgress }] =
+    await Promise.all([
+      supabase.from("reading_progress").select("status").eq("user_id", userId),
+      supabase
+        .from("quiz_attempts")
+        .select("score, total_questions")
+        .eq("user_id", userId),
+      supabase
+        .from("roadmap_progress")
+        .select("completed")
+        .eq("user_id", userId),
+    ]);
 
   const totalArticles = getAllArticles().length;
   const readCount = progress?.filter((p) => p.status === "read").length ?? 0;
@@ -27,10 +33,33 @@ export default async function DashboardPage() {
         )
       : null;
 
+  const totalRoadmapSections = getAllRoadmapSections().length;
+  const roadmapCompleted =
+    roadmapProgress?.filter((r) => r.completed).length ?? 0;
+  const roadmapPercent =
+    totalRoadmapSections > 0
+      ? Math.round((roadmapCompleted / totalRoadmapSections) * 100)
+      : 0;
+
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-xl border border-black/10 p-5 dark:border-white/10">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Roadmap progress
+          </p>
+          <p className="mt-1 text-3xl font-semibold">
+            {roadmapPercent}
+            <span className="text-lg text-zinc-500">%</span>
+          </p>
+          <Link
+            href="/dashboard/roadmap"
+            className="mt-3 inline-block text-sm underline"
+          >
+            View roadmap →
+          </Link>
+        </div>
         <div className="rounded-xl border border-black/10 p-5 dark:border-white/10">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Articles read
