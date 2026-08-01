@@ -8,13 +8,25 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
+  const { data, error } = await supabase.auth.getClaims();
+
+  let email: string | undefined = data?.claims.email as string | undefined;
 
   if (!data?.claims) {
-    redirect("/login");
+    // A verification error (e.g. a cold instance failing to fetch the
+    // JWKS) is not the same as "no session" — fall back to getUser(),
+    // which asks Supabase's Auth server directly, before concluding the
+    // user is actually logged out.
+    if (error) {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        redirect("/login");
+      }
+      email = userData.user.email;
+    } else {
+      redirect("/login");
+    }
   }
-
-  const email = data.claims.email as string | undefined;
 
   return <DashboardShell email={email}>{children}</DashboardShell>;
 }
