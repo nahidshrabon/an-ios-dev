@@ -5,7 +5,7 @@ export const quizzes: Quiz[] = [
     id: "swift-basics-quiz",
     title: "Swift Basics Quiz",
     description: "Check your understanding of variables, optionals, and functions in Swift.",
-    relatedArticleSlug: "getting-started-with-swift",
+    relatedArticleSlug: "swift-basics",
     questions: [
       {
         id: "q1",

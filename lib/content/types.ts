@@ -1,9 +1,3 @@
-export interface ArticleSection {
-  id: string;
-  heading: string;
-  body: string;
-}
-
 export interface Article {
   /** Permanent identifier — referenced by reading_progress rows once a user reads this. Do not rename. */
   slug: string;
@@ -11,7 +5,8 @@ export interface Article {
   description: string;
   tags: string[];
   publishedAt: string;
-  sections: ArticleSection[];
+  /** Full article body as markdown — rendered via MarkdownContent. */
+  content: string;
 }
 
 export interface QuizOption {

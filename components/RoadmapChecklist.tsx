@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { RoadmapPart } from "@/lib/content/roadmap";
 
@@ -74,8 +75,11 @@ export function RoadmapChecklist({
               </summary>
               <ul className="mt-3 flex flex-col gap-1">
                 {part.sections.map((sec) => (
-                  <li key={sec.id}>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-black/[.03] dark:hover:bg-white/5">
+                  <li
+                    key={sec.id}
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
+                  >
+                    <label className="flex flex-1 cursor-pointer items-center gap-3 text-sm">
                       <input
                         type="checkbox"
                         checked={!!completed[sec.id]}
@@ -92,6 +96,14 @@ export function RoadmapChecklist({
                         {sec.number}. {sec.title}
                       </span>
                     </label>
+                    {sec.articleSlug && (
+                      <Link
+                        href={`/articles/${sec.articleSlug}`}
+                        className="shrink-0 text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
+                      >
+                        Read →
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

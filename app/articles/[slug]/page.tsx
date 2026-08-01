@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllArticles, getArticle } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import { getRoadmapSectionByArticleSlug } from "@/lib/content/roadmap";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
+import { MarkdownContent } from "@/components/MarkdownContent";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -44,6 +46,7 @@ export default async function ArticlePage({ params }: Props) {
   const relatedQuiz = getAllQuizzes().find(
     (quiz) => quiz.relatedArticleSlug === article.slug
   );
+  const roadmapSection = getRoadmapSectionByArticleSlug(article.slug);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -59,16 +62,17 @@ export default async function ArticlePage({ params }: Props) {
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">
         {article.description}
       </p>
+      {roadmapSection && (
+        <Link
+          href="/dashboard/roadmap"
+          className="mt-2 inline-block text-sm text-zinc-500 underline dark:text-zinc-500"
+        >
+          Roadmap section {roadmapSection.number}: {roadmapSection.title} →
+        </Link>
+      )}
 
-      <div className="mt-10 flex flex-col gap-8">
-        {article.sections.map((section) => (
-          <section key={section.id} id={section.id}>
-            <h2 className="text-xl font-medium">{section.heading}</h2>
-            <p className="mt-2 leading-7 text-zinc-700 dark:text-zinc-300">
-              {section.body}
-            </p>
-          </section>
-        ))}
+      <div className="mt-10">
+        <MarkdownContent content={article.content} />
       </div>
 
       <ReadingStatusControl slug={article.slug} />

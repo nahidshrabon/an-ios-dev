@@ -3,6 +3,8 @@ export interface RoadmapSection {
   id: string;
   number: number;
   title: string;
+  /** Slug of the article that covers this section, if one exists yet. */
+  articleSlug?: string;
 }
 
 export interface RoadmapPart {
@@ -11,8 +13,12 @@ export interface RoadmapPart {
   sections: RoadmapSection[];
 }
 
-function section(number: number, title: string): RoadmapSection {
-  return { id: String(number), number, title };
+function section(
+  number: number,
+  title: string,
+  articleSlug?: string
+): RoadmapSection {
+  return { id: String(number), number, title, articleSlug };
 }
 
 export const roadmap: RoadmapPart[] = [
@@ -20,7 +26,7 @@ export const roadmap: RoadmapPart[] = [
     id: "part-1",
     title: "Swift Language",
     sections: [
-      section(1, "Swift Basics"),
+      section(1, "Swift Basics", "swift-basics"),
       section(2, "Control Flow"),
       section(3, "Collections"),
       section(4, "Optionals"),
@@ -171,4 +177,10 @@ export const roadmap: RoadmapPart[] = [
 
 export function getAllRoadmapSections(): RoadmapSection[] {
   return roadmap.flatMap((part) => part.sections);
+}
+
+export function getRoadmapSectionByArticleSlug(
+  slug: string
+): RoadmapSection | undefined {
+  return getAllRoadmapSections().find((s) => s.articleSlug === slug);
 }
