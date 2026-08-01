@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllArticles, getArticle } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import { ReadingStatusControl } from "@/components/ReadingStatusControl";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -70,16 +71,7 @@ export default async function ArticlePage({ params }: Props) {
         ))}
       </div>
 
-      <div className="mt-12 rounded-xl border border-black/10 p-5 dark:border-white/10">
-        <p className="font-medium">Track your progress</p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          <Link href="/signup" className="underline">
-            Sign up
-          </Link>{" "}
-          to mark this article as read and pick up where you left off on any
-          device.
-        </p>
-      </div>
+      <ReadingStatusControl slug={article.slug} />
 
       {relatedQuiz && (
         <div className="mt-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
