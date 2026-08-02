@@ -20,22 +20,40 @@ export const articles: Article[] = [
     content: loadBody("swift-basics.md"),
   },
   {
-    slug: "swiftui-basics",
-    title: "SwiftUI Basics",
+    slug: "control-flow",
+    title: "Control Flow",
     description:
-      "How SwiftUI's declarative views, modifiers, and state work together to build iOS interfaces.",
-    tags: ["swiftui", "ui"],
-    publishedAt: "2026-01-12",
-    content: loadBody("swiftui-basics.md"),
+      "How Swift makes decisions and repeats work: if/switch branching, every loop form, early-exit tools (guard, break, continue), and defer for guaranteed cleanup.",
+    tags: ["swift", "control-flow"],
+    publishedAt: "2026-08-02",
+    content: loadBody("control-flow.md"),
   },
   {
-    slug: "understanding-mvvm",
-    title: "Understanding MVVM in iOS Apps",
+    slug: "collections",
+    title: "Collections",
     description:
-      "Why MVVM is the most common architecture pattern in SwiftUI apps, and how the pieces fit together.",
-    tags: ["architecture", "swiftui"],
-    publishedAt: "2026-01-19",
-    content: loadBody("understanding-mvvm.md"),
+      "Swift's three core collection types — Array, Dictionary, Set — and the functional operations (map, filter, reduce, and friends) that transform them without hand-written loops.",
+    tags: ["swift", "collections"],
+    publishedAt: "2026-08-02",
+    content: loadBody("collections.md"),
+  },
+  {
+    slug: "optionals",
+    title: "Optionals",
+    description:
+      "Swift's answer to the billion-dollar mistake of null references: optionals as a first-class part of the type system, every way to safely unwrap them, and the pitfalls of forcing your way past that safety.",
+    tags: ["swift", "optionals"],
+    publishedAt: "2026-08-02",
+    content: loadBody("optionals.md"),
+  },
+  {
+    slug: "functions-and-closures",
+    title: "Functions and Closures",
+    description:
+      "Declaring and calling functions with Swift's label system, the full spectrum of parameter behaviors, and closures — from long-form syntax down to shorthand, including capture semantics and escaping.",
+    tags: ["swift", "functions", "closures"],
+    publishedAt: "2026-08-02",
+    content: loadBody("functions-and-closures.md"),
   },
 ];
 
