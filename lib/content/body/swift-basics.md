@@ -725,4 +725,4 @@ Xcode surfaces `TODO:` and `FIXME:` comments in the jump bar too, with distinct 
 | Type conversion | Always explicit, always initializer syntax; string-to-number conversions are optional |
 | Comments | `///` for documentation Xcode renders; `// MARK:` for jump-bar navigation only |
 
-**Next up:** Section 2 — Control Flow (`if`, `switch`, loops, `guard`, `defer`).
+**Next up:** [Section 2 — Control Flow](/articles/control-flow) (`if`, `switch`, loops, `guard`, `defer`).

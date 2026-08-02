@@ -19,6 +19,8 @@ export interface QuizQuestion {
   prompt: string;
   options: QuizOption[];
   correctOptionId: string;
+  /** Shown only after the quiz is submitted, never while answering. */
+  explanation: string;
 }
 
 export interface Quiz {

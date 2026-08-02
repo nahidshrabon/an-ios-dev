@@ -597,4 +597,4 @@ Laziness has a cost too — a lazy sequence re-runs its transforms every time yo
 | Chaining | Two or three ops read fine inline; more than that, one per line |
 | `.lazy` | Defers computation until consumed — pays off on large sequences with early exits |
 
-**Next up:** Section 4 — Optionals (`nil`, unwrapping, chaining, nil-coalescing).
+**Next up:** [Section 4 — Optionals](/articles/optionals) (`nil`, unwrapping, chaining, nil-coalescing).

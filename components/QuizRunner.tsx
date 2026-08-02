@@ -5,12 +5,20 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
 
+interface GradedAnswer {
+  questionId: string;
+  selectedOptionId: string;
+  correct: boolean;
+}
+
 export function QuizRunner({ quiz }: { quiz: Quiz }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ score: number; total: number } | null>(
-    null
-  );
+  const [result, setResult] = useState<{
+    score: number;
+    total: number;
+    graded: GradedAnswer[];
+  } | null>(null);
   const [supabase] = useState(() => createClient());
 
   const allAnswered = quiz.questions.every((q) => answers[q.id]);
@@ -18,7 +26,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   async function handleSubmit() {
     setSubmitting(true);
 
-    const gradedAnswers = quiz.questions.map((q) => {
+    const graded: GradedAnswer[] = quiz.questions.map((q) => {
       const selectedOptionId = answers[q.id];
       return {
         questionId: q.id,
@@ -26,7 +34,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         correct: selectedOptionId === q.correctOptionId,
       };
     });
-    const score = gradedAnswers.filter((a) => a.correct).length;
+    const score = graded.filter((a) => a.correct).length;
 
     const {
       data: { user },
@@ -38,11 +46,11 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         quiz_id: quiz.id,
         score,
         total_questions: quiz.questions.length,
-        answers: gradedAnswers,
+        answers: graded,
       });
     }
 
-    setResult({ score, total: quiz.questions.length });
+    setResult({ score, total: quiz.questions.length, graded });
     setSubmitting(false);
   }
 
@@ -55,7 +63,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         <p className="mt-4 text-lg">
           You scored {result.score} / {result.total}.
         </p>
-        <div className="mt-6 flex gap-4">
+        <div className="mt-4 flex gap-4">
           <Link href="/dashboard/quizzes" className="text-sm underline">
             Back to quizzes
           </Link>
@@ -65,6 +73,50 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
           >
             View history
           </Link>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-6">
+          {quiz.questions.map((question, i) => {
+            const graded = result.graded.find(
+              (g) => g.questionId === question.id
+            )!;
+            return (
+              <div
+                key={question.id}
+                className="rounded-xl border border-black/10 p-4 dark:border-white/10"
+              >
+                <p className="font-medium">
+                  {i + 1}. {question.prompt}
+                </p>
+                <div className="mt-3 flex flex-col gap-1.5 text-sm">
+                  {question.options.map((option) => {
+                    const isCorrectOption =
+                      option.id === question.correctOptionId;
+                    const isSelected = option.id === graded.selectedOptionId;
+                    return (
+                      <div
+                        key={option.id}
+                        className={
+                          isCorrectOption
+                            ? "font-medium text-green-700 dark:text-green-400"
+                            : isSelected
+                              ? "text-red-700 dark:text-red-400"
+                              : "text-zinc-600 dark:text-zinc-400"
+                        }
+                      >
+                        {option.text}
+                        {isCorrectOption && " ✓"}
+                        {isSelected && !isCorrectOption && " ✗ (your answer)"}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+                  {question.explanation}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     );

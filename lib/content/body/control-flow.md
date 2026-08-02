@@ -529,4 +529,4 @@ func criticalSection() {
 | `guard` | States required conditions; keeps the happy path unindented; bindings escape the scope |
 | `defer` | Guaranteed cleanup on any exit path; multiple `defer`s run LIFO |
 
-**Next up:** Section 3 — Collections (`Array`, `Dictionary`, `Set`, and the `map`/`filter`/`reduce` family).
+**Next up:** [Section 3 — Collections](/articles/collections) (`Array`, `Dictionary`, `Set`, and the `map`/`filter`/`reduce` family).

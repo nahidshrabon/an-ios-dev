@@ -476,4 +476,4 @@ print(sortedWithDefault)   // [1, 2, 3, nil, nil] — nils pushed to the end via
 | Nested optionals | `T??` usually comes from dictionary subscripts or a misused `map`; flatten with `flatMap { $0 }` |
 | Optional comparison | `==` works by default; `<`/`sorted()` require you to define where `nil` belongs |
 
-**Next up:** Section 5 — Functions and Closures.
+**Next up:** [Section 5 — Functions and Closures](/articles/functions-and-closures).
