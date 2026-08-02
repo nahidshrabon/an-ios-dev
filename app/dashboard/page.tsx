@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAllArticles } from "@/lib/content/articles";
-import { getAllRoadmapSections } from "@/lib/content/roadmap";
+import {
+  countCompletedRoadmapSections,
+  getAllRoadmapSections,
+} from "@/lib/content/roadmap";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -10,14 +13,17 @@ export default async function DashboardPage() {
 
   const [{ data: progress }, { data: attempts }, { data: roadmapProgress }] =
     await Promise.all([
-      supabase.from("reading_progress").select("status").eq("user_id", userId),
+      supabase
+        .from("reading_progress")
+        .select("article_slug, status")
+        .eq("user_id", userId),
       supabase
         .from("quiz_attempts")
         .select("score, total_questions")
         .eq("user_id", userId),
       supabase
         .from("roadmap_progress")
-        .select("completed")
+        .select("section_id, completed")
         .eq("user_id", userId),
     ]);
 
@@ -33,9 +39,19 @@ export default async function DashboardPage() {
         )
       : null;
 
+  const manualRoadmapCompleted: Record<string, boolean> = {};
+  roadmapProgress?.forEach((row) => {
+    manualRoadmapCompleted[row.section_id] = row.completed;
+  });
+  const readArticleSlugs = new Set(
+    progress?.filter((p) => p.status === "read").map((p) => p.article_slug)
+  );
+
   const totalRoadmapSections = getAllRoadmapSections().length;
-  const roadmapCompleted =
-    roadmapProgress?.filter((r) => r.completed).length ?? 0;
+  const roadmapCompleted = countCompletedRoadmapSections(
+    manualRoadmapCompleted,
+    readArticleSlugs
+  );
   const roadmapPercent =
     totalRoadmapSections > 0
       ? Math.round((roadmapCompleted / totalRoadmapSections) * 100)

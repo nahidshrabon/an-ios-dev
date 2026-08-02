@@ -7,20 +7,32 @@ export default async function RoadmapPage() {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims.sub as string;
 
-  const { data } = await supabase
-    .from("roadmap_progress")
-    .select("section_id, completed")
-    .eq("user_id", userId);
+  const [{ data: roadmapRows }, { data: readingRows }] = await Promise.all([
+    supabase
+      .from("roadmap_progress")
+      .select("section_id, completed")
+      .eq("user_id", userId),
+    supabase
+      .from("reading_progress")
+      .select("article_slug, status")
+      .eq("user_id", userId),
+  ]);
 
-  const initialCompleted: Record<string, boolean> = {};
-  data?.forEach((row) => {
-    initialCompleted[row.section_id] = row.completed;
+  const manualCompleted: Record<string, boolean> = {};
+  roadmapRows?.forEach((row) => {
+    manualCompleted[row.section_id] = row.completed;
   });
+
+  const readArticleSlugs =
+    readingRows
+      ?.filter((row) => row.status === "read")
+      .map((row) => row.article_slug) ?? [];
 
   return (
     <RoadmapChecklist
       parts={roadmap}
-      initialCompleted={initialCompleted}
+      manualCompleted={manualCompleted}
+      readArticleSlugs={readArticleSlugs}
       userId={userId}
     />
   );

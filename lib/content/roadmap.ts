@@ -184,3 +184,27 @@ export function getRoadmapSectionByArticleSlug(
 ): RoadmapSection | undefined {
   return getAllRoadmapSections().find((s) => s.articleSlug === slug);
 }
+
+/**
+ * A section linked to an article is completed automatically once that
+ * article is marked "read" — it ignores manualCompleted and can't be
+ * toggled by hand. Unlinked sections use the manually-checked map.
+ */
+export function isRoadmapSectionCompleted(
+  section: RoadmapSection,
+  manualCompleted: Record<string, boolean>,
+  readArticleSlugs: ReadonlySet<string>
+): boolean {
+  return section.articleSlug
+    ? readArticleSlugs.has(section.articleSlug)
+    : !!manualCompleted[section.id];
+}
+
+export function countCompletedRoadmapSections(
+  manualCompleted: Record<string, boolean>,
+  readArticleSlugs: ReadonlySet<string>
+): number {
+  return getAllRoadmapSections().filter((section) =>
+    isRoadmapSectionCompleted(section, manualCompleted, readArticleSlugs)
+  ).length;
+}
