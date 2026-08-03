@@ -30,8 +30,8 @@ export function DashboardShell({
     <div className="flex flex-1 flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10 md:hidden">
-        <Link href="/dashboard" className="font-semibold tracking-tight">
-          Become an iOS Dev
+        <Link href="/" className="font-semibold tracking-tight">
+          Home
         </Link>
         <SignOutButton />
       </div>
@@ -52,9 +52,9 @@ export function DashboardShell({
       </nav>
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:flex">
-        <Link href="/dashboard" className="px-2 font-semibold tracking-tight">
-          Become an iOS Dev
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:sticky md:top-0 md:flex md:h-screen">
+        <Link href="/" className="px-2 font-semibold tracking-tight">
+          Home
         </Link>
         <nav className="mt-8 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => (
