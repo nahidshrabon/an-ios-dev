@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getAllArticles } from "@/lib/content/articles";
+import { getSiteUrl } from "@/lib/site";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const articleEntries: MetadataRoute.Sitemap = getAllArticles().map(
