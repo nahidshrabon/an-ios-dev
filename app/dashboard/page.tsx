@@ -5,6 +5,8 @@ import {
   countCompletedRoadmapSections,
   getAllRoadmapSections,
 } from "@/lib/content/roadmap";
+import { FlagIcon } from "@/components/Icons";
+import { ReadIcon, TestIcon } from "@/components/HowItWorksIcons";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -62,7 +64,10 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-black/10 p-5 dark:border-white/10">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex size-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <FlagIcon className="size-5" />
+          </div>
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
             Roadmap progress
           </p>
           <p className="mt-1 text-3xl font-semibold">
@@ -77,7 +82,10 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <div className="rounded-xl border border-black/10 p-5 dark:border-white/10">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex size-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <ReadIcon className="size-5" />
+          </div>
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
             Articles read
           </p>
           <p className="mt-1 text-3xl font-semibold">
@@ -92,7 +100,10 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <div className="rounded-xl border border-black/10 p-5 dark:border-white/10">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex size-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <TestIcon className="size-5" />
+          </div>
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
             Quizzes taken
           </p>
           <p className="mt-1 text-3xl font-semibold">

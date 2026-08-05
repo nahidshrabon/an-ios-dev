@@ -8,6 +8,7 @@ import {
   type RoadmapPart,
   type RoadmapSection,
 } from "@/lib/content/roadmap";
+import { ChevronDownIcon } from "@/components/Icons";
 
 export function RoadmapChecklist({
   parts,
@@ -93,12 +94,13 @@ export function RoadmapChecklist({
             <details
               key={part.id}
               open
-              className="rounded-xl border border-black/10 p-4 dark:border-white/10"
+              className="group rounded-xl border border-black/10 p-4 dark:border-white/10"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between">
                 <span className="font-medium">{part.title}</span>
-                <span className="text-sm text-zinc-500">
+                <span className="flex items-center gap-2 text-sm text-zinc-500">
                   {partCompleted}/{part.sections.length}
+                  <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" />
                 </span>
               </summary>
               <ul className="mt-3 flex flex-col gap-1">

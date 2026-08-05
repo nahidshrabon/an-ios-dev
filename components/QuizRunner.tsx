@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
+import { CheckIcon, XIcon } from "@/components/Icons";
 
 interface GradedAnswer {
   questionId: string;
@@ -103,8 +104,15 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                         }
                       >
                         {option.text}
-                        {isCorrectOption && " ✓"}
-                        {isSelected && !isCorrectOption && " ✗ (your answer)"}
+                        {isCorrectOption && (
+                          <CheckIcon className="ml-1 inline size-4 align-text-bottom" />
+                        )}
+                        {isSelected && !isCorrectOption && (
+                          <span className="ml-1 inline-flex items-center gap-1 align-text-bottom">
+                            <XIcon className="size-4" />
+                            (your answer)
+                          </span>
+                        )}
                       </div>
                     );
                   })}

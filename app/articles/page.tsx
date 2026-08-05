@@ -27,16 +27,6 @@ export default function ArticlesPage() {
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {article.description}
               </p>
-              <div className="mt-3 flex gap-2">
-                {article.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-black/5 px-2.5 py-0.5 text-xs text-zinc-600 dark:bg-white/10 dark:text-zinc-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </Link>
           </li>
         ))}

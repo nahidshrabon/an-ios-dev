@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
+import { HomeIcon, FlagIcon, HistoryIcon } from "@/components/Icons";
+import { ReadIcon, TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/roadmap", label: "Roadmap" },
-  { href: "/dashboard/progress", label: "Articles" },
-  { href: "/dashboard/quizzes", label: "Quizzes" },
-  { href: "/dashboard/quizzes/history", label: "Quiz History" },
+  { href: "/dashboard", label: "Overview", Icon: HomeIcon },
+  { href: "/dashboard/roadmap", label: "Roadmap", Icon: FlagIcon },
+  { href: "/dashboard/progress", label: "Articles", Icon: ReadIcon },
+  { href: "/dashboard/quizzes", label: "Quizzes", Icon: TestIcon },
+  { href: "/dashboard/quizzes/history", label: "Quiz History", Icon: HistoryIcon },
 ];
 
 export function DashboardShell({
@@ -40,12 +42,13 @@ export function DashboardShell({
           <Link
             key={item.href}
             href={item.href}
-            className={`whitespace-nowrap ${
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap ${
               isActive(item.href)
                 ? "font-medium text-foreground"
                 : "text-zinc-600 dark:text-zinc-400"
             }`}
           >
+            <item.Icon className="size-4" />
             {item.label}
           </Link>
         ))}
@@ -61,12 +64,13 @@ export function DashboardShell({
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                 isActive(item.href)
                   ? "bg-black/5 font-medium text-foreground dark:bg-white/10"
                   : "text-zinc-600 hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/5"
               }`}
             >
+              <item.Icon className="size-4" />
               {item.label}
             </Link>
           ))}

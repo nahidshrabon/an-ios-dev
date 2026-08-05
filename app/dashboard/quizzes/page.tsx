@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import { TrophyIcon } from "@/components/Icons";
 
 export default async function QuizzesPage() {
   const supabase = await createClient();
@@ -43,7 +44,8 @@ export default async function QuizzesPage() {
                 </p>
               </div>
               {best && (
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                <span className="inline-flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+                  <TrophyIcon className="size-4 text-accent" />
                   Best: {best.score}/{best.total}
                 </span>
               )}
