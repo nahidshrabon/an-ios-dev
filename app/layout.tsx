@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Become an iOS Dev",
-    template: "%s | Become an iOS Dev",
+    default: "Become an iOS Developer",
+    template: "%s | Become an iOS Developer",
   },
   description:
     "Learn iOS development with short articles, track your reading progress, and test yourself with quizzes.",
