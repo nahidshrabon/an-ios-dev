@@ -637,4 +637,4 @@ print(isValidUsername("abc"))         // true
 | Functions as values | Named functions are closures with a name — assignable, passable, storable |
 | Higher-order functions | Any function taking or returning another function/closure — you can write your own `map` |
 
-**Next up:** [Section 6 — Structs, Classes, and Enums](/dashboard/roadmap) — not published yet, check the roadmap for progress.
+**Next up:** [Section 6 — Structs, Classes, and Enums](/articles/structs-classes-enums).

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllArticles } from "@/lib/content/articles";
+import { GetStartedButton } from "@/components/GetStartedButton";
 
 export default function Home() {
   const previewArticles = getAllArticles().slice(0, 3);
@@ -16,12 +17,7 @@ export default function Home() {
           across every device you use.
         </p>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-start justify-center">
-          <Link
-            href="/signup"
-            className="flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-          >
-            Get started
-          </Link>
+          <GetStartedButton />
           <Link
             href="/articles"
             className="flex h-12 items-center justify-center rounded-full border border-black/10 px-6 transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-[#1a1a1a]"

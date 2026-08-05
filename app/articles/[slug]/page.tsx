@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllArticles, getArticle } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
-import { getRoadmapSectionByArticleSlug } from "@/lib/content/roadmap";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { ArticleBackLink } from "@/components/ArticleBackLink";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -46,30 +47,27 @@ export default async function ArticlePage({ params }: Props) {
   const relatedQuiz = getAllQuizzes().find(
     (quiz) => quiz.relatedArticleSlug === article.slug
   );
-  const roadmapSection = getRoadmapSectionByArticleSlug(article.slug);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
-      <Link
-        href="/articles"
-        className="text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+      <Suspense
+        fallback={
+          <Link
+            href="/articles"
+            className="text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+          >
+            ← All articles
+          </Link>
+        }
       >
-        ← All articles
-      </Link>
+        <ArticleBackLink />
+      </Suspense>
       <h1 className="mt-4 text-3xl font-semibold tracking-tight">
         {article.title}
       </h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">
         {article.description}
       </p>
-      {roadmapSection && (
-        <Link
-          href="/dashboard/roadmap"
-          className="mt-2 inline-block text-sm text-zinc-500 underline dark:text-zinc-500"
-        >
-          Roadmap section {roadmapSection.number}: {roadmapSection.title} →
-        </Link>
-      )}
 
       <div className="mt-10">
         <MarkdownContent content={article.content} />

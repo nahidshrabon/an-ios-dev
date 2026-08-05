@@ -105,16 +105,9 @@ export function RoadmapChecklist({
                 {part.sections.map((sec) => {
                   const done = isCompleted(sec);
                   const isAuto = !!sec.articleSlug;
-                  return (
-                    <li
-                      key={sec.id}
-                      className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
-                    >
-                      <label
-                        className={`flex flex-1 items-center gap-3 text-sm ${
-                          isAuto ? "cursor-default" : "cursor-pointer"
-                        }`}
-                      >
+                  const rowInner = (
+                    <>
+                      <span className="flex flex-1 items-center gap-3 text-sm">
                         <input
                           type="checkbox"
                           checked={done}
@@ -125,7 +118,9 @@ export function RoadmapChecklist({
                               ? "Synced automatically from the article's reading status"
                               : undefined
                           }
-                          className="size-4 shrink-0 accent-foreground disabled:opacity-60"
+                          className={`size-4 shrink-0 accent-foreground disabled:opacity-60 ${
+                            isAuto ? "pointer-events-none" : ""
+                          }`}
                         />
                         <span
                           className={
@@ -136,15 +131,36 @@ export function RoadmapChecklist({
                         >
                           {sec.number}. {sec.title}
                         </span>
-                      </label>
-                      {sec.articleSlug && (
-                        <Link
-                          href={`/articles/${sec.articleSlug}`}
-                          className="shrink-0 text-xs text-zinc-500 underline hover:text-zinc-700 dark:hover:text-zinc-300"
-                        >
+                      </span>
+                      {isAuto && (
+                        <span className="shrink-0 text-xs text-zinc-500 underline">
                           Read →
-                        </Link>
+                        </span>
                       )}
+                    </>
+                  );
+
+                  if (isAuto) {
+                    return (
+                      <li key={sec.id}>
+                        <Link
+                          href={`/articles/${sec.articleSlug}?from=roadmap`}
+                          className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
+                        >
+                          {rowInner}
+                        </Link>
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li
+                      key={sec.id}
+                      className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
+                    >
+                      <label className="flex flex-1 cursor-pointer items-center gap-3">
+                        {rowInner}
+                      </label>
                     </li>
                   );
                 })}

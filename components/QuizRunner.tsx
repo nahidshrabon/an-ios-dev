@@ -21,8 +21,6 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   } | null>(null);
   const [supabase] = useState(() => createClient());
 
-  const allAnswered = quiz.questions.every((q) => answers[q.id]);
-
   async function handleSubmit() {
     setSubmitting(true);
 
@@ -162,7 +160,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
 
       <button
         onClick={handleSubmit}
-        disabled={!allAnswered || submitting}
+        disabled={submitting}
         className="mt-8 h-11 rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
       >
         {submitting ? "Submitting…" : "Submit"}
