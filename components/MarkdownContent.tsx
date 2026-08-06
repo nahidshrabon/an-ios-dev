@@ -11,12 +11,14 @@ export function MarkdownContent({ content }: { content: string }) {
         rehypePlugins={[[rehypeHighlight, { languages: { swift } }]]}
         components={{
           h2: ({ children }) => (
-            <h2 className="mt-10 text-xl font-semibold first:mt-0">
+            <h2 className="font-heading mt-10 text-xl font-semibold first:mt-0">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-8 text-lg font-medium">{children}</h3>
+            <h3 className="font-heading mt-8 text-lg font-medium">
+              {children}
+            </h3>
           ),
           p: ({ children }) => (
             <p className="mt-4 leading-7 text-zinc-700 dark:text-zinc-300">
@@ -84,7 +86,7 @@ export function MarkdownContent({ content }: { content: string }) {
             </div>
           ),
           th: ({ children }) => (
-            <th className="border border-black/10 bg-black/[.03] px-3 py-2 text-left font-medium dark:border-white/10 dark:bg-white/5">
+            <th className="font-heading border border-black/10 bg-black/[.03] px-3 py-2 text-left font-medium dark:border-white/10 dark:bg-white/5">
               {children}
             </th>
           ),

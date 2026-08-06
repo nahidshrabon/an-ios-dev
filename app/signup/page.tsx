@@ -38,7 +38,7 @@ export default function SignupPage() {
   if (submitted) {
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
           Check your email
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
@@ -51,7 +51,7 @@ export default function SignupPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign up</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">Sign up</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <div>
@@ -87,7 +87,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="font-heading mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
         >
           {loading ? "Signing up…" : "Sign up"}
         </button>

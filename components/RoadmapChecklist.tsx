@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import {
   isRoadmapSectionCompleted,
   type RoadmapPart,
@@ -14,23 +13,19 @@ export function RoadmapChecklist({
   parts,
   manualCompleted,
   readArticleSlugs,
-  userId,
 }: {
   parts: RoadmapPart[];
   manualCompleted: Record<string, boolean>;
   readArticleSlugs: string[];
   userId: string;
 }) {
-  const [manual, setManual] =
-    useState<Record<string, boolean>>(manualCompleted);
-  const [supabase] = useState(() => createClient());
   const readSlugs = useMemo(
     () => new Set(readArticleSlugs),
     [readArticleSlugs]
   );
 
   function isCompleted(section: RoadmapSection): boolean {
-    return isRoadmapSectionCompleted(section, manual, readSlugs);
+    return isRoadmapSectionCompleted(section, manualCompleted, readSlugs);
   }
 
   const totalSections = useMemo(
@@ -44,32 +39,24 @@ export function RoadmapChecklist({
         0
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [parts, manual, readSlugs]
+    [parts, manualCompleted, readSlugs]
   );
   const percent =
     totalSections > 0 ? Math.round((completedCount / totalSections) * 100) : 0;
 
-  async function toggle(sectionId: string) {
-    const next = !manual[sectionId];
-    setManual((prev) => ({ ...prev, [sectionId]: next }));
-    await supabase.from("roadmap_progress").upsert({
-      user_id: userId,
-      section_id: sectionId,
-      completed: next,
-      updated_at: new Date().toISOString(),
-    });
-  }
-
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Roadmap</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        Roadmap
+      </h1>
 
       <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-        Check off a section once you've covered it. Sections with a{" "}
+        Sections with a{" "}
         <strong className="font-medium text-foreground">Read →</strong> link
         have a published article — those check themselves automatically as
-        soon as you mark that article read on its page, so there's nothing to
-        click there. Everything else you check by hand as you go.
+        soon as you mark that article read on its page. Sections without a
+        published article yet are dimmed and can&apos;t be checked off until
+        their article is ready.
       </p>
 
       <div className="mt-6 rounded-xl border border-black/10 p-5 dark:border-white/10">
@@ -77,7 +64,7 @@ export function RoadmapChecklist({
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {completedCount} / {totalSections} sections completed
           </p>
-          <p className="text-2xl font-semibold">{percent}%</p>
+          <p className="font-heading text-2xl font-semibold">{percent}%</p>
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
           <div
@@ -107,40 +94,6 @@ export function RoadmapChecklist({
                 {part.sections.map((sec) => {
                   const done = isCompleted(sec);
                   const isAuto = !!sec.articleSlug;
-                  const rowInner = (
-                    <>
-                      <span className="flex flex-1 items-center gap-3 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={done}
-                          disabled={isAuto}
-                          onChange={isAuto ? undefined : () => toggle(sec.id)}
-                          title={
-                            isAuto
-                              ? "Synced automatically from the article's reading status"
-                              : undefined
-                          }
-                          className={`size-4 shrink-0 accent-foreground disabled:opacity-60 ${
-                            isAuto ? "pointer-events-none" : ""
-                          }`}
-                        />
-                        <span
-                          className={
-                            done
-                              ? "text-zinc-500 line-through dark:text-zinc-500"
-                              : ""
-                          }
-                        >
-                          {sec.number}. {sec.title}
-                        </span>
-                      </span>
-                      {isAuto && (
-                        <span className="shrink-0 text-xs text-zinc-500 underline">
-                          Read →
-                        </span>
-                      )}
-                    </>
-                  );
 
                   if (isAuto) {
                     return (
@@ -149,7 +102,27 @@ export function RoadmapChecklist({
                           href={`/articles/${sec.articleSlug}?from=roadmap`}
                           className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
                         >
-                          {rowInner}
+                          <span className="flex flex-1 items-center gap-3 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={done}
+                              disabled
+                              title="Synced automatically from the article's reading status"
+                              className="pointer-events-none size-4 shrink-0 accent-foreground disabled:opacity-60"
+                            />
+                            <span
+                              className={
+                                done
+                                  ? "text-zinc-500 line-through dark:text-zinc-500"
+                                  : ""
+                              }
+                            >
+                              {sec.number}. {sec.title}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-xs text-zinc-500 underline">
+                            Read →
+                          </span>
                         </Link>
                       </li>
                     );
@@ -158,11 +131,23 @@ export function RoadmapChecklist({
                   return (
                     <li
                       key={sec.id}
-                      className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
+                      className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 opacity-50"
                     >
-                      <label className="flex flex-1 cursor-pointer items-center gap-3">
-                        {rowInner}
-                      </label>
+                      <span className="flex flex-1 items-center gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={done}
+                          disabled
+                          title="Article not available yet"
+                          className="pointer-events-none size-4 shrink-0 accent-foreground disabled:opacity-60"
+                        />
+                        <span>
+                          {sec.number}. {sec.title}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs text-zinc-400 dark:text-zinc-600">
+                        Not available yet
+                      </span>
                     </li>
                   );
                 })}

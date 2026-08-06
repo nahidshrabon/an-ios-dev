@@ -34,7 +34,7 @@ export function Nav() {
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 font-semibold tracking-tight"
+          className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
         >
           <Logomark className="size-7" />
           <span>
@@ -44,7 +44,7 @@ export function Nav() {
         <nav className="flex items-center gap-6 text-sm">
           <Link
             href="/articles"
-            className="inline-flex items-center gap-1.5 hover:underline"
+            className="font-heading inline-flex items-center gap-1.5 hover:underline"
           >
             <ReadIcon className="size-4" />
             Articles
@@ -53,7 +53,7 @@ export function Nav() {
             <>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 hover:underline"
+                className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
                 <HomeIcon className="size-4" />
                 Dashboard
@@ -62,12 +62,12 @@ export function Nav() {
             </>
           ) : (
             <>
-              <Link href="/login" className="hover:underline">
+              <Link href="/login" className="font-heading hover:underline">
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-accent px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#0066d6] dark:hover:bg-[#3aa0ff]"
+                className="font-heading rounded-full bg-accent px-4 py-1.5 font-medium text-white transition-colors hover:bg-[#0066d6] dark:hover:bg-[#3aa0ff]"
               >
                 Sign up
               </Link>

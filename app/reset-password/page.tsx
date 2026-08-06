@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
   if (submitted) {
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
           Check your email
         </h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Reset your password
       </h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="font-heading mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
         >
           {loading ? "Sending…" : "Send reset link"}
         </button>

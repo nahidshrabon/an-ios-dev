@@ -12,7 +12,7 @@ export default function ArticlesPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">Articles</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">Articles</h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">
         Read at your own pace — sign in to track which ones you've finished.
       </p>

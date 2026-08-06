@@ -14,7 +14,7 @@ export default async function QuizHistoryPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Quiz history
       </h1>
       {!attempts || attempts.length === 0 ? (

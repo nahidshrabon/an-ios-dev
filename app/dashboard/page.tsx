@@ -84,17 +84,19 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">Overview</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
           <ProgressRing percent={roadmapPercent}>
-            <span className="text-sm font-semibold">{roadmapPercent}%</span>
+            <span className="font-heading text-sm font-semibold">
+              {roadmapPercent}%
+            </span>
           </ProgressRing>
           <div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Roadmap progress
             </p>
-            <p className="mt-1 text-xl font-semibold">
+            <p className="font-heading mt-1 text-xl font-semibold">
               {roadmapCompleted}
               <span className="text-sm text-zinc-500">
                 /{totalRoadmapSections}
@@ -110,13 +112,15 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
           <ProgressRing percent={articlesPercent}>
-            <span className="text-sm font-semibold">{articlesPercent}%</span>
+            <span className="font-heading text-sm font-semibold">
+              {articlesPercent}%
+            </span>
           </ProgressRing>
           <div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Articles read
             </p>
-            <p className="mt-1 text-xl font-semibold">
+            <p className="font-heading mt-1 text-xl font-semibold">
               {readCount}
               <span className="text-sm text-zinc-500">/{totalArticles}</span>
             </p>
@@ -130,13 +134,15 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
           <ProgressRing percent={quizzesPercent}>
-            <span className="text-sm font-semibold">{quizzesPercent}%</span>
+            <span className="font-heading text-sm font-semibold">
+              {quizzesPercent}%
+            </span>
           </ProgressRing>
           <div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Quizzes taken
             </p>
-            <p className="mt-1 text-xl font-semibold">
+            <p className="font-heading mt-1 text-xl font-semibold">
               {quizzesTaken}
               <span className="text-sm text-zinc-500">/{totalQuizzes}</span>
               {avgScore !== null && (
@@ -154,7 +160,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8 rounded-xl border border-black/10 p-5 dark:border-white/10">
-        <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <p className="font-heading text-sm font-semibold uppercase tracking-wide text-zinc-500">
           Roadmap by part
         </p>
         <div className="mt-4 flex flex-col gap-3">

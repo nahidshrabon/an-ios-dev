@@ -12,7 +12,7 @@ export default function Home() {
       <section className="w-full max-w-4xl px-6 py-20 sm:py-28">
         <div className="grid items-center gap-10 sm:grid-cols-2 sm:gap-12">
           <div className="text-center sm:text-left">
-            <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+            <h1 className="font-heading text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
               Learn iOS development, one article at a time.
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-400 sm:mx-0">
@@ -24,7 +24,7 @@ export default function Home() {
               <GetStartedButton />
               <Link
                 href="/articles"
-                className="flex h-12 items-center justify-center rounded-full border border-black/10 px-6 transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-[#1a1a1a]"
+                className="font-heading flex h-12 items-center justify-center rounded-full border border-black/10 px-6 transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-[#1a1a1a]"
               >
                 Browse articles
               </Link>
@@ -37,7 +37,7 @@ export default function Home() {
       </section>
 
       <section className="w-full max-w-4xl border-t border-black/5 px-6 py-16 dark:border-white/10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">
+        <h2 className="font-heading text-sm font-semibold uppercase tracking-wide text-accent">
           How it works
         </h2>
         <ol className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -73,7 +73,7 @@ export default function Home() {
       </section>
 
       <section className="w-full max-w-4xl border-t border-black/5 px-6 pt-16 pb-24 dark:border-white/10">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">
+        <h2 className="font-heading text-sm font-semibold uppercase tracking-wide text-accent">
           Start with
         </h2>
         <ul className="mt-4 flex flex-col gap-3">

@@ -23,7 +23,7 @@ export default async function QuizzesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Quizzes</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">Quizzes</h1>
       <ul className="mt-6 flex flex-col gap-3">
         {getAllQuizzes().map((quiz) => {
           const best = bestByQuiz[quiz.id];
@@ -46,7 +46,10 @@ export default async function QuizzesPage() {
               {best && (
                 <span className="inline-flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
                   <TrophyIcon className="size-4 text-accent" />
-                  Best: {best.score}/{best.total}
+                  Best:{" "}
+                  <span className="font-heading">
+                    {best.score}/{best.total}
+                  </span>
                 </span>
               )}
             </li>

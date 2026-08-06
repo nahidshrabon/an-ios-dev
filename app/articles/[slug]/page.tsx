@@ -62,7 +62,7 @@ export default async function ArticlePage({ params }: Props) {
       >
         <ArticleBackLink />
       </Suspense>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+      <h1 className="font-heading mt-4 text-3xl font-semibold tracking-tight">
         {article.title}
       </h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">

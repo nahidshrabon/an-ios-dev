@@ -56,11 +56,15 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   if (result) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
           {quiz.title}
         </h1>
         <p className="mt-4 text-lg">
-          You scored {result.score} / {result.total}.
+          You scored{" "}
+          <span className="font-heading">
+            {result.score} / {result.total}
+          </span>
+          .
         </p>
         <div className="mt-4 flex gap-4">
           <Link href="/dashboard/quizzes" className="text-sm underline">
@@ -130,7 +134,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">{quiz.title}</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">{quiz.title}</h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">
         {quiz.description}
       </p>
@@ -169,7 +173,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
       <button
         onClick={handleSubmit}
         disabled={submitting}
-        className="mt-8 h-11 rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+        className="font-heading mt-8 h-11 rounded-full bg-foreground px-6 text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
       >
         {submitting ? "Submitting…" : "Submit"}
       </button>

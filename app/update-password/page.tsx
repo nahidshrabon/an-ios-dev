@@ -30,7 +30,7 @@ export default function UpdatePasswordPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Set a new password
       </h1>
 
@@ -55,7 +55,7 @@ export default function UpdatePasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
+          className="font-heading mt-2 h-11 rounded-full bg-foreground text-background transition-colors hover:bg-[#383838] disabled:opacity-50 dark:hover:bg-[#ccc]"
         >
           {loading ? "Saving…" : "Save password"}
         </button>
