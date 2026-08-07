@@ -46,7 +46,7 @@ export function ProgressList({
             >
               <Link
                 href={`/articles/${article.slug}`}
-                className="font-medium hover:underline"
+                className="font-heading font-medium hover:underline"
               >
                 {article.title}
               </Link>
@@ -55,7 +55,7 @@ export function ProgressList({
                   <button
                     key={s}
                     onClick={() => setStatus(article.slug, s)}
-                    className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                    className={`font-heading rounded-full px-3 py-1 text-xs transition-colors ${
                       status === s
                         ? "bg-foreground text-background"
                         : "bg-black/5 text-zinc-600 hover:bg-black/10 dark:bg-white/10 dark:text-zinc-400 dark:hover:bg-white/15"

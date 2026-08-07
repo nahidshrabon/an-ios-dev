@@ -35,11 +35,11 @@ export default async function QuizzesPage() {
               <div>
                 <Link
                   href={`/dashboard/quizzes/${quiz.id}`}
-                  className="font-medium hover:underline"
+                  className="font-heading font-medium hover:underline"
                 >
                   {quiz.title}
                 </Link>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="font-article mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   {quiz.description}
                 </p>
               </div>

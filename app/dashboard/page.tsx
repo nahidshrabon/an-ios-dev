@@ -93,7 +93,7 @@ export default async function DashboardPage() {
             </span>
           </ProgressRing>
           <div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
               Roadmap progress
             </p>
             <p className="font-heading mt-1 text-xl font-semibold">
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
             </span>
           </ProgressRing>
           <div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
               Articles read
             </p>
             <p className="font-heading mt-1 text-xl font-semibold">
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
             </span>
           </ProgressRing>
           <div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
               Quizzes taken
             </p>
             <p className="font-heading mt-1 text-xl font-semibold">
@@ -167,7 +167,7 @@ export default async function DashboardPage() {
           {partBreakdown.map((part) => (
             <div key={part.id}>
               <div className="flex items-center justify-between text-sm">
-                <span>{part.title}</span>
+                <span className="font-heading">{part.title}</span>
                 <span className="text-zinc-500">
                   {part.completed}/{part.total}
                 </span>

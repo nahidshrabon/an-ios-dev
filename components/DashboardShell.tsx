@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
-import { HomeIcon, FlagIcon, HistoryIcon } from "@/components/Icons";
+import { HomeIcon, FlagIcon } from "@/components/Icons";
 import { ReadIcon, TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
@@ -11,7 +11,6 @@ const NAV_ITEMS = [
   { href: "/dashboard/roadmap", label: "Roadmap", Icon: FlagIcon },
   { href: "/dashboard/progress", label: "Articles", Icon: ReadIcon },
   { href: "/dashboard/quizzes", label: "Quizzes", Icon: TestIcon },
-  { href: "/dashboard/quizzes/history", label: "Quiz History", Icon: HistoryIcon },
 ];
 
 export function DashboardShell({

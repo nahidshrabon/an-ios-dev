@@ -5,7 +5,7 @@ import swift from "highlight.js/lib/languages/swift";
 
 export function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="markdown-content">
+    <div className="markdown-content font-article">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeHighlight, { languages: { swift } }]]}

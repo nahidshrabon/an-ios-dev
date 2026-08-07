@@ -84,7 +84,7 @@ export function RoadmapChecklist({
               className="group rounded-xl border border-black/10 p-4 dark:border-white/10"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between">
-                <span className="font-medium">{part.title}</span>
+                <span className="font-heading font-medium">{part.title}</span>
                 <span className="flex items-center gap-2 text-sm text-zinc-500">
                   {partCompleted}/{part.sections.length}
                   <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" />

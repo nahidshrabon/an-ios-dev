@@ -70,12 +70,6 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
           <Link href="/dashboard/quizzes" className="text-sm underline">
             Back to quizzes
           </Link>
-          <Link
-            href="/dashboard/quizzes/history"
-            className="text-sm underline"
-          >
-            View history
-          </Link>
         </div>
 
         <div className="mt-8 flex flex-col gap-6">
@@ -88,7 +82,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                 key={question.id}
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
-                <p className="font-medium">
+                <p className="font-article font-medium">
                   {i + 1}. {question.prompt}
                 </p>
                 <div className="mt-3 flex flex-col gap-1.5 text-sm">
@@ -99,13 +93,13 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                     return (
                       <div
                         key={option.id}
-                        className={
+                        className={`font-article ${
                           isCorrectOption
                             ? "font-medium text-green-700 dark:text-green-400"
                             : isSelected
                               ? "text-red-700 dark:text-red-400"
                               : "text-zinc-600 dark:text-zinc-400"
-                        }
+                        }`}
                       >
                         {option.text}
                         {isCorrectOption && (
@@ -121,7 +115,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                     );
                   })}
                 </div>
-                <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="font-article mt-3 text-sm text-zinc-600 dark:text-zinc-400">
                   {question.explanation}
                 </p>
               </div>
@@ -135,21 +129,21 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   return (
     <div>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">{quiz.title}</h1>
-      <p className="mt-2 text-zinc-600 dark:text-zinc-400">
+      <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
         {quiz.description}
       </p>
 
       <div className="mt-8 flex flex-col gap-8">
         {quiz.questions.map((question, i) => (
           <div key={question.id}>
-            <p className="font-medium">
+            <p className="font-article font-medium">
               {i + 1}. {question.prompt}
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {question.options.map((option) => (
                 <label
                   key={option.id}
-                  className="flex items-center gap-2 text-sm"
+                  className="font-article flex items-center gap-2 text-sm"
                 >
                   <input
                     type="radio"

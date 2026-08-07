@@ -60,7 +60,7 @@ export function ReadingStatusControl({ slug }: { slug: string }) {
   if (userId === null) {
     return (
       <div className="mt-12 rounded-xl border border-black/10 p-5 dark:border-white/10">
-        <p className="font-medium">Track your progress</p>
+        <p className="font-heading font-medium">Track your progress</p>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           <Link href="/signup" className="underline">
             Sign up
@@ -80,7 +80,7 @@ export function ReadingStatusControl({ slug }: { slug: string }) {
           <button
             key={s}
             onClick={() => updateStatus(s)}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+            className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
               status === s
                 ? "bg-foreground text-background"
                 : "bg-black/5 text-zinc-600 hover:bg-black/10 dark:bg-white/10 dark:text-zinc-400 dark:hover:bg-white/15"

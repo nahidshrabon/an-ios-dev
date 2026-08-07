@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
 import "highlight.js/styles/github-dark.css";
 import "./globals.css";
@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+});
+
+const literata = Literata({
+  variable: "--font-literata",
   subsets: ["latin"],
 });
 
@@ -36,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} ${literata.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <ConditionalNav />
