@@ -177,7 +177,9 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                       }))
                     }
                   />
-                  <InlineMarkdown>{option.text}</InlineMarkdown>
+                  <span>
+                    <InlineMarkdown>{option.text}</InlineMarkdown>
+                  </span>
                 </label>
               ))}
             </div>

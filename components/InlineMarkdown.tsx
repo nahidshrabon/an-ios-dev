@@ -6,7 +6,7 @@ export function InlineMarkdown({ children }: { children: string }) {
       components={{
         p: ({ children }) => <>{children}</>,
         code: ({ children }) => (
-          <code className="rounded bg-black/5 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10">
+          <code className="rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">
             {children}
           </code>
         ),
