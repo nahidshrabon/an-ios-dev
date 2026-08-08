@@ -9,7 +9,7 @@ import { InlineMarkdown } from "@/components/InlineMarkdown";
 
 interface GradedAnswer {
   questionId: string;
-  selectedOptionId: string;
+  selectedOptionId: string | undefined;
   correct: boolean;
 }
 
@@ -78,14 +78,32 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
             const graded = result.graded.find(
               (g) => g.questionId === question.id
             )!;
+            const wasAnswered = graded.selectedOptionId != null;
             return (
               <div
                 key={question.id}
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
-                <p className="font-article font-medium">
-                  {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-article font-medium">
+                    {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
+                  </p>
+                  <span
+                    className={`font-heading shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                      !wasAnswered
+                        ? "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
+                        : graded.correct
+                          ? "bg-green-700/10 text-green-700 dark:text-green-400"
+                          : "bg-red-700/10 text-red-700 dark:text-red-400"
+                    }`}
+                  >
+                    {!wasAnswered
+                      ? "Not answered"
+                      : graded.correct
+                        ? "Correct"
+                        : "Incorrect"}
+                  </span>
+                </div>
                 <div className="mt-3 flex flex-col gap-1.5 text-sm">
                   {question.options.map((option) => {
                     const isCorrectOption =
