@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Automatic Reference Counting (ARC) — how Swift manages class instance lifetimes — retain cycles and how to break them with `weak`/`unowned`, and a set of more advanced memory topics: copy-on-write, stack vs. heap allocation, existential boxing, autorelease pools, and exclusivity enforcement.
-
 ---
 
 ## 10.1 What ARC Is and What It Counts

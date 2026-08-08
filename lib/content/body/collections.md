@@ -1,7 +1,5 @@
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's three core collection types — `Array`, `Dictionary`, `Set` — and the functional operations (`map`, `filter`, `reduce`, and friends) that let you transform them without hand-written loops.
-
 ---
 
 ## 3.1 Array: Creation, Indexing, and Count

@@ -1,7 +1,5 @@
 *Estimated read time: ~30 minutes*
 
-This section covers declaring and calling functions with Swift's label system, the full spectrum of parameter behaviors (default values, variadics, `inout`), and closures — from their long-form syntax down to the shorthand you'll see everywhere in real code, including capture semantics and escaping.
-
 ---
 
 ## 5.1 Declaring Functions, Parameters, and Return Values

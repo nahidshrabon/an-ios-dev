@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's three core custom type kinds: `struct` (value semantics), `class` (reference semantics, inheritance), and `enum` (finite sets of related cases, optionally carrying data) — plus the shared property/method features (computed properties, observers, static members, subscripts) that apply across all of them.
-
 ---
 
 ## 6.1 Defining a Struct with Stored Properties

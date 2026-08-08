@@ -1,7 +1,5 @@
 *Estimated read time: ~30 minutes*
 
-This section covers the twelve foundational topics every Swift developer needs before touching control flow or collections: declaring values, Swift's type system, the core scalar types (`Int`, `Double`, `Bool`), strings and their quirks, tuples, type conversion, and documentation conventions.
-
 ---
 
 ## 1.1 Variables and Constants: `var` vs `let`

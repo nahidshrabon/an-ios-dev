@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Swift macros — compile-time code generation that replaced older, external codegen scripts. It walks through the different macro kinds (freestanding, member, peer, accessor, extension/conformance), the SwiftSyntax foundation they're built on, and the practical workflow for writing, testing, and debugging one.
-
 ---
 
 ## 13.1 What Macros Are and Why They Replaced Codegen

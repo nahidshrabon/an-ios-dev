@@ -1,7 +1,5 @@
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's answer to the "billion-dollar mistake" of null references: optionals as a first-class, type-checked part of the type system, every way to safely unwrap them, and the pitfalls of forcing your way past that safety.
-
 ---
 
 ## 4.1 What `nil` Means and Why Optionals Exist

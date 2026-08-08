@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's unsafe pointer types, newer memory-safe alternatives (`Span`, `InlineArray`), custom storage management, and interoperability with C, C++, and Objective-C. This is expert-level material, rarely needed in typical app code — most developers will use these tools only when optimizing hot paths or bridging to non-Swift code.
-
 ---
 
 ## 15.1 `UnsafePointer` Family Overview

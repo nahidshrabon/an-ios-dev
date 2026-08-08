@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section goes underneath the collection protocols you've been using since section 3, covers `Codable` in depth, and tours the modern standard-library additions for regex, formatting, time, and observation. With 22 subtopics, each is treated more briefly than earlier sections — this is a survey of what's available, not an exhaustive deep dive into any one piece.
-
 ---
 
 ## 14.1 `Sequence` and `IteratorProtocol`

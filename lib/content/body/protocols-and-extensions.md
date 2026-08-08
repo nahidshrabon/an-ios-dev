@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers protocols — Swift's contracts for shared behavior across unrelated types — and extensions, which let you add functionality to existing types (including ones you don't own). Together they underpin most of Swift's standard library conformances like `Equatable`, `Hashable`, and `Comparable`.
-
 ---
 
 ## 7.1 Defining and Conforming to a Protocol

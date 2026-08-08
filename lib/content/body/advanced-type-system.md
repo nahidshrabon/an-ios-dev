@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's more specialized type-system features: key paths, dynamic member/callable lookup, operator overloading, ownership and noncopyable types, access control, and the compiler annotations that matter for library authors (`@inlinable`, `@frozen`, ABI stability).
-
 ---
 
 ## 11.1 Key Paths: `KeyPath` and `WritableKeyPath`

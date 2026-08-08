@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers Swift's typed, explicit error-handling model: custom error types, `throws`/`try`/`catch`, the difference between `try`, `try?`, and `try!`, and the `Result` type as an alternative representation for the same concept.
-
 ---
 
 ## 9.1 The `Error` Protocol and Custom Error Enums

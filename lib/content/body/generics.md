@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers writing code that works across many types without duplication — generic functions and types, constraints, associated types, and the `some`/`any` distinction for working with protocols abstractly.
-
 ---
 
 ## 8.1 Why Generics: The Duplicate-Code Problem

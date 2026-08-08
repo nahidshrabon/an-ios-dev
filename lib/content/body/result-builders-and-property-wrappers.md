@@ -2,8 +2,6 @@
 
 *Estimated read time: ~30 minutes*
 
-This section covers two of Swift's most distinctive metaprogramming-adjacent features: result builders (the mechanism behind SwiftUI's declarative view syntax) and property wrappers (the mechanism behind `@State`, `@Published`, and similar). Both let ordinary Swift syntax do far more than it appears to on the surface.
-
 ---
 
 ## 12.1 What a Result Builder Is

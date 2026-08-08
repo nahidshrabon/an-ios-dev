@@ -1,7 +1,5 @@
 *Estimated read time: ~30 minutes*
 
-This section covers how Swift makes decisions and repeats work: `if`/`switch` branching, every loop form, early-exit tools (`guard`, `break`, `continue`), and `defer` for guaranteed cleanup.
-
 ---
 
 ## 2.1 `if` / `else if` / `else`
