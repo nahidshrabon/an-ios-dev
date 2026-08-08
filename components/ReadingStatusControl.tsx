@@ -74,7 +74,7 @@ export function ReadingStatusControl({ slug }: { slug: string }) {
 
   return (
     <div className="mt-12 rounded-xl border border-black/10 p-5 dark:border-white/10">
-      <p className="font-medium">Track your progress</p>
+      <p className="font-heading font-medium">Track your progress</p>
       <div className="mt-3 flex gap-2">
         {READING_STATUSES.map((s) => (
           <button

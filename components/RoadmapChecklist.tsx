@@ -111,11 +111,11 @@ export function RoadmapChecklist({
                               className="pointer-events-none size-4 shrink-0 accent-foreground disabled:opacity-60"
                             />
                             <span
-                              className={
+                              className={`font-heading ${
                                 done
                                   ? "text-zinc-500 line-through dark:text-zinc-500"
                                   : ""
-                              }
+                              }`}
                             >
                               {sec.number}. {sec.title}
                             </span>
@@ -141,7 +141,7 @@ export function RoadmapChecklist({
                           title="Article not available yet"
                           className="pointer-events-none size-4 shrink-0 accent-foreground disabled:opacity-60"
                         />
-                        <span>
+                        <span className="font-heading">
                           {sec.number}. {sec.title}
                         </span>
                       </span>

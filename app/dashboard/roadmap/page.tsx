@@ -1,12 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClaims } from "@/lib/supabase/server";
 import { roadmap } from "@/lib/content/roadmap";
 import { RoadmapChecklist } from "@/components/RoadmapChecklist";
 
 export default async function RoadmapPage() {
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
+  const { data: claims } = await getClaims();
   const userId = claims?.claims.sub as string;
 
+  const supabase = await createClient();
   const [{ data: roadmapRows }, { data: readingRows }] = await Promise.all([
     supabase
       .from("roadmap_progress")

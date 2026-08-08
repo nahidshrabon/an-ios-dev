@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -26,3 +27,12 @@ export async function createClient() {
     }
   );
 }
+
+// Memoized per request: the dashboard layout and each dashboard page all
+// need the current user's claims, but they'd otherwise each trigger their
+// own round trip to Supabase for the identical result. `cache()` collapses
+// every call within one render pass into a single lookup.
+export const getClaims = cache(async () => {
+  const supabase = await createClient();
+  return supabase.auth.getClaims();
+});

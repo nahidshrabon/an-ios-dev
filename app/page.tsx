@@ -83,7 +83,7 @@ export default function Home() {
                 href={`/articles/${article.slug}`}
                 className="block rounded-xl border border-black/10 p-4 transition-all hover:-translate-y-0.5 hover:border-black/15 hover:shadow-sm dark:border-white/10 dark:hover:border-white/20"
               >
-                <p className="font-medium">{article.title}</p>
+                <p className="font-heading font-medium">{article.title}</p>
                 <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                   {article.description}
                 </p>

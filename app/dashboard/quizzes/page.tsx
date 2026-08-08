@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { TrophyIcon } from "@/components/Icons";
 
 export default async function QuizzesPage() {
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
+  const { data: claims } = await getClaims();
   const userId = claims?.claims.sub as string;
 
+  const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
     .select("quiz_id, score, total_questions")

@@ -1,13 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllArticles } from "@/lib/content/articles";
 import { ProgressList } from "@/components/ProgressList";
 import type { ReadingStatus } from "@/lib/types";
 
 export default async function ProgressPage() {
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
+  const { data: claims } = await getClaims();
   const userId = claims?.claims.sub as string;
 
+  const supabase = await createClient();
   const { data } = await supabase
     .from("reading_progress")
     .select("article_slug, status")

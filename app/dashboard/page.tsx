@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllArticles } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import {
@@ -11,10 +11,10 @@ import {
 import { ProgressRing } from "@/components/ProgressRing";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
+  const { data: claims } = await getClaims();
   const userId = claims?.claims.sub as string;
 
+  const supabase = await createClient();
   const [{ data: progress }, { data: attempts }, { data: roadmapProgress }] =
     await Promise.all([
       supabase

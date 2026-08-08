@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClaims } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/DashboardShell";
 
 export default async function DashboardLayout({
@@ -7,8 +7,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
+  const { data, error } = await getClaims();
 
   let email: string | undefined = data?.claims.email as string | undefined;
 
@@ -18,6 +17,7 @@ export default async function DashboardLayout({
     // which asks Supabase's Auth server directly, before concluding the
     // user is actually logged out.
     if (error) {
+      const supabase = await createClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
         redirect("/login");
