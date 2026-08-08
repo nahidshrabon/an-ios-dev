@@ -104,7 +104,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                         : "Incorrect"}
                   </span>
                 </div>
-                <div className="mt-3 flex flex-col gap-1.5 text-sm">
+                <div className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
                       option.id === question.correctOptionId;
@@ -136,7 +136,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                     );
                   })}
                 </div>
-                <p className="font-article mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="font-article mt-3 text-base text-zinc-600 dark:text-zinc-400">
                   <InlineMarkdown>{question.explanation}</InlineMarkdown>
                 </p>
               </div>
@@ -164,7 +164,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
               {question.options.map((option) => (
                 <label
                   key={option.id}
-                  className="font-article flex items-center gap-2 text-sm"
+                  className="font-article flex items-center gap-2 text-base"
                 >
                   <input
                     type="radio"
