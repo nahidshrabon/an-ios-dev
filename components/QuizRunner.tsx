@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
 import { CheckIcon, XIcon } from "@/components/Icons";
+import { InlineMarkdown } from "@/components/InlineMarkdown";
 
 interface GradedAnswer {
   questionId: string;
@@ -83,7 +84,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
                 <p className="font-article font-medium">
-                  {i + 1}. {question.prompt}
+                  {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
                 </p>
                 <div className="mt-3 flex flex-col gap-1.5 text-sm">
                   {question.options.map((option) => {
@@ -101,7 +102,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                               : "text-zinc-600 dark:text-zinc-400"
                         }`}
                       >
-                        {option.text}
+                        <InlineMarkdown>{option.text}</InlineMarkdown>
                         {isCorrectOption && (
                           <CheckIcon className="ml-1 inline size-4 align-text-bottom" />
                         )}
@@ -116,7 +117,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                   })}
                 </div>
                 <p className="font-article mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-                  {question.explanation}
+                  <InlineMarkdown>{question.explanation}</InlineMarkdown>
                 </p>
               </div>
             );
@@ -137,7 +138,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         {quiz.questions.map((question, i) => (
           <div key={question.id}>
             <p className="font-article font-medium">
-              {i + 1}. {question.prompt}
+              {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {question.options.map((option) => (
@@ -156,7 +157,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                       }))
                     }
                   />
-                  {option.text}
+                  <InlineMarkdown>{option.text}</InlineMarkdown>
                 </label>
               ))}
             </div>
