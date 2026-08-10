@@ -45,7 +45,7 @@ export function Nav() {
             href="/articles"
             className="font-heading inline-flex items-center gap-1.5 hover:underline"
           >
-            <ArticleIcon className="size-4" />
+            <ArticleIcon className="size-4 text-accent" />
             Articles
           </Link>
           {userEmail === undefined ? null : userEmail ? (
@@ -54,7 +54,7 @@ export function Nav() {
                 href="/dashboard"
                 className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
-                <DashboardIcon className="size-4" />
+                <DashboardIcon className="size-4 text-accent" />
                 Dashboard
               </Link>
               <SignOutButton />
