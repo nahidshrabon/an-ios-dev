@@ -1,5 +1,3 @@
-# Part 1, Section 14 — Standard Library Deep Dive 🟠
-
 *Estimated read time: ~30 minutes*
 
 ---

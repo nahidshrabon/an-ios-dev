@@ -1,5 +1,3 @@
-# Part 1, Section 13 — Macros 🟠
-
 *Estimated read time: ~30 minutes*
 
 ---

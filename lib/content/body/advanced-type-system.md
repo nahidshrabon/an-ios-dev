@@ -1,5 +1,3 @@
-# Part 1, Section 11 — Advanced Type System 🟠
-
 *Estimated read time: ~30 minutes*
 
 ---

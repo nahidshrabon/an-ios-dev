@@ -1,5 +1,3 @@
-# Part 1, Section 6 — Structs, Classes, and Enums 🟢
-
 *Estimated read time: ~30 minutes*
 
 ---

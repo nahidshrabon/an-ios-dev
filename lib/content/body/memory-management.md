@@ -1,5 +1,3 @@
-# Part 1, Section 10 — Memory Management 🔵
-
 *Estimated read time: ~30 minutes*
 
 ---

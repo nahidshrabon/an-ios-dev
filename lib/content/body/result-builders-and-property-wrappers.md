@@ -1,5 +1,3 @@
-# Part 1, Section 12 — Result Builders and Property Wrappers 🟠
-
 *Estimated read time: ~30 minutes*
 
 ---

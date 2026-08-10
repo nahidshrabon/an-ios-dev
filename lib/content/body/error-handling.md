@@ -1,5 +1,3 @@
-# Part 1, Section 9 — Error Handling 🟢
-
 *Estimated read time: ~30 minutes*
 
 ---

@@ -1,5 +1,3 @@
-# Part 1, Section 8 — Generics 🔵
-
 *Estimated read time: ~30 minutes*
 
 ---

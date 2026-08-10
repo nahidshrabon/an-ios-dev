@@ -1,5 +1,3 @@
-# Part 1, Section 7 — Protocols and Extensions 🟢
-
 *Estimated read time: ~30 minutes*
 
 ---

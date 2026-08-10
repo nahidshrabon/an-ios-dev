@@ -1,5 +1,3 @@
-# Part 1, Section 15 — Low-Level Swift 🔴
-
 *Estimated read time: ~30 minutes*
 
 ---
