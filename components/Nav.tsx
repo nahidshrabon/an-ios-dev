@@ -5,8 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { HomeIcon } from "@/components/Icons";
-import { ReadIcon } from "@/components/HowItWorksIcons";
+import { ArticleIcon, DashboardIcon } from "@/components/Icons";
 
 export function Nav() {
   const [supabase] = useState(() => createClient());
@@ -46,7 +45,7 @@ export function Nav() {
             href="/articles"
             className="font-heading inline-flex items-center gap-1.5 hover:underline"
           >
-            <ReadIcon className="size-4" />
+            <ArticleIcon className="size-4" />
             Articles
           </Link>
           {userEmail === undefined ? null : userEmail ? (
@@ -55,7 +54,7 @@ export function Nav() {
                 href="/dashboard"
                 className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
-                <HomeIcon className="size-4" />
+                <DashboardIcon className="size-4" />
                 Dashboard
               </Link>
               <SignOutButton />
