@@ -4,14 +4,12 @@
   --background: #ffffff;
   --foreground: #171717;
   --accent: #007aff;
-  --accent-hover: #0066d6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-jetbrains-mono);
@@ -23,7 +21,6 @@
     --background: #0a0a0a;
     --foreground: #ededed;
     --accent: #0a84ff;
-    --accent-hover: #3aa0ff;
   }
 }
 
