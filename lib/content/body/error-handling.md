@@ -130,7 +130,7 @@ let converted = try customMap(["1", "2", "abc"]) { (str) -> Int in
 
 ---
 
-## 9.6 Typed Throws: `throws(MyError)` 🔵
+## 9.6 Typed Throws: `throws(MyError)`
 
 Since Swift 6, a function can declare **exactly which error type** it throws, rather than the implicit `any Error` that ordinary `throws` uses — written `throws(SpecificErrorType)`:
 
@@ -205,7 +205,7 @@ func useResult() throws -> String {
 
 ---
 
-## 9.8 Designing an Error Taxonomy for an App 🔵
+## 9.8 Designing an Error Taxonomy for an App
 
 As an app grows, a single flat error enum with dozens of unrelated cases becomes unwieldy. A common, more maintainable pattern is **layered error types** — one error enum per subsystem (networking, persistence, validation), often composed together at a higher level:
 
@@ -240,7 +240,7 @@ This layering keeps each subsystem's errors focused and independently testable, 
 
 ---
 
-## 9.9 Surfacing Errors in the UI Without Leaking Internals 🔵
+## 9.9 Surfacing Errors in the UI Without Leaking Internals
 
 A critical, easy-to-miss principle: the *internal* error a function throws (a stack trace, a raw server error string, a SQL error message) is rarely appropriate to show directly to an end user — it can be confusing, unhelpful, or even a security/privacy concern (e.g. leaking internal server details, file paths, or database schema).
 

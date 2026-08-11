@@ -253,7 +253,7 @@ This is why delegate protocols are conventionally constrained to `AnyObject` (cl
 
 ---
 
-## 10.9 Retain Cycles with `Task` and Async Closures 🟠
+## 10.9 Retain Cycles with `Task` and Async Closures
 
 Swift Concurrency's `Task { }` closures (fully covered in Part 2) capture their surrounding context strongly by default too, exactly like ordinary closures — a class storing a `Task` that captures `self`, especially one performing long-running or repeating work, is a modern variant of the same retain-cycle problem.
 
@@ -313,7 +313,7 @@ If you navigate away from a screen backed by `ProfileViewModel` and never see "P
 
 ---
 
-## 10.11 Copy-on-Write and `isKnownUniquelyReferenced` 🟠
+## 10.11 Copy-on-Write and `isKnownUniquelyReferenced`
 
 Swift's value types (`Array`, `Dictionary`, `Set`, and your own structs containing them) achieve efficient copy semantics through **copy-on-write (COW)**: assigning or passing a value type doesn't actually duplicate its underlying storage immediately — it shares the same storage buffer until one of the copies is actually *mutated*, at which point a real copy is made just before that mutation.
 
@@ -352,7 +352,7 @@ struct MyArray {
 
 ---
 
-## 10.12 Stack vs Heap Allocation in Swift 🟠
+## 10.12 Stack vs Heap Allocation in Swift
 
 Value types (structs, enums, tuples) are generally allocated on the **stack** — fast, automatically reclaimed when a scope exits, with no reference counting overhead — while class instances are allocated on the **heap**, managed by ARC, and require pointer indirection to access.
 
@@ -373,7 +373,7 @@ This is one of the practical performance reasons Swift favors `struct` by defaul
 
 ---
 
-## 10.13 Existential Boxing Cost 🔴
+## 10.13 Existential Boxing Cost
 
 Recall from section 8.9 that `any Protocol` (an existential type) erases a value's concrete type into a runtime container. For value types larger than a small fixed buffer (typically 3 machine words), this existential container must allocate additional storage on the **heap** to hold the value — an extra allocation and indirection cost that `some`/generic code avoids entirely.
 
@@ -396,7 +396,7 @@ This is a concrete, measurable reason `some`/generics generally outperform `any`
 
 ---
 
-## 10.14 Autorelease Pools and When You Still Need Them 🟠
+## 10.14 Autorelease Pools and When You Still Need Them
 
 Autorelease pools are a holdover mechanism from Objective-C's memory model, still occasionally relevant in Swift when interoperating with Objective-C/Cocoa APIs (or writing tight loops that create many temporary Objective-C objects) — `autoreleasepool { }` forces temporary objects to be released promptly rather than accumulating until the end of the current run loop iteration.
 
@@ -415,7 +415,7 @@ In pure Swift code using only native Swift types, you'll rarely need this explic
 
 ---
 
-## 10.15 The Law of Exclusivity 🔴
+## 10.15 The Law of Exclusivity
 
 Swift enforces **exclusive access** to memory: you cannot have two overlapping accesses to the same variable where at least one of them is a mutation — this rule is checked (mostly at compile time, sometimes at runtime) to prevent subtle bugs and to enable certain compiler optimizations that assume no aliasing.
 

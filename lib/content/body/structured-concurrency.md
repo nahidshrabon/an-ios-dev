@@ -139,7 +139,7 @@ This is a common, easy-to-miss gotcha: unlike `async let`'s tuple-based `await (
 
 ---
 
-## 18.6 `DiscardingTaskGroup` 🟠
+## 18.6 `DiscardingTaskGroup`
 
 `DiscardingTaskGroup` (and its throwing counterpart, `ThrowingDiscardingTaskGroup`) is a variant for when you need to run many child tasks concurrently purely for their **side effects**, with no results to actually collect — it avoids the memory overhead of buffering child task results you'd never consume anyway.
 
@@ -207,7 +207,7 @@ Many standard-library async APIs (like `Task.sleep`, recall 17.6) already check 
 
 ---
 
-## 18.9 `withTaskCancellationHandler` 🟠
+## 18.9 `withTaskCancellationHandler`
 
 `withTaskCancellationHandler` lets you register a synchronous closure that runs **immediately** the moment cancellation occurs — useful for wrapping non-async, non-cancellation-aware work (like a callback-based API) with cleanup logic that fires right away, rather than waiting for the wrapped operation's own code to eventually notice `Task.isCancelled`.
 
@@ -232,7 +232,7 @@ This is especially valuable when bridging to callback-based APIs (see 18.11) tha
 
 ---
 
-## 18.10 Task-Local Values with `@TaskLocal` 🟠
+## 18.10 Task-Local Values with `@TaskLocal`
 
 `@TaskLocal` provides values that are implicitly available to a task and all of its structured children, without needing to be threaded explicitly through every function's parameter list — conceptually similar to thread-local storage, but scoped to Swift Concurrency's task hierarchy instead of an OS thread.
 
@@ -288,7 +288,7 @@ The "checked" in the name means Swift performs a runtime check ensuring `resume`
 
 ---
 
-## 18.12 Continuation Misuse: Double Resume and Leaks 🟠
+## 18.12 Continuation Misuse: Double Resume and Leaks
 
 A continuation's contract is strict: `resume` must be called **exactly once** — never zero times, never more than once. Violating this produces one of two failure modes, both of which the "checked" continuation variants actively detect and report (typically as a runtime warning or crash, rather than silent corruption).
 

@@ -96,7 +96,7 @@ Binding a `NavigationPath` to `NavigationStack(path:)` gives you full external c
 
 ---
 
-## 27.5 Deep Linking into a Navigation Stack 🔵
+## 27.5 Deep Linking into a Navigation Stack
 
 Deep linking — opening the app directly to a specific screen from a URL (recall the URL scheme/universal link mechanics covered fully in section 49.5–49.7) — combines directly with `NavigationPath` (27.4): parse the incoming URL into the appropriate value(s), then programmatically build the `NavigationPath` to match.
 
@@ -211,7 +211,7 @@ Using an enum (recall section 6.22's "model state with enums" theme) for tab sel
 
 ---
 
-## 27.9 Sidebar-Adaptable Tabs on iPad 🔵
+## 27.9 Sidebar-Adaptable Tabs on iPad
 
 On iPad, tabs declared with the modern `Tab` API can automatically adapt into a sidebar-style presentation (rather than a bottom tab bar) when there's sufficient width, and `TabSection` lets you group related tabs together within that sidebar for larger tab counts:
 
@@ -236,7 +236,7 @@ This automatic adaptation is another instance of the same "one declaration, mult
 
 ---
 
-## 27.10 Tab Customization and Persistence 🔵
+## 27.10 Tab Customization and Persistence
 
 Modern `TabView` supports letting users customize which tabs are visible/reordered (similar to apps like the App Store's customizable tab bar), with `.tabViewCustomization()` persisting the user's chosen configuration automatically across app launches.
 
@@ -442,7 +442,7 @@ Common placements include `.navigationBarLeading`/`.navigationBarTrailing` (the 
 
 ---
 
-## 27.20 Toolbar Visibility Priority and Auto-Minimizing (iOS 27) 🔵
+## 27.20 Toolbar Visibility Priority and Auto-Minimizing (iOS 27)
 
 Recent iOS versions introduced automatic toolbar item prioritization — when there isn't enough horizontal space to show every toolbar item at full size, lower-priority items automatically collapse into a more compact representation (an icon-only button, or folding into an overflow menu, see 27.21) rather than the toolbar simply overflowing or clipping content.
 
@@ -463,7 +463,7 @@ This directly parallels `.layoutPriority()`'s role in stack layout (recall secti
 
 ---
 
-## 27.21 Toolbar Overflow Menus and Pinned Placements (iOS 27) 🔵
+## 27.21 Toolbar Overflow Menus and Pinned Placements (iOS 27)
 
 Complementing 27.20's auto-minimizing behavior, toolbar items that don't fit can automatically collapse into a system-provided overflow menu (rather than being hidden entirely), and specific items can be explicitly **pinned** to always remain visible regardless of available space, never candidates for overflow collapse.
 
@@ -501,7 +501,7 @@ Context menus can also include a `preview:` closure showing an enlarged, non-int
 
 ---
 
-## 27.23 Zoom Navigation Transitions 🔵
+## 27.23 Zoom Navigation Transitions
 
 The `.navigationTransition(.zoom(...))` modifier (paired with a matching `.matchedTransitionSource()` on the triggering element) produces a smooth zoom effect when navigating from a source element (like a grid thumbnail) into a detail view, visually connecting the two rather than using a plain slide/push transition.
 

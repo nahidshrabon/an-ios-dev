@@ -501,7 +501,7 @@ The key advantage over the older `ObservableObject`/`@Published` system (covered
 
 ---
 
-## 14.21 `Synchronization`: `Mutex` and `Atomic` 🔴
+## 14.21 `Synchronization`: `Mutex` and `Atomic`
 
 The `Synchronization` module (Swift 6) provides low-level, high-performance primitives for protecting shared mutable state across threads, as an alternative to older lock types (`NSLock`, covered in section 10.5/22.5) or full actor isolation (Part 2) when you specifically need lightweight, low-level synchronization:
 
@@ -521,7 +521,7 @@ print(counter.withLock { $0 })   // 1
 
 ---
 
-## 14.22 `Subprocess` 1.0 basics 🔴
+## 14.22 `Subprocess` 1.0 basics
 
 `Subprocess` is a modern Swift API (reaching 1.0 alongside recent Swift/toolchain releases) for launching and communicating with external processes — replacing the older, more cumbersome Foundation `Process` API with a structured-concurrency-friendly, `async`/`await`-based interface:
 

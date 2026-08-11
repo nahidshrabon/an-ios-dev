@@ -156,7 +156,7 @@ Getting precedence and associativity right matters for making a custom operator 
 
 ---
 
-## 11.7 Noncopyable Types with `~Copyable` 🔴
+## 11.7 Noncopyable Types with `~Copyable`
 
 By default, every Swift type is implicitly copyable — assigning a struct's value creates an independent copy (recall section 6.9). `~Copyable` (introduced in Swift 5.9) opts a type *out* of that default, producing a type that can only ever be **moved**, never duplicated — useful for modeling unique resources (a file handle, a lock) where having two independent copies would be semantically wrong.
 
@@ -178,7 +178,7 @@ Once a noncopyable value is passed to a `consuming` function (or otherwise moved
 
 ---
 
-## 11.8 Ownership: `consuming`, `borrowing`, `inout` 🔴
+## 11.8 Ownership: `consuming`, `borrowing`, `inout`
 
 These three parameter modifiers describe exactly how a function intends to interact with an argument's ownership — most relevant (though not exclusively) for noncopyable types from 11.7, since ownership becomes an explicit, enforced concern once copying isn't automatically available as a fallback.
 
@@ -204,7 +204,7 @@ func rename(_ resource: inout Resource) {
 
 ---
 
-## 11.9 `~Escapable` and Lifetime Dependencies 🔴
+## 11.9 `~Escapable` and Lifetime Dependencies
 
 `~Escapable` (introduced alongside Swift's ownership features) marks a type whose values are tied to a specific, bounded lifetime — they cannot "escape" beyond the scope that guarantees the data they depend on remains valid, similar in spirit to Rust's borrow-checked references, but far less commonly encountered in everyday Swift code.
 
@@ -245,7 +245,7 @@ open class BaseViewModel {   // can be subclassed even from outside this module
 
 ---
 
-## 11.11 `@inlinable` and `@usableFromInline` 🔴
+## 11.11 `@inlinable` and `@usableFromInline`
 
 These attributes matter specifically for **library authors** using resilient (ABI-stable) modules — they let the compiler inline a function's body directly into the *caller's* compiled code, even across module boundaries, for performance-critical code paths that would otherwise pay a cross-module call overhead.
 
@@ -270,7 +270,7 @@ public struct Vector {
 
 ---
 
-## 11.12 `@frozen` and Library Evolution 🔴
+## 11.12 `@frozen` and Library Evolution
 
 By default, a `public` struct or enum in a **resilient** library (one built with library evolution support, like the ones shipped in the OS itself) is treated as an opaque, potentially-changing-shape type from the outside — callers can't assume its exact memory layout, since the library author might add stored properties or enum cases in a future version without breaking already-compiled client binaries.
 
@@ -285,7 +285,7 @@ By default, a `public` struct or enum in a **resilient** library (one built with
 
 ---
 
-## 11.13 ABI Stability vs Module Stability 🔴
+## 11.13 ABI Stability vs Module Stability
 
 **ABI (Application Binary Interface) stability** means compiled binaries built against one version of a library continue working correctly against a *newer* version of that library's compiled binary, without recompilation — this is exactly what lets Apple ship the Swift standard library and system frameworks baked into the OS itself, rather than bundled inside every single app.
 

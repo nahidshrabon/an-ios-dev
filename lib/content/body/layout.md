@@ -362,7 +362,7 @@ Unlike ordinary views (which passively receive a proposal and decide their own s
 
 ---
 
-## 24.19 `GeometryReader` Pitfalls and Alternatives 🔵
+## 24.19 `GeometryReader` Pitfalls and Alternatives
 
 `GeometryReader`'s greedy space-filling behavior (24.18) is its biggest practical drawback: since it always expands to fill all available space regardless of its content's actual needs, it frequently disrupts a layout's natural sizing behavior in ways that are surprising and hard to work around, especially when nested inside stacks alongside other, normally-behaving views.
 
@@ -384,7 +384,7 @@ Modern alternatives that avoid this pitfall by not requiring a fully separate, g
 
 ---
 
-## 24.20 `.onGeometryChange()` 🔵
+## 24.20 `.onGeometryChange()`
 
 `.onGeometryChange()` lets a view observe its own size/position changes and react via a callback, without needing to wrap it in a separate, greedily-expanding `GeometryReader` container at all — solving `GeometryReader`'s biggest pitfall (24.19) directly.
 
@@ -407,7 +407,7 @@ Since `.onGeometryChange()` is a plain modifier (not a container view), it doesn
 
 ---
 
-## 24.21 `containerRelativeFrame()` 🔵
+## 24.21 `containerRelativeFrame()`
 
 `containerRelativeFrame()` sizes a view as a fraction (or fixed count of equal divisions) of its enclosing container's size — directly expressing "half the width of my container" or "one-third of my scroll view's width" declaratively, again without needing `GeometryReader`.
 
@@ -431,7 +431,7 @@ This is especially common in horizontally-scrolling carousels/galleries (recall 
 
 ---
 
-## 24.22 Alignment Guides 🟠
+## 24.22 Alignment Guides
 
 Beyond a stack's built-in `alignment` parameter (24.3), `.alignmentGuide()` lets you customize exactly where a specific view's alignment point sits, overriding the default alignment behavior for that one view without affecting its siblings.
 
@@ -449,7 +449,7 @@ This is useful for fine-tuning visual alignment in cases where the default geome
 
 ---
 
-## 24.23 Custom Alignment Identifiers 🟠
+## 24.23 Custom Alignment Identifiers
 
 Beyond the built-in alignment guides (`.top`, `.leading`, `.center`, and similar), you can define entirely custom alignment identifiers — useful for aligning views that aren't direct siblings in the same stack, by sharing a common, custom-defined alignment guide across a more complex view hierarchy.
 

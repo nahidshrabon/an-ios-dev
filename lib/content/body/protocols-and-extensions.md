@@ -357,7 +357,7 @@ This is also exactly what powers string interpolation of custom types (recall 1.
 
 ---
 
-## 7.12 Protocol Witness Dispatch vs Extension Static Dispatch 🔵
+## 7.12 Protocol Witness Dispatch vs Extension Static Dispatch
 
 This is a subtler but important distinction: methods satisfying a protocol *requirement* use **dynamic (witness table) dispatch** — the correct implementation is looked up at runtime based on the concrete type. Methods added purely in a protocol *extension*, without being declared as a requirement, use **static dispatch** — resolved at compile time based on the *static* type of the reference.
 
@@ -390,7 +390,7 @@ The `farewell()` discrepancy is the classic gotcha: because `farewell()` was nev
 
 ---
 
-## 7.13 `@retroactive` Conformance 🟠
+## 7.13 `@retroactive` Conformance
 
 Adding a protocol conformance to a type you don't own (e.g. a type from a third-party library or Apple's own frameworks) from your own module is called a **retroactive conformance**. Since Swift 6, doing this without marking it explicitly produces a warning, because retroactive conformances can silently conflict if two different modules each add the same conformance independently — `@retroactive` marks the conformance as an intentional, acknowledged choice.
 

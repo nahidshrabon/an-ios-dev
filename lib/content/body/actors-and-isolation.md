@@ -291,7 +291,7 @@ This mode directly addresses the reality that most SwiftUI-based app code is inh
 
 ---
 
-## 19.14 Custom Actor Executors 🔴
+## 19.14 Custom Actor Executors
 
 By default, every actor (and the main actor) is scheduled by Swift Concurrency's own built-in executor — but actors can specify a **custom executor**, letting you control precisely which underlying thread/queue an actor's work actually runs on, which matters for interoperating with existing serial-queue-based subsystems that predate Swift Concurrency.
 
@@ -311,7 +311,7 @@ Custom executors are a genuinely advanced, narrow tool — primarily useful when
 
 ---
 
-## 19.15 Isolated Conformances and Isolated `deinit` 🔴
+## 19.15 Isolated Conformances and Isolated `deinit`
 
 Two more specialized isolation refinements: an **isolated conformance** lets a type satisfy a protocol requirement specifically *while remaining actor-isolated*, rather than being forced to implement that requirement as `nonisolated` (which was previously often required for protocol conformance, even when it didn't make logical sense for the isolated type). An **isolated `deinit`** similarly allows a `deinit` (recall section 6.8) to run on the actor's own isolation domain rather than always running in a `nonisolated` context, letting cleanup code safely touch the actor's isolated state directly during teardown.
 

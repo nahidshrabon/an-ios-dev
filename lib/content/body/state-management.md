@@ -278,7 +278,7 @@ This is the modern, SwiftUI-native replacement for manually calling `becomeFirst
 
 ---
 
-## 25.12 `ObservableObject` and `@StateObject` — Legacy Code Literacy 🔵
+## 25.12 `ObservableObject` and `@StateObject` — Legacy Code Literacy
 
 Before `@Observable` (25.4), SwiftUI's data-binding model was built on Combine's `ObservableObject`/`@Published` (recall section 22.9), paired with `@StateObject` (for the view that owns/creates the object) or `@ObservedObject` (for a view that merely receives an already-existing instance from elsewhere).
 
@@ -308,7 +308,7 @@ The `@StateObject`/`@ObservedObject` distinction (owns vs. merely receives) matt
 
 ---
 
-## 25.13 `@Observable` vs `ObservableObject` Tracking Granularity 🟠
+## 25.13 `@Observable` vs `ObservableObject` Tracking Granularity
 
 The core practical difference between the two systems, beyond syntax: `ObservableObject`'s `objectWillChange` (recall section 22.9) fires as one blanket signal any time *any* `@Published` property changes, causing every view observing that object to re-evaluate its `body` regardless of which specific property it actually reads — `@Observable`'s tracking is precise per-property, notifying only views that actually read the specific property that changed.
 
@@ -356,7 +356,7 @@ Understanding structural identity explains a wide range of otherwise-mysterious 
 
 ---
 
-## 25.15 Why `.id()` Resets State 🔵
+## 25.15 Why `.id()` Resets State
 
 Explicitly applying `.id(someValue)` to a view tells SwiftUI to treat it as an entirely new, distinct view identity whenever `someValue` changes — which deliberately, intentionally discards and recreates that view's `@State` from scratch, rather than preserving it across the change.
 
@@ -375,7 +375,7 @@ This is a deliberate, useful tool specifically when you *want* a full reset — 
 
 ---
 
-## 25.16 What Actually Triggers a `body` Re-Evaluation 🟠
+## 25.16 What Actually Triggers a `body` Re-Evaluation
 
 A view's `body` re-runs specifically when a piece of state it actually *reads* during that evaluation changes — this applies uniformly across `@State`, `@Binding`, `@Observable` properties actually accessed, `@Environment` values actually read, and so on; state that exists but is never actually read inside `body` doesn't trigger a re-evaluation when it changes.
 
@@ -399,7 +399,7 @@ This is precisely what makes `@Observable`'s fine-grained tracking work (25.4/25
 
 ---
 
-## 25.17 Lazy State Initialization for `@Observable` Types 🟠
+## 25.17 Lazy State Initialization for `@Observable` Types
 
 Since `@Observable` types are ordinary reference types (classes), initializing one inside a view's own property declaration (rather than receiving it from a parent) runs the risk of recreating that instance on every `body` re-evaluation unless handled carefully — `@State` is specifically what guarantees an `@Observable` object a view itself creates is initialized only *once*, on that view's first appearance, and preserved thereafter.
 

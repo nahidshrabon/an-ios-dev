@@ -252,7 +252,7 @@ Notice the legality difference too: `makeSomeShape` above *couldn't* be written 
 
 ---
 
-## 8.10 Primary Associated Types: `Collection<Int>` 🟠
+## 8.10 Primary Associated Types: `Collection<Int>`
 
 Since Swift 5.7, protocols can expose their associated types directly in angle-bracket syntax at the use site — called **primary associated types** — making constraints far more readable than the older, more verbose `where` clause spelling:
 
@@ -274,7 +274,7 @@ print(sumAllModern([1, 2, 3]))   // 6
 
 ---
 
-## 8.11 Type Erasure: Writing an `AnyX` Wrapper 🟠
+## 8.11 Type Erasure: Writing an `AnyX` Wrapper
 
 Before opaque types (`some`) existed, and still in cases requiring genuine heterogeneous storage, **type erasure** is the classic technique for hiding a generic type's concrete parameter behind a concrete wrapper type — the standard library's own `AnySequence`, `AnyHashable`, and similar types all use this pattern.
 
@@ -306,7 +306,7 @@ The wrapper stores the underlying logic as a closure captured at initialization 
 
 ---
 
-## 8.12 Variadic Generics and Parameter Packs 🔴
+## 8.12 Variadic Generics and Parameter Packs
 
 Introduced in Swift 5.9, **parameter packs** let a generic function or type accept a variable number of *differently-typed* generic parameters — something previously only possible for same-typed variadics (recall `Int...` from 5.4).
 
@@ -322,7 +322,7 @@ let result = makeTuple(1, "two", 3.0)   // (Int, String, Double)
 
 ---
 
-## 8.13 Phantom Types for Compile-Time Safety 🔴
+## 8.13 Phantom Types for Compile-Time Safety
 
 A phantom type is a generic type parameter that appears in a type's declaration but is never actually *used* by any of its stored properties — it exists purely to let the compiler distinguish between otherwise-identical values at compile time, catching category errors that would otherwise only surface at runtime.
 

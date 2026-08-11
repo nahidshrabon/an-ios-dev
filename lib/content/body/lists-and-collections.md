@@ -437,7 +437,7 @@ ScrollView(.horizontal) {
 
 ---
 
-## 26.18 `.onScrollGeometryChange()` 🟠
+## 26.18 `.onScrollGeometryChange()`
 
 `.onScrollGeometryChange()` observes a scroll view's geometry (content offset, content size, visible size) changing over time, reporting updates via a callback — directly analogous to `.onGeometryChange()` from section 24.20, but specifically scoped to scroll-related geometry rather than general view size/position.
 
@@ -462,7 +462,7 @@ This is the modern, non-`GeometryReader`-requiring way to build effects that rea
 
 ---
 
-## 26.19 `.scrollEdgeEffectStyle()` 🔵
+## 26.19 `.scrollEdgeEffectStyle()`
 
 `.scrollEdgeEffectStyle()` controls the visual treatment applied at a scroll view's edges as content scrolls underneath fixed UI elements (like a navigation bar or tab bar) — tying into the Liquid Glass design language (fully covered in section 32) where content can visually blur or fade as it passes beneath translucent system chrome.
 
@@ -477,7 +477,7 @@ This is a relatively subtle, presentation-layer detail compared to most of this 
 
 ---
 
-## 26.20 Reordering in Lists, Grids, and Sections (iOS 27) 🔵
+## 26.20 Reordering in Lists, Grids, and Sections (iOS 27)
 
 Recent iOS versions extended drag-to-reorder support (previously largely `List`-specific via `onMove`, recall 26.7) to also work naturally within `LazyVGrid`/`Grid` layouts and across `Section` boundaries within a single list — letting users drag an item not just up and down within a flat list, but between distinct sections or grid positions.
 
@@ -502,7 +502,7 @@ This extension makes patterns like a Kanban-style board (dragging a task between
 
 ---
 
-## 26.21 List Performance: What Makes Scrolling Stutter 🟠
+## 26.21 List Performance: What Makes Scrolling Stutter
 
 Scrolling performance problems in `List`/`ScrollView` almost always trace back to expensive work happening synchronously on the main thread during scrolling — heavy computation inside a row's `body`, un-cached image decoding/resizing happening repeatedly, or (most commonly) not using the lazy containers (26.13–26.14) at all and instead eagerly creating every row's entire view hierarchy upfront regardless of visibility.
 

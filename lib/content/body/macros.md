@@ -197,7 +197,7 @@ This is the practical, everyday debugging workflow for macros — rather than re
 
 ---
 
-## 13.10 Macro Build-Time Cost and When to Avoid Them 🔴
+## 13.10 Macro Build-Time Cost and When to Avoid Them
 
 Because macros execute as separate compiler-plugin processes during every build, and their SwiftSyntax-based parsing/expansion work isn't free, heavy macro usage across a large codebase can measurably slow down build times — every file using a given macro requires invoking that macro's plugin process and running its (potentially nontrivial) expansion logic during compilation.
 
