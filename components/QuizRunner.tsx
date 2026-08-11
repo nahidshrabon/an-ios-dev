@@ -104,17 +104,17 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                         : "Incorrect"}
                   </span>
                 </div>
-                <div className="mt-3 flex flex-col gap-1.5 text-base">
+                <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
                       option.id === question.correctOptionId;
                     const isSelected = option.id === graded.selectedOptionId;
                     return (
-                      <div
+                      <li
                         key={option.id}
                         className={`font-article ${
                           isCorrectOption
-                            ? "font-medium text-green-700 dark:text-green-400"
+                            ? "-mx-2 rounded bg-green-700/10 px-2 py-0.5 font-medium text-green-700 dark:text-green-400"
                             : isSelected
                               ? "text-red-700 dark:text-red-400"
                               : "text-zinc-600 dark:text-zinc-400"
@@ -132,10 +132,10 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                             (your answer)
                           </span>
                         )}
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
                 <p className="font-article mt-3 text-base text-zinc-600 dark:text-zinc-400">
                   <InlineMarkdown>{question.explanation}</InlineMarkdown>
                 </p>
