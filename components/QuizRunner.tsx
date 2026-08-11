@@ -52,6 +52,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
 
     setResult({ score, total: quiz.questions.length, graded });
     setSubmitting(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (result) {
