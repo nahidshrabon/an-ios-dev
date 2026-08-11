@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
-import { CheckIcon, XIcon } from "@/components/Icons";
+import { CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
 
 interface GradedAnswer {
@@ -104,7 +104,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                         : "Incorrect"}
                   </span>
                 </div>
-                <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-base">
+                <ul className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
                       option.id === question.correctOptionId;
@@ -112,33 +112,49 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                     return (
                       <li
                         key={option.id}
-                        className={`font-article ${
-                          isCorrectOption
-                            ? "-mx-2 rounded bg-green-700/10 px-2 py-0.5 font-medium text-green-700 dark:text-green-400"
-                            : isSelected
-                              ? "text-red-700 dark:text-red-400"
-                              : "text-zinc-600 dark:text-zinc-400"
-                        }`}
+                        className="font-article flex items-baseline gap-2"
                       >
-                        <InlineMarkdown>{option.text}</InlineMarkdown>
-                        {isCorrectOption && (
-                          <CheckIcon className="ml-1 inline size-4 align-text-bottom" />
-                        )}
-                        {isSelected && !isCorrectOption && (
-                          <XIcon className="ml-1 inline size-4 align-text-bottom" />
-                        )}
-                        {isSelected && (
-                          <span className="ml-1 align-text-bottom text-xs text-zinc-500 dark:text-zinc-500">
-                            (your answer)
-                          </span>
-                        )}
+                        <span
+                          className="size-1.5 shrink-0 self-center rounded-full bg-current opacity-60"
+                          aria-hidden="true"
+                        />
+                        <span
+                          className={
+                            isCorrectOption
+                              ? "rounded bg-green-700/10 px-2 py-0.5 font-medium text-green-700 dark:text-green-400"
+                              : isSelected
+                                ? "text-red-700 dark:text-red-400"
+                                : "text-zinc-600 dark:text-zinc-400"
+                          }
+                        >
+                          <InlineMarkdown>{option.text}</InlineMarkdown>
+                          {isCorrectOption && (
+                            <CheckIcon className="ml-1 inline size-4 align-text-bottom" />
+                          )}
+                          {isSelected && !isCorrectOption && (
+                            <XIcon className="ml-1 inline size-4 align-text-bottom" />
+                          )}
+                          {isSelected && (
+                            <span className="ml-1 align-text-bottom text-xs text-zinc-500 dark:text-zinc-500">
+                              (your answer)
+                            </span>
+                          )}
+                        </span>
                       </li>
                     );
                   })}
                 </ul>
-                <p className="font-article mt-3 text-base text-zinc-600 dark:text-zinc-400">
-                  <InlineMarkdown>{question.explanation}</InlineMarkdown>
-                </p>
+                <div className="mt-3 flex gap-2 rounded-lg border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <InfoIcon className="mt-0.5 size-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
+                  <div>
+                    <p className="font-heading text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+                      Explanation
+                    </p>
+                    <p className="font-article mt-1 text-base text-zinc-600 dark:text-zinc-400">
+                      <InlineMarkdown>{question.explanation}</InlineMarkdown>
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })}

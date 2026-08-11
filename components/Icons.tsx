@@ -92,6 +92,16 @@ export function ArticleIcon({ className }: IconProps) {
   );
 }
 
+export function InfoIcon({ className }: IconProps) {
+  return (
+    <svg {...shared} className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8h.01" />
+      <path d="M11 12h1v4h1" />
+    </svg>
+  );
+}
+
 export function DashboardIcon({ className }: IconProps) {
   return (
     <svg {...shared} className={className} aria-hidden="true">
