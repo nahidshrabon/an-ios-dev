@@ -7,7 +7,8 @@ import {
   type RoadmapPart,
   type RoadmapSection,
 } from "@/lib/content/roadmap";
-import { ChevronDownIcon } from "@/components/Icons";
+import { ArrowRightIcon, ChevronDownIcon } from "@/components/Icons";
+import { ProgressRing } from "@/components/ProgressRing";
 
 export function RoadmapChecklist({
   parts,
@@ -44,6 +45,18 @@ export function RoadmapChecklist({
   const percent =
     totalSections > 0 ? Math.round((completedCount / totalSections) * 100) : 0;
 
+  const nextSection = useMemo(() => {
+    for (const part of parts) {
+      for (const sec of part.sections) {
+        if (sec.articleSlug && !isCompleted(sec)) {
+          return sec;
+        }
+      }
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parts, manualCompleted, readSlugs]);
+
   return (
     <div>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -59,28 +72,51 @@ export function RoadmapChecklist({
         their article is ready.
       </p>
 
-      <div className="mt-6 rounded-xl border border-black/10 p-5 dark:border-white/10">
-        <div className="flex items-baseline justify-between">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {completedCount} / {totalSections} sections completed
-          </p>
-          <p className="font-heading text-2xl font-semibold">{percent}%</p>
+      {nextSection && (
+        <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent/20 bg-accent/5 p-5">
+          <div>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Continue where you left off
+            </p>
+            <p className="font-heading mt-1 text-lg font-semibold">
+              {nextSection.number}. {nextSection.title}
+            </p>
+          </div>
+          <Link
+            href={`/articles/${nextSection.articleSlug}?from=roadmap`}
+            className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white"
+          >
+            Continue
+            <ArrowRightIcon className="size-4" />
+          </Link>
         </div>
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
-          <div
-            className="h-full rounded-full bg-foreground transition-all"
-            style={{ width: `${percent}%` }}
-          />
+      )}
+
+      <div className="mt-6 flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
+        <ProgressRing percent={percent}>
+          <span className="font-heading text-sm font-semibold">
+            {percent}%
+          </span>
+        </ProgressRing>
+        <div>
+          <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+            Roadmap progress
+          </p>
+          <p className="font-heading mt-1 text-xl font-semibold">
+            {completedCount}
+            <span className="text-sm text-zinc-500">/{totalSections}</span>
+          </p>
         </div>
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
         {parts.map((part) => {
           const partCompleted = part.sections.filter(isCompleted).length;
+          const hasAvailable = part.sections.some((s) => s.articleSlug);
           return (
             <details
               key={part.id}
-              open
+              open={hasAvailable}
               className="group rounded-xl border border-black/10 p-4 dark:border-white/10"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between">
@@ -100,7 +136,11 @@ export function RoadmapChecklist({
                       <li key={sec.id}>
                         <Link
                           href={`/articles/${sec.articleSlug}?from=roadmap`}
-                          className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-black/[.03] dark:hover:bg-white/5"
+                          className={`flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors ${
+                            done
+                              ? "bg-green-700/5 hover:bg-green-700/10"
+                              : "hover:bg-black/[.03] dark:hover:bg-white/5"
+                          }`}
                         >
                           <span className="flex flex-1 items-center gap-3 text-sm">
                             <input
@@ -120,8 +160,9 @@ export function RoadmapChecklist({
                               {sec.number}. {sec.title}
                             </span>
                           </span>
-                          <span className="shrink-0 text-xs text-zinc-500 underline">
-                            Read →
+                          <span className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-500">
+                            Read
+                            <ArrowRightIcon className="size-3" />
                           </span>
                         </Link>
                       </li>
@@ -145,8 +186,8 @@ export function RoadmapChecklist({
                           {sec.number}. {sec.title}
                         </span>
                       </span>
-                      <span className="shrink-0 text-xs text-zinc-400 dark:text-zinc-600">
-                        Not available yet
+                      <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs text-zinc-500 dark:bg-white/10 dark:text-zinc-400">
+                        Coming soon
                       </span>
                     </li>
                   );
