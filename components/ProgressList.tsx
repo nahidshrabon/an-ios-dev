@@ -17,6 +17,12 @@ const STATUS_ACTIVE_CLASSES: Record<ReadingStatus, string> = {
   read: "bg-green-700/10 text-green-700 dark:text-green-400",
 };
 
+const STATUS_CELL_CLASSES: Record<ReadingStatus, string> = {
+  unread: "border-black/10 dark:border-white/10",
+  in_progress: "border-accent/20 bg-accent/5",
+  read: "border-green-700/20 bg-green-700/5",
+};
+
 export function ProgressList({
   groups,
   initialProgress,
@@ -88,7 +94,7 @@ export function ProgressList({
                   return (
                     <li
                       key={article.slug}
-                      className="flex flex-col gap-3 rounded-xl border border-black/10 p-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
+                      className={`flex flex-col gap-3 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center sm:justify-between ${STATUS_CELL_CLASSES[status]}`}
                     >
                       <Link
                         href={`/articles/${article.slug}`}
@@ -100,7 +106,12 @@ export function ProgressList({
                         {READING_STATUSES.map((s) => (
                           <button
                             key={s}
-                            onClick={() => setStatus(article.slug, s)}
+                            onClick={() =>
+                              setStatus(
+                                article.slug,
+                                status === s ? "unread" : s
+                              )
+                            }
                             className={`font-heading rounded-full px-3 py-1 text-xs transition-colors ${
                               status === s
                                 ? STATUS_ACTIVE_CLASSES[s]

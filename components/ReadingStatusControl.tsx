@@ -79,7 +79,7 @@ export function ReadingStatusControl({ slug }: { slug: string }) {
         {READING_STATUSES.map((s) => (
           <button
             key={s}
-            onClick={() => updateStatus(s)}
+            onClick={() => updateStatus(status === s ? "unread" : s)}
             className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
               status === s
                 ? "bg-foreground text-background"
