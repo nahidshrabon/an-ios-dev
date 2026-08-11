@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllArticles, getArticle } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import { getRoadmapSectionByArticleSlug } from "@/lib/content/roadmap";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { ArticleBackLink } from "@/components/ArticleBackLink";
@@ -47,6 +48,7 @@ export default async function ArticlePage({ params }: Props) {
   const relatedQuiz = getAllQuizzes().find(
     (quiz) => quiz.relatedArticleSlug === article.slug
   );
+  const section = getRoadmapSectionByArticleSlug(article.slug);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -63,6 +65,7 @@ export default async function ArticlePage({ params }: Props) {
         <ArticleBackLink />
       </Suspense>
       <h1 className="font-heading mt-4 text-3xl font-semibold tracking-tight">
+        {section ? `${section.number}. ` : ""}
         {article.title}
       </h1>
       <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
