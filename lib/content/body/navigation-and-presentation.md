@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 27.1 `NavigationStack` and `NavigationLink`
 
 `NavigationStack` manages a stack of views, pushing new views on top as the user navigates deeper and popping them off as they navigate back — `NavigationLink` is the tappable control that triggers a push.

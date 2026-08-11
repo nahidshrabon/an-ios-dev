@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 24.1 `VStack`, `HStack`, `ZStack`
 
 The three foundational layout containers arrange their children vertically, horizontally, or stacked on top of each other along the z-axis, respectively:

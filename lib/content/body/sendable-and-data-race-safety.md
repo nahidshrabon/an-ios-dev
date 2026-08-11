@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 20.1 What `Sendable` Means
 
 `Sendable` is a marker protocol (like `Error` from section 9.1) indicating that a type is safe to share across concurrency isolation boundaries — passed into a `Task`, sent to an actor, or captured by a `@Sendable` closure — without risking a data race. It's the compiler's way of answering "is it safe to hand this value to a different isolation domain?"

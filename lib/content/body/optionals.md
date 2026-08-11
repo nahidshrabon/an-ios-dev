@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 4.1 What `nil` Means and Why Optionals Exist
 
 In Swift, a variable can only be `nil` if its type is explicitly marked as optional — plain types can never silently hold "no value." This is enforced entirely at compile time.

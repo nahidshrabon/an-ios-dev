@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 1.1 Variables and Constants: `var` vs `let`
 
 Swift has exactly two ways to bind a name to a value: `var` for something that can change, `let` for something that can't.

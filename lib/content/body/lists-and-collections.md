@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 26.1 `List` with Static Rows
 
 `List` is SwiftUI's scrollable, row-based container — for a small, fixed number of rows known at compile time, you can list them directly as children, exactly like a stack:

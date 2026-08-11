@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 18.1 What "Structured" Means and Why It Matters
 
 "Structured" concurrency means a child task's lifetime is strictly bounded by the scope that created it — a parent function cannot return (or otherwise complete) until all the child tasks it spawned have either finished or been cancelled and unwound. This is a deliberate contrast to `Task.detached` (recall 17.9) or older, unstructured mechanisms like a bare `DispatchQueue.async` call, where a spawned unit of work has no enforced relationship to its creator's lifetime at all.

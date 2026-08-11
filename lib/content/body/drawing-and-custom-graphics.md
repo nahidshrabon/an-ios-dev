@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 30.1 Path and Drawing Primitives
 
 `Path` describes vector geometry — lines, curves, and shapes — built from a sequence of drawing commands like `move(to:)`, `addLine(to:)`, `addCurve(to:control1:control2:)`, and `addArc()`.

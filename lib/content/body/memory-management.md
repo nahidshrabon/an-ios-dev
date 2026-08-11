@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 10.1 What ARC Is and What It Counts
 
 ARC (Automatic Reference Counting) manages the memory of **class instances** automatically by tracking how many *strong references* point to each one. When that count reaches zero, the instance is deallocated (`deinit` runs, recall 6.8) and its memory is reclaimed — no manual `retain`/`release` calls, and no garbage collector pausing your app to scan memory.

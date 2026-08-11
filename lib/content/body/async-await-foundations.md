@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 17.1 The Callback Problem Async/Await Solves
 
 Before async/await, asynchronous work in Swift (and most C-family languages) was expressed with completion-handler closures — functions that don't return a value directly, but instead call a closure later when the work finishes:

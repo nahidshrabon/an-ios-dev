@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 22.1 GCD: Queues and `DispatchQueue.async`
 
 Grand Central Dispatch (GCD) is Apple's original, lower-level concurrency system, built around **queues** — you submit closures (work items) to a queue, and the system manages a pool of threads to actually execute them. `DispatchQueue.async` submits work without waiting for it to finish, returning immediately, much like `Task { }` (recall section 17.5) does for Swift Concurrency.

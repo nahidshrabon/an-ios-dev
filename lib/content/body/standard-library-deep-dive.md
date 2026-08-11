@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 14.1 `Sequence` and `IteratorProtocol`
 
 `Sequence` is the most basic protocol enabling `for-in` iteration — it requires only a `makeIterator()` method returning something conforming to `IteratorProtocol`, which itself requires just one method: `next()`, returning the next element or `nil` when exhausted.

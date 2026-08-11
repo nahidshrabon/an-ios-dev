@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 23.1 The `View` Protocol and `body`
 
 Every SwiftUI view is a type conforming to the `View` protocol, which has exactly one requirement: a computed property named `body` describing what the view displays, in terms of other views.

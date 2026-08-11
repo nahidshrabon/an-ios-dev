@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 15.1 `UnsafePointer` Family Overview
 
 Swift's `Unsafe*Pointer` types provide direct, unchecked memory access — bypassing ARC, bounds checking, and type safety entirely, in exchange for C-level control and performance. The family covers read-only vs. mutable, and typed vs. raw:

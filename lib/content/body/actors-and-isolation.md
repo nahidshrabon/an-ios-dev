@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 19.1 The Data Race Problem Actors Solve
 
 A data race occurs when two threads access the same mutable memory concurrently, with at least one of them writing, and no synchronization coordinating the two — a notoriously difficult class of bug, since the outcome is nondeterministic and often doesn't reproduce reliably.

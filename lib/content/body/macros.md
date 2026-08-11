@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 13.1 What Macros Are and Why They Replaced Codegen
 
 A macro is code that runs **at compile time**, inspecting and generating Swift source code as part of the build itself — introduced in Swift 5.9 to replace a common older pattern: external scripts (often Python or a tool like Sourcery, covered in section 75.7) that scanned your source files and generated additional `.swift` files before the real build started.

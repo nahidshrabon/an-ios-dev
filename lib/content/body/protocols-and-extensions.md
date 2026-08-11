@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 7.1 Defining and Conforming to a Protocol
 
 A protocol declares a set of requirements — properties and methods — that a conforming type must implement, without providing the implementation itself:

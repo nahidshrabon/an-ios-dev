@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 2.1 `if` / `else if` / `else`
 
 The basic conditional. Unlike C, the condition does **not** need parentheses, but the braces are mandatory even for one-line bodies (no dangling-`if` bugs):

@@ -44,8 +44,8 @@ export default async function QuizzesPage() {
                 </p>
               </div>
               {best && (
-                <span className="inline-flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-                  <TrophyIcon className="size-4 text-accent" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
+                  <TrophyIcon className="size-4" />
                   Best:{" "}
                   <span className="font-heading">
                     {best.score}/{best.total}

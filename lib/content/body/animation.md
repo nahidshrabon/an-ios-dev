@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 29.1 Implicit Animation
 
 Implicit animation uses `.animation()` attached to a view, automatically animating any changes to values that modifier observes.

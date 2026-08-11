@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 8.1 Why Generics: The Duplicate-Code Problem
 
 Without generics, supporting multiple types means writing near-identical functions repeatedly:

@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 11.1 Key Paths: `KeyPath` and `WritableKeyPath`
 
 A key path is a first-class, reusable reference to a property — not the property's *value*, but a pointer-like handle to "the `.name` property" itself, which can be stored, passed around, and applied to different instances later.

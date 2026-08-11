@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 21.1 `AsyncSequence` and `AsyncIteratorProtocol`
 
 `AsyncSequence` mirrors `Sequence` (recall 14.1) exactly, except each element is produced *asynchronously* — its `next()` method is `async` (and `throws`, for the throwing variant), meaning producing the next element might involve genuine suspension (waiting on network data, a timer, or any other async source).

@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 6.1 Defining a Struct with Stored Properties
 
 A `struct` bundles related stored properties into a single named type:

@@ -8,6 +8,7 @@ import { getRoadmapSectionByArticleSlug } from "@/lib/content/roadmap";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { ArticleBackLink } from "@/components/ArticleBackLink";
+import { ArrowLeftIcon } from "@/components/Icons";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -56,9 +57,10 @@ export default async function ArticlePage({ params }: Props) {
         fallback={
           <Link
             href="/articles"
-            className="text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+            className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
           >
-            ← All articles
+            <ArrowLeftIcon className="size-4" />
+            All articles
           </Link>
         }
       >

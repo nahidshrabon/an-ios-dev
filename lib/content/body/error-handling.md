@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 9.1 The `Error` Protocol and Custom Error Enums
 
 Any type can represent an error by conforming to the empty `Error` protocol — in practice, this is almost always an enum, since errors naturally form a finite, related set of cases, optionally carrying associated data (recall 6.17):

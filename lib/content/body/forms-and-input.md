@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 28.1 Form and Section
 
 `Form` is a specialized container, similar to `List`, that automatically applies platform-appropriate styling to its grouped content — on iOS this typically means the grouped/inset grouped list appearance familiar from Settings.app.

@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 25.1 `@State` for Local View State
 
 `@State` marks a value as owned and managed by a specific view — SwiftUI persists this storage across `body` re-evaluations (recall section 23.2's "views are descriptions" point: the *view* is recreated constantly, but `@State`'s underlying storage survives that, living outside the view value itself) and triggers a re-render automatically whenever the value changes.

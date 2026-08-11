@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 3.1 Array: Creation, Indexing, and Count
 
 `Array` is an ordered, random-access collection. Like all Swift collections, it's a **value type** — assigning or passing it copies the reference cheaply and only duplicates storage on write (copy-on-write, covered in section 10).

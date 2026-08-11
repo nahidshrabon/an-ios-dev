@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 12.1 What a Result Builder Is
 
 A result builder (marked `@resultBuilder`) is a type that transforms a specially-formatted block of statements — one that looks like plain sequential code — into a single combined value, by intercepting the block at compile time and rewriting it into a series of method calls. This is exactly what makes SwiftUI's view syntax work:

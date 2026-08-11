@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 5.1 Declaring Functions, Parameters, and Return Values
 
 A function is declared with `func`, a name, a parenthesized parameter list, and an optional return type after `->`:

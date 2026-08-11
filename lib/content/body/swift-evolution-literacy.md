@@ -1,7 +1,3 @@
-*Estimated read time: ~30 minutes*
-
----
-
 ## 16.1 How Swift Evolution Works and Reading a Proposal
 
 Swift Evolution is the open, public process by which the Swift language itself changes — anyone can propose a new feature, and every accepted change goes through a documented, numbered **SE proposal** (e.g. "SE-0401"), reviewed publicly on the swift-evolution GitHub repository and forums before being accepted, revised, or rejected.
