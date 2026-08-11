@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
-import { CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
+import { ArrowLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
 
 interface GradedAnswer {
@@ -57,21 +57,25 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   if (result) {
     return (
       <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {quiz.title}
-        </h1>
-        <p className="mt-4 text-lg">
-          You scored{" "}
-          <span className="font-heading">
-            {result.score} / {result.total}
-          </span>
-          .
-        </p>
-        <div className="mt-4 flex gap-4">
-          <Link href="/dashboard/quizzes" className="text-sm underline">
-            Back to quizzes
-          </Link>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            {quiz.title}
+          </h1>
+          <div className="shrink-0 rounded-xl border border-accent/20 bg-accent/10 px-5 py-3 text-right">
+            <p className="font-heading text-3xl font-semibold text-accent">
+              {result.score}
+              <span className="text-lg text-accent/70">/{result.total}</span>
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Score</p>
+          </div>
         </div>
+        <Link
+          href="/dashboard/quizzes"
+          className="mt-4 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Back to quizzes
+        </Link>
 
         <div className="mt-8 flex flex-col gap-6">
           {quiz.questions.map((question, i) => {
