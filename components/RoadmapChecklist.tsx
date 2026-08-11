@@ -153,7 +153,7 @@ export function RoadmapChecklist({
                             <span
                               className={`font-heading ${
                                 done
-                                  ? "text-zinc-500 line-through dark:text-zinc-500"
+                                  ? "text-green-700 dark:text-green-400"
                                   : ""
                               }`}
                             >
