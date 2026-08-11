@@ -1,5 +1,6 @@
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllArticles } from "@/lib/content/articles";
+import { roadmap } from "@/lib/content/roadmap";
 import { ProgressList } from "@/components/ProgressList";
 import type { ReadingStatus } from "@/lib/types";
 
@@ -18,9 +19,22 @@ export default async function ProgressPage() {
     initialProgress[row.article_slug] = row.status as ReadingStatus;
   });
 
+  const articlesBySlug = new Map(
+    getAllArticles().map((article) => [article.slug, article])
+  );
+  const groups = roadmap
+    .map((part) => ({
+      id: part.id,
+      title: part.title,
+      articles: part.sections
+        .filter((s) => s.articleSlug)
+        .map((s) => articlesBySlug.get(s.articleSlug!)!),
+    }))
+    .filter((g) => g.articles.length > 0);
+
   return (
     <ProgressList
-      articles={getAllArticles()}
+      groups={groups}
       initialProgress={initialProgress}
       userId={userId}
     />
