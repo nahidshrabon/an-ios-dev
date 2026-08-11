@@ -71,7 +71,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         </div>
         <Link
           href="/dashboard/quizzes"
-          className="mt-4 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+          className="mt-2 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
         >
           <ArrowLeftIcon className="size-4" />
           Back to quizzes
