@@ -89,7 +89,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                     {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
                   </p>
                   <span
-                    className={`font-heading shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                    className={`font-heading shrink-0 rounded-full px-2.5 py-1 text-sm ${
                       !wasAnswered
                         ? "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
                         : graded.correct
@@ -147,10 +147,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                 <div className="mt-3 flex gap-2 rounded-lg border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/[0.03]">
                   <InfoIcon className="mt-0.5 size-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
                   <div>
-                    <p className="font-heading text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-                      Explanation
-                    </p>
-                    <p className="font-article mt-1 text-base text-zinc-600 dark:text-zinc-400">
+                    <p className="font-article text-base text-zinc-600 dark:text-zinc-400">
                       <InlineMarkdown>{question.explanation}</InlineMarkdown>
                     </p>
                   </div>
