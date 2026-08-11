@@ -134,11 +134,6 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                           {isSelected && !isCorrectOption && (
                             <XIcon className="ml-1 inline size-4 align-text-bottom" />
                           )}
-                          {isSelected && (
-                            <span className="ml-1 align-text-bottom text-xs text-zinc-500 dark:text-zinc-500">
-                              (your answer)
-                            </span>
-                          )}
                         </span>
                       </li>
                     );
