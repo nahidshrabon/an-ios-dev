@@ -1,9 +1,9 @@
 export type ReadingStatus = "unread" | "in_progress" | "read";
 
 export const READING_STATUSES: ReadingStatus[] = [
-  "unread",
-  "in_progress",
   "read",
+  "in_progress",
+  "unread",
 ];
 
 export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
