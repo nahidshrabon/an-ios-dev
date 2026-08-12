@@ -149,7 +149,7 @@ export function RoadmapChecklist({
                               title="Synced automatically from the article's reading status"
                               className={`flex size-4 shrink-0 items-center justify-center rounded ${
                                 done
-                                  ? "bg-green-700 dark:bg-green-600"
+                                  ? "bg-green-700 opacity-70 dark:bg-green-600"
                                   : "border border-black/20 dark:border-white/20"
                               }`}
                             >
