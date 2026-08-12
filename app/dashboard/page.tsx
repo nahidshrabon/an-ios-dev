@@ -36,19 +36,7 @@ export default async function DashboardPage() {
 
   const allQuizIds = new Set(getAllQuizzes().map((q) => q.id));
   const validAttempts = (attempts ?? []).filter((a) => allQuizIds.has(a.quiz_id));
-  const totalAttempts = validAttempts.length;
   const quizzesTaken = new Set(validAttempts.map((a) => a.quiz_id)).size;
-  const avgScore =
-    totalAttempts > 0
-      ? Math.round(
-          (validAttempts.reduce(
-            (sum, a) => sum + a.score / a.total_questions,
-            0
-          ) /
-            totalAttempts) *
-            100
-        )
-      : null;
 
   const manualRoadmapCompleted: Record<string, boolean> = {};
   roadmapProgress?.forEach((row) => {
@@ -152,9 +140,6 @@ export default async function DashboardPage() {
             <p className="font-heading mt-1 text-xl font-semibold">
               {quizzesTaken}
               <span className="text-sm text-zinc-500">/{totalQuizzes}</span>
-              {avgScore !== null && (
-                <span className="text-sm text-zinc-500"> · {avgScore}% avg</span>
-              )}
             </p>
             <Link
               href="/dashboard/quizzes"
