@@ -47,7 +47,7 @@ export function DashboardShell({
                 : "text-zinc-600 dark:text-zinc-400"
             }`}
           >
-            <item.Icon className="size-4" />
+            <item.Icon className="size-4 text-accent" />
             {item.label}
           </Link>
         ))}
@@ -72,7 +72,7 @@ export function DashboardShell({
                   : "text-zinc-600 hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/5"
               }`}
             >
-              <item.Icon className="size-4" />
+              <item.Icon className="size-4 text-accent" />
               {item.label}
             </Link>
           ))}
