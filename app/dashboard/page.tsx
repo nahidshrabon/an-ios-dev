@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               <span className="text-sm text-zinc-500">/{totalArticles}</span>
             </p>
             <Link
-              href="/dashboard/progress"
+              href="/articles"
               className="mt-2 inline-block text-sm underline"
             >
               View all articles →

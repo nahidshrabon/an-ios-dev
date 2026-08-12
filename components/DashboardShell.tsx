@@ -10,7 +10,7 @@ import { TestIcon } from "@/components/HowItWorksIcons";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", Icon: HomeIcon },
   { href: "/dashboard/roadmap", label: "Roadmap", Icon: FlagIcon },
-  { href: "/dashboard/progress", label: "Articles", Icon: ArticleIcon },
+  { href: "/articles", label: "Articles", Icon: ArticleIcon },
   { href: "/dashboard/quizzes", label: "Quizzes", Icon: TestIcon },
 ];
 
