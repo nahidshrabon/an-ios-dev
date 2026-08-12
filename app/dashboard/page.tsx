@@ -33,12 +33,18 @@ export default async function DashboardPage() {
 
   const totalArticles = getAllArticles().length;
   const readCount = progress?.filter((p) => p.status === "read").length ?? 0;
-  const totalAttempts = attempts?.length ?? 0;
-  const quizzesTaken = new Set(attempts?.map((a) => a.quiz_id) ?? []).size;
+
+  const allQuizIds = new Set(getAllQuizzes().map((q) => q.id));
+  const validAttempts = (attempts ?? []).filter((a) => allQuizIds.has(a.quiz_id));
+  const totalAttempts = validAttempts.length;
+  const quizzesTaken = new Set(validAttempts.map((a) => a.quiz_id)).size;
   const avgScore =
-    attempts && totalAttempts > 0
+    totalAttempts > 0
       ? Math.round(
-          (attempts.reduce((sum, a) => sum + a.score / a.total_questions, 0) /
+          (validAttempts.reduce(
+            (sum, a) => sum + a.score / a.total_questions,
+            0
+          ) /
             totalAttempts) *
             100
         )
