@@ -7,7 +7,7 @@ import {
   type RoadmapPart,
   type RoadmapSection,
 } from "@/lib/content/roadmap";
-import { ArrowRightIcon, ChevronDownIcon } from "@/components/Icons";
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
 export function RoadmapChecklist({
@@ -143,13 +143,20 @@ export function RoadmapChecklist({
                           }`}
                         >
                           <span className="flex flex-1 items-center gap-3 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={done}
-                              disabled
+                            <span
+                              role="img"
+                              aria-label={done ? "Completed" : "Not completed"}
                               title="Synced automatically from the article's reading status"
-                              className="pointer-events-none size-4 shrink-0 accent-foreground disabled:opacity-60"
-                            />
+                              className={`flex size-4 shrink-0 items-center justify-center rounded ${
+                                done
+                                  ? "bg-green-700 dark:bg-green-600"
+                                  : "border border-black/20 dark:border-white/20"
+                              }`}
+                            >
+                              {done && (
+                                <CheckIcon className="size-3 text-white" />
+                              )}
+                            </span>
                             <span
                               className={`font-heading ${
                                 done
