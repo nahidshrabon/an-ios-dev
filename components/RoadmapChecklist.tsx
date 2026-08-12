@@ -73,7 +73,10 @@ export function RoadmapChecklist({
       </p>
 
       {nextSection && (
-        <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent/20 bg-accent/5 p-5">
+        <Link
+          href={`/articles/${nextSection.articleSlug}?from=roadmap`}
+          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent/20 bg-accent/5 p-5 transition-colors hover:bg-accent/10"
+        >
           <div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Next up
@@ -82,14 +85,11 @@ export function RoadmapChecklist({
               {nextSection.number}. {nextSection.title}
             </p>
           </div>
-          <Link
-            href={`/articles/${nextSection.articleSlug}?from=roadmap`}
-            className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white"
-          >
+          <span className="font-heading inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent">
             Continue
             <ArrowRightIcon className="size-4" />
-          </Link>
-        </div>
+          </span>
+        </Link>
       )}
 
       <div className="mt-6 flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
