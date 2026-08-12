@@ -23,7 +23,7 @@ export default async function DashboardPage() {
         .eq("user_id", userId),
       supabase
         .from("quiz_attempts")
-        .select("score, total_questions")
+        .select("quiz_id, score, total_questions")
         .eq("user_id", userId),
       supabase
         .from("roadmap_progress")
@@ -33,12 +33,13 @@ export default async function DashboardPage() {
 
   const totalArticles = getAllArticles().length;
   const readCount = progress?.filter((p) => p.status === "read").length ?? 0;
-  const quizzesTaken = attempts?.length ?? 0;
+  const totalAttempts = attempts?.length ?? 0;
+  const quizzesTaken = new Set(attempts?.map((a) => a.quiz_id) ?? []).size;
   const avgScore =
-    attempts && quizzesTaken > 0
+    attempts && totalAttempts > 0
       ? Math.round(
           (attempts.reduce((sum, a) => sum + a.score / a.total_questions, 0) /
-            quizzesTaken) *
+            totalAttempts) *
             100
         )
       : null;
