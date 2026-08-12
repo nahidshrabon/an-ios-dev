@@ -4,13 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { HomeIcon, FlagIcon, ArticleIcon } from "@/components/Icons";
+import { HomeIcon, FlagIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Overview", Icon: HomeIcon },
   { href: "/dashboard/roadmap", label: "Roadmap", Icon: FlagIcon },
-  { href: "/articles", label: "Articles", Icon: ArticleIcon },
   { href: "/dashboard/quizzes", label: "Quizzes", Icon: TestIcon },
 ];
 
