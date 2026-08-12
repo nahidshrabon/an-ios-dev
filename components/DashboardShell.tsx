@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
+import { Logomark } from "@/components/Logomark";
 import { HomeIcon, FlagIcon, ArticleIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 
@@ -31,7 +32,11 @@ export function DashboardShell({
     <div className="flex flex-1 flex-col md:flex-row">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10 md:hidden">
-        <Link href="/" className="font-heading font-semibold tracking-tight">
+        <Link
+          href="/"
+          className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
+        >
+          <Logomark className="size-6" />
           Home
         </Link>
         <SignOutButton />
@@ -43,7 +48,7 @@ export function DashboardShell({
             href={item.href}
             className={`font-heading inline-flex items-center gap-1.5 whitespace-nowrap ${
               isActive(item.href)
-                ? "font-medium text-foreground"
+                ? "font-medium text-accent"
                 : "text-zinc-600 dark:text-zinc-400"
             }`}
           >
@@ -57,18 +62,19 @@ export function DashboardShell({
       <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:sticky md:top-0 md:flex md:h-screen">
         <Link
           href="/"
-          className="font-heading px-2 font-semibold tracking-tight"
+          className="font-heading inline-flex items-center gap-2 px-2 font-semibold tracking-tight"
         >
+          <Logomark className="size-6" />
           Home
         </Link>
-        <nav className="mt-8 flex flex-col gap-1">
+        <nav className="mt-6 flex flex-col gap-1 border-t border-black/10 pt-6 dark:border-white/10">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={`font-heading flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                 isActive(item.href)
-                  ? "bg-black/5 font-medium text-foreground dark:bg-white/10"
+                  ? "bg-accent/10 font-medium text-accent"
                   : "text-zinc-600 hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/5"
               }`}
             >
@@ -79,9 +85,14 @@ export function DashboardShell({
         </nav>
         <div className="mt-auto flex flex-col gap-3 border-t border-black/10 pt-4 dark:border-white/10">
           {email && (
-            <span className="truncate px-3 text-sm text-zinc-600 dark:text-zinc-400">
-              {email}
-            </span>
+            <div className="flex items-center gap-2 px-3">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
+                {email[0]?.toUpperCase()}
+              </div>
+              <span className="truncate text-sm text-zinc-600 dark:text-zinc-400">
+                {email}
+              </span>
+            </div>
           )}
           <div className="px-3">
             <SignOutButton />
