@@ -142,21 +142,7 @@ export function RoadmapChecklist({
                               : "hover:bg-black/[.03] dark:hover:bg-white/5"
                           }`}
                         >
-                          <span className="flex flex-1 items-center gap-3 text-sm">
-                            <span
-                              role="img"
-                              aria-label={done ? "Completed" : "Not completed"}
-                              title="Synced automatically from the article's reading status"
-                              className={`flex size-4 shrink-0 items-center justify-center rounded ${
-                                done
-                                  ? "bg-green-700 opacity-70 dark:bg-green-600"
-                                  : "border border-black/20 dark:border-white/20"
-                              }`}
-                            >
-                              {done && (
-                                <CheckIcon className="size-3 text-white" />
-                              )}
-                            </span>
+                          <span className="flex flex-1 items-center gap-1.5 text-sm">
                             <span
                               className={`font-heading ${
                                 done
@@ -166,6 +152,14 @@ export function RoadmapChecklist({
                             >
                               {sec.number}. {sec.title}
                             </span>
+                            {done && (
+                              <span
+                                title="Synced automatically from the article's reading status"
+                                className="shrink-0"
+                              >
+                                <CheckIcon className="size-4 text-green-700 opacity-70 dark:text-green-400" />
+                              </span>
+                            )}
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-500">
                             Read
