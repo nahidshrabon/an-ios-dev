@@ -72,41 +72,43 @@ export function RoadmapChecklist({
         their article is ready.
       </p>
 
-      {nextSection && (
-        <Link
-          href={`/articles/${nextSection.articleSlug}?from=roadmap`}
-          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent/20 bg-accent/5 p-5 transition-colors hover:bg-accent/10"
-        >
+      <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">
+        <div className="flex items-center gap-4 p-5 sm:flex-1">
+          <ProgressRing percent={percent}>
+            <span className="font-heading text-sm font-semibold">
+              {percent}%
+            </span>
+          </ProgressRing>
           <div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Next up
+            <p className="font-heading text-base text-zinc-600 dark:text-zinc-400">
+              Roadmap progress
             </p>
-            <p className="font-heading mt-1 text-lg font-semibold">
-              {nextSection.number}. {nextSection.title}
+            <p className="font-heading mt-1 text-3xl font-semibold">
+              {completedCount}
+              <span className="text-lg text-zinc-500">/{totalSections}</span>
             </p>
           </div>
-          <span className="font-heading inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent">
-            Continue
-            <ArrowRightIcon className="size-4" />
-          </span>
-        </Link>
-      )}
-
-      <div className="mt-6 flex items-center gap-4 rounded-xl border border-black/10 p-5 dark:border-white/10">
-        <ProgressRing percent={percent}>
-          <span className="font-heading text-sm font-semibold">
-            {percent}%
-          </span>
-        </ProgressRing>
-        <div>
-          <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
-            Roadmap progress
-          </p>
-          <p className="font-heading mt-1 text-xl font-semibold">
-            {completedCount}
-            <span className="text-sm text-zinc-500">/{totalSections}</span>
-          </p>
         </div>
+
+        {nextSection && (
+          <div className="flex items-center justify-between gap-4 border-t border-black/10 p-5 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10">
+            <div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Next up
+              </p>
+              <p className="font-heading mt-1 text-lg font-semibold">
+                {nextSection.number}. {nextSection.title}
+              </p>
+            </div>
+            <Link
+              href={`/articles/${nextSection.articleSlug}?from=roadmap`}
+              className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white"
+            >
+              Continue
+              <ArrowRightIcon className="size-4" />
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
