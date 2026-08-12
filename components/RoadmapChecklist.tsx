@@ -73,36 +73,36 @@ export function RoadmapChecklist({
       </p>
 
       <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">
-        <div className="flex items-center gap-4 p-5 sm:flex-1">
-          <ProgressRing percent={percent}>
-            <span className="font-heading text-sm font-semibold">
+        <div className="flex items-center gap-3 p-4 sm:flex-1">
+          <ProgressRing percent={percent} size={44} strokeWidth={4}>
+            <span className="font-heading text-xs font-semibold">
               {percent}%
             </span>
           </ProgressRing>
           <div>
-            <p className="font-heading text-base text-zinc-600 dark:text-zinc-400">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
               Roadmap progress
             </p>
-            <p className="font-heading mt-1 text-3xl font-semibold">
+            <p className="font-heading mt-0.5 text-xl font-semibold">
               {completedCount}
-              <span className="text-lg text-zinc-500">/{totalSections}</span>
+              <span className="text-sm text-zinc-500">/{totalSections}</span>
             </p>
           </div>
         </div>
 
         {nextSection && (
-          <div className="flex items-center justify-between gap-4 border-t border-black/10 p-5 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10">
+          <div className="flex items-center justify-between gap-4 border-t border-black/10 p-4 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10">
             <div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Next up
               </p>
-              <p className="font-heading mt-1 text-lg font-semibold">
+              <p className="font-heading mt-0.5 text-base font-semibold">
                 {nextSection.number}. {nextSection.title}
               </p>
             </div>
             <Link
               href={`/articles/${nextSection.articleSlug}?from=roadmap`}
-              className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white"
+              className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-white"
             >
               Continue
               <ArrowRightIcon className="size-4" />
