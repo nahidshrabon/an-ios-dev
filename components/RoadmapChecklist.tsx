@@ -76,7 +76,7 @@ export function RoadmapChecklist({
         <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent/20 bg-accent/5 p-5">
           <div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Continue where you left off
+              Next up
             </p>
             <p className="font-heading mt-1 text-lg font-semibold">
               {nextSection.number}. {nextSection.title}
