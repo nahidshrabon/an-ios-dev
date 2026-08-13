@@ -24,7 +24,7 @@ export default function UpdatePasswordPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/roadmap");
     router.refresh();
   }
 

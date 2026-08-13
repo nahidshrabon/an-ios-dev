@@ -119,14 +119,3 @@ export function ArrowRightIcon({ className }: IconProps) {
     </svg>
   );
 }
-
-export function DashboardIcon({ className }: IconProps) {
-  return (
-    <svg {...shared} className={className} aria-hidden="true">
-      <rect x="4" y="4" width="7" height="7" rx="1.5" />
-      <rect x="13" y="4" width="7" height="7" rx="1.5" />
-      <rect x="4" y="13" width="7" height="7" rx="1.5" />
-      <rect x="13" y="13" width="7" height="7" rx="1.5" />
-    </svg>
-  );
-}

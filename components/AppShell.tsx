@@ -4,16 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { HomeIcon, FlagIcon } from "@/components/Icons";
+import { FlagIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview", Icon: HomeIcon },
-  { href: "/dashboard/roadmap", label: "Roadmap", Icon: FlagIcon },
-  { href: "/dashboard/quizzes", label: "Quizzes", Icon: TestIcon },
+  { href: "/roadmap", label: "Roadmap", Icon: FlagIcon },
+  { href: "/quizzes", label: "Quizzes", Icon: TestIcon },
 ];
 
-export function DashboardShell({
+export function AppShell({
   email,
   children,
 }: {
@@ -23,7 +22,6 @@ export function DashboardShell({
   const pathname = usePathname();
 
   function isActive(href: string) {
-    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   }
 

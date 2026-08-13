@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { ArticleIcon, DashboardIcon } from "@/components/Icons";
+import { ArticleIcon, FlagIcon } from "@/components/Icons";
 
 export function Nav() {
   const [supabase] = useState(() => createClient());
@@ -51,11 +51,11 @@ export function Nav() {
           {userEmail === undefined ? null : userEmail ? (
             <>
               <Link
-                href="/dashboard"
+                href="/roadmap"
                 className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
-                <DashboardIcon className="size-4 text-accent" />
-                Dashboard
+                <FlagIcon className="size-4 text-accent" />
+                Roadmap
               </Link>
               <SignOutButton />
             </>

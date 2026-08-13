@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient, getClaims } from "@/lib/supabase/server";
-import { DashboardShell } from "@/components/DashboardShell";
+import { AppShell } from "@/components/AppShell";
 
-export default async function DashboardLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -28,5 +28,5 @@ export default async function DashboardLayout({
     }
   }
 
-  return <DashboardShell email={email}>{children}</DashboardShell>;
+  return <AppShell email={email}>{children}</AppShell>;
 }

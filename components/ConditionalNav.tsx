@@ -5,7 +5,7 @@ import { Nav } from "@/components/Nav";
 
 export function ConditionalNav() {
   const pathname = usePathname();
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/roadmap") || pathname.startsWith("/quizzes")) {
     return null;
   }
   return <Nav />;

@@ -34,16 +34,17 @@ export async function updateSession(request: NextRequest) {
   // failure (data: null, error: AuthError) — e.g. a cold serverless
   // instance failing to fetch the JWKS on its first request. Only the
   // "no session" case means the user is actually logged out; an error
-  // is inconclusive; the dashboard layout re-checks server-side anyway,
+  // is inconclusive; the app layout re-checks server-side anyway,
   // so this proxy check can fail open rather than bouncing a valid
   // session to /login over a transient blip.
   const { data, error } = await supabase.auth.getClaims();
   const definitelyLoggedOut = error === null && !data?.claims;
 
-  if (
-    request.nextUrl.pathname.startsWith("/dashboard") &&
-    definitelyLoggedOut
-  ) {
+  const isGatedRoute =
+    request.nextUrl.pathname.startsWith("/roadmap") ||
+    request.nextUrl.pathname.startsWith("/quizzes");
+
+  if (isGatedRoute && definitelyLoggedOut) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);

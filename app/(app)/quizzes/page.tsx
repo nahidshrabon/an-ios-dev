@@ -34,7 +34,7 @@ export default async function QuizzesPage() {
             >
               <div>
                 <Link
-                  href={`/dashboard/quizzes/${quiz.id}`}
+                  href={`/quizzes/${quiz.id}`}
                   className="font-heading font-medium hover:underline"
                 >
                   {quiz.title}

@@ -87,7 +87,7 @@ export default async function ArticlePage({ params }: Props) {
             {relatedQuiz.description}
           </p>
           <Link
-            href={`/dashboard/quizzes/${relatedQuiz.id}`}
+            href={`/quizzes/${relatedQuiz.id}`}
             className="mt-3 inline-block text-sm underline"
           >
             Take this quiz

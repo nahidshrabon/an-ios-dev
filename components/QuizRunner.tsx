@@ -71,7 +71,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
           </div>
         </div>
         <Link
-          href="/dashboard/quizzes"
+          href="/quizzes"
           className="mt-1.5 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
         >
           <ArrowLeftIcon className="size-4" />

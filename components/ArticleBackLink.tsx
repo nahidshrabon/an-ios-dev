@@ -8,7 +8,7 @@ export function ArticleBackLink() {
   const searchParams = useSearchParams();
   const fromRoadmap = searchParams.get("from") === "roadmap";
 
-  const href = fromRoadmap ? "/dashboard/roadmap" : "/articles";
+  const href = fromRoadmap ? "/roadmap" : "/articles";
   const label = fromRoadmap ? "Roadmap" : "All articles";
 
   return (
