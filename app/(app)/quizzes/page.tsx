@@ -4,18 +4,10 @@ import { getAllQuizzes } from "@/lib/content/quizzes";
 import { roadmap } from "@/lib/content/roadmap";
 import { ArrowRightIcon, ChevronDownIcon, TrophyIcon } from "@/components/Icons";
 
-const quizEntryColors = [
-  "border-sky-200/70 bg-sky-50/80 hover:bg-sky-100/80 dark:border-sky-400/15 dark:bg-sky-400/10 dark:hover:bg-sky-400/15",
-  "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15",
-  "border-amber-200/70 bg-amber-50/80 hover:bg-amber-100/80 dark:border-amber-400/15 dark:bg-amber-400/10 dark:hover:bg-amber-400/15",
-  "border-rose-200/70 bg-rose-50/80 hover:bg-rose-100/80 dark:border-rose-400/15 dark:bg-rose-400/10 dark:hover:bg-rose-400/15",
-  "border-violet-200/70 bg-violet-50/80 hover:bg-violet-100/80 dark:border-violet-400/15 dark:bg-violet-400/10 dark:hover:bg-violet-400/15",
-  "border-cyan-200/70 bg-cyan-50/80 hover:bg-cyan-100/80 dark:border-cyan-400/15 dark:bg-cyan-400/10 dark:hover:bg-cyan-400/15",
-];
-
-function getQuizEntryColor(sectionNumber: number): string {
-  return quizEntryColors[(sectionNumber - 1) % quizEntryColors.length];
-}
+const takenQuizEntryColor =
+  "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
+const notTakenQuizEntryColor =
+  "border-sky-200/70 bg-sky-50/80 hover:bg-sky-100/80 dark:border-sky-400/15 dark:bg-sky-400/10 dark:hover:bg-sky-400/15";
 
 export default async function QuizzesPage() {
   const { data: claims } = await getClaims();
@@ -87,9 +79,9 @@ export default async function QuizzesPage() {
                     <li key={quiz.id}>
                       <Link
                         href={`/quizzes/${quiz.id}`}
-                        className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors ${getQuizEntryColor(
-                          section.number
-                        )}`}
+                        className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors ${
+                          best ? takenQuizEntryColor : notTakenQuizEntryColor
+                        }`}
                       >
                         <span className="min-w-0 flex-1">
                           <span className="font-heading block truncate text-sm">
