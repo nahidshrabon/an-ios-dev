@@ -6,7 +6,7 @@ A public learning tracker for iOS development: read articles, track your progres
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
 - [Supabase](https://supabase.com) — Postgres + Auth (email/password and Google OAuth), accessed via `@supabase/ssr`
-- Deployed on [Vercel](https://vercel.com)
+- Deployed on [Netlify](https://netlify.com)
 
 Articles and quiz content are hardcoded in `lib/content/` — only reading progress and quiz results are stored in Supabase.
 
