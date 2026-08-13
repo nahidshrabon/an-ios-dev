@@ -2,12 +2,17 @@ import Link from "next/link";
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { roadmap } from "@/lib/content/roadmap";
-import { ArrowRightIcon, ChevronDownIcon, TrophyIcon } from "@/components/Icons";
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  TrophyIcon,
+} from "@/components/Icons";
 
 const takenQuizEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
 const notTakenQuizEntryColor =
-  "border-sky-200/70 bg-sky-50/80 hover:bg-sky-100/80 dark:border-sky-400/15 dark:bg-sky-400/10 dark:hover:bg-sky-400/15";
+  "border-black/10 bg-transparent hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/5";
 
 export default async function QuizzesPage() {
   const { data: claims } = await getClaims();
@@ -86,6 +91,9 @@ export default async function QuizzesPage() {
                         <span className="min-w-0 flex-1">
                           <span className="font-heading block truncate text-sm">
                             {section.number}. {section.title}
+                            {best && (
+                              <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
+                            )}
                           </span>
                           <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">
                             {quiz.description}

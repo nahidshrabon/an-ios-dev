@@ -10,6 +10,11 @@ import {
 import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
+const completedRoadmapEntryColor =
+  "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
+const incompleteRoadmapEntryColor =
+  "border-black/10 bg-transparent hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/5";
+
 export function RoadmapChecklist({
   parts,
   manualCompleted,
@@ -138,30 +143,19 @@ export function RoadmapChecklist({
                       <li key={sec.id}>
                         <Link
                           href={`/articles/${sec.articleSlug}?from=roadmap`}
-                          className={`flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 transition-colors ${
+                          className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors ${
                             done
-                              ? "bg-green-700/5 hover:bg-green-700/10"
-                              : "hover:bg-black/[.03] dark:hover:bg-white/5"
+                              ? completedRoadmapEntryColor
+                              : incompleteRoadmapEntryColor
                           }`}
                         >
-                          <span className="flex flex-1 items-center gap-1.5 text-sm">
-                            <span
-                              className={`font-heading ${
-                                done
-                                  ? "text-green-700 dark:text-green-400"
-                                  : ""
-                              }`}
-                            >
+                          <span className="min-w-0 flex-1 text-sm">
+                            <span className="font-heading block truncate">
                               {sec.number}. {sec.title}
+                              {done && (
+                                <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
+                              )}
                             </span>
-                            {done && (
-                              <span
-                                title="Synced automatically from the article's reading status"
-                                className="shrink-0"
-                              >
-                                <CheckIcon className="size-4 text-green-700 opacity-70 dark:text-green-400" />
-                              </span>
-                            )}
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-500">
                             Read
@@ -175,7 +169,7 @@ export function RoadmapChecklist({
                   return (
                     <li
                       key={sec.id}
-                      className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 opacity-50"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-transparent px-3 py-2 opacity-50 dark:border-white/10"
                     >
                       <span className="flex flex-1 items-center gap-3 text-sm">
                         <input
