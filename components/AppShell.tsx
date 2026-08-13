@@ -82,14 +82,9 @@ export function AppShell({
         </nav>
         <div className="mt-auto flex flex-col gap-3 border-t border-black/10 pt-4 dark:border-white/10">
           {email && (
-            <div className="flex items-center gap-2 px-3">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
-                {email[0]?.toUpperCase()}
-              </div>
-              <span className="truncate text-sm text-zinc-600 dark:text-zinc-400">
-                {email}
-              </span>
-            </div>
+            <span className="truncate px-3 text-sm text-zinc-600 dark:text-zinc-400">
+              {email}
+            </span>
           )}
           <div className="px-3">
             <SignOutButton />
