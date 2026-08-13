@@ -24,7 +24,7 @@ Articles and quiz content are hardcoded in `lib/content/` — only reading progr
 
 ## Project structure
 
-- `app/` — routes (App Router). Public: `/`, `/articles`, `/articles/[slug]`. Gated behind login: `/dashboard/*`.
+- `app/` — routes (App Router). Public: `/`, `/articles`, `/articles/[slug]`. Gated behind login: `/roadmap`, `/quizzes/*`.
 - `lib/content/` — hardcoded articles and quizzes.
 - `lib/supabase/` — Supabase client setup (`server.ts` for Server Components/Route Handlers, `client.ts` for Client Components).
 - `proxy.ts` — refreshes the Supabase session cookie on each request (Next.js 16 renamed `middleware.ts` to `proxy.ts`).
