@@ -19,7 +19,7 @@ export default async function BookmarksPage() {
     .from("bookmarks")
     .select("article_slug, heading_slug, heading_title, created_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   const groups = new Map<string, BookmarkRow[]>();
   (bookmarks as BookmarkRow[] | null)?.forEach((b) => {
