@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useBookmarksContext } from "@/components/BookmarksProvider";
-import { BookmarkIcon } from "@/components/Icons";
+import { BookmarkIcon, SpinnerIcon } from "@/components/Icons";
 import { addBookmark, removeBookmark } from "@/lib/actions/bookmarks";
 
 export function BookmarkToggle({
@@ -27,6 +27,14 @@ export function BookmarkToggle({
     } else {
       await removeBookmark(articleSlug, headingSlug);
     }
+  }
+
+  if (userId === undefined) {
+    return (
+      <span className="-m-1 inline-flex shrink-0 items-center justify-center p-1 align-middle text-zinc-300 dark:text-zinc-600">
+        <SpinnerIcon className="size-6 animate-spin" />
+      </span>
+    );
   }
 
   if (!userId) {
