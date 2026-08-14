@@ -3,9 +3,9 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { roadmap } from "@/lib/content/roadmap";
 import {
-  ArrowRightIcon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   TrophyIcon,
 } from "@/components/Icons";
 
@@ -106,10 +106,7 @@ export default async function QuizzesPage() {
                               {best.score}/{best.total}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1">
-                            Start
-                            <ArrowRightIcon className="size-3" />
-                          </span>
+                          <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
                         </span>
                       </Link>
                     </li>
