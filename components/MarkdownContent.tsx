@@ -5,6 +5,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import swift from "highlight.js/lib/languages/swift";
 import { BookmarkToggle } from "@/components/BookmarkToggle";
+import { BookmarksProvider } from "@/components/BookmarksProvider";
 
 function nodeText(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") {
@@ -33,7 +34,7 @@ export function MarkdownContent({
   content: string;
   articleSlug?: string;
 }) {
-  return (
+  const markdown = (
     <div className="markdown-content font-article">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -149,5 +150,13 @@ export function MarkdownContent({
         {content}
       </ReactMarkdown>
     </div>
+  );
+
+  return articleSlug ? (
+    <BookmarksProvider key={articleSlug} articleSlug={articleSlug}>
+      {markdown}
+    </BookmarksProvider>
+  ) : (
+    markdown
   );
 }
