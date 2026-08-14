@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BookmarkIcon } from "@/components/Icons";
+import { addBookmark, removeBookmark } from "@/lib/actions/bookmarks";
 
 export function BookmarkToggle({
   articleSlug,
@@ -48,19 +49,9 @@ export function BookmarkToggle({
     const next = !bookmarked;
     setBookmarked(next);
     if (next) {
-      await supabase.from("bookmarks").insert({
-        user_id: userId,
-        article_slug: articleSlug,
-        heading_slug: headingSlug,
-        heading_title: headingTitle,
-      });
+      await addBookmark(articleSlug, headingSlug, headingTitle);
     } else {
-      await supabase
-        .from("bookmarks")
-        .delete()
-        .eq("user_id", userId)
-        .eq("article_slug", articleSlug)
-        .eq("heading_slug", headingSlug);
+      await removeBookmark(articleSlug, headingSlug);
     }
   }
 
