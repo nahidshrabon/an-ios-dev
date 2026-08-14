@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getArticle } from "@/lib/content/articles";
-import { ArrowRightIcon } from "@/components/Icons";
+import { ChevronRightIcon } from "@/components/Icons";
 
 type BookmarkRow = {
   article_slug: string;
@@ -64,7 +64,7 @@ export default async function BookmarksPage() {
                       <span className="min-w-0 flex-1 truncate">
                         {b.heading_title}
                       </span>
-                      <ArrowRightIcon className="size-3 shrink-0 text-zinc-500" />
+                      <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
                     </Link>
                   </li>
                 ))}
