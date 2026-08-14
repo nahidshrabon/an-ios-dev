@@ -22,23 +22,20 @@ export function BookmarkToggle({
     let active = true;
 
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!active) return;
-      setUserId(user?.id ?? null);
-
-      if (user) {
-        const { data } = await supabase
+      const [{ data: userData }, { data: existing }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
           .from("bookmarks")
           .select("id")
           .eq("article_slug", articleSlug)
           .eq("heading_slug", headingSlug)
-          .maybeSingle();
-        if (active) {
-          setBookmarked(!!data);
-        }
-      }
+          .maybeSingle(),
+      ]);
+      if (!active) return;
+      // Set both together so the button never renders an intermediate
+      // "not bookmarked" frame before flipping to its real state.
+      setBookmarked(!!existing);
+      setUserId(userData.user?.id ?? null);
     })();
 
     return () => {
