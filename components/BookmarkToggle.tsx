@@ -82,7 +82,7 @@ export function BookmarkToggle({
           : "text-zinc-400 hover:bg-accent/10 hover:text-accent dark:text-zinc-500"
       }`}
     >
-      <BookmarkIcon className="size-5" filled={bookmarked} />
+      <BookmarkIcon className="size-6" filled={bookmarked} />
     </button>
   );
 }
