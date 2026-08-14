@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
 import swift from "highlight.js/lib/languages/swift";
 
 export function MarkdownContent({ content }: { content: string }) {
@@ -8,15 +9,18 @@ export function MarkdownContent({ content }: { content: string }) {
     <div className="markdown-content font-article">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[[rehypeHighlight, { languages: { swift } }]]}
+        rehypePlugins={[rehypeSlug, [rehypeHighlight, { languages: { swift } }]]}
         components={{
-          h2: ({ children }) => (
-            <h2 className="font-heading mt-10 text-xl font-semibold first:mt-0">
+          h2: ({ id, children }) => (
+            <h2
+              id={id}
+              className="font-heading mt-10 text-xl font-semibold first:mt-0"
+            >
               {children}
             </h2>
           ),
-          h3: ({ children }) => (
-            <h3 className="font-heading mt-8 text-lg font-medium">
+          h3: ({ id, children }) => (
+            <h3 id={id} className="font-heading mt-8 text-lg font-medium">
               {children}
             </h3>
           ),
