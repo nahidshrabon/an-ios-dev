@@ -76,13 +76,13 @@ export function BookmarkToggle({
       onClick={toggle}
       title={bookmarked ? "Remove bookmark" : "Bookmark this section"}
       aria-label={bookmarked ? "Remove bookmark" : "Bookmark this section"}
-      className={`inline-flex shrink-0 align-middle transition-colors ${
+      className={`-m-1 inline-flex shrink-0 items-center justify-center rounded-full p-1 align-middle transition-all hover:scale-110 ${
         bookmarked
-          ? "text-accent"
-          : "text-zinc-400 hover:text-zinc-600 dark:text-zinc-600 dark:hover:text-zinc-400"
+          ? "text-accent hover:bg-accent/10"
+          : "text-zinc-400 hover:bg-accent/10 hover:text-accent dark:text-zinc-500"
       }`}
     >
-      <BookmarkIcon className="size-4" filled={bookmarked} />
+      <BookmarkIcon className="size-5" filled={bookmarked} />
     </button>
   );
 }
