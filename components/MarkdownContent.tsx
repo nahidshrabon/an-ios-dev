@@ -1,10 +1,38 @@
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import swift from "highlight.js/lib/languages/swift";
+import { BookmarkToggle } from "@/components/BookmarkToggle";
 
-export function MarkdownContent({ content }: { content: string }) {
+function nodeText(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(nodeText).join("");
+  }
+  if (
+    node &&
+    typeof node === "object" &&
+    "props" in node &&
+    node.props &&
+    typeof node.props === "object" &&
+    "children" in node.props
+  ) {
+    return nodeText(node.props.children as ReactNode);
+  }
+  return "";
+}
+
+export function MarkdownContent({
+  content,
+  articleSlug,
+}: {
+  content: string;
+  articleSlug?: string;
+}) {
   return (
     <div className="markdown-content font-article">
       <ReactMarkdown
@@ -14,14 +42,31 @@ export function MarkdownContent({ content }: { content: string }) {
           h2: ({ id, children }) => (
             <h2
               id={id}
-              className="font-heading mt-10 text-xl font-semibold first:mt-0"
+              className="font-heading mt-10 flex items-center gap-2 text-xl font-semibold first:mt-0"
             >
               {children}
+              {articleSlug && id && (
+                <BookmarkToggle
+                  articleSlug={articleSlug}
+                  headingSlug={id}
+                  headingTitle={nodeText(children)}
+                />
+              )}
             </h2>
           ),
           h3: ({ id, children }) => (
-            <h3 id={id} className="font-heading mt-8 text-lg font-medium">
+            <h3
+              id={id}
+              className="font-heading mt-8 flex items-center gap-2 text-lg font-medium"
+            >
               {children}
+              {articleSlug && id && (
+                <BookmarkToggle
+                  articleSlug={articleSlug}
+                  headingSlug={id}
+                  headingTitle={nodeText(children)}
+                />
+              )}
             </h3>
           ),
           p: ({ children }) => (

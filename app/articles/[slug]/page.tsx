@@ -75,7 +75,7 @@ export default async function ArticlePage({ params }: Props) {
       </p>
 
       <div className="mt-10">
-        <MarkdownContent content={article.content} />
+        <MarkdownContent content={article.content} articleSlug={article.slug} />
       </div>
 
       <ReadingStatusControl slug={article.slug} />

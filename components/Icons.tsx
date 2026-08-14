@@ -127,3 +127,19 @@ export function ArrowRightIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function BookmarkIcon({
+  className,
+  filled,
+}: IconProps & { filled?: boolean }) {
+  return (
+    <svg
+      {...shared}
+      fill={filled ? "currentColor" : "none"}
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M6 4h12v16l-6-4-6 4V4Z" />
+    </svg>
+  );
+}
