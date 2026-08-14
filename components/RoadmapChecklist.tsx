@@ -7,7 +7,12 @@ import {
   type RoadmapPart,
   type RoadmapSection,
 } from "@/lib/content/roadmap";
-import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@/components/Icons";
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
 const completedRoadmapEntryColor =
@@ -70,8 +75,8 @@ export function RoadmapChecklist({
 
       <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
         Sections with a{" "}
-        <strong className="font-medium text-foreground">Read →</strong> link
-        have a published article — those check themselves automatically as
+        <strong className="font-medium text-foreground">›</strong> link have
+        a published article — those check themselves automatically as
         soon as you mark that article read on its page. Sections without a
         published article yet are dimmed and can&apos;t be checked off until
         their article is ready.
@@ -157,10 +162,7 @@ export function RoadmapChecklist({
                               )}
                             </span>
                           </span>
-                          <span className="inline-flex shrink-0 items-center gap-1 text-xs text-zinc-500">
-                            Read
-                            <ArrowRightIcon className="size-3" />
-                          </span>
+                          <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
                         </Link>
                       </li>
                     );
