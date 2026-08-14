@@ -1,4 +1,4 @@
-# Become an iOS Developer
+# an iOS dev
 
 A public learning tracker for iOS development: read articles, track your progress, take quizzes, and see your history sync across devices.
 

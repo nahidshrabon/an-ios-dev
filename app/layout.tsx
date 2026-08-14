@@ -26,8 +26,8 @@ const literata = Literata({
 
 export const metadata: Metadata = {
   title: {
-    default: "Become an iOS Developer",
-    template: "%s | Become an iOS Developer",
+    default: "an iOS dev",
+    template: "%s | an iOS dev",
   },
   description:
     "Learn iOS development with short articles, track your reading progress, and test yourself with quizzes.",

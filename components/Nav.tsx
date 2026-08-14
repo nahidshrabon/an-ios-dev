@@ -37,7 +37,7 @@ export function Nav() {
         >
           <Logomark className="size-7" />
           <span>
-            Become an <span className="text-accent">iOS</span> Developer
+            an <span className="text-accent">iOS</span> dev
           </span>
         </Link>
         <nav className="flex items-center gap-6 text-sm">
