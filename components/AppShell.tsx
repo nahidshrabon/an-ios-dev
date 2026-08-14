@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { FlagIcon } from "@/components/Icons";
+import { BookmarkIcon, FlagIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
   { href: "/roadmap", label: "Roadmap", Icon: FlagIcon },
   { href: "/quizzes", label: "Quizzes", Icon: TestIcon },
+  { href: "/bookmarks", label: "Bookmarks", Icon: BookmarkIcon },
 ];
 
 export function AppShell({

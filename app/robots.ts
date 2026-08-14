@@ -8,7 +8,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/roadmap", "/roadmap/*", "/quizzes", "/quizzes/*", "/auth/*"],
+      disallow: [
+        "/roadmap",
+        "/roadmap/*",
+        "/quizzes",
+        "/quizzes/*",
+        "/bookmarks",
+        "/bookmarks/*",
+        "/auth/*",
+      ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };

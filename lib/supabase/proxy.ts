@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
 
   const isGatedRoute =
     request.nextUrl.pathname.startsWith("/roadmap") ||
-    request.nextUrl.pathname.startsWith("/quizzes");
+    request.nextUrl.pathname.startsWith("/quizzes") ||
+    request.nextUrl.pathname.startsWith("/bookmarks");
 
   if (isGatedRoute && definitelyLoggedOut) {
     const url = request.nextUrl.clone();
