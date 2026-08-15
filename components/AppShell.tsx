@@ -4,21 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { BookmarkIcon, FlagIcon } from "@/components/Icons";
+import { BookmarkIcon, FlagIcon, SettingsIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 
 const NAV_ITEMS = [
   { href: "/roadmap", label: "Roadmap", Icon: FlagIcon },
   { href: "/quizzes", label: "Quizzes", Icon: TestIcon },
   { href: "/bookmarks", label: "Bookmarks", Icon: BookmarkIcon },
+  { href: "/settings", label: "Settings", Icon: SettingsIcon },
 ];
 
 export function AppShell({
   email,
   children,
+  wrapContent = true,
+  showMobileBar = true,
 }: {
   email?: string;
   children: React.ReactNode;
+  /** Set false when children already provide their own <main> and padding. */
+  wrapContent?: boolean;
+  /** Set false to skip the mobile top bar/nav strip and show the sidebar on desktop only. */
+  showMobileBar?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -28,33 +35,37 @@ export function AppShell({
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
-      {/* Mobile top bar */}
-      <div className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10 md:hidden">
-        <Link
-          href="/"
-          className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
-        >
-          <Logomark className="size-6" />
-          Home
-        </Link>
-        <SignOutButton />
-      </div>
-      <nav className="flex gap-4 overflow-x-auto border-b border-black/10 px-6 py-3 text-sm dark:border-white/10 md:hidden">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`font-heading inline-flex items-center gap-1.5 whitespace-nowrap ${
-              isActive(item.href)
-                ? "font-medium text-accent"
-                : "text-zinc-600 dark:text-zinc-400"
-            }`}
-          >
-            <item.Icon className="size-4 text-accent" />
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      {showMobileBar && (
+        <>
+          {/* Mobile top bar */}
+          <div className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10 md:hidden">
+            <Link
+              href="/"
+              className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
+            >
+              <Logomark className="size-6" />
+              Home
+            </Link>
+            <SignOutButton />
+          </div>
+          <nav className="flex gap-4 overflow-x-auto border-b border-black/10 px-6 py-3 text-sm dark:border-white/10 md:hidden">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`font-heading inline-flex items-center gap-1.5 whitespace-nowrap ${
+                  isActive(item.href)
+                    ? "font-medium text-accent"
+                    : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                <item.Icon className="size-4 text-accent" />
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </>
+      )}
 
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:sticky md:top-0 md:flex md:h-screen">
@@ -94,9 +105,13 @@ export function AppShell({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 px-6 py-8 md:px-10 md:py-10">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
-      </main>
+      {wrapContent ? (
+        <main className="flex-1 px-6 py-8 md:px-10 md:py-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        </main>
+      ) : (
+        children
+      )}
     </div>
   );
 }

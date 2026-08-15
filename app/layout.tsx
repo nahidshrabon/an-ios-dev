@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
 import "highlight.js/styles/github-dark.css";
@@ -44,7 +45,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} ${literata.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <ConditionalNav />
+        <Suspense fallback={null}>
+          <ConditionalNav />
+        </Suspense>
         <div className="flex flex-1 flex-col">{children}</div>
       </body>
     </html>

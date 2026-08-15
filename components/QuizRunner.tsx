@@ -58,25 +58,23 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
   if (result) {
     return (
       <div>
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            {quiz.title}
-          </h1>
-          <div className="shrink-0 rounded-xl border border-accent/20 bg-accent/10 px-4 py-2 text-right">
-            <p className="font-heading text-2xl font-semibold text-accent">
-              {result.score}
-              <span className="text-base text-accent/70">/{result.total}</span>
-            </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Score</p>
-          </div>
-        </div>
         <Link
           href="/quizzes"
-          className="mt-1.5 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+          className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
         >
           <ArrowLeftIcon className="size-4" />
           Back to quizzes
         </Link>
+
+        <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">
+          {quiz.title}{" "}
+          <span className="font-heading inline-block rounded-full bg-accent/10 px-2.5 py-1 align-middle text-sm font-medium text-accent">
+            {result.score}/{result.total}
+          </span>
+        </h1>
+        <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
+          {quiz.description}
+        </p>
 
         <div className="mt-8 flex flex-col gap-6">
           {quiz.questions.map((question, i) => {
@@ -89,12 +87,10 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                 key={question.id}
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-article font-medium">
-                    {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
-                  </p>
+                <p className="font-article font-medium">
+                  {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>{" "}
                   <span
-                    className={`font-heading shrink-0 rounded-full px-2.5 py-1 text-sm ${
+                    className={`font-heading inline-block rounded-full px-2.5 py-1 align-middle text-sm ${
                       !wasAnswered
                         ? "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
                         : graded.correct
@@ -108,7 +104,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
                         ? "Correct"
                         : "Incorrect"}
                   </span>
-                </div>
+                </p>
                 <ul className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
@@ -162,7 +158,15 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">{quiz.title}</h1>
+      <Link
+        href="/quizzes"
+        className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+      >
+        <ArrowLeftIcon className="size-4" />
+        Back to quizzes
+      </Link>
+
+      <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">{quiz.title}</h1>
       <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
         {quiz.description}
       </p>

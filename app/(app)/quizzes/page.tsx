@@ -3,11 +3,13 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { roadmap } from "@/lib/content/roadmap";
 import {
+  ArrowRightIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   TrophyIcon,
 } from "@/components/Icons";
+import { ProgressRing } from "@/components/ProgressRing";
 
 const takenQuizEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
@@ -51,15 +53,61 @@ export default async function QuizzesPage() {
     }))
     .filter((part) => part.sections.length > 0);
 
+  const allQuizSections = quizParts.flatMap((part) => part.sections);
+  const totalQuizzes = allQuizSections.length;
+  const takenCount = allQuizSections.filter(
+    (section) => bestByQuiz[section.quiz!.id]
+  ).length;
+  const percent =
+    totalQuizzes > 0 ? Math.round((takenCount / totalQuizzes) * 100) : 0;
+  const nextSection = allQuizSections.find(
+    (section) => !bestByQuiz[section.quiz!.id]
+  );
+
   return (
     <div>
       <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Quizzes
       </h1>
-      <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-        Practice each published roadmap topic with a short quiz. Entries match
-        the roadmap numbering so you can move through them in order.
-      </p>
+
+      <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">
+        <div className="flex items-center gap-3 p-4 sm:flex-1">
+          <ProgressRing percent={percent} size={44} strokeWidth={4}>
+            <span className="font-heading text-xs font-semibold">
+              {percent}%
+            </span>
+          </ProgressRing>
+          <div>
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+              Quiz progress
+            </p>
+            <p className="font-heading mt-0.5 text-xl font-semibold">
+              {takenCount}
+              <span className="text-sm text-zinc-500">/{totalQuizzes}</span>
+            </p>
+          </div>
+        </div>
+
+        {nextSection && (
+          <div className="flex items-center justify-between gap-4 border-t border-black/10 p-4 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10">
+            <div>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Next up
+              </p>
+              <p className="font-heading mt-0.5 text-base font-semibold">
+                {nextSection.number}. {nextSection.title}
+              </p>
+            </div>
+            <Link
+              href={`/quizzes/${nextSection.quiz!.id}`}
+              className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-white"
+            >
+              Continue
+              <ArrowRightIcon className="size-4" />
+            </Link>
+          </div>
+        )}
+      </div>
 
       <div className="mt-6 flex flex-col gap-4">
         {quizParts.map((part) => {

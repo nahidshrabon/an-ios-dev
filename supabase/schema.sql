@@ -41,13 +41,18 @@ create policy "upsert own progress" on public.reading_progress
   for insert with check (auth.uid() = user_id);
 create policy "update own progress" on public.reading_progress
   for update using (auth.uid() = user_id);
+create policy "delete own progress" on public.reading_progress
+  for delete using (auth.uid() = user_id);
 
 create policy "select own attempts" on public.quiz_attempts
   for select using (auth.uid() = user_id);
 create policy "insert own attempts" on public.quiz_attempts
   for insert with check (auth.uid() = user_id);
+create policy "delete own attempts" on public.quiz_attempts
+  for delete using (auth.uid() = user_id);
 
--- No update/delete policy on quiz_attempts: attempts are immutable history.
+-- No update policy on quiz_attempts: past attempts can be cleared (e.g. via
+-- a progress reset) but not edited in place.
 
 create policy "select own roadmap progress" on public.roadmap_progress
   for select using (auth.uid() = user_id);
@@ -55,6 +60,8 @@ create policy "upsert own roadmap progress" on public.roadmap_progress
   for insert with check (auth.uid() = user_id);
 create policy "update own roadmap progress" on public.roadmap_progress
   for update using (auth.uid() = user_id);
+create policy "delete own roadmap progress" on public.roadmap_progress
+  for delete using (auth.uid() = user_id);
 
 create table if not exists public.bookmarks (
   id uuid primary key default gen_random_uuid(),

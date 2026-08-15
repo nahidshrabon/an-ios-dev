@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getAllArticles, getArticle } from "@/lib/content/articles";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { getRoadmapSectionByArticleSlug } from "@/lib/content/roadmap";
+import { createClient, getClaims } from "@/lib/supabase/server";
+import { AppShell } from "@/components/AppShell";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { ArticleBackLink } from "@/components/ArticleBackLink";
@@ -12,6 +14,7 @@ import { ArrowLeftIcon } from "@/components/Icons";
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 };
 
 export function generateStaticParams() {
@@ -38,8 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ArticlePage({ params }: Props) {
+export default async function ArticlePage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const article = getArticle(slug);
 
   if (!article) {
@@ -51,7 +55,20 @@ export default async function ArticlePage({ params }: Props) {
   );
   const section = getRoadmapSectionByArticleSlug(article.slug);
 
-  return (
+  // The left sidebar only replaces the top nav when arriving from the
+  // roadmap — direct/listing visits keep the plain top nav instead.
+  let email: string | undefined;
+  if (from === "roadmap") {
+    const { data, error } = await getClaims();
+    email = data?.claims.email as string | undefined;
+    if (!data?.claims && error) {
+      const supabase = await createClient();
+      const { data: userData } = await supabase.auth.getUser();
+      email = userData.user?.email;
+    }
+  }
+
+  const content = (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <Suspense
         fallback={
@@ -96,4 +113,14 @@ export default async function ArticlePage({ params }: Props) {
       )}
     </main>
   );
+
+  if (email) {
+    return (
+      <AppShell email={email} wrapContent={false} showMobileBar={false}>
+        {content}
+      </AppShell>
+    );
+  }
+
+  return content;
 }
