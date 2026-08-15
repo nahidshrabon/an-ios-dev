@@ -280,6 +280,24 @@ export const articles: Article[] = [
     publishedAt: "2026-08-08",
     content: loadBody("drawing-and-custom-graphics.md"),
   },
+  {
+    slug: "swiftui-architecture-and-internals",
+    title: "SwiftUI Architecture and Internals",
+    description:
+      "How SwiftUI actually works under the hood: ViewBuilder and TupleView, AnyView's real cost, custom ViewModifier and PreferenceKey for upward data flow, the Layout protocol, and diagnosing body invalidation storms.",
+    tags: ["swiftui", "architecture", "performance"],
+    publishedAt: "2026-08-15",
+    content: loadBody("swiftui-architecture-and-internals.md"),
+  },
+  {
+    slug: "liquid-glass-and-modern-design",
+    title: "Liquid Glass and Modern Design",
+    description:
+      "Apple's modern cross-platform material and design language: .glassEffect() and GlassEffectContainer, glass morphing, where glass is and isn't appropriate, accessibility fallbacks, SF Symbols 7, and building a design token system.",
+    tags: ["swiftui", "liquid-glass", "design"],
+    publishedAt: "2026-08-15",
+    content: loadBody("liquid-glass-and-modern-design.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
