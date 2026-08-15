@@ -298,6 +298,24 @@ export const articles: Article[] = [
     publishedAt: "2026-08-15",
     content: loadBody("liquid-glass-and-modern-design.md"),
   },
+  {
+    slug: "multiplatform-swiftui",
+    title: "Multiplatform SwiftUI",
+    description:
+      "Targeting multiple Apple platforms from a shared codebase: size classes and adaptive layout, iPad multitasking, macOS scene types and menu bar apps, Mac Catalyst vs. native macOS, watchOS and tvOS, and sharing code cleanly across platforms.",
+    tags: ["swiftui", "multiplatform", "macos", "watchos", "tvos"],
+    publishedAt: "2026-08-16",
+    content: loadBody("multiplatform-swiftui.md"),
+  },
+  {
+    slug: "document-based-apps",
+    title: "Document-Based Apps",
+    description:
+      "First-class SwiftUI support for document apps via DocumentGroup and the FileDocument/ReferenceFileDocument protocols: value vs. reference document models, async streaming I/O, snapshot-based saving, custom UTType declarations, and multi-format support.",
+    tags: ["swiftui", "documents", "filedocument"],
+    publishedAt: "2026-08-16",
+    content: loadBody("document-based-apps.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

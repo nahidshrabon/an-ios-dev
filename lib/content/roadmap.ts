@@ -70,8 +70,8 @@ export const roadmap: RoadmapPart[] = [
       section(30, "Drawing and Custom Graphics", "drawing-and-custom-graphics"),
       section(31, "SwiftUI Architecture and Internals", "swiftui-architecture-and-internals"),
       section(32, "Liquid Glass and Modern Design", "liquid-glass-and-modern-design"),
-      section(33, "Multiplatform SwiftUI"),
-      section(34, "Document-Based Apps"),
+      section(33, "Multiplatform SwiftUI", "multiplatform-swiftui"),
+      section(34, "Document-Based Apps", "document-based-apps"),
     ],
   },
   {
