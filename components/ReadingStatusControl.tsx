@@ -8,6 +8,7 @@ import {
   READING_STATUS_LABELS,
   type ReadingStatus,
 } from "@/lib/types";
+import { updateReadingStatus } from "@/lib/actions/reading-progress";
 
 export function ReadingStatusControl({ slug }: { slug: string }) {
   const [supabase] = useState(() => createClient());
@@ -45,12 +46,7 @@ export function ReadingStatusControl({ slug }: { slug: string }) {
   async function updateStatus(next: ReadingStatus) {
     if (!userId) return;
     setStatus(next);
-    await supabase.from("reading_progress").upsert({
-      user_id: userId,
-      article_slug: slug,
-      status: next,
-      updated_at: new Date().toISOString(),
-    });
+    await updateReadingStatus(slug, next);
   }
 
   if (userId === undefined) {
