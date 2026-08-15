@@ -76,10 +76,7 @@ export function RoadmapChecklist({
       <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
         Sections with a{" "}
         <ChevronRightIcon className="inline size-3.5 align-text-bottom text-foreground" />{" "}
-        link have a published article — those check themselves automatically
-        as soon as you mark that article read on its page. Sections without a
-        published article yet are dimmed and can&apos;t be checked off until
-        their article is ready.
+        link have a published article and auto-check when you mark it read.
       </p>
 
       <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">
