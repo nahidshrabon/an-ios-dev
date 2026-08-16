@@ -94,7 +94,12 @@ export function QuizRunner({
   bestAttempt,
 }: {
   quiz: Quiz;
-  bestAttempt?: { score: number; total: number; wrongCount: number } | null;
+  bestAttempt?: {
+    score: number;
+    total: number;
+    wrongCount: number;
+    wrongQuestionIds: string[];
+  } | null;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -290,6 +295,11 @@ export function QuizRunner({
           <div key={question.id}>
             <p className="font-article font-medium">
               {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
+              {bestAttempt?.wrongQuestionIds.includes(question.id) && (
+                <span title="Needs review" className="ml-1.5 inline-block align-text-bottom">
+                  <FlagIcon className="size-4 text-red-600 dark:text-red-400" />
+                </span>
+              )}
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {question.options.map((option) => (

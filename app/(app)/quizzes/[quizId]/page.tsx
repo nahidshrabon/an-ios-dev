@@ -26,13 +26,28 @@ export default async function QuizPage({
     .eq("quiz_id", quiz.id);
 
   const bestAttempt = attempts?.reduce<
-    { score: number; total: number; wrongCount: number } | null
+    | {
+        score: number;
+        total: number;
+        wrongCount: number;
+        wrongQuestionIds: string[];
+      }
+    | null
   >((best, attempt) => {
     if (best && attempt.score <= best.score) return best;
-    const wrongCount = Array.isArray(attempt.answers)
-      ? attempt.answers.filter((g: { correct: boolean }) => !g.correct).length
-      : 0;
-    return { score: attempt.score, total: attempt.total_questions, wrongCount };
+    const wrongAnswers = Array.isArray(attempt.answers)
+      ? attempt.answers.filter(
+          (g: { correct: boolean }) => !g.correct
+        )
+      : [];
+    return {
+      score: attempt.score,
+      total: attempt.total_questions,
+      wrongCount: wrongAnswers.length,
+      wrongQuestionIds: wrongAnswers.map(
+        (g: { questionId: string }) => g.questionId
+      ),
+    };
   }, null);
 
   return <QuizRunner quiz={quiz} bestAttempt={bestAttempt ?? null} />;
