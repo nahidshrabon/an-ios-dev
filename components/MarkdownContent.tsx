@@ -46,13 +46,15 @@ export function MarkdownContent({
               className="font-heading mt-10 flex items-center gap-2 text-xl font-semibold first:mt-0"
             >
               {children}
-              {articleSlug && id && (
-                <BookmarkToggle
-                  articleSlug={articleSlug}
-                  headingSlug={id}
-                  headingTitle={nodeText(children)}
-                />
-              )}
+              {articleSlug &&
+                id &&
+                nodeText(children).trim().toLowerCase() !== "summary" && (
+                  <BookmarkToggle
+                    articleSlug={articleSlug}
+                    headingSlug={id}
+                    headingTitle={nodeText(children)}
+                  />
+                )}
             </h2>
           ),
           h3: ({ id, children }) => (
@@ -61,13 +63,15 @@ export function MarkdownContent({
               className="font-heading mt-8 flex items-center gap-2 text-lg font-medium"
             >
               {children}
-              {articleSlug && id && (
-                <BookmarkToggle
-                  articleSlug={articleSlug}
-                  headingSlug={id}
-                  headingTitle={nodeText(children)}
-                />
-              )}
+              {articleSlug &&
+                id &&
+                nodeText(children).trim().toLowerCase() !== "summary" && (
+                  <BookmarkToggle
+                    articleSlug={articleSlug}
+                    headingSlug={id}
+                    headingTitle={nodeText(children)}
+                  />
+                )}
             </h3>
           ),
           p: ({ children }) => (
