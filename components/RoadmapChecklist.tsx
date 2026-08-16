@@ -12,6 +12,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  InfoIcon,
 } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
@@ -73,10 +74,9 @@ export function RoadmapChecklist({
         Roadmap
       </h1>
 
-      <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-        Sections with a{" "}
-        <ChevronRightIcon className="inline size-3.5 align-text-bottom text-foreground" />{" "}
-        link have a published article and auto-check when you mark it read.
+      <p className="mt-2 flex max-w-2xl items-start gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <InfoIcon className="mt-0.5 size-4 shrink-0" />
+        A section auto-checks once you mark its article as read.
       </p>
 
       <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">

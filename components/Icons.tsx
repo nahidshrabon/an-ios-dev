@@ -63,6 +63,14 @@ export function ChevronRightIcon({ className }: IconProps) {
   );
 }
 
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <svg {...shared} className={className} aria-hidden="true">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ className }: IconProps) {
   return (
     <svg {...shared} className={className} aria-hidden="true">
@@ -117,15 +125,6 @@ export function InfoIcon({ className }: IconProps) {
       <circle cx="12" cy="12" r="9" />
       <path d="M12 8h.01" />
       <path d="M11 12h1v4h1" />
-    </svg>
-  );
-}
-
-export function ArrowLeftIcon({ className }: IconProps) {
-  return (
-    <svg {...shared} className={className} aria-hidden="true">
-      <path d="M19 12H5" />
-      <path d="M11 6l-6 6 6 6" />
     </svg>
   );
 }

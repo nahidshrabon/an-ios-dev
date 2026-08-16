@@ -3,7 +3,7 @@
 import type { MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftIcon } from "@/components/Icons";
+import { ChevronLeftIcon } from "@/components/Icons";
 
 export function ArticleBackLink() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export function ArticleBackLink() {
       onClick={handleClick}
       className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
     >
-      <ArrowLeftIcon className="size-4" />
+      <ChevronLeftIcon className="size-4" />
       {label}
     </Link>
   );

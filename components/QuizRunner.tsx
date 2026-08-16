@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
-import { ArrowLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
+import { ChevronLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
 
 interface GradedAnswer {
@@ -62,7 +62,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
           href="/quizzes"
           className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
         >
-          <ArrowLeftIcon className="size-4" />
+          <ChevronLeftIcon className="size-4" />
           Back to quizzes
         </Link>
 
@@ -162,7 +162,7 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
         href="/quizzes"
         className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
       >
-        <ArrowLeftIcon className="size-4" />
+        <ChevronLeftIcon className="size-4" />
         Back to quizzes
       </Link>
 
