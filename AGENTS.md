@@ -6,4 +6,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Project conventions
 
-- Always commit but do not push to git unless asked explicitly.
+- Whenever you make a change, always commit it, but do not push to git unless asked explicitly.
