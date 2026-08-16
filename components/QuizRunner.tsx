@@ -166,7 +166,7 @@ export function QuizRunner({
 
         <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">
           {quiz.title}{" "}
-          <span className="font-heading inline-block rounded-full bg-accent/10 px-2.5 py-1 align-middle text-sm font-medium text-accent">
+          <span className="font-heading inline-block rounded-full bg-green-700/10 px-2.5 py-1 align-middle text-lg font-medium text-green-700 dark:text-green-400">
             {result.score}/{result.total}
           </span>
         </h1>
