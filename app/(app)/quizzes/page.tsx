@@ -7,6 +7,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  FlagIcon,
   TrophyIcon,
 } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
@@ -23,14 +24,24 @@ export default async function QuizzesPage() {
   const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
-    .select("quiz_id, score, total_questions")
+    .select("quiz_id, score, total_questions, answers")
     .eq("user_id", userId);
 
-  const bestByQuiz: Record<string, { score: number; total: number }> = {};
+  const bestByQuiz: Record<
+    string,
+    { score: number; total: number; wrongCount: number }
+  > = {};
   attempts?.forEach((a) => {
     const current = bestByQuiz[a.quiz_id];
     if (!current || a.score > current.score) {
-      bestByQuiz[a.quiz_id] = { score: a.score, total: a.total_questions };
+      const wrongCount = Array.isArray(a.answers)
+        ? a.answers.filter((g: { correct: boolean }) => !g.correct).length
+        : 0;
+      bestByQuiz[a.quiz_id] = {
+        score: a.score,
+        total: a.total_questions,
+        wrongCount,
+      };
     }
   });
 
@@ -141,6 +152,12 @@ export default async function QuizzesPage() {
                             {section.number}. {section.title}
                             {best && (
                               <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
+                            )}
+                            {best && best.wrongCount > 0 && (
+                              <span className="ml-1 inline-flex items-center gap-0.5 align-text-bottom text-red-600 dark:text-red-400">
+                                <FlagIcon className="size-3.5" />
+                                {best.wrongCount}
+                              </span>
                             )}
                           </span>
                           <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">

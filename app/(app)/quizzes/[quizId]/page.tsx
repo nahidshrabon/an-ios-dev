@@ -21,17 +21,19 @@ export default async function QuizPage({
   const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
-    .select("score, total_questions")
+    .select("score, total_questions, answers")
     .eq("user_id", userId)
     .eq("quiz_id", quiz.id);
 
-  const bestScore = attempts?.reduce<{ score: number; total: number } | null>(
-    (best, attempt) =>
-      !best || attempt.score > best.score
-        ? { score: attempt.score, total: attempt.total_questions }
-        : best,
-    null
-  );
+  const bestAttempt = attempts?.reduce<
+    { score: number; total: number; wrongCount: number } | null
+  >((best, attempt) => {
+    if (best && attempt.score <= best.score) return best;
+    const wrongCount = Array.isArray(attempt.answers)
+      ? attempt.answers.filter((g: { correct: boolean }) => !g.correct).length
+      : 0;
+    return { score: attempt.score, total: attempt.total_questions, wrongCount };
+  }, null);
 
-  return <QuizRunner quiz={quiz} bestScore={bestScore ?? null} />;
+  return <QuizRunner quiz={quiz} bestAttempt={bestAttempt ?? null} />;
 }

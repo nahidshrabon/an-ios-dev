@@ -21,6 +21,38 @@ interface GradedAnswer {
   correct: boolean;
 }
 
+function QuizStatusPills({
+  bestScore,
+  wrongCount,
+  hasAttempted,
+  onReset,
+}: {
+  bestScore: { score: number; total: number } | null;
+  wrongCount: number;
+  hasAttempted: boolean;
+  onReset: () => void;
+}) {
+  if (!hasAttempted) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {bestScore && (
+        <span className="font-heading inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-sm font-medium text-accent">
+          <TrophyIcon className="size-3.5" />
+          Best {bestScore.score}/{bestScore.total}
+        </span>
+      )}
+      {wrongCount > 0 && (
+        <span className="font-heading inline-flex items-center gap-1 rounded-full border border-red-300/70 bg-red-50/80 px-2.5 py-1 text-sm font-medium text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-400">
+          <FlagIcon className="size-3.5" />
+          Needs review · {wrongCount}
+        </span>
+      )}
+      <ResetQuizButton onReset={onReset} />
+    </div>
+  );
+}
+
 function ResetQuizButton({ onReset }: { onReset: () => void }) {
   const [confirming, setConfirming] = useState(false);
 
@@ -59,10 +91,10 @@ function ResetQuizButton({ onReset }: { onReset: () => void }) {
 
 export function QuizRunner({
   quiz,
-  bestScore,
+  bestAttempt,
 }: {
   quiz: Quiz;
-  bestScore?: { score: number; total: number } | null;
+  bestAttempt?: { score: number; total: number; wrongCount: number } | null;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -72,6 +104,17 @@ export function QuizRunner({
     graded: GradedAnswer[];
   } | null>(null);
   const [supabase] = useState(() => createClient());
+
+  const hasAttempted = Boolean(result) || Boolean(bestAttempt);
+  const bestScore =
+    result && (!bestAttempt || result.score >= bestAttempt.score)
+      ? { score: result.score, total: result.total }
+      : bestAttempt
+        ? { score: bestAttempt.score, total: bestAttempt.total }
+        : null;
+  const wrongCount = result
+    ? result.graded.filter((g) => !g.correct).length
+    : (bestAttempt?.wrongCount ?? 0);
 
   function handleReset() {
     setAnswers({});
@@ -129,21 +172,12 @@ export function QuizRunner({
             </span>
           </h1>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {bestScore && (
-              <span className="font-heading inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-sm font-medium text-accent">
-                <TrophyIcon className="size-3.5" />
-                Best {bestScore.score}/{bestScore.total}
-              </span>
-            )}
-            {!quiz.reviewed && (
-              <span className="font-heading inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-amber-50/80 px-2.5 py-1 text-sm font-medium text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400">
-                <FlagIcon className="size-3.5" />
-                Needs review
-              </span>
-            )}
-            <ResetQuizButton onReset={handleReset} />
-          </div>
+          <QuizStatusPills
+            bestScore={bestScore}
+            wrongCount={wrongCount}
+            hasAttempted={hasAttempted}
+            onReset={handleReset}
+          />
         </div>
 
         <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
@@ -243,21 +277,12 @@ export function QuizRunner({
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">{quiz.title}</h1>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {bestScore && (
-            <span className="font-heading inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-sm font-medium text-accent">
-              <TrophyIcon className="size-3.5" />
-              Best {bestScore.score}/{bestScore.total}
-            </span>
-          )}
-          {!quiz.reviewed && (
-            <span className="font-heading inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-amber-50/80 px-2.5 py-1 text-sm font-medium text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400">
-              <FlagIcon className="size-3.5" />
-              Needs review
-            </span>
-          )}
-          <ResetQuizButton onReset={handleReset} />
-        </div>
+        <QuizStatusPills
+          bestScore={bestScore}
+          wrongCount={wrongCount}
+          hasAttempted={hasAttempted}
+          onReset={handleReset}
+        />
       </div>
 
       <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
