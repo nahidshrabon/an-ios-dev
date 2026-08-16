@@ -88,8 +88,8 @@ export const roadmap: RoadmapPart[] = [
     id: "part-5",
     title: "Data",
     sections: [
-      section(39, "Networking Fundamentals"),
-      section(40, "Advanced Networking"),
+      section(39, "Networking Fundamentals", "networking-fundamentals"),
+      section(40, "Advanced Networking", "advanced-networking"),
       section(41, "SwiftData"),
       section(42, "Core Data"),
       section(43, "Other Persistence"),

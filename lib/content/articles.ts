@@ -352,6 +352,24 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("uikit-and-swiftui-interop.md"),
   },
+  {
+    slug: "networking-fundamentals",
+    title: "Networking Fundamentals",
+    description:
+      "URLSession with async/await: building requests and query strings, sending JSON, authentication headers, distinguishing transport errors from HTTP errors, decoding responses, loading/error UI states, AsyncImage, file uploads and downloads, and client-side secrets.",
+    tags: ["networking", "urlsession"],
+    publishedAt: "2026-08-16",
+    content: loadBody("networking-fundamentals.md"),
+  },
+  {
+    slug: "advanced-networking",
+    title: "Advanced Networking",
+    description:
+      "Production-grade networking: a reusable generic API client, retry with exponential backoff, request cancellation and deduplication, caching and ETags, background transfers, WebSockets and SSE, certificate pinning, ATS, connectivity monitoring, and OAuth 2.0 with PKCE.",
+    tags: ["networking", "urlsession", "advanced"],
+    publishedAt: "2026-08-16",
+    content: loadBody("advanced-networking.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
