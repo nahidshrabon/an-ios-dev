@@ -322,5 +322,3 @@ These two guarantees, together, are what make it possible for the Swift runtime 
 | `@inlinable`/`@usableFromInline` | Expose a function's body for cross-module inlining in performance-critical library code |
 | `@frozen` | A library author's promise to never change a public type's layout again |
 | ABI/module stability | Let compiled binaries and frameworks remain compatible across library/compiler version changes |
-
-**Next up:** [Section 12 — Result Builders and Property Wrappers](/articles/result-builders-and-property-wrappers).

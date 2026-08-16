@@ -413,5 +413,3 @@ Rather than guessing at performance problems by reading code, the SwiftUI Perfor
 | Manual diffing | `.equatable()` | Skip `body` re-evaluation via custom equality |
 | Diagnosing over-updates | Isolated `@Observable` models | Narrow invalidation scope per view |
 | Empirical profiling | SwiftUI Performance instrument | Observe real update frequency and cause |
-
-**Next up:** Section 32 — Liquid Glass and Modern Design.

@@ -543,5 +543,3 @@ Beyond avoiding expensive per-row computation, using `LazyVStack`/`LazyVGrid`/`L
 | `.scrollEdgeEffectStyle()` | Visual blur/fade treatment as content scrolls beneath translucent system chrome |
 | Cross-section/grid reordering | Modern drag-to-reorder works across sections and within grids, not just flat lists |
 | Scrolling performance | Expensive per-row work and skipping lazy containers are the primary causes of scroll stutter |
-
-**Next up:** Section 27 — Navigation and Presentation.

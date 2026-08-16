@@ -192,5 +192,3 @@ struct MultiFormatDocument: FileDocument {
 | Safe concurrent saving | `snapshot(contentType:)` | Immutable point-in-time copy for serialization |
 | Custom file types | `UTType`, Info.plist declarations | Register and recognize a custom document format |
 | Format flexibility | `readableContentTypes`/`writableContentTypes` | Support import/export across multiple formats |
-
-**Next up:** Section 35 — UIKit Essentials (opening Part 4 — UIKit).

@@ -462,5 +462,3 @@ This rule exists because Swift's optimizer is allowed to assume no two mutable r
 | Existential boxing | `any` can require extra heap allocation for values larger than its inline buffer |
 | Autorelease pools | A rarely-needed Objective-C interop tool for releasing temporary objects promptly in tight loops |
 | Law of Exclusivity | Overlapping mutable access to the same memory is forbidden, enabling safe compiler optimizations |
-
-**Next up:** [Section 11 — Advanced Type System](/articles/advanced-type-system).

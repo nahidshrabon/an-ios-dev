@@ -522,5 +522,3 @@ func criticalSection() {
 | Ternary operator | Fine for one simple condition; nest it and reach for `if`/`switch` instead |
 | `guard` | States required conditions; keeps the happy path unindented; bindings escape the scope |
 | `defer` | Guaranteed cleanup on any exit path; multiple `defer`s run LIFO |
-
-**Next up:** [Section 3 — Collections](/articles/collections) (`Array`, `Dictionary`, `Set`, and the `map`/`filter`/`reduce` family).

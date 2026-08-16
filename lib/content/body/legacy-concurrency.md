@@ -254,4 +254,4 @@ The broader pattern across this whole migration: GCD's manual thread/queue manag
 | Migrating Combine | `.values` bridges a publisher into an `AsyncSequence`, enabling gradual, incremental migration |
 | Migrating GCD | `Task`/`async let`/task groups/actors largely replace manual queue and `DispatchGroup` choreography |
 
-**This concludes Part 2 — Concurrency (Sections 17–22).** Next up: Part 3 — SwiftUI, starting with Section 23, SwiftUI Fundamentals.
+**This concludes Part 2 — Concurrency (Sections 17–22).**

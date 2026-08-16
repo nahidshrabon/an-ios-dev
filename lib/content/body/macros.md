@@ -228,5 +228,3 @@ The practical guidance: macros are a powerful, precise tool for compile-time cod
 | Testing macros | `assertMacroExpansion` verifies exact expected output source for given input source |
 | Debugging macros | Xcode's "Expand Macro" reveals the actual generated code inline, for any macro usage |
 | Build-time cost | Macros aren't free — prefer protocol extensions or property wrappers when they'd suffice |
-
-**Next up:** [Section 14 — Standard Library Deep Dive](/articles/standard-library-deep-dive).

@@ -346,5 +346,3 @@ Both refinements exist to close awkward gaps in the actor isolation model where 
 | `defaultIsolation` | Target-level setting making `@MainActor` the implicit default, requiring explicit opt-out instead of opt-in |
 | Custom actor executors | Let an actor run on a specific existing queue/thread, useful for gradual legacy-system migration |
 | Isolated conformances/deinit | Let protocol conformance and `deinit` safely run on an actor's own isolation instead of forced `nonisolated` |
-
-**Next up:** Section 20 — Sendable and Data-Race Safety.

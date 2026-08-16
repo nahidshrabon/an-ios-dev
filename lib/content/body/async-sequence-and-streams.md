@@ -287,5 +287,3 @@ This bridges two of Swift's newer systems — `Observation`'s fine-grained track
 | `merge`/`zip`/`combineLatest` | Combine multiple async sequences — interleave, pair positionally, or pair with the latest from each |
 | `chunked` | Batch a rapid sequence's elements by count or time window, reducing downstream processing frequency |
 | `Observations` | Bridges `@Observable` property changes into an `AsyncSequence`, consumable with `for await` |
-
-**Next up:** Section 22 — Legacy Concurrency.

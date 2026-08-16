@@ -287,5 +287,3 @@ The pattern: maintain a clear separation between the **detailed internal error**
 | `Result` | A value-based alternative to `throws`; converts via `get()` and `Result(catching:)` |
 | Error taxonomy | Layer per-subsystem error enums, composed into one top-level app error type |
 | User-facing errors | Never show raw internal errors to users — map to a curated message, log the details separately |
-
-**Next up:** [Section 10 — Memory Management](/articles/memory-management).

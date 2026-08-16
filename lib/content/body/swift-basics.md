@@ -718,5 +718,3 @@ Xcode surfaces `TODO:` and `FIXME:` comments in the jump bar too, with distinct 
 | Tuples | Lightweight grouping for local use and multiple return values; graduate to `struct` when it grows |
 | Type conversion | Always explicit, always initializer syntax; string-to-number conversions are optional |
 | Comments | `///` for documentation Xcode renders; `// MARK:` for jump-bar navigation only |
-
-**Next up:** [Section 2 — Control Flow](/articles/control-flow) (`if`, `switch`, loops, `guard`, `defer`).

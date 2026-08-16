@@ -542,5 +542,3 @@ This is conceptually closely related to `matchedGeometryEffect` (covered fully i
 | Toolbar overflow/pinning | Items collapse into an overflow menu or stay explicitly pinned, never overflow-eligible |
 | Context menus | Long-press-triggered action menu, with an optional enlarged preview of the content |
 | Zoom navigation transitions | Smooth zoom effect connecting a source element to its detail view during navigation |
-
-**Next up:** Section 28 — Forms and Input.

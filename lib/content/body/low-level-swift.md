@@ -206,5 +206,3 @@ processObjC(swiftArray as NSArray)
 | C interop | Near-seamless — C functions/structs/pointers import directly and predictably into Swift |
 | C++ interop | More involved than C interop, due to C++'s richer type system; useful for gradual adoption |
 | Objective-C bridging cost | Bridging Swift/Objective-C types (`String`/`NSString`, etc.) isn't always free — real, measurable cost in hot paths |
-
-**Next up:** [Section 16 — Swift Evolution Literacy](/dashboard/roadmap) — the final section of Part 1 (Swift Language), before moving on to Part 2 (Concurrency). Not published yet — check the roadmap for progress.

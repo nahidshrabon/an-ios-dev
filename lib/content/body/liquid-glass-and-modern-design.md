@@ -382,5 +382,3 @@ Centralizing these values as `enum`-namespaced static constants (rather than rep
 | Custom iconography | Custom SF Symbols | Brand icons with full symbol-system flexibility |
 | App icons | Icon Composer | Layered, dynamically-lit modern app icons |
 | Design consistency | Design token system | Centralized, strongly-typed visual constants |
-
-**Next up:** Section 33 — Multiplatform SwiftUI.

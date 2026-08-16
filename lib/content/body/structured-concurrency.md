@@ -324,5 +324,3 @@ Calling `resume` **zero times** is just as serious a bug, though less immediatel
 | `@TaskLocal` | Implicitly-inherited values across a task's structured children, without explicit parameter threading |
 | `withCheckedContinuation` | Bridges a single legacy callback invocation into one `await`-able call, with runtime misuse detection |
 | Continuation misuse | `resume` must fire exactly once — zero times leaks a hung task, more than once triggers a runtime warning |
-
-**Next up:** Section 19 — Actors and Isolation.

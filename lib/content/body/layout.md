@@ -500,5 +500,3 @@ Custom alignment identifiers are an advanced tool primarily useful for precisely
 | `containerRelativeFrame()` | Sizes a view as a fraction of its container, declaratively, without `GeometryReader` |
 | Alignment guides | Override a specific view's alignment point without affecting its siblings |
 | Custom alignment identifiers | Share a custom alignment guide across non-sibling views in a more complex hierarchy |
-
-**Next up:** Section 25 — State Management.

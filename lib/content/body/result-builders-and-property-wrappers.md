@@ -278,5 +278,3 @@ Composition order matters (innermost wrapper applies first, closest to the raw v
 | Projected value (`$`) | An optional secondary value exposed via `$property`, e.g. how `@State` produces a `Binding` |
 | Custom wrappers | Package cross-cutting concerns (persistence, validation, logging) into a reusable, declarative attribute |
 | Limitations | Only stored properties, not computed ones; composing multiple wrappers works but adds complexity |
-
-**Next up:** [Section 13 — Macros](/articles/macros).

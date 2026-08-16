@@ -341,5 +341,3 @@ SomeView()
 | `#Preview` | Generates a live, interactive Xcode canvas preview without a full simulator build/run cycle |
 | Multiple previews/traits | Configure several previews per view for different states/appearances/canvas layouts at once |
 | `.colorScheme` | Reserve explicit checks for non-color logic; semantic colors handle most light/dark adaptation alone |
-
-**Next up:** Section 24 — Layout.

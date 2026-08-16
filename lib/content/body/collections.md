@@ -590,5 +590,3 @@ Laziness has a cost too — a lazy sequence re-runs its transforms every time yo
 | Slices | `ArraySlice` shares the original array's indices — convert to `Array` to reindex |
 | Chaining | Two or three ops read fine inline; more than that, one per line |
 | `.lazy` | Defers computation until consumed — pays off on large sequences with early exits |
-
-**Next up:** [Section 4 — Optionals](/articles/optionals) (`nil`, unwrapping, chaining, nil-coalescing).

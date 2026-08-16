@@ -532,5 +532,3 @@ A frequent cause of "animation just doesn't happen" bugs is a missing `value:` a
 | Per-view animation control | `.transaction()` | Override animation for part of a hierarchy |
 | Accessibility | `accessibilityReduceMotion` | Respect reduced-motion preference |
 | Debugging | Stable `.id()`, explicit `value:` | Avoid identity resets that break animation |
-
-**Next up:** Section 30 — Drawing and Custom Graphics.

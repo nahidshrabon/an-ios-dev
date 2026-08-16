@@ -420,5 +420,3 @@ This is purely a documentation/safety annotation for the compiler — it doesn't
 | `CustomStringConvertible` | Controls `print()`/interpolation output via a custom `description` |
 | Witness vs static dispatch | Requirement methods dispatch dynamically; extension-only methods dispatch statically based on the static type |
 | `@retroactive` | Marks an intentional conformance added to a type you don't own, flagging potential cross-module conflicts |
-
-**Next up:** [Section 8 — Generics](/articles/generics).

@@ -473,5 +473,3 @@ struct MultiFieldFormView: View {
 | Validation | Computed `Bool` properties | Disable submission until requirements are met |
 | Keyboard handling | `.scrollDismissesKeyboard()` | Interactive, immediate, or disabled dismissal |
 | Focus flow | `@FocusState`, `.onSubmit()` | Programmatic advancement between fields |
-
-**Next up:** Section 29 — Animation.

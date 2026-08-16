@@ -337,5 +337,3 @@ The general principle: business logic, data models, and networking (like `TaskIt
 | TV navigation | Focus engine, `@FocusState` | Remote-driven, focus-based interaction |
 | Compile-time branching | `#if os(...)` | Platform-exclusive code without breaking other targets |
 | Clean multiplatform architecture | Shared logic + isolated platform views | Minimize scattered platform conditionals |
-
-**Next up:** Section 34 — Document-Based Apps.

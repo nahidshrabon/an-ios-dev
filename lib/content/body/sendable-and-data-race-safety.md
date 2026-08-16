@@ -223,4 +223,4 @@ Before fully committing to Swift 6 language mode, a target can enable **strict c
 | Module migration | Incremental, module-by-module, leaf-first, using `@preconcurrency import` for unmigrated dependencies |
 | Strict concurrency settings | `minimal`/`targeted`/`complete` preview Swift 6-style checking as warnings before the full language mode jump |
 
-**This concludes Part 2 — Concurrency (Sections 17–22 cover the full part; Sections 17–20 completed here).** Next up: Section 21 — AsyncSequence and Streams.
+**This concludes Part 2 — Concurrency (Sections 17–22 cover the full part; Sections 17–20 completed here).**

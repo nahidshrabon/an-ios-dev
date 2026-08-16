@@ -750,5 +750,3 @@ This pattern — "make illegal states unrepresentable" — is one of the most va
 | `indirect` enums | Enables recursive enum cases by boxing them behind a pointer |
 | Nested types | Scope helper types to their owning type, documenting the relationship |
 | Enums over booleans | Make illegal state combinations unrepresentable by construction |
-
-**Next up:** [Section 7 — Protocols and Extensions](/articles/protocols-and-extensions).

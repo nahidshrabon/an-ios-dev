@@ -143,4 +143,4 @@ Swift 6.4 introduced `anyAppleOS` as a platform-condition shorthand covering all
 | Swift 6.3 | Strengthened region-based isolation proves more transfers safe without requiring full `Sendable` conformance |
 | Swift 6.4 | `anyAppleOS` platform-condition shorthand, plus further isolation-inference ergonomics |
 
-**This concludes Part 1 — Swift Language (Sections 1–16).** Next up: Part 2 — Concurrency, starting with Section 17, Async/Await Foundations.
+**This concludes Part 1 — Swift Language (Sections 1–16).**

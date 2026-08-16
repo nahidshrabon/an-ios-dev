@@ -242,5 +242,3 @@ Priority is a *hint* to the scheduler, not an absolute guarantee of execution or
 | Blocking the pool | Genuinely blocking calls inside `async` code can starve the whole pool — always suspend, never block |
 | `Task.detached` | Doesn't inherit context (priority/isolation/task-locals) — rarely the right default choice |
 | Task priority | A scheduling hint inherited by default; influences ordering under contention, doesn't guarantee it |
-
-**Next up:** Section 18 — Structured Concurrency.

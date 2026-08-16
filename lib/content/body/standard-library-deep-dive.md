@@ -559,5 +559,3 @@ This is primarily relevant for command-line tools, server-side Swift (Part 12), 
 | `Observation`/`withObservationTracking` | Fine-grained, per-property change tracking underlying `@Observable` |
 | `Mutex`/`Atomic` | Low-level thread-safety primitives for specific, measured contention needs |
 | `Subprocess` | Modern async API for launching external processes, mainly for CLI/server Swift |
-
-**Next up:** [Section 15 — Low-Level Swift](/articles/low-level-swift).

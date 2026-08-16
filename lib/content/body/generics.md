@@ -362,5 +362,3 @@ addMeters(distanceInMeters, distanceInFeet)      // ❌ compile-time error — m
 | Type erasure (`AnyX`) | Wraps a concrete generic type behind closures to hide its specific type parameter |
 | Parameter packs | `each T` / `repeat each` enable variadic generics over differently-typed parameters |
 | Phantom types | Unused generic parameters that exist purely to enforce compile-time category safety |
-
-**Next up:** [Section 9 — Error Handling](/articles/error-handling).

@@ -434,5 +434,3 @@ Without `@State` wrapping it, a plain `var model = ExpensiveModel()` property wo
 | `.id()` resets | Deliberately discards and recreates a view's state when its identity value changes |
 | `body` re-evaluation | Triggered only by state actually *read* during that specific `body` evaluation |
 | Lazy `@Observable` init | `@State` guarantees a view-created `@Observable` object initializes once, not on every re-render |
-
-**Next up:** Section 26 — Lists and Collections.

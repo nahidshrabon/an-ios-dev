@@ -630,5 +630,3 @@ print(isValidUsername("abc"))         // true
 | Autoclosures | `@autoclosure` defers an expression's evaluation without `{}` at the call site — use sparingly |
 | Functions as values | Named functions are closures with a name — assignable, passable, storable |
 | Higher-order functions | Any function taking or returning another function/closure — you can write your own `map` |
-
-**Next up:** [Section 6 — Structs, Classes, and Enums](/articles/structs-classes-enums).

@@ -373,5 +373,3 @@ struct BlendModeDemoView: View {
 | Position-remapping shaders | `.distortionEffect()` | Geometric warp/ripple effects |
 | Neighbor-sampling shaders | `.layerEffect()` | Blur, pixelation, and similar layer-wide effects |
 | Layer compositing | `.blendMode()`, `.compositingGroup()` | Combine and flatten layered content |
-
-**Next up:** Section 31 (continuing Part 3 — SwiftUI).
