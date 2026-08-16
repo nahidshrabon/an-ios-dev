@@ -370,6 +370,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("advanced-networking.md"),
   },
+  {
+    slug: "swiftdata",
+    title: "SwiftData",
+    description:
+      "Apple's modern, Swift-native persistence framework: @Model and ModelContainer, @Query, relationships and #Predicate, sorting, background work with @ModelActor, schema migrations, CloudKit sync, and performance debugging.",
+    tags: ["swiftdata", "persistence"],
+    publishedAt: "2026-08-16",
+    content: loadBody("swiftdata.md"),
+  },
+  {
+    slug: "core-data",
+    title: "Core Data",
+    description:
+      "Apple's original object-graph persistence framework: the managed object model, NSPersistentContainer, contexts and concurrency, NSFetchedResultsController, batch operations, faulting, migration, persistent history, and CloudKit integration.",
+    tags: ["core-data", "persistence"],
+    publishedAt: "2026-08-16",
+    content: loadBody("core-data.md"),
+  },
+  {
+    slug: "other-persistence",
+    title: "Other Persistence",
+    description:
+      "Lighter-weight persistence tools: UserDefaults, App Groups, Codable JSON files, the Documents/Caches/temp directory structure, FileManager, the Keychain and biometric-gated items, data protection classes, GRDB/SQLite, and cache eviction design.",
+    tags: ["persistence", "userdefaults", "keychain"],
+    publishedAt: "2026-08-16",
+    content: loadBody("other-persistence.md"),
+  },
+  {
+    slug: "cloudkit-and-sync",
+    title: "CloudKit and Sync",
+    description:
+      "CloudKit's core concepts and APIs directly: containers/databases/records, change-token-based incremental sync, subscriptions, CKShare collaboration, CKSyncEngine, conflict resolution, offline-first architecture, debugging, and CRDTs.",
+    tags: ["cloudkit", "sync", "persistence"],
+    publishedAt: "2026-08-16",
+    content: loadBody("cloudkit-and-sync.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

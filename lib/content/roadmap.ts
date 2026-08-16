@@ -90,10 +90,10 @@ export const roadmap: RoadmapPart[] = [
     sections: [
       section(39, "Networking Fundamentals", "networking-fundamentals"),
       section(40, "Advanced Networking", "advanced-networking"),
-      section(41, "SwiftData"),
-      section(42, "Core Data"),
-      section(43, "Other Persistence"),
-      section(44, "CloudKit and Sync"),
+      section(41, "SwiftData", "swiftdata"),
+      section(42, "Core Data", "core-data"),
+      section(43, "Other Persistence", "other-persistence"),
+      section(44, "CloudKit and Sync", "cloudkit-and-sync"),
     ],
   },
   {
