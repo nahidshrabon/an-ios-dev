@@ -7,7 +7,6 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  FlagIcon,
   TrophyIcon,
 } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
@@ -24,24 +23,14 @@ export default async function QuizzesPage() {
   const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
-    .select("quiz_id, score, total_questions, answers")
+    .select("quiz_id, score, total_questions")
     .eq("user_id", userId);
 
   const bestByQuiz: Record<string, { score: number; total: number }> = {};
-  // A quiz needs review if any question has ever been missed, across every
-  // attempt — not just the best-scoring one.
-  const wrongIdsByQuiz: Record<string, Set<string>> = {};
   attempts?.forEach((a) => {
     const current = bestByQuiz[a.quiz_id];
     if (!current || a.score > current.score) {
       bestByQuiz[a.quiz_id] = { score: a.score, total: a.total_questions };
-    }
-    if (Array.isArray(a.answers)) {
-      const wrongIds = wrongIdsByQuiz[a.quiz_id] ?? new Set<string>();
-      a.answers.forEach((g: { correct: boolean; questionId: string }) => {
-        if (!g.correct) wrongIds.add(g.questionId);
-      });
-      wrongIdsByQuiz[a.quiz_id] = wrongIds;
     }
   });
 
@@ -139,7 +128,6 @@ export default async function QuizzesPage() {
                 {part.sections.map((section) => {
                   const quiz = section.quiz!;
                   const best = bestByQuiz[quiz.id];
-                  const wrongCount = wrongIdsByQuiz[quiz.id]?.size ?? 0;
                   return (
                     <li key={quiz.id}>
                       <Link
@@ -153,12 +141,6 @@ export default async function QuizzesPage() {
                             {section.number}. {section.title}
                             {best && (
                               <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
-                            )}
-                            {wrongCount > 0 && (
-                              <span className="ml-1 inline-flex items-center gap-0.5 align-middle text-red-600 dark:text-red-400">
-                                <FlagIcon className="size-4" />
-                                {wrongCount}
-                              </span>
                             )}
                           </span>
                           <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">
