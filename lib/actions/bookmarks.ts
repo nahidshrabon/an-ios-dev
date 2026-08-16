@@ -21,6 +21,7 @@ export async function addBookmark(
   });
 
   revalidatePath("/bookmarks");
+  revalidatePath("/roadmap");
 }
 
 export async function removeBookmark(articleSlug: string, headingSlug: string) {
@@ -37,4 +38,5 @@ export async function removeBookmark(articleSlug: string, headingSlug: string) {
     .eq("heading_slug", headingSlug);
 
   revalidatePath("/bookmarks");
+  revalidatePath("/roadmap");
 }

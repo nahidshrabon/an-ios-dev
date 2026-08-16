@@ -9,6 +9,7 @@ import {
 } from "@/lib/content/roadmap";
 import {
   ArrowRightIcon,
+  BookmarkIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -25,10 +26,12 @@ export function RoadmapChecklist({
   parts,
   manualCompleted,
   readArticleSlugs,
+  bookmarkCountByArticleSlug,
 }: {
   parts: RoadmapPart[];
   manualCompleted: Record<string, boolean>;
   readArticleSlugs: string[];
+  bookmarkCountByArticleSlug: Record<string, number>;
   userId: string;
 }) {
   const readSlugs = useMemo(
@@ -141,6 +144,8 @@ export function RoadmapChecklist({
                   const isAuto = !!sec.articleSlug;
 
                   if (isAuto) {
+                    const bookmarkCount =
+                      bookmarkCountByArticleSlug[sec.articleSlug!] ?? 0;
                     return (
                       <li key={sec.id}>
                         <Link
@@ -159,7 +164,15 @@ export function RoadmapChecklist({
                               )}
                             </span>
                           </span>
-                          <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
+                          <span className="inline-flex shrink-0 items-center gap-3 text-xs text-zinc-500">
+                            {bookmarkCount > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 font-medium text-accent">
+                                <BookmarkIcon className="size-3.5" filled />
+                                {bookmarkCount}
+                              </span>
+                            )}
+                            <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
+                          </span>
                         </Link>
                       </li>
                     );
