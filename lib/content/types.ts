@@ -29,5 +29,7 @@ export interface Quiz {
   title: string;
   description: string;
   relatedArticleSlug?: string;
+  /** Set once the questions have been proofread for correctness. Defaults to false. */
+  reviewed?: boolean;
   questions: QuizQuestion[];
 }
