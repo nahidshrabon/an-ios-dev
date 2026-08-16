@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Quiz } from "@/lib/content/types";
 import {
@@ -30,7 +31,7 @@ function QuizStatusPills({
   bestScore: { score: number; total: number } | null;
   wrongCount: number;
   hasAttempted: boolean;
-  onReset: () => void;
+  onReset: () => Promise<void>;
 }) {
   if (!hasAttempted) return null;
 
@@ -53,23 +54,28 @@ function QuizStatusPills({
   );
 }
 
-function ResetQuizButton({ onReset }: { onReset: () => void }) {
+function ResetQuizButton({ onReset }: { onReset: () => Promise<void> }) {
   const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
 
   if (confirming) {
     return (
       <span className="inline-flex items-center gap-2">
         <button
-          onClick={() => {
-            onReset();
+          onClick={async () => {
+            setPending(true);
+            await onReset();
+            setPending(false);
             setConfirming(false);
           }}
-          className="font-heading inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-700"
+          disabled={pending}
+          className="font-heading inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60"
         >
-          Confirm reset
+          {pending ? "Resetting…" : "Confirm reset"}
         </button>
         <button
           onClick={() => setConfirming(false)}
+          disabled={pending}
           className="font-heading text-sm text-zinc-600 hover:underline dark:text-zinc-400"
         >
           Cancel
@@ -97,7 +103,6 @@ export function QuizRunner({
   bestAttempt?: {
     score: number;
     total: number;
-    wrongCount: number;
     wrongQuestionIds: string[];
   } | null;
 }) {
@@ -109,6 +114,7 @@ export function QuizRunner({
     graded: GradedAnswer[];
   } | null>(null);
   const [supabase] = useState(() => createClient());
+  const router = useRouter();
 
   const hasAttempted = Boolean(result) || Boolean(bestAttempt);
   const bestScore =
@@ -117,13 +123,36 @@ export function QuizRunner({
       : bestAttempt
         ? { score: bestAttempt.score, total: bestAttempt.total }
         : null;
-  const wrongCount = result
-    ? result.graded.filter((g) => !g.correct).length
-    : (bestAttempt?.wrongCount ?? 0);
+  // A question stays flagged once it's ever been missed, even if a later
+  // attempt happens to get it right — "needs review" tracks history, not
+  // just the most recent try.
+  const wrongQuestionIds = new Set([
+    ...(bestAttempt?.wrongQuestionIds ?? []),
+    ...(result ? result.graded.filter((g) => !g.correct).map((g) => g.questionId) : []),
+  ]);
+  const wrongCount = wrongQuestionIds.size;
 
   function handleReset() {
     setAnswers({});
     setResult(null);
+  }
+
+  async function handleResetProgress() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      await supabase
+        .from("quiz_attempts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("quiz_id", quiz.id);
+    }
+
+    setAnswers({});
+    setResult(null);
+    router.refresh();
   }
 
   async function handleSubmit() {
@@ -169,18 +198,27 @@ export function QuizRunner({
           Back to quizzes
         </Link>
 
-        <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">
-          {quiz.title}{" "}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            {quiz.title}
+          </h1>
           <span className="font-heading inline-block rounded-full bg-green-700/10 px-2.5 py-1 align-middle text-lg font-medium text-green-700 dark:text-green-400">
             {result.score}/{result.total}
           </span>
-        </h1>
+          <button
+            onClick={handleReset}
+            className="font-heading inline-flex items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-black/5 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5"
+          >
+            <RotateCcwIcon className="size-3.5" />
+            Retake
+          </button>
+        </div>
 
         <QuizStatusPills
           bestScore={bestScore}
           wrongCount={wrongCount}
           hasAttempted={hasAttempted}
-          onReset={handleReset}
+          onReset={handleResetProgress}
         />
 
         <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
@@ -283,7 +321,7 @@ export function QuizRunner({
         bestScore={bestScore}
         wrongCount={wrongCount}
         hasAttempted={hasAttempted}
-        onReset={handleReset}
+        onReset={handleResetProgress}
       />
 
       <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
@@ -295,9 +333,9 @@ export function QuizRunner({
           <div key={question.id}>
             <p className="font-article font-medium">
               {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
-              {bestAttempt?.wrongQuestionIds.includes(question.id) && (
-                <span title="Needs review" className="ml-1.5 inline-block align-text-bottom">
-                  <FlagIcon className="size-4 text-red-600 dark:text-red-400" />
+              {wrongQuestionIds.has(question.id) && (
+                <span title="Needs review" className="ml-1.5 inline-block align-middle">
+                  <FlagIcon className="size-5 text-red-600 dark:text-red-400" />
                 </span>
               )}
             </p>

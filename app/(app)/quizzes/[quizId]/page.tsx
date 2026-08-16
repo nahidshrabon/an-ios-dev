@@ -25,30 +25,29 @@ export default async function QuizPage({
     .eq("user_id", userId)
     .eq("quiz_id", quiz.id);
 
-  const bestAttempt = attempts?.reduce<
-    | {
-        score: number;
-        total: number;
-        wrongCount: number;
-        wrongQuestionIds: string[];
-      }
-    | null
-  >((best, attempt) => {
-    if (best && attempt.score <= best.score) return best;
-    const wrongAnswers = Array.isArray(attempt.answers)
-      ? attempt.answers.filter(
-          (g: { correct: boolean }) => !g.correct
-        )
-      : [];
-    return {
-      score: attempt.score,
-      total: attempt.total_questions,
-      wrongCount: wrongAnswers.length,
-      wrongQuestionIds: wrongAnswers.map(
-        (g: { questionId: string }) => g.questionId
-      ),
-    };
-  }, null);
+  const bestScore = attempts?.reduce<{ score: number; total: number } | null>(
+    (best, attempt) =>
+      !best || attempt.score > best.score
+        ? { score: attempt.score, total: attempt.total_questions }
+        : best,
+    null
+  );
 
-  return <QuizRunner quiz={quiz} bestAttempt={bestAttempt ?? null} />;
+  // A question needs review if it's ever been missed, across every attempt
+  // — not just the best-scoring one.
+  const wrongQuestionIds = Array.from(
+    new Set(
+      (attempts ?? []).flatMap((attempt) =>
+        Array.isArray(attempt.answers)
+          ? attempt.answers
+              .filter((g: { correct: boolean }) => !g.correct)
+              .map((g: { questionId: string }) => g.questionId)
+          : []
+      )
+    )
+  );
+
+  const bestAttempt = bestScore ? { ...bestScore, wrongQuestionIds } : null;
+
+  return <QuizRunner quiz={quiz} bestAttempt={bestAttempt} />;
 }
