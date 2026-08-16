@@ -35,7 +35,7 @@ function QuizStatusPills({
   if (!hasAttempted) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="mt-3 flex flex-wrap items-center gap-2">
       {bestScore && (
         <span className="font-heading inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-sm font-medium text-accent">
           <TrophyIcon className="size-3.5" />
@@ -164,21 +164,19 @@ export function QuizRunner({
           Back to quizzes
         </Link>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            {quiz.title}{" "}
-            <span className="font-heading inline-block rounded-full bg-accent/10 px-2.5 py-1 align-middle text-sm font-medium text-accent">
-              {result.score}/{result.total}
-            </span>
-          </h1>
+        <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">
+          {quiz.title}{" "}
+          <span className="font-heading inline-block rounded-full bg-accent/10 px-2.5 py-1 align-middle text-sm font-medium text-accent">
+            {result.score}/{result.total}
+          </span>
+        </h1>
 
-          <QuizStatusPills
-            bestScore={bestScore}
-            wrongCount={wrongCount}
-            hasAttempted={hasAttempted}
-            onReset={handleReset}
-          />
-        </div>
+        <QuizStatusPills
+          bestScore={bestScore}
+          wrongCount={wrongCount}
+          hasAttempted={hasAttempted}
+          onReset={handleReset}
+        />
 
         <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
           {quiz.description}
@@ -274,16 +272,14 @@ export function QuizRunner({
         Back to quizzes
       </Link>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">{quiz.title}</h1>
+      <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">{quiz.title}</h1>
 
-        <QuizStatusPills
-          bestScore={bestScore}
-          wrongCount={wrongCount}
-          hasAttempted={hasAttempted}
-          onReset={handleReset}
-        />
-      </div>
+      <QuizStatusPills
+        bestScore={bestScore}
+        wrongCount={wrongCount}
+        hasAttempted={hasAttempted}
+        onReset={handleReset}
+      />
 
       <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
         {quiz.description}
