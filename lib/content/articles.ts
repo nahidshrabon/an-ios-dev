@@ -316,6 +316,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("document-based-apps.md"),
   },
+  {
+    slug: "uikit-essentials",
+    title: "UIKit Essentials",
+    description:
+      "Why UIKit still matters in a SwiftUI-first world: the view controller and view lifecycle, programmatic UI vs. Interface Builder, delegates and target-action, the responder chain, gesture recognizers, view controller containment, and UIScene.",
+    tags: ["uikit", "essentials"],
+    publishedAt: "2026-08-16",
+    content: loadBody("uikit-essentials.md"),
+  },
+  {
+    slug: "auto-layout",
+    title: "Auto Layout",
+    description:
+      "UIKit's constraint-based layout system as a system of linear equations: NSLayoutConstraint and anchors, priorities, content hugging and compression resistance, UIStackView, safe area handling, and debugging conflicts and ambiguity.",
+    tags: ["uikit", "auto-layout"],
+    publishedAt: "2026-08-16",
+    content: loadBody("auto-layout.md"),
+  },
+  {
+    slug: "table-and-collection-views",
+    title: "Table and Collection Views",
+    description:
+      "UITableView and UICollectionView's data source/delegate patterns, cell reuse and self-sizing, UICollectionViewFlowLayout and custom layouts, prefetching for scroll performance, and animated inserts, deletes, and reorders.",
+    tags: ["uikit", "table-view", "collection-view"],
+    publishedAt: "2026-08-16",
+    content: loadBody("table-and-collection-views.md"),
+  },
+  {
+    slug: "uikit-and-swiftui-interop",
+    title: "UIKit and SwiftUI Interop",
+    description:
+      "Bridging the two frameworks in both directions: UIViewRepresentable and UIViewControllerRepresentable, the Coordinator pattern, hosting SwiftUI inside UIKit with UIHostingController, UIHostingConfiguration for cells, and cross-boundary data flow.",
+    tags: ["uikit", "swiftui", "interop"],
+    publishedAt: "2026-08-16",
+    content: loadBody("uikit-and-swiftui-interop.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

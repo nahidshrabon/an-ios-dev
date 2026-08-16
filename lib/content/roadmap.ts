@@ -78,10 +78,10 @@ export const roadmap: RoadmapPart[] = [
     id: "part-4",
     title: "UIKit",
     sections: [
-      section(35, "UIKit Essentials"),
-      section(36, "Auto Layout"),
-      section(37, "Table and Collection Views"),
-      section(38, "UIKit and SwiftUI Interop"),
+      section(35, "UIKit Essentials", "uikit-essentials"),
+      section(36, "Auto Layout", "auto-layout"),
+      section(37, "Table and Collection Views", "table-and-collection-views"),
+      section(38, "UIKit and SwiftUI Interop", "uikit-and-swiftui-interop"),
     ],
   },
   {
@@ -183,6 +183,26 @@ export function getRoadmapSectionByArticleSlug(
   slug: string
 ): RoadmapSection | undefined {
   return getAllRoadmapSections().find((s) => s.articleSlug === slug);
+}
+
+/**
+ * The next published article after the given one, in roadmap order.
+ * Skips over sections that don't have an article yet.
+ */
+export function getNextArticleSection(
+  currentArticleSlug: string
+): RoadmapSection | undefined {
+  const sections = getAllRoadmapSections();
+  const currentIndex = sections.findIndex(
+    (s) => s.articleSlug === currentArticleSlug
+  );
+  if (currentIndex === -1) return undefined;
+
+  return sections
+    .slice(currentIndex + 1)
+    .find((s): s is RoadmapSection & { articleSlug: string } =>
+      Boolean(s.articleSlug)
+    );
 }
 
 /**
