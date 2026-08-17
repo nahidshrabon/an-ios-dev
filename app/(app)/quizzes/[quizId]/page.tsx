@@ -19,6 +19,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
   }
 
   let activeQuiz = quiz;
+  let previousAnswers: Record<string, GradedAnswer> | undefined;
 
   if (practice === "1") {
     const { data: claims } = await getClaims();
@@ -35,14 +36,11 @@ export default async function QuizPage({ params, searchParams }: Props) {
         .limit(1)
         .maybeSingle();
 
-      const missedIds = new Set(
-        ((lastAttempt?.answers as GradedAnswer[] | null) ?? [])
-          .filter((a) => !a.correct)
-          .map((a) => a.questionId)
-      );
-      const missedQuestions = quiz.questions.filter((q) =>
-        missedIds.has(q.id)
-      );
+      const missed: Record<string, GradedAnswer> = {};
+      ((lastAttempt?.answers as GradedAnswer[] | null) ?? []).forEach((a) => {
+        if (!a.correct) missed[a.questionId] = a;
+      });
+      const missedQuestions = quiz.questions.filter((q) => missed[q.id]);
 
       if (missedQuestions.length > 0) {
         activeQuiz = {
@@ -52,9 +50,10 @@ export default async function QuizPage({ params, searchParams }: Props) {
             missedQuestions.length === 1 ? "" : "s"
           } you missed last time.`,
         };
+        previousAnswers = missed;
       }
     }
   }
 
-  return <QuizRunner quiz={activeQuiz} />;
+  return <QuizRunner quiz={activeQuiz} previousAnswers={previousAnswers} />;
 }

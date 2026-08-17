@@ -7,7 +7,13 @@ import type { GradedAnswer, Quiz } from "@/lib/content/types";
 import { ChevronLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
 
-export function QuizRunner({ quiz }: { quiz: Quiz }) {
+export function QuizRunner({
+  quiz,
+  previousAnswers,
+}: {
+  quiz: Quiz;
+  previousAnswers?: Record<string, GradedAnswer>;
+}) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{
@@ -166,36 +172,49 @@ export function QuizRunner({ quiz }: { quiz: Quiz }) {
       </p>
 
       <div className="mt-8 flex flex-col gap-8">
-        {quiz.questions.map((question, i) => (
-          <div key={question.id}>
-            <p className="font-article font-medium">
-              {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
-            </p>
-            <div className="mt-3 flex flex-col gap-2">
-              {question.options.map((option) => (
-                <label
-                  key={option.id}
-                  className="font-article flex items-center gap-2 text-base"
-                >
-                  <input
-                    type="radio"
-                    name={question.id}
-                    checked={answers[question.id] === option.id}
-                    onChange={() =>
-                      setAnswers((prev) => ({
-                        ...prev,
-                        [question.id]: option.id,
-                      }))
-                    }
-                  />
-                  <span>
-                    <InlineMarkdown>{option.text}</InlineMarkdown>
-                  </span>
-                </label>
-              ))}
+        {quiz.questions.map((question, i) => {
+          const previous = previousAnswers?.[question.id];
+          const previousOptionText = question.options.find(
+            (o) => o.id === previous?.selectedOptionId
+          )?.text;
+          return (
+            <div key={question.id}>
+              <p className="font-article font-medium">
+                {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
+              </p>
+              {previous && (
+                <p className="mt-1.5 text-sm text-amber-700 dark:text-amber-400">
+                  {previousOptionText
+                    ? `Last time you picked "${previousOptionText}" — incorrect.`
+                    : "You left this unanswered last time."}
+                </p>
+              )}
+              <div className="mt-3 flex flex-col gap-2">
+                {question.options.map((option) => (
+                  <label
+                    key={option.id}
+                    className="font-article flex items-center gap-2 text-base"
+                  >
+                    <input
+                      type="radio"
+                      name={question.id}
+                      checked={answers[question.id] === option.id}
+                      onChange={() =>
+                        setAnswers((prev) => ({
+                          ...prev,
+                          [question.id]: option.id,
+                        }))
+                      }
+                    />
+                    <span>
+                      <InlineMarkdown>{option.text}</InlineMarkdown>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
