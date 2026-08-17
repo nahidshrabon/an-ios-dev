@@ -31,3 +31,10 @@ export interface Quiz {
   relatedArticleSlug?: string;
   questions: QuizQuestion[];
 }
+
+/** Shape of each entry in quiz_attempts.answers. */
+export interface GradedAnswer {
+  questionId: string;
+  selectedOptionId: string | undefined;
+  correct: boolean;
+}

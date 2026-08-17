@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
 import {
   ArrowRightIcon,
@@ -23,14 +24,25 @@ export default async function QuizzesPage() {
   const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
-    .select("quiz_id, score, total_questions")
+    .select("quiz_id, score, total_questions, answers, completed_at")
     .eq("user_id", userId);
 
   const bestByQuiz: Record<string, { score: number; total: number }> = {};
+  const needsReviewByQuiz: Record<string, number> = {};
+  const lastAttemptTimeByQuiz: Record<string, string> = {};
   attempts?.forEach((a) => {
     const current = bestByQuiz[a.quiz_id];
     if (!current || a.score > current.score) {
       bestByQuiz[a.quiz_id] = { score: a.score, total: a.total_questions };
+    }
+
+    const lastTime = lastAttemptTimeByQuiz[a.quiz_id];
+    if (!lastTime || a.completed_at > lastTime) {
+      lastAttemptTimeByQuiz[a.quiz_id] = a.completed_at;
+      const missedCount = (a.answers as GradedAnswer[]).filter(
+        (g) => !g.correct
+      ).length;
+      needsReviewByQuiz[a.quiz_id] = missedCount;
     }
   });
 
@@ -128,35 +140,46 @@ export default async function QuizzesPage() {
                 {part.sections.map((section) => {
                   const quiz = section.quiz!;
                   const best = bestByQuiz[quiz.id];
+                  const needsReview = needsReviewByQuiz[quiz.id];
                   return (
                     <li key={quiz.id}>
-                      <Link
-                        href={`/quizzes/${quiz.id}`}
+                      <div
                         className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors ${
                           best ? takenQuizEntryColor : notTakenQuizEntryColor
                         }`}
                       >
-                        <span className="min-w-0 flex-1">
-                          <span className="font-heading block truncate text-sm">
-                            {section.number}. {section.title}
-                            {best && (
-                              <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
-                            )}
+                        <Link
+                          href={`/quizzes/${quiz.id}`}
+                          className="flex min-w-0 flex-1 items-center gap-3"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="font-heading block truncate text-sm">
+                              {section.number}. {section.title}
+                              {best && (
+                                <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
+                              )}
+                            </span>
+                            <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">
+                              {quiz.description}
+                            </span>
                           </span>
-                          <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">
-                            {quiz.description}
-                          </span>
-                        </span>
-                        <span className="inline-flex shrink-0 items-center gap-3 text-xs text-zinc-500">
                           {best && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 font-medium text-accent">
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
                               <TrophyIcon className="size-3.5" />
                               {best.score}/{best.total}
                             </span>
                           )}
                           <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
-                        </span>
-                      </Link>
+                        </Link>
+                        {!!needsReview && (
+                          <Link
+                            href={`/quizzes/${quiz.id}?practice=1`}
+                            className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-500/20 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
+                          >
+                            Review {needsReview}
+                          </Link>
+                        )}
+                      </div>
                     </li>
                   );
                 })}

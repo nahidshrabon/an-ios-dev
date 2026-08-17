@@ -3,15 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import type { Quiz } from "@/lib/content/types";
+import type { GradedAnswer, Quiz } from "@/lib/content/types";
 import { ChevronLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
-
-interface GradedAnswer {
-  questionId: string;
-  selectedOptionId: string | undefined;
-  correct: boolean;
-}
 
 export function QuizRunner({ quiz }: { quiz: Quiz }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
