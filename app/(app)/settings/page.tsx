@@ -1,4 +1,6 @@
 import { getClaims } from "@/lib/supabase/server";
+import { SettingsIcon } from "@/components/Icons";
+import { PageHeader } from "@/components/PageHeader";
 import { ResetActionButton } from "@/components/ResetActionButton";
 import {
   resetAllProgress,
@@ -61,9 +63,7 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Settings
-      </h1>
+      <PageHeader icon={SettingsIcon} title="Settings" />
 
       {email && (
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">

@@ -4,6 +4,8 @@ import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
 import { CheckIcon, ChevronDownIcon, InfoIcon } from "@/components/Icons";
+import { TestIcon } from "@/components/HowItWorksIcons";
+import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
 import { ResetActionButton } from "@/components/ResetActionButton";
 import { resetQuizHistory } from "@/lib/actions/settings";
@@ -109,9 +111,7 @@ export default async function QuizzesPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Quizzes
-      </h1>
+      <PageHeader icon={TestIcon} title="Quizzes" />
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <div className="flex items-center gap-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 dark:border-blue-400/15 dark:bg-blue-400/10">

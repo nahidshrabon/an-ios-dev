@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getArticle } from "@/lib/content/articles";
-import { ChevronRightIcon } from "@/components/Icons";
+import { BookmarkIcon, ChevronRightIcon } from "@/components/Icons";
+import { PageHeader } from "@/components/PageHeader";
 
 type BookmarkRow = {
   article_slug: string;
@@ -34,9 +35,7 @@ export default async function BookmarksPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Bookmarks
-      </h1>
+      <PageHeader icon={BookmarkIcon} title="Bookmarks" />
       <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
         Sections you&apos;ve bookmarked while reading, grouped by article.
       </p>

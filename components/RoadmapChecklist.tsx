@@ -13,8 +13,10 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  FlagIcon,
   InfoIcon,
 } from "@/components/Icons";
+import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
 
 const completedRoadmapEntryColor =
@@ -73,9 +75,7 @@ export function RoadmapChecklist({
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Roadmap
-      </h1>
+      <PageHeader icon={FlagIcon} title="Roadmap" />
 
       <p className="mt-2 flex max-w-2xl items-start gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
         <InfoIcon className="mt-0.5 size-4 shrink-0" />
