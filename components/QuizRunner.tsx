@@ -75,7 +75,7 @@ export function QuizRunner({
         <p
           className={`font-article mt-2 ${
             previousAnswers
-              ? "font-semibold text-red-700/70 dark:text-red-400/70"
+              ? "font-semibold text-red-700/30 dark:text-red-400/30"
               : "text-zinc-600 dark:text-zinc-400"
           }`}
         >
