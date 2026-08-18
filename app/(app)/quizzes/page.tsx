@@ -3,7 +3,7 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
-import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@/components/Icons";
+import { CheckIcon, ChevronDownIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
 const takenQuizEntryColor =
@@ -66,9 +66,6 @@ export default async function QuizzesPage() {
   ).length;
   const percent =
     totalQuizzes > 0 ? Math.round((takenCount / totalQuizzes) * 100) : 0;
-  const nextSection = allQuizSections.find(
-    (section) => !bestByQuiz[section.quiz!.id]
-  );
 
   return (
     <div>
@@ -94,25 +91,24 @@ export default async function QuizzesPage() {
           </div>
         </div>
 
-        {nextSection && (
-          <div className="flex items-center justify-between gap-4 border-t border-black/10 p-4 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10">
-            <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Next up
-              </p>
-              <p className="font-heading mt-0.5 text-base font-semibold">
-                {nextSection.number}. {nextSection.title}
-              </p>
-            </div>
-            <Link
-              href={`/quizzes/${nextSection.quiz!.id}`}
-              className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-white"
-            >
-              Continue
-              <ArrowRightIcon className="size-4" />
-            </Link>
-          </div>
-        )}
+        <div className="flex flex-col justify-center gap-1.5 border-t border-black/10 p-4 text-sm text-zinc-600 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10 dark:text-zinc-400">
+          <p>
+            <span className="font-heading font-medium text-foreground">
+              Full quiz
+            </span>{" "}
+            — click a quiz to take or retake every question.
+          </p>
+          <p>
+            <span className="font-heading font-medium text-foreground">
+              Review quiz
+            </span>{" "}
+            — click{" "}
+            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
+              Review
+            </span>{" "}
+            to practice just what you missed last time.
+          </p>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-4">
