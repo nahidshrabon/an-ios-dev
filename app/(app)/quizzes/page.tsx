@@ -163,23 +163,28 @@ export default async function QuizzesPage() {
             </span>{" "}
             score.
           </p>
-          <p className="text-red-700 dark:text-red-400">
+          <p>
             <InfoIcon className="mr-1 inline size-4 align-text-bottom text-red-700 dark:text-red-400" />
-            <span className="font-heading font-medium">Review</span>{" "}
-            — click{" "}
+            <span className="font-heading font-medium text-red-700 dark:text-red-400">
+              Review
+            </span>{" "}
+            <span className="text-zinc-600 dark:text-zinc-400">
+              — click{" "}
+            </span>
             <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
               Review
             </span>{" "}
-            to retake just the questions you missed last time. Doesn&apos;t
-            update your <span className="font-heading font-medium">Best</span>{" "}
-            score.
+            <span className="text-zinc-600 dark:text-zinc-400">
+              to retake just the questions you missed last time.
+            </span>{" "}
+            <span className="text-red-700 dark:text-red-400">
+              Doesn&apos;t update your{" "}
+              <span className="font-heading font-medium">Best</span> score.
+            </span>
           </p>
         </div>
 
         <div className="flex flex-col justify-center gap-2 rounded-xl border border-black/10 p-4 sm:ml-auto dark:border-white/10">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Start over on this quiz history.
-          </p>
           <ResetActionButton
             label="Reset progress"
             confirmLabel="Yes, reset progress"
