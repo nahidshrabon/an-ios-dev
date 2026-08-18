@@ -94,9 +94,12 @@ export default async function QuizzesPage() {
   const reviewPercent =
     takenCount > 0
       ? Math.round(
-          (takenSections.filter(
-            (section) => (needsReviewByQuiz[section.quiz!.id] ?? 0) > 0
-          ).length /
+          (takenSections.reduce((sum, section) => {
+            const quizId = section.quiz!.id;
+            const missed = needsReviewByQuiz[quizId] ?? 0;
+            const total = totalQuestionsByQuizId.get(quizId) ?? 1;
+            return sum + missed / total;
+          }, 0) /
             takenCount) *
             100
         )
@@ -137,7 +140,7 @@ export default async function QuizzesPage() {
           </div>
           <div className="p-4">
             <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
-              Review
+              Needs review
             </p>
             <p className="font-heading mt-0.5 text-xl font-semibold">
               {reviewPercent}%
