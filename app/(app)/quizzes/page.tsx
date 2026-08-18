@@ -72,11 +72,35 @@ export default async function QuizzesPage() {
 
   const allQuizSections = quizParts.flatMap((part) => part.sections);
   const totalQuizzes = allQuizSections.length;
-  const takenCount = allQuizSections.filter(
+  const takenSections = allQuizSections.filter(
     (section) => bestByQuiz[section.quiz!.id]
-  ).length;
+  );
+  const takenCount = takenSections.length;
   const percent =
     totalQuizzes > 0 ? Math.round((takenCount / totalQuizzes) * 100) : 0;
+
+  const successRatePercent =
+    takenCount > 0
+      ? Math.round(
+          (takenSections.reduce((sum, section) => {
+            const b = bestByQuiz[section.quiz!.id];
+            return sum + b.score / b.total;
+          }, 0) /
+            takenCount) *
+            100
+        )
+      : 0;
+
+  const reviewPercent =
+    takenCount > 0
+      ? Math.round(
+          (takenSections.filter(
+            (section) => (needsReviewByQuiz[section.quiz!.id] ?? 0) > 0
+          ).length /
+            takenCount) *
+            100
+        )
+      : 0;
 
   return (
     <div>
@@ -84,8 +108,8 @@ export default async function QuizzesPage() {
         Quizzes
       </h1>
 
-      <div className="mt-6 flex flex-col overflow-hidden rounded-xl border border-black/10 sm:flex-row sm:items-stretch dark:border-white/10">
-        <div className="flex items-center gap-3 p-4 sm:flex-1">
+      <div className="mt-6 flex flex-wrap gap-3">
+        <div className="flex items-center gap-3 rounded-xl border border-black/10 p-4 dark:border-white/10">
           <ProgressRing percent={percent} size={44} strokeWidth={4}>
             <span className="font-heading text-xs font-semibold">
               {percent}%
@@ -102,7 +126,26 @@ export default async function QuizzesPage() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-center gap-1.5 border-t border-black/10 p-4 text-sm text-zinc-600 sm:flex-1 sm:border-t-0 sm:border-l dark:border-white/10 dark:text-zinc-400">
+        <div className="flex items-stretch divide-x divide-black/10 rounded-xl border border-black/10 dark:divide-white/10 dark:border-white/10">
+          <div className="p-4">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+              Success rate
+            </p>
+            <p className="font-heading mt-0.5 text-xl font-semibold">
+              {successRatePercent}%
+            </p>
+          </div>
+          <div className="p-4">
+            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+              Review
+            </p>
+            <p className="font-heading mt-0.5 text-xl font-semibold">
+              {reviewPercent}%
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-center gap-1.5 rounded-xl border border-black/10 p-4 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
           <p>
             <span className="font-heading font-medium text-foreground">
               Full quiz
