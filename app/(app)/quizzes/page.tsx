@@ -5,6 +5,8 @@ import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
 import { CheckIcon, ChevronDownIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
+import { ResetActionButton } from "@/components/ResetActionButton";
+import { resetQuizHistory } from "@/lib/actions/settings";
 
 const takenQuizEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
@@ -167,6 +169,19 @@ export default async function QuizzesPage() {
             to retake just the questions you missed last time. Doesn&apos;t
             update your Best score.
           </p>
+        </div>
+
+        <div className="flex flex-col justify-center gap-2 rounded-xl border border-black/10 p-4 sm:ml-auto dark:border-white/10">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Start over on this quiz history.
+          </p>
+          <ResetActionButton
+            label="Reset progress"
+            confirmLabel="Yes, reset progress"
+            warning="This will permanently delete your quiz attempt history. This can't be undone."
+            successMessage="Your quiz history has been reset."
+            action={resetQuizHistory}
+          />
         </div>
       </div>
 
