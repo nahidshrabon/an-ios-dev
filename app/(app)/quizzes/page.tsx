@@ -3,12 +3,7 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  TrophyIcon,
-} from "@/components/Icons";
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 
 const takenQuizEntryColor =
@@ -164,8 +159,7 @@ export default async function QuizzesPage() {
                           </span>
                           {best && (
                             <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-                              <TrophyIcon className="size-3.5" />
-                              {best.score}/{best.total}
+                              Best {best.score}/{best.total}
                             </span>
                           )}
                         </Link>
