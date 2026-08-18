@@ -114,19 +114,19 @@ export default async function QuizzesPage() {
       </h1>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <div className="flex items-center gap-3 rounded-xl border border-black/10 p-4 dark:border-white/10">
+        <div className="flex items-center gap-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 dark:border-blue-400/15 dark:bg-blue-400/10">
           <ProgressRing percent={percent} size={44} strokeWidth={4}>
             <span className="font-heading text-xs font-semibold">
               {percent}%
             </span>
           </ProgressRing>
           <div>
-            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="font-heading text-sm text-blue-700 dark:text-blue-400">
               Quiz progress
             </p>
-            <p className="font-heading mt-0.5 text-xl font-semibold">
+            <p className="font-heading mt-0.5 text-xl font-semibold text-blue-700 dark:text-blue-400">
               {takenCount}
-              <span className="text-sm text-zinc-500">/{totalQuizzes}</span>
+              <span className="text-sm text-blue-500/80">/{totalQuizzes}</span>
             </p>
           </div>
         </div>
@@ -156,12 +156,14 @@ export default async function QuizzesPage() {
             <span className="font-heading font-medium text-foreground">
               Full quiz
             </span>{" "}
-            — click a quiz row to take or retake every question. Updates
-            your{" "}
-            <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
-              Best
-            </span>{" "}
-            score.
+            — click a quiz row to take or retake every question.{" "}
+            <span className="text-emerald-700 dark:text-emerald-400">
+              Updates your{" "}
+              <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
+                Best
+              </span>{" "}
+              score.
+            </span>
           </p>
           <p>
             <InfoIcon className="mr-1 inline size-4 align-text-bottom text-red-700 dark:text-red-400" />
@@ -184,7 +186,7 @@ export default async function QuizzesPage() {
           </p>
         </div>
 
-        <div className="flex flex-col justify-center gap-2 rounded-xl border border-black/10 p-4 sm:ml-auto dark:border-white/10">
+        <div className="flex flex-col justify-center gap-2 rounded-xl border border-red-200/70 bg-red-50/80 p-4 sm:ml-auto dark:border-red-400/15 dark:bg-red-400/10">
           <ResetActionButton
             label="Reset progress"
             confirmLabel="Yes, reset progress"
