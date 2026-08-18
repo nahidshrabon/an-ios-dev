@@ -3,7 +3,7 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
-import { CheckIcon, ChevronDownIcon } from "@/components/Icons";
+import { CheckIcon, ChevronDownIcon, InfoIcon } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
 import { ResetActionButton } from "@/components/ResetActionButton";
 import { resetQuizHistory } from "@/lib/actions/settings";
@@ -109,7 +109,7 @@ export default async function QuizzesPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
+      <h1 className="font-heading text-center text-2xl font-semibold tracking-tight">
         Quizzes
       </h1>
 
@@ -131,20 +131,20 @@ export default async function QuizzesPage() {
           </div>
         </div>
 
-        <div className="flex items-stretch divide-x divide-black/10 rounded-xl border border-black/10 dark:divide-white/10 dark:border-white/10">
-          <div className="p-4">
-            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex items-stretch overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
+          <div className="bg-emerald-50/80 p-4 dark:bg-emerald-400/10">
+            <p className="font-heading text-sm text-emerald-700 dark:text-emerald-400">
               Success rate
             </p>
-            <p className="font-heading mt-0.5 text-xl font-semibold">
+            <p className="font-heading mt-0.5 text-xl font-semibold text-emerald-700 dark:text-emerald-400">
               {successRatePercent}%
             </p>
           </div>
-          <div className="p-4">
-            <p className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="bg-red-50/80 p-4 dark:bg-red-400/10">
+            <p className="font-heading text-sm text-red-700 dark:text-red-400">
               Needs review
             </p>
-            <p className="font-heading mt-0.5 text-xl font-semibold">
+            <p className="font-heading mt-0.5 text-xl font-semibold text-red-700 dark:text-red-400">
               {reviewPercent}%
             </p>
           </div>
@@ -152,13 +152,19 @@ export default async function QuizzesPage() {
 
         <div className="flex flex-col justify-center gap-1.5 rounded-xl border border-black/10 p-4 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
           <p>
+            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-zinc-500 dark:text-zinc-400" />
             <span className="font-heading font-medium text-foreground">
               Full quiz
             </span>{" "}
-            — click a quiz to take or retake every question. Updates your
-            Best score.
+            — click a quiz row to take or retake every question. Updates
+            your{" "}
+            <span className="font-heading font-medium text-accent">
+              Best
+            </span>{" "}
+            score.
           </p>
           <p>
+            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-zinc-500 dark:text-zinc-400" />
             <span className="font-heading font-medium text-foreground">
               Review
             </span>{" "}
@@ -167,7 +173,11 @@ export default async function QuizzesPage() {
               Review
             </span>{" "}
             to retake just the questions you missed last time. Doesn&apos;t
-            update your Best score.
+            update your{" "}
+            <span className="font-heading font-medium text-red-700 dark:text-red-400">
+              Best
+            </span>{" "}
+            score.
           </p>
         </div>
 
