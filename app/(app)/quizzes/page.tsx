@@ -15,6 +15,11 @@ export default async function QuizzesPage() {
   const { data: claims } = await getClaims();
   const userId = claims?.claims.sub as string;
 
+  const allQuizzes = getAllQuizzes();
+  const totalQuestionsByQuizId = new Map(
+    allQuizzes.map((quiz) => [quiz.id, quiz.questions.length])
+  );
+
   const supabase = await createClient();
   const { data: attempts } = await supabase
     .from("quiz_attempts")
@@ -25,9 +30,15 @@ export default async function QuizzesPage() {
   const needsReviewByQuiz: Record<string, number> = {};
   const lastAttemptTimeByQuiz: Record<string, string> = {};
   attempts?.forEach((a) => {
-    const current = bestByQuiz[a.quiz_id];
-    if (!current || a.score > current.score) {
-      bestByQuiz[a.quiz_id] = { score: a.score, total: a.total_questions };
+    // Only full attempts count toward Best — review runs cover fewer
+    // questions, so their raw score isn't comparable.
+    const isFullAttempt =
+      a.total_questions === totalQuestionsByQuizId.get(a.quiz_id);
+    if (isFullAttempt) {
+      const current = bestByQuiz[a.quiz_id];
+      if (!current || a.score > current.score) {
+        bestByQuiz[a.quiz_id] = { score: a.score, total: a.total_questions };
+      }
     }
 
     const lastTime = lastAttemptTimeByQuiz[a.quiz_id];
@@ -41,7 +52,7 @@ export default async function QuizzesPage() {
   });
 
   const quizzesBySlug = new Map(
-    getAllQuizzes()
+    allQuizzes
       .filter((quiz) => quiz.relatedArticleSlug)
       .map((quiz) => [quiz.relatedArticleSlug, quiz])
   );
@@ -96,25 +107,19 @@ export default async function QuizzesPage() {
             <span className="font-heading font-medium text-foreground">
               Full quiz
             </span>{" "}
-            — click a quiz to take or retake every question.
+            — click a quiz to take or retake every question. Updates your
+            Best score.
           </p>
           <p>
             <span className="font-heading font-medium text-foreground">
-              Review quiz
+              Review
             </span>{" "}
             — click{" "}
             <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
               Review
             </span>{" "}
-            to practice just what you missed last time.
-          </p>
-          <p>
-            <span className="font-heading font-medium text-foreground">
-              Best
-            </span>{" "}
-            — your highest score on any attempt, full or review. Review
-            runs have fewer questions, so acing one won&apos;t always beat a
-            strong full-quiz score.
+            to retake just the questions you missed last time. Doesn&apos;t
+            update your Best score.
           </p>
         </div>
       </div>
