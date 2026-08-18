@@ -7,7 +7,6 @@ import {
   ArrowRightIcon,
   CheckIcon,
   ChevronDownIcon,
-  ChevronRightIcon,
   TrophyIcon,
 } from "@/components/Icons";
 import { ProgressRing } from "@/components/ProgressRing";
@@ -169,7 +168,6 @@ export default async function QuizzesPage() {
                               {best.score}/{best.total}
                             </span>
                           )}
-                          <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
                         </Link>
                         {!!needsReview && (
                           <Link
