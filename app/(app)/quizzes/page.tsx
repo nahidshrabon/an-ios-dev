@@ -111,7 +111,7 @@ export default async function QuizzesPage() {
         Quizzes
       </h1>
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <div className="flex items-center gap-3 rounded-xl border border-black/10 p-4 dark:border-white/10">
           <ProgressRing percent={percent} size={44} strokeWidth={4}>
             <span className="font-heading text-xs font-semibold">
