@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient, getClaims } from "@/lib/supabase/server";
 import { getArticle } from "@/lib/content/articles";
-import { BookmarkIcon, ChevronRightIcon } from "@/components/Icons";
+import { BookmarkIcon, ChevronRightIcon, InfoIcon } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
 
 type BookmarkRow = {
@@ -36,7 +36,8 @@ export default async function BookmarksPage() {
   return (
     <div>
       <PageHeader icon={BookmarkIcon} title="Bookmarks" />
-      <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-2 flex max-w-2xl items-start gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <InfoIcon className="mt-0.5 size-4 shrink-0" />
         Sections you&apos;ve bookmarked while reading, grouped by article.
       </p>
 
@@ -50,15 +51,17 @@ export default async function BookmarksPage() {
           {articleGroups.map(({ slug, article, items }) => (
             <div
               key={slug}
-              className="rounded-xl border border-black/10 p-4 dark:border-white/10"
+              className="rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 dark:border-blue-400/15 dark:bg-blue-400/10"
             >
-              <p className="font-heading font-medium">{article!.title}</p>
+              <p className="font-heading font-medium text-blue-700 dark:text-blue-400">
+                {article!.title}
+              </p>
               <ul className="mt-3 flex flex-col gap-1">
                 {items.map((b) => (
                   <li key={b.heading_slug}>
                     <Link
                       href={`/articles/${slug}#${b.heading_slug}`}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm transition-colors hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/5"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-blue-200/50 bg-white/70 px-3 py-2 text-sm transition-colors hover:bg-blue-100/60 dark:border-blue-400/10 dark:bg-white/5 dark:hover:bg-blue-400/15"
                     >
                       <span className="font-heading min-w-0 flex-1 truncate">
                         {b.heading_title}

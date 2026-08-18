@@ -113,8 +113,42 @@ export default async function QuizzesPage() {
     <div>
       <PageHeader icon={TestIcon} title="Quizzes" />
 
+      <div className="mt-2 flex flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <p>
+          <InfoIcon className="mr-1 inline size-4 align-text-bottom text-zinc-500 dark:text-zinc-400" />
+          <span className="font-heading font-medium text-foreground">
+            Full quiz
+          </span>{" "}
+          — click a quiz row to take or retake every question.{" "}
+          <span className="text-emerald-700 dark:text-emerald-400">
+            Updates your{" "}
+            <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
+              Best
+            </span>{" "}
+            score.
+          </span>
+        </p>
+        <p>
+          <InfoIcon className="mr-1 inline size-4 align-text-bottom text-red-700 dark:text-red-400" />
+          <span className="font-heading font-medium text-red-700 dark:text-red-400">
+            Review
+          </span>{" "}
+          <span className="text-zinc-600 dark:text-zinc-400">— click </span>
+          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
+            Review
+          </span>{" "}
+          <span className="text-zinc-600 dark:text-zinc-400">
+            to retake just the questions you missed last time.
+          </span>{" "}
+          <span className="text-red-700 dark:text-red-400">
+            Doesn&apos;t update your{" "}
+            <span className="font-heading font-medium">Best</span> score.
+          </span>
+        </p>
+      </div>
+
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <div className="flex items-center gap-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 dark:border-blue-400/15 dark:bg-blue-400/10">
+        <div className="flex items-center gap-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 sm:flex-1 dark:border-blue-400/15 dark:bg-blue-400/10">
           <ProgressRing percent={percent} size={44} strokeWidth={4}>
             <span className="font-heading text-xs font-semibold">
               {percent}%
@@ -131,8 +165,8 @@ export default async function QuizzesPage() {
           </div>
         </div>
 
-        <div className="flex items-stretch overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
-          <div className="flex flex-col justify-center bg-emerald-50/80 p-4 dark:bg-emerald-400/10">
+        <div className="flex items-stretch overflow-hidden rounded-xl border border-black/10 sm:flex-1 dark:border-white/10">
+          <div className="flex flex-1 flex-col justify-center bg-emerald-50/80 p-4 dark:bg-emerald-400/10">
             <p className="font-heading text-sm text-emerald-700 dark:text-emerald-400">
               Success rate
             </p>
@@ -140,7 +174,7 @@ export default async function QuizzesPage() {
               {successRatePercent}%
             </p>
           </div>
-          <div className="flex flex-col justify-center bg-red-50/80 p-4 dark:bg-red-400/10">
+          <div className="flex flex-1 flex-col justify-center bg-red-50/80 p-4 dark:bg-red-400/10">
             <p className="font-heading text-sm text-red-700 dark:text-red-400">
               Needs review
             </p>
@@ -148,42 +182,6 @@ export default async function QuizzesPage() {
               {reviewPercent}%
             </p>
           </div>
-        </div>
-
-        <div className="flex flex-col justify-center gap-1.5 rounded-xl border border-black/10 p-4 text-sm text-zinc-600 dark:border-white/10 dark:text-zinc-400">
-          <p>
-            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-zinc-500 dark:text-zinc-400" />
-            <span className="font-heading font-medium text-foreground">
-              Full quiz
-            </span>{" "}
-            — click a quiz row to take or retake every question.{" "}
-            <span className="text-emerald-700 dark:text-emerald-400">
-              Updates your{" "}
-              <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
-                Best
-              </span>{" "}
-              score.
-            </span>
-          </p>
-          <p>
-            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-red-700 dark:text-red-400" />
-            <span className="font-heading font-medium text-red-700 dark:text-red-400">
-              Review
-            </span>{" "}
-            <span className="text-zinc-600 dark:text-zinc-400">
-              — click{" "}
-            </span>
-            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
-              Review
-            </span>{" "}
-            <span className="text-zinc-600 dark:text-zinc-400">
-              to retake just the questions you missed last time.
-            </span>{" "}
-            <span className="text-red-700 dark:text-red-400">
-              Doesn&apos;t update your{" "}
-              <span className="font-heading font-medium">Best</span> score.
-            </span>
-          </p>
         </div>
 
         <div className="flex flex-col justify-center gap-2 rounded-xl border border-red-200/70 bg-red-50/80 p-4 sm:ml-auto dark:border-red-400/15 dark:bg-red-400/10">
