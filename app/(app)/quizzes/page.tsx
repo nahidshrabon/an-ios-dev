@@ -109,7 +109,7 @@ export default async function QuizzesPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-center text-2xl font-semibold tracking-tight">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
         Quizzes
       </h1>
 
@@ -132,7 +132,7 @@ export default async function QuizzesPage() {
         </div>
 
         <div className="flex items-stretch overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
-          <div className="bg-emerald-50/80 p-4 dark:bg-emerald-400/10">
+          <div className="flex flex-col justify-center bg-emerald-50/80 p-4 dark:bg-emerald-400/10">
             <p className="font-heading text-sm text-emerald-700 dark:text-emerald-400">
               Success rate
             </p>
@@ -140,7 +140,7 @@ export default async function QuizzesPage() {
               {successRatePercent}%
             </p>
           </div>
-          <div className="bg-red-50/80 p-4 dark:bg-red-400/10">
+          <div className="flex flex-col justify-center bg-red-50/80 p-4 dark:bg-red-400/10">
             <p className="font-heading text-sm text-red-700 dark:text-red-400">
               Needs review
             </p>
