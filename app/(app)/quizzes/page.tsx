@@ -108,6 +108,14 @@ export default async function QuizzesPage() {
             </span>{" "}
             to practice just what you missed last time.
           </p>
+          <p>
+            <span className="font-heading font-medium text-foreground">
+              Best
+            </span>{" "}
+            — your highest score on any attempt, full or review. Review
+            runs have fewer questions, so acing one won&apos;t always beat a
+            strong full-quiz score.
+          </p>
         </div>
       </div>
 
