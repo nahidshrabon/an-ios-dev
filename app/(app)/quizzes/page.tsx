@@ -158,25 +158,20 @@ export default async function QuizzesPage() {
             </span>{" "}
             — click a quiz row to take or retake every question. Updates
             your{" "}
-            <span className="font-heading font-medium text-accent">
+            <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
               Best
             </span>{" "}
             score.
           </p>
-          <p>
-            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-zinc-500 dark:text-zinc-400" />
-            <span className="font-heading font-medium text-foreground">
-              Review
-            </span>{" "}
+          <p className="text-red-700 dark:text-red-400">
+            <InfoIcon className="mr-1 inline size-4 align-text-bottom text-red-700 dark:text-red-400" />
+            <span className="font-heading font-medium">Review</span>{" "}
             — click{" "}
             <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
               Review
             </span>{" "}
             to retake just the questions you missed last time. Doesn&apos;t
-            update your{" "}
-            <span className="font-heading font-medium text-red-700 dark:text-red-400">
-              Best
-            </span>{" "}
+            update your <span className="font-heading font-medium">Best</span>{" "}
             score.
           </p>
         </div>
