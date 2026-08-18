@@ -100,10 +100,10 @@ export const roadmap: RoadmapPart[] = [
     id: "part-6",
     title: "Architecture",
     sections: [
-      section(45, "Architecture Foundations"),
-      section(46, "Architecture Patterns"),
-      section(47, "Dependency Injection"),
-      section(48, "Modularization"),
+      section(45, "Architecture Foundations", "architecture-foundations"),
+      section(46, "Architecture Patterns", "architecture-patterns"),
+      section(47, "Dependency Injection", "dependency-injection"),
+      section(48, "Modularization", "modularization"),
     ],
   },
   {

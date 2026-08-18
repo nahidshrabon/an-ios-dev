@@ -406,6 +406,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("cloudkit-and-sync.md"),
   },
+  {
+    slug: "architecture-foundations",
+    title: "Architecture Foundations",
+    description:
+      "Why large views become unmaintainable, separating model/logic/presentation, MVVM with @Observable, what belongs in a view model, service/repository layers, DTO-to-domain mapping, illegal states unrepresentable, screen state as an enum, and project structure that scales.",
+    tags: ["architecture", "mvvm"],
+    publishedAt: "2026-08-16",
+    content: loadBody("architecture-foundations.md"),
+  },
+  {
+    slug: "architecture-patterns",
+    title: "Architecture Patterns",
+    description:
+      "MVC, MVP, MVVM, VIPER, Clean Architecture, unidirectional data flow and the Composable Architecture, the Coordinator pattern vs. SwiftUI-native navigation, use cases/interactors, and choosing an architecture for a given team size.",
+    tags: ["architecture", "tca", "viper"],
+    publishedAt: "2026-08-16",
+    content: loadBody("architecture-patterns.md"),
+  },
+  {
+    slug: "dependency-injection",
+    title: "Dependency Injection",
+    description:
+      "Why singletons hurt testability, initializer and @Environment-based injection, protocol and closure-based abstractions, the composition root, swift-dependencies, injecting a Clock for deterministic tests, and concurrency-aware dependency design.",
+    tags: ["architecture", "dependency-injection", "testing"],
+    publishedAt: "2026-08-16",
+    content: loadBody("dependency-injection.md"),
+  },
+  {
+    slug: "modularization",
+    title: "Modularization",
+    description:
+      "When to split an app into modules, local Swift packages, feature module boundaries, the interface/implementation split, module-level dependency inversion, the package access level, circular dependencies, linking trade-offs, and Tuist/Bazel tooling.",
+    tags: ["architecture", "modularization", "swift-package-manager"],
+    publishedAt: "2026-08-16",
+    content: loadBody("modularization.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
