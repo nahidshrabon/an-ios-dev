@@ -72,7 +72,13 @@ export function QuizRunner({
             {result.score}/{result.total}
           </span>
         </h1>
-        <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
+        <p
+          className={`font-article mt-2 ${
+            previousAnswers
+              ? "font-semibold text-red-700 dark:text-red-400"
+              : "text-zinc-600 dark:text-zinc-400"
+          }`}
+        >
           {quiz.description}
         </p>
 
@@ -167,7 +173,13 @@ export function QuizRunner({
       </Link>
 
       <h1 className="font-heading mt-4 text-2xl font-semibold tracking-tight">{quiz.title}</h1>
-      <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
+      <p
+        className={`font-article mt-2 ${
+          previousAnswers
+            ? "font-semibold text-red-700 dark:text-red-400"
+            : "text-zinc-600 dark:text-zinc-400"
+        }`}
+      >
         {quiz.description}
       </p>
 
