@@ -236,9 +236,6 @@ export default async function QuizzesPage() {
                                 <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
                               )}
                             </span>
-                            <span className="font-article mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">
-                              {quiz.description}
-                            </span>
                           </span>
                           {best && (
                             <span className="font-heading shrink-0 text-xs font-medium text-accent">
