@@ -442,6 +442,69 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("modularization.md"),
   },
+  {
+    slug: "app-lifecycle-and-system-integration",
+    title: "App Lifecycle and System Integration",
+    description:
+      "The App protocol and scene phases, Info.plist and entitlements, custom URL schemes vs. universal links, Handoff, state restoration, BGAppRefreshTask/BGProcessingTask, background execution budgets, Core Spotlight, and SharePlay.",
+    tags: ["platform", "lifecycle", "background-tasks"],
+    publishedAt: "2026-08-16",
+    content: loadBody("app-lifecycle-and-system-integration.md"),
+  },
+  {
+    slug: "notifications",
+    title: "Notifications",
+    description:
+      "Requesting permission, local notifications and triggers, categories and interactive actions, APNs and device tokens, handling taps, silent push, service and content extensions, threading, time-sensitive/critical alerts, and debugging delivery.",
+    tags: ["platform", "notifications", "push"],
+    publishedAt: "2026-08-16",
+    content: loadBody("notifications.md"),
+  },
+  {
+    slug: "app-intents-and-siri",
+    title: "App Intents and Siri",
+    description:
+      "The unified App Intents framework powering Siri, Shortcuts, Spotlight, and widgets: AppIntent, parameters and summaries, AppEntity/EntityQuery, AppEnum, App Shortcuts, snippets, relevance, long-running intents, and testing.",
+    tags: ["platform", "app-intents", "siri"],
+    publishedAt: "2026-08-16",
+    content: loadBody("app-intents-and-siri.md"),
+  },
+  {
+    slug: "widgetkit-and-live-activities",
+    title: "WidgetKit and Live Activities",
+    description:
+      "Widget anatomy, TimelineProvider and reload budgets, widget families, AppIntentConfiguration, interactive widgets, Lock Screen/StandBy/Control Center surfaces, and the full Live Activities lifecycle with Dynamic Island and push updates.",
+    tags: ["platform", "widgetkit", "live-activities"],
+    publishedAt: "2026-08-16",
+    content: loadBody("widgetkit-and-live-activities.md"),
+  },
+  {
+    slug: "app-extensions",
+    title: "App Extensions",
+    description:
+      "The sandboxed extension process model: share and action extensions, custom keyboards, photo editing extensions, Safari web extensions, SFSafariViewController, App Clips, Network Extension, and extension memory limits.",
+    tags: ["platform", "extensions", "app-clips"],
+    publishedAt: "2026-08-16",
+    content: loadBody("app-extensions.md"),
+  },
+  {
+    slug: "location-and-maps",
+    title: "Location and Maps",
+    description:
+      "Location permission tiers, the async CLLocationUpdate/CLMonitor APIs, accuracy authorization, significant location change, background location, SwiftUI Map with annotations and overlays, camera control, local search, directions, and geocoding.",
+    tags: ["platform", "corelocation", "mapkit"],
+    publishedAt: "2026-08-16",
+    content: loadBody("location-and-maps.md"),
+  },
+  {
+    slug: "camera-photos-and-media",
+    title: "Camera, Photos, and Media",
+    description:
+      "Privacy-preserving photo picking, PhotoKit and limited library access, AVCaptureSession photo/video/frame capture, AVPlayer playback, AVAudioSession and AVAudioEngine, recording, export and composition, HLS streaming, and Now Playing integration.",
+    tags: ["platform", "avfoundation", "photokit"],
+    publishedAt: "2026-08-16",
+    content: loadBody("camera-photos-and-media.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
