@@ -213,7 +213,7 @@ export default async function QuizzesPage() {
                   <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" />
                 </span>
               </summary>
-              <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-3 flex flex-col gap-1">
                 {part.sections.map((section) => {
                   const quiz = section.quiz!;
                   const best = bestByQuiz[quiz.id];
