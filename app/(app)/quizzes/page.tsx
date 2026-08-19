@@ -3,7 +3,12 @@ import { createClient, getClaims } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
-import { CheckIcon, ChevronDownIcon, InfoIcon } from "@/components/Icons";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  InfoIcon,
+} from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
@@ -122,9 +127,7 @@ export default async function QuizzesPage() {
           — click a quiz row to take or retake every question.{" "}
           <span className="text-emerald-700 dark:text-emerald-400">
             Updates your{" "}
-            <span className="font-heading inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 align-middle text-xs font-medium text-accent">
-              Best
-            </span>{" "}
+            <span className="font-heading font-medium text-accent">Best</span>{" "}
             score.
           </span>
         </p>
@@ -238,7 +241,7 @@ export default async function QuizzesPage() {
                             </span>
                           </span>
                           {best && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                            <span className="font-heading shrink-0 text-xs font-medium text-accent">
                               Best {best.score}/{best.total}
                             </span>
                           )}
@@ -251,6 +254,7 @@ export default async function QuizzesPage() {
                             Review {needsReview}
                           </Link>
                         )}
+                        <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />
                       </div>
                     </li>
                   );
