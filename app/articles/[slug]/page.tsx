@@ -141,6 +141,22 @@ export default async function ArticlePage({ params, searchParams }: Props) {
             </div>
           )}
         </div>
+
+        <div className="mt-8">
+          <Suspense
+            fallback={
+              <Link
+                href="/articles"
+                className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+              >
+                <ChevronLeftIcon className="size-4" />
+                All articles
+              </Link>
+            }
+          >
+            <ArticleBackLink />
+          </Suspense>
+        </div>
       </ReadingStatusProvider>
     </main>
   );
