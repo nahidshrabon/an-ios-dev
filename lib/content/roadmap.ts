@@ -117,8 +117,8 @@ export const roadmap: RoadmapPart[] = [
       section(53, "App Extensions", "app-extensions"),
       section(54, "Location and Maps", "location-and-maps"),
       section(55, "Camera, Photos, and Media", "camera-photos-and-media"),
-      section(56, "StoreKit and Monetization"),
-      section(57, "Other System Frameworks"),
+      section(56, "StoreKit and Monetization", "storekit-and-monetization"),
+      section(57, "Other System Frameworks", "other-system-frameworks"),
     ],
   },
   {

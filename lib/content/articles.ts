@@ -505,6 +505,24 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("camera-photos-and-media.md"),
   },
+  {
+    slug: "storekit-and-monetization",
+    title: "StoreKit and Monetization",
+    description:
+      "In-app purchase product types, StoreKit 2's async product fetching and purchasing, Transaction.updates and verification, SubscriptionStoreView, subscription groups and offers, server notifications, receipt validation, restoring, refunds, and testing.",
+    tags: ["platform", "storekit", "monetization"],
+    publishedAt: "2026-08-16",
+    content: loadBody("storekit-and-monetization.md"),
+  },
+  {
+    slug: "other-system-frameworks",
+    title: "Other System Frameworks",
+    description:
+      "A broad survey: HealthKit, EventKit, Contacts, Core Motion, Core Bluetooth (central and peripheral), AccessorySetupKit, Core NFC, PassKit/Apple Pay and Wallet, CarPlay templates, Screen Time APIs, Transferable, Translation, and App Attest.",
+    tags: ["platform", "healthkit", "corebluetooth"],
+    publishedAt: "2026-08-16",
+    content: loadBody("other-system-frameworks.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
