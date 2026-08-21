@@ -31,11 +31,13 @@ export function RoadmapChecklist({
   manualCompleted,
   readArticleSlugs,
   bookmarkCountByArticleSlug,
+  bestScoreByArticleSlug,
 }: {
   parts: RoadmapPart[];
   manualCompleted: Record<string, boolean>;
   readArticleSlugs: string[];
   bookmarkCountByArticleSlug: Record<string, number>;
+  bestScoreByArticleSlug: Record<string, { score: number; total: number }>;
   userId: string;
 }) {
   const readSlugs = useMemo(
@@ -168,6 +170,7 @@ export function RoadmapChecklist({
                   if (isAuto) {
                     const bookmarkCount =
                       bookmarkCountByArticleSlug[sec.articleSlug!] ?? 0;
+                    const best = bestScoreByArticleSlug[sec.articleSlug!];
                     return (
                       <li key={sec.id}>
                         <Link
@@ -187,6 +190,11 @@ export function RoadmapChecklist({
                             </span>
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-3 text-xs text-zinc-500">
+                            {best && (
+                              <span className="font-heading shrink-0 text-xs font-medium text-accent">
+                                Best {best.score}/{best.total}
+                              </span>
+                            )}
                             {bookmarkCount > 0 && (
                               <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 font-medium text-accent">
                                 <BookmarkIcon className="size-3.5" filled />
