@@ -16,6 +16,7 @@ import {
   FlagIcon,
   InfoIcon,
 } from "@/components/Icons";
+import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
 import { ResetActionButton } from "@/components/ResetActionButton";
@@ -191,12 +192,13 @@ export function RoadmapChecklist({
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-3 text-xs text-zinc-500">
                             {best && (
-                              <span className="font-heading shrink-0 text-xs font-medium text-accent">
-                                Best {best.score}/{best.total}
+                              <span className="inline-flex items-center gap-1 font-medium text-accent">
+                                <TestIcon className="size-3.5" />
+                                {best.score}/{best.total}
                               </span>
                             )}
                             {bookmarkCount > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 font-medium text-accent">
+                              <span className="inline-flex items-center gap-1 font-medium text-accent">
                                 <BookmarkIcon className="size-3.5" filled />
                                 {bookmarkCount}
                               </span>
