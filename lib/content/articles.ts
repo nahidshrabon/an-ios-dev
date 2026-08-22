@@ -523,6 +523,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("other-system-frameworks.md"),
   },
+  {
+    slug: "foundation-models",
+    title: "Foundation Models",
+    description:
+      "Apple's on-device LLM: availability checks, LanguageModelSession, instructions vs. prompts, context windows, streaming, @Generable/@Guide guided generation, tool calling, multimodal prompts, cloud routing to Claude and Gemini, latency budgeting, guardrails, prompt injection defense, and LoRA adapters.",
+    tags: ["ai", "foundation-models", "on-device"],
+    publishedAt: "2026-08-16",
+    content: loadBody("foundation-models.md"),
+  },
+  {
+    slug: "core-ml-and-custom-models",
+    title: "Core ML and Custom Models",
+    description:
+      "Running custom, narrow-task ML models on-device: adding a .mlpackage to a project, making predictions, converting models with coremltools, quantization and palettization, compute unit selection, the performance report, stateful models, Create ML, Core AI, and MLX.",
+    tags: ["ai", "core-ml", "on-device"],
+    publishedAt: "2026-08-16",
+    content: loadBody("core-ml-and-custom-models.md"),
+  },
+  {
+    slug: "vision-speech-and-language",
+    title: "Vision, Speech, and Language",
+    description:
+      "Apple's perceptual and language frameworks: the modern async Vision API, OCR, barcode detection, face/body detection, image feature prints, document scanning, SpeechAnalyzer transcription, Natural Language tokenization/tagging and embeddings, Sound Analysis, and Image Playground/Genmoji.",
+    tags: ["ai", "vision", "speech"],
+    publishedAt: "2026-08-16",
+    content: loadBody("vision-speech-and-language.md"),
+  },
+  {
+    slug: "ai-assisted-development",
+    title: "AI-Assisted Development",
+    description:
+      "AI as part of the development process: Xcode 27 coding intelligence, on-device vs. cloud model routing, agentic multi-file workflows, generating SwiftUI views, AI-assisted localization, Xcode tool plugins, Claude Code, writing a CLAUDE.md, MCP servers, and reviewing generated Swift for concurrency bugs, retain cycles, and secrets.",
+    tags: ["ai", "tooling", "claude-code"],
+    publishedAt: "2026-08-16",
+    content: loadBody("ai-assisted-development.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

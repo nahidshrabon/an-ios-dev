@@ -14138,6 +14138,1958 @@ export const quizzes: Quiz[] = [
       },
     ],
   },
+  {
+    id: "foundation-models-quiz",
+    title: "Foundation Models",
+    description: "20 questions covering Apple's on-device LLM, sessions, guided generation, tool calling, cloud routing, and safety.",
+    relatedArticleSlug: "foundation-models",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What is the defining characteristic of the Foundation Models framework's on-device LLM, compared to cloud-based APIs?",
+        options: [
+          {
+            id: "a",
+            text: "It requires a persistent network connection for every request",
+          },
+          {
+            id: "b",
+            text: "It runs entirely on-device, providing private processing, zero marginal per-request cost, and offline availability, at the trade-off of smaller model capability",
+          },
+          {
+            id: "c",
+            text: "It charges per-token billing identical to cloud APIs",
+          },
+          {
+            id: "d",
+            text: "It is functionally identical to cloud models with no capability trade-offs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Running entirely on-device means genuinely private processing, no per-token cost, and offline availability, but comes with the trade-off of a smaller, less broadly capable model compared to large cloud-hosted alternatives.",
+      },
+      {
+        id: "q2",
+        prompt: "Why must an app explicitly check `SystemLanguageModel.default.availability` rather than assuming the model is always present?",
+        options: [
+          {
+            id: "a",
+            text: "Availability is purely a network connectivity question, just like a cloud API",
+          },
+          {
+            id: "b",
+            text: "Availability depends on several distinct conditions — hardware eligibility, a user-controlled system setting, and download completion state — any of which could make the model unavailable",
+          },
+          {
+            id: "c",
+            text: "The model is always available on every device running any iOS version",
+          },
+          {
+            id: "d",
+            text: "Availability checks are optional and have no practical purpose",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Unlike a cloud API's simple connectivity question, on-device availability depends on hardware eligibility, whether the feature is enabled in Settings, and download state, all of which a well-designed app should check and handle explicitly.",
+      },
+      {
+        id: "q3",
+        prompt: "Why is a single `LanguageModelSession` instance typically reused across a multi-turn interaction rather than recreated per prompt?",
+        options: [
+          {
+            id: "a",
+            text: "Recreating sessions is technically impossible",
+          },
+          {
+            id: "b",
+            text: "Each `respond(to:)` call within the same session has access to accumulated conversation history, letting follow-up prompts naturally reference earlier turns without manually resending context",
+          },
+          {
+            id: "c",
+            text: "Sessions can only be used exactly once before becoming invalid",
+          },
+          {
+            id: "d",
+            text: "Reusing a session has no effect on conversational continuity",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A session maintains conversation context across turns, similar to a chat conversation's continuity, so reusing it lets follow-up prompts build naturally on prior exchanges.",
+      },
+      {
+        id: "q4",
+        prompt: "What is the key distinction between instructions and prompts in `LanguageModelSession`?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical and interchangeable",
+          },
+          {
+            id: "b",
+            text: "Instructions are a persistent, trusted behavioral framing set once at session creation, while prompts are the actual per-turn user input, a distinction with security relevance for untrusted content",
+          },
+          {
+            id: "c",
+            text: "Prompts are set once at session creation, while instructions are sent per turn",
+          },
+          {
+            id: "d",
+            text: "Instructions can only contain a single word",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Instructions establish stable, trusted behavioral rules independent of user input, while prompts carry the specific per-turn content — a separation that also matters for prompt injection defense (58.18), since prompts may contain untrusted content.",
+      },
+      {
+        id: "q5",
+        prompt: "What happens when a session's accumulated context exceeds the model's context window?",
+        options: [
+          {
+            id: "a",
+            text: "The framework silently truncates older content with no error",
+          },
+          {
+            id: "b",
+            text: "It produces an explicit error (`exceededContextWindowSize`) requiring the app to handle it, such as by starting a fresh session with summarized prior context",
+          },
+          {
+            id: "c",
+            text: "The session automatically expands its context window indefinitely",
+          },
+          {
+            id: "d",
+            text: "The app crashes with no recoverable error",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Exceeding the context window produces an error rather than silent truncation, requiring explicit handling — commonly, starting a fresh session carrying forward a summary of essential prior context.",
+      },
+      {
+        id: "q6",
+        prompt: "Why is streaming particularly important for on-device generation's user experience?",
+        options: [
+          {
+            id: "a",
+            text: "Streaming makes the underlying generation itself faster",
+          },
+          {
+            id: "b",
+            text: "Even fast on-device inference takes perceptible time for longer responses, so showing text progressively keeps the interface feeling responsive rather than frozen until the full response completes",
+          },
+          {
+            id: "c",
+            text: "Streaming is required by the framework and cannot be disabled",
+          },
+          {
+            id: "d",
+            text: "Streaming only matters for multimodal prompts, not text",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Streaming addresses perceived responsiveness — displaying text as it's generated avoids a blank, frozen UI state during the time generation actually takes, similar to the benefit of streaming in other async contexts.",
+      },
+      {
+        id: "q7",
+        prompt: "What advantage does `@Generable` provide over prompting a model to \"return JSON matching this schema\" and parsing the result?",
+        options: [
+          {
+            id: "a",
+            text: "`@Generable` has no real advantage; both approaches are equally reliable",
+          },
+          {
+            id: "b",
+            text: "`@Generable` constrains the model's actual generation process to conform to the type's structure, eliminating the class of bugs where free-form output almost, but not quite, matches the expected format",
+          },
+          {
+            id: "c",
+            text: "`@Generable` only works with cloud-hosted models, not on-device models",
+          },
+          {
+            id: "d",
+            text: "`@Generable` requires manually writing a custom JSON parser",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `@Generable` constrains generation itself rather than relying on post-hoc parsing of free-form text, it eliminates a whole category of format-mismatch bugs common with prompt-based JSON generation.",
+      },
+      {
+        id: "q8",
+        prompt: "How does `@Guide`'s `.anyOf([...])` constraint behave, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "It is purely documentation with no effect on actual generation",
+          },
+          {
+            id: "b",
+            text: "It genuinely constrains what the model can produce for that field during generation itself, not as post-hoc validation, similar in spirit to how `AppEnum` constrains App Intents parameters",
+          },
+          {
+            id: "c",
+            text: "It only applies after the model has already generated a value, filtering the result",
+          },
+          {
+            id: "d",
+            text: "It can only be used with numeric properties, not strings",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`@Guide` constraints operate during generation, genuinely shaping what the model can produce for a given field, drawing a direct parallel to `AppEnum`'s constraint of App Intents parameters to a fixed set of values.",
+      },
+      {
+        id: "q9",
+        prompt: "What does `PartiallyGenerated` represent when streaming a `@Generable` type's output?",
+        options: [
+          {
+            id: "a",
+            text: "A fully complete instance of the type, identical to the final result",
+          },
+          {
+            id: "b",
+            text: "An incremental version of the type where properties may be `nil` or incomplete until the model has generated enough content to populate them, enabling progressive field-by-field rendering",
+          },
+          {
+            id: "c",
+            text: "An error state indicating generation failed",
+          },
+          {
+            id: "d",
+            text: "A separate type unrelated to the original `@Generable` type",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`PartiallyGenerated` combines streaming's responsiveness with guided generation's structure, letting a UI render fields like a name as soon as available while other fields are still being generated.",
+      },
+      {
+        id: "q10",
+        prompt: "Who decides when a tool call is needed within the `Tool` protocol's design?",
+        options: [
+          {
+            id: "a",
+            text: "The app must manually trigger every tool call itself",
+          },
+          {
+            id: "b",
+            text: "The language model itself decides when a tool call is needed during generation, reasoning about whether it requires external information to properly answer a prompt",
+          },
+          {
+            id: "c",
+            text: "Tool calls happen on a fixed schedule regardless of prompt content",
+          },
+          {
+            id: "d",
+            text: "Tool calls can only be triggered by explicit user button taps",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The model reasons about whether it needs external information and decides when to invoke a tool, with the framework handling the actual invocation and feeding the result back into generation.",
+      },
+      {
+        id: "q11",
+        prompt: "How does multi-step tool calling handle a compound prompt requiring several pieces of sequentially gathered information?",
+        options: [
+          {
+            id: "a",
+            text: "The app must manually sequence each tool call itself",
+          },
+          {
+            id: "b",
+            text: "The session can invoke multiple tools across several steps automatically within one `respond(to:)` call, with the model reasoning iteratively about what additional information it still needs",
+          },
+          {
+            id: "c",
+            text: "Multi-step tool calling is not supported; only a single tool can be called per prompt",
+          },
+          {
+            id: "d",
+            text: "Each tool call requires starting an entirely new session",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The model's own reasoning determines the necessary sequence of tool invocations to fully answer a compound prompt, all orchestrated automatically within a single `respond(to:)` call.",
+      },
+      {
+        id: "q12",
+        prompt: "What new capability does iOS 27's multimodal prompting add to `LanguageModelSession`?",
+        options: [
+          {
+            id: "a",
+            text: "The ability to accept image input alongside text, letting the model reason jointly about visual and textual content",
+          },
+          {
+            id: "b",
+            text: "The ability to run entirely on cloud servers instead of on-device",
+          },
+          {
+            id: "c",
+            text: "The removal of the context window limit entirely",
+          },
+          {
+            id: "d",
+            text: "Automatic translation of prompts into other languages",
+          },
+        ],
+        correctOptionId: "a",
+        explanation: "Multimodal prompting extends prompts to include image content (via `ImageContent`), enabling use cases like describing photos or extracting structured data from a captured image alongside a text question.",
+      },
+      {
+        id: "q13",
+        prompt: "How do Vision framework tools exposed to the model (58.13) differ from direct multimodal image input (58.12)?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical mechanisms with different names",
+          },
+          {
+            id: "b",
+            text: "Vision tools let the model request specific, structured visual analysis (like OCR) as part of its reasoning process, as opposed to holistically describing an image via direct multimodal input",
+          },
+          {
+            id: "c",
+            text: "Vision tools can only be used with text prompts, never images",
+          },
+          {
+            id: "d",
+            text: "Direct multimodal input requires more code than Vision tools",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Vision-backed tools complement multimodal input by letting the model invoke structured, specific visual analysis when a task calls for it, rather than relying solely on holistic image description.",
+      },
+      {
+        id: "q14",
+        prompt: "What does the `LanguageModel` protocol abstraction enable?",
+        options: [
+          {
+            id: "a",
+            text: "It requires every app to implement its own language model from scratch",
+          },
+          {
+            id: "b",
+            text: "It abstracts over different underlying model backends, letting app code written against the protocol interchangeably target different models (like the on-device model or cloud-routed models) without structural changes",
+          },
+          {
+            id: "c",
+            text: "It only works with `SystemLanguageModel` and no other backend",
+          },
+          {
+            id: "d",
+            text: "It eliminates the need for the `Tool` protocol entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because app code targets the protocol rather than `SystemLanguageModel` directly, swapping the underlying model backend becomes a configuration concern rather than requiring separate parallel implementations.",
+      },
+      {
+        id: "q15",
+        prompt: "What determines when iOS 27 routes a request to a cloud-hosted model like Claude or Gemini instead of the on-device model?",
+        options: [
+          {
+            id: "a",
+            text: "Cloud routing happens for every single request by default",
+          },
+          {
+            id: "b",
+            text: "Routing can occur when a task's complexity genuinely exceeds what the smaller on-device model can handle well, while simpler tasks continue using the on-device model by default for speed, privacy, and offline availability",
+          },
+          {
+            id: "c",
+            text: "Cloud routing is entirely manual and requires the user to explicitly select it every time",
+          },
+          {
+            id: "d",
+            text: "There is no meaningful difference between on-device and cloud-routed requests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The hybrid approach reserves cloud routing for cases where on-device capability would be insufficient, while defaulting to on-device processing for its speed, privacy, and offline advantages when sufficient.",
+      },
+      {
+        id: "q16",
+        prompt: "Why might an app pre-warm a `LanguageModelSession` ahead of when it's actually needed?",
+        options: [
+          {
+            id: "a",
+            text: "Pre-warming has no effect on performance",
+          },
+          {
+            id: "b",
+            text: "On-device inference has real, non-trivial latency, so pre-warming ahead of actual need can reduce perceived latency for the user's first real prompt, echoing latency-budgeting concerns from background tasks and widget reloads",
+          },
+          {
+            id: "c",
+            text: "Pre-warming is required before any session can be created at all",
+          },
+          {
+            id: "d",
+            text: "Pre-warming disables guardrails for faster generation",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because generation latency is a real, non-trivial cost, pre-warming a session in advance is a practical technique for reducing the perceived delay experienced at the moment of actual use, similar to other latency-budgeting concerns elsewhere in the platform.",
+      },
+      {
+        id: "q17",
+        prompt: "Why must apps handle the guardrail refusal case explicitly, according to 58.17?",
+        options: [
+          {
+            id: "a",
+            text: "Guardrails never actually trigger in practice",
+          },
+          {
+            id: "b",
+            text: "The model's built-in guardrails can produce a refusal for harmful or policy-violating content, independent of the app's own instructions, and apps should handle this gracefully rather than treating it as an unexpected error",
+          },
+          {
+            id: "c",
+            text: "Guardrails can be fully disabled by the app's own instructions",
+          },
+          {
+            id: "d",
+            text: "Refusals only occur for multimodal prompts, never text-only prompts",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Guardrails are a safety layer independent of app instructions — even carefully crafted instructions can't override built-in refusal behavior — so well-built apps handle this path with an appropriate user-facing message.",
+      },
+      {
+        id: "q18",
+        prompt: "What is prompt injection, as described in 58.18?",
+        options: [
+          {
+            id: "a",
+            text: "A technique for improving model response speed",
+          },
+          {
+            id: "b",
+            text: "A vulnerability where untrusted external content (like scraped web text) embedded in a prompt could contain adversarial instructions attempting to override the app's own behavioral framing",
+          },
+          {
+            id: "c",
+            text: "A required step for using the `Tool` protocol",
+          },
+          {
+            id: "d",
+            text: "A method for expanding the context window",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Prompt injection is a security concern arising when untrusted content is incorporated into a prompt, potentially containing instructions designed to hijack the model's behavior away from the app's intended framing.",
+      },
+      {
+        id: "q19",
+        prompt: "How does defensive prompt design mitigate prompt injection risk, per the section's example?",
+        options: [
+          {
+            id: "a",
+            text: "By elevating untrusted content directly into the instructions so the model trusts it fully",
+          },
+          {
+            id: "b",
+            text: "By clearly demarcating untrusted content as data to analyze within the prompt (never the instructions) and explicitly telling the model not to follow instructions contained within that content",
+          },
+          {
+            id: "c",
+            text: "By disabling the `Tool` protocol entirely",
+          },
+          {
+            id: "d",
+            text: "There is no effective mitigation technique available",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because instructions are trusted and prompts may carry untrusted content, defensive design keeps untrusted content clearly framed as data within the prompt and never promotes it into the trusted instructions.",
+      },
+      {
+        id: "q20",
+        prompt: "What makes LoRA-style adapter fine-tuning (58.19) more efficient than full model fine-tuning?",
+        options: [
+          {
+            id: "a",
+            text: "It requires retraining the entire model's weights from scratch",
+          },
+          {
+            id: "b",
+            text: "It trains only a small number of additional, low-rank parameters layered on top of the frozen base model, rather than updating the entire model's weights",
+          },
+          {
+            id: "c",
+            text: "It eliminates the need for any training data at all",
+          },
+          {
+            id: "d",
+            text: "It only works with cloud-hosted models, not the on-device model",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "LoRA adaptation's efficiency comes from training a small set of additional parameters on top of a frozen base model, making domain specialization practical without the computational cost of full fine-tuning.",
+      },
+    ],
+  },
+  {
+    id: "core-ml-and-custom-models-quiz",
+    title: "Core ML and Custom Models",
+    description: "20 questions covering Core ML integration, prediction, model conversion, compression, compute units, and related on-device ML frameworks.",
+    relatedArticleSlug: "core-ml-and-custom-models",
+    questions: [
+      {
+        id: "q1",
+        prompt: "How does Core ML's purpose differ from Foundation Models' purpose?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical frameworks with different names",
+          },
+          {
+            id: "b",
+            text: "Core ML is the framework of choice for custom, often narrower-task models, while Foundation Models provides a single, general-purpose, pre-built language model requiring no training",
+          },
+          {
+            id: "c",
+            text: "Foundation Models requires training data while Core ML does not",
+          },
+          {
+            id: "d",
+            text: "Core ML only works with images, while Foundation Models only works with text",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Core ML is suited to genuinely custom tasks needing a bespoke, often narrowly-trained model, while Foundation Models provides a ready-to-use, general-purpose LLM with no training required.",
+      },
+      {
+        id: "q2",
+        prompt: "What does Xcode automatically generate when a `.mlpackage` file is added to a project?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; models must be manually parsed as raw tensors",
+          },
+          {
+            id: "b",
+            text: "A strongly-typed Swift interface class matching the model's inputs and outputs, enabling type-safe usage rather than manual tensor manipulation",
+          },
+          {
+            id: "c",
+            text: "A Python script for running the model",
+          },
+          {
+            id: "d",
+            text: "A separate app target dedicated to the model",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Xcode's automatic code generation produces a properly typed Swift class matching the model's defined schema, making model integration feel like calling any other strongly-typed Swift API.",
+      },
+      {
+        id: "q3",
+        prompt: "Why is it standard practice to run `prediction(input:)` off the main thread for larger models?",
+        options: [
+          {
+            id: "a",
+            text: "`prediction(input:)` is always asynchronous by default and requires no special handling",
+          },
+          {
+            id: "b",
+            text: "It runs synchronously and can take meaningful time for larger models, so running it off the main thread avoids blocking the UI, consistent with general UI responsiveness principles",
+          },
+          {
+            id: "c",
+            text: "Core ML predictions cannot execute on the main thread at all",
+          },
+          {
+            id: "d",
+            text: "Off-main-thread execution is required only for models using the Neural Engine",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Since prediction runs synchronously and can be time-consuming, moving it off the main thread for larger models avoids blocking UI responsiveness, mirroring general principles about keeping expensive work off the main thread.",
+      },
+      {
+        id: "q4",
+        prompt: "What is the purpose of `coremltools`?",
+        options: [
+          {
+            id: "a",
+            text: "It runs Core ML models on-device for inference",
+          },
+          {
+            id: "b",
+            text: "It converts models trained in other frameworks (like PyTorch or TensorFlow) into Core ML's `.mlmodel`/`.mlpackage` format, as an offline step before Xcode integration",
+          },
+          {
+            id: "c",
+            text: "It replaces the need for Xcode's automatic Swift class generation",
+          },
+          {
+            id: "d",
+            text: "It is used exclusively for quantization, not format conversion",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because most published ML models are trained in PyTorch or TensorFlow, `coremltools` provides the necessary offline conversion step that translates architecture and weights into Core ML's native format.",
+      },
+      {
+        id: "q5",
+        prompt: "What trade-off do quantization and palettization introduce?",
+        options: [
+          {
+            id: "a",
+            text: "They have no downside; maximum compression should always be applied",
+          },
+          {
+            id: "b",
+            text: "They substantially shrink model size and can improve inference speed, generally at some cost to prediction accuracy, requiring the right compression level to be determined by measuring actual accuracy impact",
+          },
+          {
+            id: "c",
+            text: "They only affect inference speed, never model file size",
+          },
+          {
+            id: "d",
+            text: "They are only applicable to models trained with Create ML",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "These compression techniques trade file size and speed benefits against potential accuracy degradation — the section emphasizes measuring the actual impact against the specific task's tolerance rather than applying maximum compression by default.",
+      },
+      {
+        id: "q6",
+        prompt: "What does setting `MLModelConfiguration.computeUnits` to `.all` do?",
+        options: [
+          {
+            id: "a",
+            text: "It forces every operation to run exclusively on the CPU",
+          },
+          {
+            id: "b",
+            text: "It lets Core ML automatically choose the most efficient available compute unit (CPU, GPU, or Neural Engine) per operation, which is generally the right choice for most apps",
+          },
+          {
+            id: "c",
+            text: "It disables the Neural Engine entirely",
+          },
+          {
+            id: "d",
+            text: "It has no effect on how the model actually executes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`.all` (the default) allows Core ML's own scheduling to select the fastest available hardware per operation, generally outperforming a manually restricted configuration in most cases.",
+      },
+      {
+        id: "q7",
+        prompt: "Why might a developer explicitly restrict a model to `.cpuOnly` despite `.all` generally being the better default?",
+        options: [
+          {
+            id: "a",
+            text: "`.cpuOnly` is always faster than `.all` for every model",
+          },
+          {
+            id: "b",
+            text: "For specific debugging or consistency needs, like ensuring identical numeric results across runs, since GPU/Neural Engine execution can introduce minor floating-point differences",
+          },
+          {
+            id: "c",
+            text: "`.cpuOnly` is required for all models using quantization",
+          },
+          {
+            id: "d",
+            text: "The Neural Engine cannot be used with any Core ML model",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Restricting to CPU-only execution can be useful for reproducibility/debugging purposes where consistent floating-point results matter, even though it sacrifices the performance benefit of `.all`'s flexible hardware selection.",
+      },
+      {
+        id: "q8",
+        prompt: "What does Xcode's Core ML performance report reveal that the `.all` compute units configuration alone does not?",
+        options: [
+          {
+            id: "a",
+            text: "The model's training data source",
+          },
+          {
+            id: "b",
+            text: "*Actual* per-operation compute unit assignment and latency on a target device, surfacing cases where operations unexpectedly fall back to CPU or GPU instead of the Neural Engine",
+          },
+          {
+            id: "c",
+            text: "The exact accuracy percentage of the model on a validation set",
+          },
+          {
+            id: "d",
+            text: "Whether the model file is signed correctly",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The performance report shows what actually executed on which compute unit, revealing unexpected fallbacks (e.g., an operation unsupported by the Neural Engine silently running on CPU/GPU) before the model ships.",
+      },
+      {
+        id: "q9",
+        prompt: "What efficiency problem does a stateful Core ML model address?",
+        options: [
+          {
+            id: "a",
+            text: "Stateful models eliminate the need for any input data",
+          },
+          {
+            id: "b",
+            text: "Without statefulness, each prediction call would need to recompute shared context from scratch; a stateful model carries forward relevant internal computation across successive calls",
+          },
+          {
+            id: "c",
+            text: "Stateful models only matter for image classification tasks",
+          },
+          {
+            id: "d",
+            text: "Stateful models remove the need for `MLModelConfiguration`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Particularly for transformer-based sequential models, statefulness avoids redundant recomputation of shared context across calls, directly analogous to the efficiency benefit of session-based conversational continuity in Foundation Models.",
+      },
+      {
+        id: "q10",
+        prompt: "How does a stateful Core ML model's efficiency benefit relate to `LanguageModelSession` from section 58.3?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful relationship between the two",
+          },
+          {
+            id: "b",
+            text: "Both maintain context/state across successive calls to avoid recomputing shared information each time, though implemented at Core ML's lower, more general level versus Foundation Models' session abstraction",
+          },
+          {
+            id: "c",
+            text: "`LanguageModelSession` uses Core ML internally with no distinction between them",
+          },
+          {
+            id: "d",
+            text: "Stateful models are exclusively used within `LanguageModelSession`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct analogy — both stateful Core ML models and `LanguageModelSession` avoid redundant recomputation by carrying forward context across calls, just at different levels of the stack.",
+      },
+      {
+        id: "q11",
+        prompt: "What privacy advantage does on-device training with Create ML provide?",
+        options: [
+          {
+            id: "a",
+            text: "Training data is always uploaded to Apple's servers for processing",
+          },
+          {
+            id: "b",
+            text: "A model can personalize itself to a specific user's data entirely locally, without that potentially sensitive personal data ever needing to be transmitted to an external training service",
+          },
+          {
+            id: "c",
+            text: "Create ML cannot train models using personal user data at all",
+          },
+          {
+            id: "d",
+            text: "On-device training requires an active network connection",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "On-device training lets personalization (like adapting to a user's handwriting style) happen entirely locally, paralleling the privacy advantages already discussed for on-device inference in Foundation Models and Translation.",
+      },
+      {
+        id: "q12",
+        prompt: "Where does the iOS 27 Core AI framework sit relative to Foundation Models and raw Core ML?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces both frameworks entirely",
+          },
+          {
+            id: "b",
+            text: "It fills a middle ground — providing more specialized custom local model capability than Foundation Models' general-purpose LLM, with tighter platform integration than assembling a fully custom Core ML pipeline from scratch",
+          },
+          {
+            id: "c",
+            text: "It is identical in scope to Foundation Models",
+          },
+          {
+            id: "d",
+            text: "It is only usable for model conversion, not inference",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Core AI is positioned between Foundation Models' general-purpose, ready-to-use LLM and Core ML's maximum-flexibility, higher-implementation-responsibility approach, aimed at teams needing custom models without building all supporting infrastructure themselves.",
+      },
+      {
+        id: "q13",
+        prompt: "What is MLX primarily used for, as distinguished from Core ML?",
+        options: [
+          {
+            id: "a",
+            text: "MLX and Core ML serve identical purposes with no meaningful distinction",
+          },
+          {
+            id: "b",
+            text: "MLX is more commonly used for research, experimentation, and training workloads leveraging Apple silicon's unified memory architecture, while Core ML is the production-oriented, app-integration-focused framework",
+          },
+          {
+            id: "c",
+            text: "MLX is exclusively used for deploying models within production iOS apps",
+          },
+          {
+            id: "d",
+            text: "MLX cannot run on Apple silicon at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MLX targets research and training workflows that benefit from Apple silicon's memory architecture, while Core ML focuses on production deployment with strongly-typed Swift interfaces and Xcode integration.",
+      },
+      {
+        id: "q14",
+        prompt: "What is a typical workflow relationship between MLX and Core ML, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "They can never be used together in the same project",
+          },
+          {
+            id: "b",
+            text: "Models developed or trained using MLX during research/prototyping could then be converted or exported for actual production app integration via Core ML",
+          },
+          {
+            id: "c",
+            text: "Core ML must always be used before MLX in any workflow",
+          },
+          {
+            id: "d",
+            text: "MLX replaces the need for `coremltools` entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section describes MLX as suited to research/training phases, with resulting models potentially deployed via Core ML for production app integration — a complementary rather than competing relationship.",
+      },
+      {
+        id: "q15",
+        prompt: "Why is choosing between Core ML and Foundation Models framed as an architectural decision rather than a purely technical one?",
+        options: [
+          {
+            id: "a",
+            text: "Both frameworks are functionally interchangeable in every scenario",
+          },
+          {
+            id: "b",
+            text: "The choice depends on whether an app's needs are genuinely custom and narrow (favoring Core ML) versus general-purpose and ready-to-use with no training required (favoring Foundation Models)",
+          },
+          {
+            id: "c",
+            text: "Foundation Models can never be used for any classification task",
+          },
+          {
+            id: "d",
+            text: "Core ML is always the superior choice regardless of task",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuine architectural decision — matching the framework to whether the task requires bespoke, custom-trained model behavior or general-purpose language capability.",
+      },
+      {
+        id: "q16",
+        prompt: "What must happen before a PyTorch-trained model can be used within an Xcode project via the generated Swift interface described in 59.2?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; PyTorch models can be added directly to Xcode with no conversion",
+          },
+          {
+            id: "b",
+            text: "The model must first be converted to Core ML's `.mlmodel`/`.mlpackage` format using `coremltools`, as a separate offline step",
+          },
+          {
+            id: "c",
+            text: "The model must be retrained entirely using Create ML",
+          },
+          {
+            id: "d",
+            text: "The model must be converted to MLX format first",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`coremltools` conversion is a necessary offline bridge step — translating a PyTorch (or TensorFlow) model's architecture and weights into Core ML's native format before it can be added to an Xcode project and used via the generated interface.",
+      },
+      {
+        id: "q17",
+        prompt: "What is the general default recommendation for `computeUnits`, and why?",
+        options: [
+          {
+            id: "a",
+            text: "`.cpuOnly`, because it is always fastest",
+          },
+          {
+            id: "b",
+            text: "`.all`, because it lets Core ML intelligently select the fastest available hardware per operation, which is appropriate for most apps",
+          },
+          {
+            id: "c",
+            text: "`.gpuOnly`, because the Neural Engine is deprecated",
+          },
+          {
+            id: "d",
+            text: "There is no default recommendation; every app must choose based on trial and error",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends `.all` as the generally correct default, since Core ML's own scheduling can select the most efficient compute unit per operation more effectively than manual restriction in most cases.",
+      },
+      {
+        id: "q18",
+        prompt: "What kind of model architecture particularly benefits from Core ML's stateful model support?",
+        options: [
+          {
+            id: "a",
+            text: "Simple linear regression models",
+          },
+          {
+            id: "b",
+            text: "Transformer-based models processing sequential input, where avoiding recomputation of shared context across calls provides genuine efficiency gains",
+          },
+          {
+            id: "c",
+            text: "Models that only ever receive a single, isolated prediction call",
+          },
+          {
+            id: "d",
+            text: "Only image classification models",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section specifically calls out transformer-based sequential inference as the case where statefulness addresses a genuine efficiency gap, since such models benefit most from carrying forward computation across calls.",
+      },
+      {
+        id: "q19",
+        prompt: "Why does the section describe accuracy measurement as necessary when applying quantization or palettization, rather than simply applying maximum compression?",
+        options: [
+          {
+            id: "a",
+            text: "Accuracy measurement is only relevant for models using the Neural Engine",
+          },
+          {
+            id: "b",
+            text: "Because more aggressive compression can meaningfully degrade prediction quality, and the appropriate compression level depends on the target task's specific tolerance for error",
+          },
+          {
+            id: "c",
+            text: "Compression techniques never actually affect model accuracy",
+          },
+          {
+            id: "d",
+            text: "Accuracy measurement is only needed for models trained with `coremltools`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Since compression involves a genuine size/accuracy trade-off, the right level requires actually measuring the impact on prediction quality against what the specific task can tolerate, rather than assuming maximum compression is always safe.",
+      },
+      {
+        id: "q20",
+        prompt: "Which statement correctly summarizes the relationship between the frameworks covered across sections 58 and 59?",
+        options: [
+          {
+            id: "a",
+            text: "Foundation Models, Core ML, Core AI, and MLX are entirely redundant with one another",
+          },
+          {
+            id: "b",
+            text: "Each framework occupies a different point on a spectrum from general-purpose and ready-to-use (Foundation Models) to fully custom and flexible (Core ML), with Core AI as a middle ground and MLX oriented toward research/training rather than production deployment",
+          },
+          {
+            id: "c",
+            text: "Only Core ML can be used in production apps; the others are experimental only",
+          },
+          {
+            id: "d",
+            text: "MLX and Core ML are the same framework under different names",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section positions these frameworks along a spectrum of generality versus customization and implementation responsibility, from Foundation Models' ready-to-use general LLM through Core AI's middle ground to Core ML's full flexibility, with MLX serving a distinct research/training role.",
+      },
+    ],
+  },
+  {
+    id: "vision-speech-and-language-quiz",
+    title: "Vision, Speech, and Language",
+    description: "20 questions covering the modern Vision API, OCR, barcode/face/document detection, speech transcription, Natural Language, Sound Analysis, and Image Playground.",
+    relatedArticleSlug: "vision-speech-and-language",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What pattern does Vision's modern Swift API use for processing an image against one or more requests?",
+        options: [
+          {
+            id: "a",
+            text: "A delegate-based callback pattern with no async support",
+          },
+          {
+            id: "b",
+            text: "An `ImageRequestHandler` processes an image against request types via `async`/`await`, replacing the older completion-handler-based pattern",
+          },
+          {
+            id: "c",
+            text: "A synchronous, blocking-only API with no request/handler separation",
+          },
+          {
+            id: "d",
+            text: "Vision has no unified pattern; each request type uses a completely different API",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The modern Vision API consolidates around a consistent, async-native request/handler pattern, simplifying what previously required `VNImageRequestHandler`/`VNRequest` completion-handler boilerplate.",
+      },
+      {
+        id: "q2",
+        prompt: "Why does `RecognizeTextRequest` return `topCandidates` rather than a single definitive string per recognized text region?",
+        options: [
+          {
+            id: "a",
+            text: "Vision never actually recognizes text with any confidence measure",
+          },
+          {
+            id: "b",
+            text: "OCR is inherently probabilistic — multiple candidate interpretations can exist for recognized text, ranked by confidence, and an app dealing with ambiguous images might inspect several candidates before committing to one",
+          },
+          {
+            id: "c",
+            text: "`topCandidates` is deprecated and should not be used",
+          },
+          {
+            id: "d",
+            text: "Only barcode detection returns multiple candidates, not text recognition",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because OCR involves genuine uncertainty, especially with blurry or low-quality source images, Vision exposes ranked candidate interpretations rather than forcing a single, potentially incorrect definitive answer.",
+      },
+      {
+        id: "q3",
+        prompt: "What common pairing enables a live, real-time barcode scanning experience, according to 60.3?",
+        options: [
+          {
+            id: "a",
+            text: "`DetectBarcodesRequest` paired with `AVCaptureVideoDataOutput`'s continuous frame stream, feeding each incoming frame into the barcode detection request",
+          },
+          {
+            id: "b",
+            text: "`DetectBarcodesRequest` used only on manually captured still photos",
+          },
+          {
+            id: "c",
+            text: "`DetectFaceRectanglesRequest` combined with barcode detection",
+          },
+          {
+            id: "d",
+            text: "Barcode detection cannot be used with live camera frames at all",
+          },
+        ],
+        correctOptionId: "a",
+        explanation: "Feeding each frame from `AVCaptureVideoDataOutput`'s continuous stream (section 55.7) into a Vision barcode request is what enables real-time scanning, rather than requiring a manually captured still photo.",
+      },
+      {
+        id: "q4",
+        prompt: "What is the granularity trade-off between face rectangle detection and face landmark/body pose detection?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful trade-off; both provide identical information",
+          },
+          {
+            id: "b",
+            text: "Bounding box detection alone is sufficient and faster for simpler use cases like counting faces, while landmark/pose detection is necessary for more sophisticated use cases like filters aligned to facial features or analyzing exercise form",
+          },
+          {
+            id: "c",
+            text: "Landmark detection is always faster than simple rectangle detection",
+          },
+          {
+            id: "d",
+            text: "Body pose detection cannot return joint positions, only bounding boxes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Simple rectangle detection suffices for coarse tasks like counting faces, while more detailed landmark or pose detection is needed when specific feature or joint positions are actually required, at correspondingly greater cost.",
+      },
+      {
+        id: "q5",
+        prompt: "What does `GenerateImageFeaturePrintRequest` produce, and what is it used for?",
+        options: [
+          {
+            id: "a",
+            text: "A cropped version of the input image with no numeric output",
+          },
+          {
+            id: "b",
+            text: "A compact, numeric embedding representing an image's visual content, enabling similarity search and near-duplicate detection via distance comparison between feature prints",
+          },
+          {
+            id: "c",
+            text: "A textual description of the image's contents",
+          },
+          {
+            id: "d",
+            text: "A list of detected barcodes within the image",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Feature prints reduce an image's visual content to a compact vector representation designed so visual similarity corresponds to small computed distances, enabling similarity search without comparing raw pixels directly.",
+      },
+      {
+        id: "q6",
+        prompt: "How does image feature print similarity (60.5) conceptually relate to `NLEmbedding` (60.9)?",
+        options: [
+          {
+            id: "a",
+            text: "They are unrelated techniques with no shared design principle",
+          },
+          {
+            id: "b",
+            text: "Both reduce complex, high-dimensional content (visual or textual) to a compact numeric vector representation designed so semantic/visual similarity translates into small distances between representations",
+          },
+          {
+            id: "c",
+            text: "`NLEmbedding` only works on images, not text",
+          },
+          {
+            id: "d",
+            text: "Feature prints require training a custom model, while `NLEmbedding` does not",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Both techniques share the same underlying design principle — reducing complex content to compact vectors where similarity corresponds to small distances — just applied to different content types (images versus text).",
+      },
+      {
+        id: "q7",
+        prompt: "What does detecting a document's four corner points, via `DetectDocumentSegmentationRequest`, enable?",
+        options: [
+          {
+            id: "a",
+            text: "Automatic text extraction with no further processing needed",
+          },
+          {
+            id: "b",
+            text: "A perspective-correction transform that can warp a photographed, angled document into a clean, rectangular, top-down view — a better result than simple cropping",
+          },
+          {
+            id: "c",
+            text: "Barcode decoding within the document",
+          },
+          {
+            id: "d",
+            text: "Automatic translation of the document's text",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Knowing the document's corners is specifically what enables perspective correction, producing a clean rectangular scan rather than merely cropping the original angled photo.",
+      },
+      {
+        id: "q8",
+        prompt: "What does `SpeechAnalyzer`/`SpeechTranscriber` replace, and what privacy benefit does it share with other frameworks in this Part?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces Vision's text recognition; it has no particular privacy benefit",
+          },
+          {
+            id: "b",
+            text: "It modernizes and replaces the older `SFSpeechRecognizer` API, and by running transcription on-device, it shares the same privacy/offline-availability benefit as on-device translation and Foundation Models",
+          },
+          {
+            id: "c",
+            text: "It replaces ShazamKit's song recognition capability",
+          },
+          {
+            id: "d",
+            text: "It requires uploading audio to a cloud service, unlike older APIs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`SpeechAnalyzer` is a modernized, more flexible replacement for `SFSpeechRecognizer`, and its on-device operation provides the same privacy and offline benefits discussed for Translation (57.15) and Foundation Models (58.1).",
+      },
+      {
+        id: "q9",
+        prompt: "Why is `NLTokenizer`'s language-aware text splitting more robust than naive whitespace-based splitting?",
+        options: [
+          {
+            id: "a",
+            text: "Whitespace-based splitting is always sufficient for every language and use case",
+          },
+          {
+            id: "b",
+            text: "Many languages don't use whitespace to separate words at all, and even for those that do, correctly handling punctuation, contractions, and sentence boundaries requires genuine linguistic awareness",
+          },
+          {
+            id: "c",
+            text: "`NLTokenizer` is slower than whitespace splitting with no accuracy benefit",
+          },
+          {
+            id: "d",
+            text: "Language-aware splitting only matters for tagging, not tokenization",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Naive whitespace splitting fails entirely for languages without whitespace-delimited words, and even in languages that do use whitespace, proper handling of punctuation and sentence boundaries requires more sophisticated, language-aware logic.",
+      },
+      {
+        id: "q10",
+        prompt: "What does `NLTagger` with the `.lexicalClass` scheme provide?",
+        options: [
+          {
+            id: "a",
+            text: "Image classification labels",
+          },
+          {
+            id: "b",
+            text: "Linguistic tags like part of speech assigned to tokens within text",
+          },
+          {
+            id: "c",
+            text: "Audio sound classification results",
+          },
+          {
+            id: "d",
+            text: "Barcode payload decoding",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`NLTagger` assigns linguistic tags — such as part of speech, named entities, or language identification — to tokens within a body of text, depending on the configured tag scheme.",
+      },
+      {
+        id: "q11",
+        prompt: "What is the key distinction between Sound Analysis and ShazamKit (section 55.15)?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical frameworks",
+          },
+          {
+            id: "b",
+            text: "Sound Analysis answers \"what kind of sound is this\" using a general classification taxonomy (a dog barking, glass breaking), while ShazamKit answers the narrower question of \"what specific song is this,\" matched against a catalog of audio fingerprints",
+          },
+          {
+            id: "c",
+            text: "ShazamKit classifies general sound categories, while Sound Analysis matches specific songs",
+          },
+          {
+            id: "d",
+            text: "Sound Analysis requires an internet connection, while ShazamKit does not",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit about this distinction — Sound Analysis handles general environmental sound classification, useful for accessibility and ambient awareness, while ShazamKit performs specific song matching against a known catalog.",
+      },
+      {
+        id: "q12",
+        prompt: "What use case is specifically mentioned as benefiting from Sound Analysis's general sound classification?",
+        options: [
+          {
+            id: "a",
+            text: "Identifying a specific song playing in the background",
+          },
+          {
+            id: "b",
+            text: "Accessibility features, such as alerting a deaf user to important environmental sounds like a smoke alarm or doorbell",
+          },
+          {
+            id: "c",
+            text: "Translating spoken audio into another language",
+          },
+          {
+            id: "d",
+            text: "Detecting barcodes within an audio waveform visualization",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights accessibility as a key use case — general sound category classification can alert users to important environmental sounds they might not otherwise perceive.",
+      },
+      {
+        id: "q13",
+        prompt: "How does Image Playground's generation approach compare to integrating a third-party image generation API directly?",
+        options: [
+          {
+            id: "a",
+            text: "It requires exactly the same integration effort as a custom third-party API",
+          },
+          {
+            id: "b",
+            text: "It runs through Apple's on-device (or hybrid) generative pipeline via a standardized system UI sheet, providing a consistent, system-standard experience without requiring direct third-party API integration",
+          },
+          {
+            id: "c",
+            text: "Image Playground cannot generate images from text descriptions, only from existing photos",
+          },
+          {
+            id: "d",
+            text: "It has no relationship to any system-provided UI pattern",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Image Playground provides generation through a standard system sheet, giving a consistent experience across apps without each app needing to integrate and manage its own third-party generative image API.",
+      },
+      {
+        id: "q14",
+        prompt: "What design similarity does the section draw between Image Playground's system UI and `SubscriptionStoreView` (section 56.6)?",
+        options: [
+          {
+            id: "a",
+            text: "Both require identical purchase flows",
+          },
+          {
+            id: "b",
+            text: "Both provide a consistent, system-standard UI experience rather than requiring each app to build fully custom presentation from scratch",
+          },
+          {
+            id: "c",
+            text: "Both are exclusively used for audio processing",
+          },
+          {
+            id: "d",
+            text: "There is no meaningful similarity drawn between them",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly parallels Image Playground's standardized generation UI with `SubscriptionStoreView`'s standardized purchase UI — both reduce the custom UI burden on individual apps in favor of a consistent system-provided experience.",
+      },
+      {
+        id: "q15",
+        prompt: "What Foundation Models capability from section 58.13 shares underlying functionality with Vision's text recognition (60.2)?",
+        options: [
+          {
+            id: "a",
+            text: "The `LanguageModel` protocol abstraction",
+          },
+          {
+            id: "b",
+            text: "A Vision-backed `Tool` conformer exposed to the model, such as the `TextRecognitionTool` example, which performs OCR as part of the model's reasoning process",
+          },
+          {
+            id: "c",
+            text: "`@Generable` structured output",
+          },
+          {
+            id: "d",
+            text: "Session pre-warming",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Section 58.13's example `TextRecognitionTool` performs OCR as a callable tool for the language model, directly built on the same underlying text recognition capability covered in 60.2.",
+      },
+      {
+        id: "q16",
+        prompt: "Why might an app inspect multiple OCR candidates or confidence scores rather than always using just the top candidate?",
+        options: [
+          {
+            id: "a",
+            text: "Vision requires inspecting all candidates for every request by default",
+          },
+          {
+            id: "b",
+            text: "For genuinely ambiguous or low-quality source images, like a blurry photographed receipt, considering multiple candidates or confidence scores can help avoid committing to an incorrect single interpretation",
+          },
+          {
+            id: "c",
+            text: "Confidence scores are not actually provided by `RecognizeTextRequest`",
+          },
+          {
+            id: "d",
+            text: "Multiple candidates are only relevant for barcode detection, not text recognition",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because OCR accuracy can degrade with poor image quality, an app handling genuinely ambiguous source material may benefit from considering more than just the single top-ranked candidate.",
+      },
+      {
+        id: "q17",
+        prompt: "What does `NLEmbedding.neighbors(for:maximumCount:)` enable in the word similarity example?",
+        options: [
+          {
+            id: "a",
+            text: "Detecting barcodes near a given word in an image",
+          },
+          {
+            id: "b",
+            text: "Finding semantically related words by returning nearby vectors in the embedding space, useful for \"find related content\" style features",
+          },
+          {
+            id: "c",
+            text: "Translating the given word into another language",
+          },
+          {
+            id: "d",
+            text: "Classifying the sentiment of the given word",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`neighbors(for:maximumCount:)` returns semantically similar words based on vector proximity in the embedding space, enabling similarity-based features without training a custom embedding model.",
+      },
+      {
+        id: "q18",
+        prompt: "What does `DetectFaceLandmarksRequest` provide beyond what `DetectFaceRectanglesRequest` alone provides?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing additional; they return identical data",
+          },
+          {
+            id: "b",
+            text: "Individual facial feature points (landmarks) in addition to a bounding box, necessary for more sophisticated use cases like applying filters aligned to specific facial features",
+          },
+          {
+            id: "c",
+            text: "Full body joint positions instead of facial data",
+          },
+          {
+            id: "d",
+            text: "Barcode payload data associated with detected faces",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "While rectangle detection provides only a bounding box, landmark detection provides more granular facial feature point data, needed for applications requiring precise facial feature alignment.",
+      },
+      {
+        id: "q19",
+        prompt: "What broader platform-wide pattern does Vision's shift to an async/await-native API exemplify, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "A pattern unique to Vision with no parallel elsewhere in the curriculum",
+          },
+          {
+            id: "b",
+            text: "The broader shift toward async/await seen throughout the platform, also reflected in StoreKit's product fetching (56.2) and PhotoKit's continuation-wrapped calls (55.2)",
+          },
+          {
+            id: "c",
+            text: "A move away from async/await back toward delegate-based patterns",
+          },
+          {
+            id: "d",
+            text: "A pattern exclusive to machine learning frameworks",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects Vision's modernization to the same broader async/await adoption pattern seen in StoreKit and PhotoKit, reflecting a platform-wide trend rather than an isolated Vision-specific change.",
+      },
+      {
+        id: "q20",
+        prompt: "Which statement accurately distinguishes the purposes of Vision's feature print similarity, Natural Language's embeddings, and Sound Analysis's classification?",
+        options: [
+          {
+            id: "a",
+            text: "All three perform the exact same function on different data types with no distinction",
+          },
+          {
+            id: "b",
+            text: "Feature prints and embeddings both enable similarity search via compact vector representations (for images and text respectively), while Sound Analysis instead classifies audio into discrete general sound categories rather than computing similarity distances",
+          },
+          {
+            id: "c",
+            text: "Sound Analysis also produces vector embeddings for similarity search, identical to the other two",
+          },
+          {
+            id: "d",
+            text: "None of these three techniques involve any form of numeric representation",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Feature prints and `NLEmbedding` share a similarity-via-vector-distance design for images and text respectively, while Sound Analysis instead performs discrete classification into named sound categories, a functionally different approach.",
+      },
+    ],
+  },
+  {
+    id: "ai-assisted-development-quiz",
+    title: "AI-Assisted Development",
+    description: "20 questions covering Xcode 27 coding intelligence, model routing, agentic workflows, Claude Code, CLAUDE.md, MCP servers, and reviewing AI-generated Swift.",
+    relatedArticleSlug: "ai-assisted-development",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What distinguishes Xcode 27's coding intelligence integration from treating AI assistance as an external, bolted-on tool?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful distinction between the two approaches",
+          },
+          {
+            id: "b",
+            text: "Xcode 27 treats AI assistance as a first-class part of the IDE with real context about the actual project, unlike a disconnected external tool",
+          },
+          {
+            id: "c",
+            text: "External tools always have more project context than an integrated IDE feature",
+          },
+          {
+            id: "d",
+            text: "Xcode's coding intelligence only works without any project context at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Integrating AI assistance directly into Xcode gives it access to the actual project's files, types, and build state, a meaningful advantage over an external, disconnected chat tool with no such context.",
+      },
+      {
+        id: "q2",
+        prompt: "What consideration mirrors the app-facing model routing trade-off from section 58.15, applied here to development tasks?",
+        options: [
+          {
+            id: "a",
+            text: "Development tasks always require cloud routing with no on-device option",
+          },
+          {
+            id: "b",
+            text: "Choosing between on-device and cloud models (Claude, Gemini) for coding tasks based on task complexity, privacy sensitivity of the code, and connectivity availability",
+          },
+          {
+            id: "c",
+            text: "Model routing has no relevance to development tooling, only to end-user apps",
+          },
+          {
+            id: "d",
+            text: "On-device models are never suitable for any coding task",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Just as Foundation Models routes between on-device and cloud models based on task complexity (58.15), Xcode's coding intelligence applies the same situational trade-off to development tasks.",
+      },
+      {
+        id: "q3",
+        prompt: "What distinguishes agentic workflows from simple autocomplete, according to 61.3?",
+        options: [
+          {
+            id: "a",
+            text: "Agentic workflows only suggest the next few tokens at the cursor, identical to autocomplete",
+          },
+          {
+            id: "b",
+            text: "The planning phase — reasoning about a goal's full scope and proposing a coordinated set of changes across multiple relevant files, followed by a human review step",
+          },
+          {
+            id: "c",
+            text: "Agentic workflows never require any human review before changes are applied",
+          },
+          {
+            id: "d",
+            text: "Agentic workflows can only operate on a single file at a time",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Agentic workflows go beyond token-level suggestions by planning and executing changes across multiple files toward a stated goal, with review remaining an essential human checkpoint.",
+      },
+      {
+        id: "q4",
+        prompt: "Why does generated SwiftUI code still require the same review discipline as any other AI-generated code?",
+        options: [
+          {
+            id: "a",
+            text: "Generated SwiftUI code is always guaranteed to be fully correct",
+          },
+          {
+            id: "b",
+            text: "A plausible-looking, compiling view can still embed subtly wrong assumptions, like an incorrect aspect ratio, missed accessibility label, or mismatched state management architecture",
+          },
+          {
+            id: "c",
+            text: "SwiftUI code cannot actually be generated by AI tools",
+          },
+          {
+            id: "d",
+            text: "Review is only needed for UIKit code, not SwiftUI",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Compiling successfully doesn't guarantee correctness — generated views can still contain subtle issues that only careful review would catch, consistent with the broader review discipline discussed in 61.10 and 61.11.",
+      },
+      {
+        id: "q5",
+        prompt: "What role does human review still play in AI-assisted String Catalog localization?",
+        options: [
+          {
+            id: "a",
+            text: "None; AI translations are always final and ship without review",
+          },
+          {
+            id: "b",
+            text: "AI-drafted translations accelerate the first pass, but a human reviewer with genuine fluency remains important for catching cultural nuance, incorrect register, or unnatural phrasing",
+          },
+          {
+            id: "c",
+            text: "Human review is only needed for right-to-left languages",
+          },
+          {
+            id: "d",
+            text: "Localization cannot be assisted by AI at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Machine-suggested translations can miss cultural nuance or produce unnatural phrasing, so a human reviewer remains an important part of a quality localization pipeline even with AI acceleration.",
+      },
+      {
+        id: "q6",
+        prompt: "How do Xcode tool plugins relate to the `Tool` protocol from Foundation Models (section 58.10)?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated concepts",
+          },
+          {
+            id: "b",
+            text: "They directly parallel the `Tool` protocol pattern — letting an AI coding assistant call out to external, developer-defined functionality (like a linter) when built-in knowledge alone isn't sufficient",
+          },
+          {
+            id: "c",
+            text: "Tool plugins replace the need for Foundation Models entirely",
+          },
+          {
+            id: "d",
+            text: "Tool plugins can only be used for image generation",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Both mechanisms augment a model's reasoning with the ability to call developer-defined external functionality, whether an app-facing LLM needing weather data or a coding assistant needing to run an actual linter.",
+      },
+      {
+        id: "q7",
+        prompt: "What is a key advantage of Claude Code operating through the terminal in an iOS repo?",
+        options: [
+          {
+            id: "a",
+            text: "Terminal-based operation prevents any interaction with build tools",
+          },
+          {
+            id: "b",
+            text: "It can run real build/test commands like `xcodebuild` or `swift test` as part of its own verification loop, rather than relying solely on static reasoning about correctness",
+          },
+          {
+            id: "c",
+            text: "Terminal-based tools cannot read Swift source files",
+          },
+          {
+            id: "d",
+            text: "It requires Xcode's UI to be open at all times",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because Claude Code can invoke standard command-line iOS tooling, it can verify its own changes by actually running tests rather than just reasoning statically about whether code is likely correct.",
+      },
+      {
+        id: "q8",
+        prompt: "What is the purpose of a `CLAUDE.md` file at a repository's root?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for any source code documentation",
+          },
+          {
+            id: "b",
+            text: "It gives Claude Code persistent, project-specific context (architecture, build commands, conventions) that would otherwise need to be re-explained at the start of every session",
+          },
+          {
+            id: "c",
+            text: "It is only used for storing API keys and secrets",
+          },
+          {
+            id: "d",
+            text: "It has no functional purpose and is purely decorative",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A well-maintained `CLAUDE.md` establishes stable project facts once, reducing the context that needs to be manually provided in each new coding session, similar in spirit to how session instructions establish stable framing in Foundation Models (58.4).",
+      },
+      {
+        id: "q9",
+        prompt: "How does the section describe the relationship between `CLAUDE.md` and Foundation Models' instructions-vs-prompts distinction (58.4)?",
+        options: [
+          {
+            id: "a",
+            text: "There is no relationship drawn between them",
+          },
+          {
+            id: "b",
+            text: "Both establish stable, persistent framing once, rather than needing to repeat the same context at the start of every individual interaction or session",
+          },
+          {
+            id: "c",
+            text: "`CLAUDE.md` is a replacement for Foundation Models' instructions parameter",
+          },
+          {
+            id: "d",
+            text: "Instructions and `CLAUDE.md` serve completely opposite purposes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct parallel — both mechanisms let stable, persistent context be established once, letting individual interactions or sessions focus on the specific task rather than re-establishing baseline context repeatedly.",
+      },
+      {
+        id: "q10",
+        prompt: "What do MCP servers provide for iOS development workflows, according to 61.9?",
+        options: [
+          {
+            id: "a",
+            text: "A way to compile Swift code faster",
+          },
+          {
+            id: "b",
+            text: "A standardized protocol for connecting an AI assistant to external systems (like crash reporting or project management), generalizing the tool-calling pattern seen elsewhere in this Part",
+          },
+          {
+            id: "c",
+            text: "A replacement for Xcode's build system entirely",
+          },
+          {
+            id: "d",
+            text: "MCP servers are unrelated to AI coding assistants",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MCP generalizes the tool-calling pattern (seen in Foundation Models' `Tool` protocol and Xcode tool plugins) into a standardized interface, letting a coding assistant work with any MCP-compatible service relevant to a team's workflow.",
+      },
+      {
+        id: "q11",
+        prompt: "Why can AI-generated Swift code contain a real concurrency bug despite compiling cleanly?",
+        options: [
+          {
+            id: "a",
+            text: "The Swift compiler catches every possible concurrency bug with no exceptions",
+          },
+          {
+            id: "b",
+            text: "Compiler-enforced concurrency checking catches many, but not all, classes of concurrency bugs — a generated class that should have been an actor might compile without warnings while still harboring a genuine data race",
+          },
+          {
+            id: "c",
+            text: "AI-generated code is automatically exempt from concurrency bugs",
+          },
+          {
+            id: "d",
+            text: "Concurrency bugs can only occur in hand-written code, never generated code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Swift's strict concurrency checking is powerful but not exhaustive — generated code, like any code, can compile cleanly while still containing genuine data races or incorrect isolation assumptions that only careful review catches.",
+      },
+      {
+        id: "q12",
+        prompt: "What specific concurrency-related review question does the section suggest a reviewer should ask about generated code?",
+        options: [
+          {
+            id: "a",
+            text: "Whether the code uses too many comments",
+          },
+          {
+            id: "b",
+            text: "Whether a class handling shared mutable state should genuinely be an actor, or whether the assumption that state is only mutated from one isolation context actually holds",
+          },
+          {
+            id: "c",
+            text: "Whether the generated code uses SwiftUI or UIKit",
+          },
+          {
+            id: "d",
+            text: "Whether the code was generated using an on-device or cloud model",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The example given specifically calls out questioning whether a `class` managing shared state (like a cache) should actually be an `actor`, since this is a common source of subtle, invisible concurrency bugs.",
+      },
+      {
+        id: "q13",
+        prompt: "Why are retain cycles described as an \"easy category of bug for generated code to introduce invisibly\"?",
+        options: [
+          {
+            id: "a",
+            text: "Retain cycles always produce a compiler error",
+          },
+          {
+            id: "b",
+            text: "A strong `self` capture inside a closure compiles without warning and often appears to \"work\" in casual testing (the closure fires normally) while still silently leaking memory",
+          },
+          {
+            id: "c",
+            text: "Retain cycles are impossible to create with AI-generated code",
+          },
+          {
+            id: "d",
+            text: "Retain cycles only occur in UIKit, never in generated Swift code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because a strong capture compiles fine and the closure's callback still executes correctly in casual testing, retain cycles can silently exist undetected unless a reviewer specifically checks capture semantics.",
+      },
+      {
+        id: "q14",
+        prompt: "What question should a reviewer ask when reviewing a generated closure that captures `self`?",
+        options: [
+          {
+            id: "a",
+            text: "Whether the closure uses too many parameters",
+          },
+          {
+            id: "b",
+            text: "Whether `self`'s lifetime genuinely needs to extend for the closure's entire lifetime, or whether the capture should instead be `[weak self]`",
+          },
+          {
+            id: "c",
+            text: "Whether the closure is written in Swift or Objective-C",
+          },
+          {
+            id: "d",
+            text: "Whether the closure was generated by an on-device or cloud model",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This is the core question for reviewing capture semantics — determining whether a strong capture is genuinely appropriate or whether it risks creating a retain cycle that a weak capture would avoid.",
+      },
+      {
+        id: "q15",
+        prompt: "What genuine data-handling concern does 61.12 raise about cloud-routed AI coding tools?",
+        options: [
+          {
+            id: "a",
+            text: "Cloud-routed tools never have any data retention policy",
+          },
+          {
+            id: "b",
+            text: "What code and data is actually being sent to the assistant, and under what data retention and training-use policies, particularly for API keys, credentials, and proprietary source code",
+          },
+          {
+            id: "c",
+            text: "Cloud-routed tools are always slower than on-device tools",
+          },
+          {
+            id: "d",
+            text: "This concern only applies to SwiftUI code, not other Swift code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Using cloud-routed AI tools raises a real question about what sensitive content is being transmitted and how it's retained or used, especially for credentials and proprietary code.",
+      },
+      {
+        id: "q16",
+        prompt: "What practical mitigation does the section suggest for keeping credentials safe when using AI coding tools?",
+        options: [
+          {
+            id: "a",
+            text: "Hardcoding credentials directly in source files for easy access",
+          },
+          {
+            id: "b",
+            text: "Keeping credentials out of source entirely (environment variables, secrets managers) rather than as hardcoded strings a cloud-routed assistant might read as file context",
+          },
+          {
+            id: "c",
+            text: "Credentials should always be shared directly with cloud-routed assistants for convenience",
+          },
+          {
+            id: "d",
+            text: "There is no way to protect credentials when using AI coding tools",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Keeping credentials out of source code entirely avoids them being inadvertently included in the file context a cloud-routed assistant might read during a coding session.",
+      },
+      {
+        id: "q17",
+        prompt: "How does the section connect 61.12's data-handling concern to section 58's prompt injection and guardrails material?",
+        options: [
+          {
+            id: "a",
+            text: "It claims the two concerns are identical with no distinction",
+          },
+          {
+            id: "b",
+            text: "It frames them as related but opposite-direction concerns — section 58 concerned untrusted content influencing a model, while 61.12 concerns sensitive project content being sent *to* a cloud-routed model",
+          },
+          {
+            id: "c",
+            text: "It claims prompt injection is irrelevant to development tooling entirely",
+          },
+          {
+            id: "d",
+            text: "It claims guardrails eliminate any need for data-handling caution",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel-but-inverted relationship — one direction concerns data flowing into the model maliciously, the other concerns sensitive data flowing out to the model's cloud backend.",
+      },
+      {
+        id: "q18",
+        prompt: "What is one recommended approach for working with genuinely sensitive files or modules using AI coding tools?",
+        options: [
+          {
+            id: "a",
+            text: "Always use cloud-routed models regardless of sensitivity",
+          },
+          {
+            id: "b",
+            text: "Prefer on-device model routing for sensitive files/modules, and understand/configure the organization's actual data retention policy rather than assuming a default is safe",
+          },
+          {
+            id: "c",
+            text: "Disable all AI coding assistance permanently",
+          },
+          {
+            id: "d",
+            text: "Share sensitive files with as many cloud services as possible for redundancy",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends deliberately choosing on-device routing for sensitive material and understanding the actual data retention policies in place, rather than assuming safety by default.",
+      },
+      {
+        id: "q19",
+        prompt: "According to 61.4, what should a developer's posture be toward agent-generated SwiftUI views?",
+        options: [
+          {
+            id: "a",
+            text: "Treat them as finished, unreviewed deliverables ready to ship immediately",
+          },
+          {
+            id: "b",
+            text: "Treat them as a solid first draft to review and adapt, given that plausible-looking generated code can still embed subtly wrong assumptions",
+          },
+          {
+            id: "c",
+            text: "Reject all agent-generated views regardless of quality",
+          },
+          {
+            id: "d",
+            text: "Only use agent-generated views for prototypes that will never ship",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit that generated views warrant the same review discipline as other generated code — a good starting point, not a finished product to accept without scrutiny.",
+      },
+      {
+        id: "q20",
+        prompt: "What common thread runs through 61.6 (tool plugins), 61.9 (MCP servers), and 58.10 (the Tool protocol)?",
+        options: [
+          {
+            id: "a",
+            text: "They are unrelated mechanisms with no shared design principle",
+          },
+          {
+            id: "b",
+            text: "All three extend a model's or assistant's built-in reasoning with the ability to call out to external, developer-defined functionality or systems when needed",
+          },
+          {
+            id: "c",
+            text: "They all exclusively apply to image generation tasks",
+          },
+          {
+            id: "d",
+            text: "They all require disabling on-device model routing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Across app-facing language models and development tooling alike, this recurring pattern lets a model's reasoning be augmented by calling external functionality — whether an app tool, a linter plugin, or an MCP-exposed service — rather than relying solely on built-in knowledge.",
+      },
+    ],
+  },
 ];
 
 export function getAllQuizzes(): Quiz[] {

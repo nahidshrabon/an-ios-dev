@@ -125,10 +125,10 @@ export const roadmap: RoadmapPart[] = [
     id: "part-8",
     title: "On-Device AI",
     sections: [
-      section(58, "Foundation Models"),
-      section(59, "Core ML and Custom Models"),
-      section(60, "Vision, Speech, and Language"),
-      section(61, "AI-Assisted Development"),
+      section(58, "Foundation Models", "foundation-models"),
+      section(59, "Core ML and Custom Models", "core-ml-and-custom-models"),
+      section(60, "Vision, Speech, and Language", "vision-speech-and-language"),
+      section(61, "AI-Assisted Development", "ai-assisted-development"),
     ],
   },
   {
