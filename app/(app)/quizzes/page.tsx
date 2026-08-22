@@ -12,8 +12,6 @@ import {
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
-import { ResetActionButton } from "@/components/ResetActionButton";
-import { resetQuizHistory } from "@/lib/actions/settings";
 
 const takenQuizEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
@@ -185,16 +183,6 @@ export default async function QuizzesPage() {
               {reviewPercent}%
             </p>
           </div>
-        </div>
-
-        <div className="flex flex-col justify-center gap-2 rounded-xl border border-red-200/70 bg-red-50/80 p-4 sm:ml-auto dark:border-red-400/15 dark:bg-red-400/10">
-          <ResetActionButton
-            label="Reset progress"
-            confirmLabel="Yes, reset progress"
-            warning="This will permanently delete your quiz attempt history. This can't be undone."
-            successMessage="Your quiz history has been reset."
-            action={resetQuizHistory}
-          />
         </div>
       </div>
 

@@ -19,8 +19,6 @@ import {
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
-import { ResetActionButton } from "@/components/ResetActionButton";
-import { resetRoadmapProgress } from "@/lib/actions/settings";
 
 const completedRoadmapEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
@@ -134,16 +132,6 @@ export function RoadmapChecklist({
             </Link>
           </div>
         )}
-
-        <div className="flex flex-col justify-center gap-2 rounded-xl border border-red-200/70 bg-red-50/80 p-4 sm:ml-auto dark:border-red-400/15 dark:bg-red-400/10">
-          <ResetActionButton
-            label="Reset progress"
-            confirmLabel="Yes, reset progress"
-            warning="This will permanently clear your roadmap checkmarks and article read status. This can't be undone."
-            successMessage="Your roadmap progress has been reset."
-            action={resetRoadmapProgress}
-          />
-        </div>
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
