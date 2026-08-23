@@ -685,6 +685,33 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("code-quality-tooling.md"),
   },
+  {
+    slug: "ci-cd",
+    title: "CI/CD",
+    description:
+      "Why CI matters for mobile, xcodebuild for building and testing, result bundles and xcresulttool, GitHub Actions and Xcode Cloud, caching DerivedData/SPM checkouts, Fastlane lanes/actions/match, automating TestFlight uploads, the App Store Connect API, automated version numbering, automatic dSYM upload, CI build time optimization, and merge queues/build sharding.",
+    tags: ["ci-cd", "fastlane", "github-actions"],
+    publishedAt: "2026-08-16",
+    content: loadBody("ci-cd.md"),
+  },
+  {
+    slug: "code-signing-and-distribution",
+    title: "Code Signing and Distribution",
+    description:
+      "Certificates/App IDs/profiles, automatic vs. manual signing, entitlements and capability drift, why signing breaks and how to diagnose it, archiving and exporting a build, ad hoc and enterprise distribution, MDM/custom app distribution, and notarization/alternative marketplaces in the EU.",
+    tags: ["code-signing", "distribution", "provisioning"],
+    publishedAt: "2026-08-16",
+    content: loadBody("code-signing-and-distribution.md"),
+  },
+  {
+    slug: "app-store",
+    title: "App Store",
+    description:
+      "Creating an app record, metadata/keywords/ASO, screenshots and app previews, the privacy manifest, required reason APIs, privacy nutrition labels, TestFlight testing, submitting for review, App Review Guidelines that matter most, handling rejection, phased release, responding to reviews, custom product pages/A/B testing, and app size limits.",
+    tags: ["app-store", "app-review", "testflight"],
+    publishedAt: "2026-08-16",
+    content: loadBody("app-store.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

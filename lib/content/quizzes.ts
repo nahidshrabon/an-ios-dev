@@ -22922,6 +22922,1470 @@ export const quizzes: Quiz[] = [
       },
     ],
   },
+  {
+    id: "ci-cd-quiz",
+    title: "CI/CD",
+    description: "20 questions covering why CI matters for mobile, xcodebuild for build/test, result bundles, GitHub Actions and Xcode Cloud, caching, Fastlane and match, TestFlight automation, the App Store Connect API, version numbering, dSYM upload, build time optimization, and merge queues.",
+    relatedArticleSlug: "ci-cd",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Why does CI matter specifically for mobile, according to 76.1?",
+        options: [
+          {
+            id: "a",
+            text: "Mobile builds are simpler than server-side builds and require less verification",
+          },
+          {
+            id: "b",
+            text: "iOS builds involve genuinely more moving parts (code signing, provisioning profiles, simulator/device targeting, longer build times) than many server-side projects, making automated, consistent verification more valuable than relying on individual developer diligence",
+          },
+          {
+            id: "c",
+            text: "CI has no particular relevance to mobile development compared to other platforms",
+          },
+          {
+            id: "d",
+            text: "Mobile apps never require any automated testing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights iOS-specific complexity (signing, profiles, device targeting) as a reason automated CI verification provides more value than for simpler build environments.",
+      },
+      {
+        id: "q2",
+        prompt: "How does CI connect to the testing discipline established throughout Part 10?",
+        options: [
+          {
+            id: "a",
+            text: "CI and testing are entirely unrelated concerns",
+          },
+          {
+            id: "b",
+            text: "A comprehensive test suite provides essentially no protective value if it isn't reliably run before every change merges, and CI is the mechanism ensuring tests are actually, consistently applied rather than depending on individual developer memory",
+          },
+          {
+            id: "c",
+            text: "CI replaces the need for writing any tests at all",
+          },
+          {
+            id: "d",
+            text: "Testing only matters locally; CI has no bearing on test execution",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly ties CI's value to closing the gap between having tests and actually, reliably running them before every merge, directly connecting back to section 65.1's argument for why tests exist.",
+      },
+      {
+        id: "q3",
+        prompt: "Why is `generic/platform=iOS` an appropriate destination for `xcodebuild build` but not for `xcodebuild test`?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful difference; both commands use identical destinations",
+          },
+          {
+            id: "b",
+            text: "A generic platform destination produces a build not tied to any specific simulator/device, appropriate for archiving/distribution, while testing requires an actual, specific runtime target capable of executing the compiled test code",
+          },
+          {
+            id: "c",
+            text: "Generic platform destinations are only used for testing, never building",
+          },
+          {
+            id: "d",
+            text: "`xcodebuild test` cannot accept any destination parameter at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Building for archiving doesn't require a specific execution environment, while actually running tests requires targeting a real, specific simulator or device capable of executing them.",
+      },
+      {
+        id: "q4",
+        prompt: "What does `xcresulttool` provide that relying purely on `xcodebuild test`'s exit code does not?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing additional; the exit code already contains all relevant information",
+          },
+          {
+            id: "b",
+            text: "Structured access to detailed test result data — individual test outcomes, failure messages, screenshots, and code coverage — enabling considerably richer CI feedback than a simple binary pass/fail signal",
+          },
+          {
+            id: "c",
+            text: "`xcresulttool` can only report the overall pass/fail status, identical to the exit code",
+          },
+          {
+            id: "d",
+            text: "It replaces the need for `.xcresult` bundles entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that relying solely on the exit code discards valuable diagnostic detail that `xcresulttool`'s structured extraction can surface for richer CI reporting.",
+      },
+      {
+        id: "q5",
+        prompt: "Why does GitHub Actions require a macOS runner specifically for iOS CI?",
+        options: [
+          {
+            id: "a",
+            text: "GitHub Actions can run iOS builds on any operating system equally well",
+          },
+          {
+            id: "b",
+            text: "Xcode and the iOS build toolchain only run on macOS, making a macOS-specific runner an unavoidable requirement",
+          },
+          {
+            id: "c",
+            text: "macOS runners are actually cheaper than Linux runners on most CI platforms",
+          },
+          {
+            id: "d",
+            text: "This requirement only applies to UI testing, not unit testing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Since Xcode itself only runs on macOS, iOS CI fundamentally requires macOS runners, which the section notes are typically more expensive and resource-constrained than Linux alternatives.",
+      },
+      {
+        id: "q6",
+        prompt: "Why does the macOS runner cost/constraint make build time optimization (76.14) and caching (76.7) particularly consequential for iOS CI?",
+        options: [
+          {
+            id: "a",
+            text: "These concerns are equally important across all CI platforms regardless of runner type",
+          },
+          {
+            id: "b",
+            text: "Because macOS runners are typically more expensive and resource-constrained, minimizing wasted build time through caching and optimization carries more cost/speed significance than it might for cheaper, more abundant Linux infrastructure",
+          },
+          {
+            id: "c",
+            text: "Build time optimization has no actual effect on CI cost",
+          },
+          {
+            id: "d",
+            text: "Caching is only relevant for Linux-based CI pipelines, not macOS",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects the elevated cost/constraint of macOS runners to the increased importance of build time optimization and caching strategies specifically for iOS CI.",
+      },
+      {
+        id: "q7",
+        prompt: "What is Xcode Cloud's genuine value proposition compared to a general-purpose CI platform like GitHub Actions?",
+        options: [
+          {
+            id: "a",
+            text: "Xcode Cloud requires more manual scripting and configuration than GitHub Actions",
+          },
+          {
+            id: "b",
+            text: "Deep, native integration with the Apple developer ecosystem (schemes, test plans, App Store Connect distribution) without needing extensive manual scripting, trading some general-purpose flexibility for lower setup and maintenance burden",
+          },
+          {
+            id: "c",
+            text: "Xcode Cloud can only be used for building, never testing or archiving",
+          },
+          {
+            id: "d",
+            text: "Xcode Cloud has no relationship to App Store Connect at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames Xcode Cloud's value as its inherent understanding of Apple-specific concepts, reducing setup burden at some cost to general-purpose flexibility compared to GitHub Actions.",
+      },
+      {
+        id: "q8",
+        prompt: "How does caching DerivedData and SPM checkouts connect to the compilation trade-off discussed in section 72.13?",
+        options: [
+          {
+            id: "a",
+            text: "Caching has no relationship to compilation modes at all",
+          },
+          {
+            id: "b",
+            text: "Properly cached DerivedData lets a CI run potentially recompile only changed files (incremental compilation's benefit), rather than every run paying the full cost of compiling an entire project from scratch",
+          },
+          {
+            id: "c",
+            text: "Caching only affects SPM dependency resolution, never actual compilation",
+          },
+          {
+            id: "d",
+            text: "DerivedData caching makes whole-module optimization unnecessary in all cases",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section directly connects effective caching to enabling incremental-style compilation benefits within CI, avoiding redundant full recompilation on every run.",
+      },
+      {
+        id: "q9",
+        prompt: "What genuine value does Fastlane provide, according to 76.8?",
+        options: [
+          {
+            id: "a",
+            text: "Fastlane requires teams to write every automation step entirely from scratch",
+          },
+          {
+            id: "b",
+            text: "A large library of pre-built, battle-tested actions for common, fiddly release process steps (code signing coordination, version bumping, TestFlight upload), letting teams compose lanes from reusable building blocks rather than hand-writing custom scripts",
+          },
+          {
+            id: "c",
+            text: "Fastlane can only be used for running unit tests, not release automation",
+          },
+          {
+            id: "d",
+            text: "Fastlane eliminates the need for `xcodebuild` entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights Fastlane's value as encapsulating frequently-needed, easy-to-get-wrong release automation as reusable actions, rather than requiring teams to build this tooling independently.",
+      },
+      {
+        id: "q10",
+        prompt: "What root problem does `fastlane match` address for iOS CI?",
+        options: [
+          {
+            id: "a",
+            text: "Slow build times caused by whole-module optimization",
+          },
+          {
+            id: "b",
+            text: "Inconsistent, independently-managed code signing configuration across different developers' machines and CI environments, by storing encrypted certificates/profiles in a shared repository",
+          },
+          {
+            id: "c",
+            text: "`match` addresses App Store review rejection reasons, not signing",
+          },
+          {
+            id: "d",
+            text: "Match only works for local development, never CI environments",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`match`'s shared, centrally-managed signing repository directly addresses inconsistent per-machine signing configuration, a commonly cited source of CI pipeline breakage for iOS projects.",
+      },
+      {
+        id: "q11",
+        prompt: "Why is automating the TestFlight upload pipeline described as providing \"genuine, compounding value\"?",
+        options: [
+          {
+            id: "a",
+            text: "Beta releases happen rarely, so automation provides minimal benefit",
+          },
+          {
+            id: "b",
+            text: "Because beta releases tend to happen frequently during active development, a manual process taking even 15-20 minutes becomes a meaningful recurring time cost, while automation reduces that recurring task to essentially zero manual effort",
+          },
+          {
+            id: "c",
+            text: "Automation only matters for the final App Store submission, not beta builds",
+          },
+          {
+            id: "d",
+            text: "TestFlight uploads cannot actually be automated under any circumstances",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The compounding value comes from frequency — since beta builds recur often, the time savings from automation accumulate meaningfully compared to a one-time manual process.",
+      },
+      {
+        id: "q12",
+        prompt: "When does direct App Store Connect API access matter, as opposed to using Fastlane's pre-built actions?",
+        options: [
+          {
+            id: "a",
+            text: "Direct API access should always be preferred over Fastlane regardless of need",
+          },
+          {
+            id: "b",
+            text: "For automation needs that fall outside what Fastlane's existing actions already cover, since Fastlane's actions wrap this same underlying API for the most common release automation needs",
+          },
+          {
+            id: "c",
+            text: "The App Store Connect API cannot be accessed directly under any circumstances",
+          },
+          {
+            id: "d",
+            text: "Fastlane and the App Store Connect API are entirely unrelated tools",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Fastlane's actions already wrap the API for common needs, so direct API access is appropriate specifically for genuinely custom automation requirements not already covered by existing Fastlane actions.",
+      },
+      {
+        id: "q13",
+        prompt: "What real consequence results from forgetting to increment a build number before a TestFlight upload?",
+        options: [
+          {
+            id: "a",
+            text: "The upload succeeds normally with no issue",
+          },
+          {
+            id: "b",
+            text: "App Store Connect rejects an upload with a build number that's not genuinely higher than a previously uploaded build, causing an avoidable upload failure",
+          },
+          {
+            id: "c",
+            text: "The app automatically increments the version for the developer",
+          },
+          {
+            id: "d",
+            text: "This only affects App Store submission, never TestFlight uploads",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section notes this specific, common, avoidable failure mode, which automated version/build numbering directly eliminates by handling this bookkeeping mechanically rather than relying on manual developer action.",
+      },
+      {
+        id: "q14",
+        prompt: "How does automating dSYM upload connect to the strict dSYM-matching requirement discussed in section 68.22?",
+        options: [
+          {
+            id: "a",
+            text: "There is no connection; dSYM upload and symbolication are unrelated concerns",
+          },
+          {
+            id: "b",
+            text: "Because a dSYM must correspond to the exact build that produced a crash, automating dSYM upload as an unskippable part of every release ensures the correct dSYM always exists wherever needed for symbolication, avoiding unsymbolicated crash reports",
+          },
+          {
+            id: "c",
+            text: "Automated dSYM upload eliminates the need for dSYMs to match specific builds at all",
+          },
+          {
+            id: "d",
+            text: "dSYM upload only matters for Debug builds, never Release builds",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This directly closes the gap identified in 68.22 — since exact build-to-dSYM matching is strict, automating upload as a mandatory pipeline step prevents the scenario of a missing matching dSYM for a real crash report.",
+      },
+      {
+        id: "q15",
+        prompt: "What CI-specific optimization does 76.14 describe beyond general build time techniques from section 72.11?",
+        options: [
+          {
+            id: "a",
+            text: "Running every CI job strictly sequentially to ensure consistency",
+          },
+          {
+            id: "b",
+            text: "Parallelizing independent CI jobs (linting, unit tests, UI tests as separate concurrent jobs), using pre-warmed runner images, and aggressively applying caching given macOS runner cost sensitivity",
+          },
+          {
+            id: "c",
+            text: "Disabling all caching to ensure fresh builds every time",
+          },
+          {
+            id: "d",
+            text: "CI build time cannot actually be optimized beyond what section 72.11 already covers",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section describes CI-specific strategies — job parallelization, pre-configured images, and aggressive caching — building on but extending beyond the general build diagnosis techniques from 72.11.",
+      },
+      {
+        id: "q16",
+        prompt: "How does parallelizing CI jobs relate to the test sharding principle from section 66.15?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated concepts with no shared principle",
+          },
+          {
+            id: "b",
+            text: "It applies the same sharding principle at the level of an entire CI pipeline's distinct job types (linting, unit tests, UI tests), rather than distributing a single test suite's tests across runners",
+          },
+          {
+            id: "c",
+            text: "Test sharding can only be applied within a single job, never across separate CI jobs",
+          },
+          {
+            id: "d",
+            text: "Job parallelization replaces the need for test sharding entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel — both apply the same underlying principle of distributing independent work across parallel execution, just at different granularities (test-level vs. job-level).",
+      },
+      {
+        id: "q17",
+        prompt: "What genuinely subtle problem do merge queues solve that simple \"require passing CI\" branch protection does not?",
+        options: [
+          {
+            id: "a",
+            text: "Merge queues prevent any PR from ever failing CI",
+          },
+          {
+            id: "b",
+            text: "Two PRs can each independently pass CI against the current `main` while still being mutually incompatible once both are actually merged together — a gap simple CI-passing requirements don't catch",
+          },
+          {
+            id: "c",
+            text: "Merge queues only address code signing issues, not merge compatibility",
+          },
+          {
+            id: "d",
+            text: "This problem doesn't actually exist in real-world development",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section specifically illustrates this scenario — two independently-passing PRs can combine to break `main` in a way neither individual PR's CI run would have revealed.",
+      },
+      {
+        id: "q18",
+        prompt: "How does a merge queue close the gap described in Q17?",
+        options: [
+          {
+            id: "a",
+            text: "By preventing more than one PR from ever being open simultaneously",
+          },
+          {
+            id: "b",
+            text: "By re-verifying each PR against the true, up-to-the-moment state including other PRs ahead of it in the queue, rather than testing each PR only against a static, potentially-stale version of `main`",
+          },
+          {
+            id: "c",
+            text: "Merge queues do not actually re-run any verification; they only reorder merge commits",
+          },
+          {
+            id: "d",
+            text: "By requiring manual approval from every team member before any merge",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The queue's core mechanism is re-testing each PR against the current, evolving state (including other queued changes), providing a stronger correctness guarantee than independent, isolated CI passes.",
+      },
+      {
+        id: "q19",
+        prompt: "What is the relationship between Fastlane's `upload_symbols_to_crashlytics` action (76.13) and third-party crash reporting services mentioned in section 80.4?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated topics with no connection",
+          },
+          {
+            id: "b",
+            text: "Automated dSYM upload as part of a release pipeline can target both Apple's own crash report symbolication and third-party crash reporting services, ensuring symbolication works regardless of which crash reporting system is in use",
+          },
+          {
+            id: "c",
+            text: "Third-party crash reporting services never require dSYM uploads",
+          },
+          {
+            id: "d",
+            text: "Fastlane can only upload dSYMs to Apple, never to third-party services",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section's example shows dSYM upload targeting a third-party service (Crashlytics), illustrating that automated symbolication support extends to whichever crash reporting infrastructure a team actually uses, connecting to the broader crash reporting material in section 80.4.",
+      },
+      {
+        id: "q20",
+        prompt: "What overarching theme connects Fastlane's release automation, automated version numbering, and automated dSYM upload across sections 76.8-76.13?",
+        options: [
+          {
+            id: "a",
+            text: "These are unrelated, independent tooling choices with no shared purpose",
+          },
+          {
+            id: "b",
+            text: "Each eliminates a recurring, error-prone manual step in the release process, replacing fallible human memory and repetitive manual effort with reliable, consistent automation",
+          },
+          {
+            id: "c",
+            text: "All three exclusively concern code signing, nothing else",
+          },
+          {
+            id: "d",
+            text: "These tools only matter for apps with no CI pipeline at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The recurring theme across these subtopics is converting tedious, easily-forgotten, or error-prone manual release steps into reliable, automated, consistently-applied pipeline behavior.",
+      },
+    ],
+  },
+  {
+    id: "code-signing-and-distribution-quiz",
+    title: "Code Signing and Distribution",
+    description: "20 questions covering certificates/App IDs/profiles, automatic vs. manual signing, entitlements and capability drift, diagnosing signing failures, archiving and exporting, ad hoc and enterprise distribution, MDM, and EU alternative marketplaces.",
+    relatedArticleSlug: "code-signing-and-distribution",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What role does a provisioning profile play among the three core signing concepts?",
+        options: [
+          {
+            id: "a",
+            text: "It proves a developer's identity, identical to a certificate",
+          },
+          {
+            id: "b",
+            text: "It binds together a specific certificate, App ID, and set of allowed devices/capabilities into what gets embedded in a built app to authorize it to run",
+          },
+          {
+            id: "c",
+            text: "It identifies a specific app, identical to an App ID",
+          },
+          {
+            id: "d",
+            text: "A provisioning profile has no functional relationship to certificates or App IDs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A provisioning profile is fundamentally a binding mechanism connecting a certificate, an App ID, and device/capability information together into the actual embedded authorization for a built app.",
+      },
+      {
+        id: "q2",
+        prompt: "Why is understanding the certificate/App ID/profile relationship described as \"genuinely foundational\" for diagnosing signing problems?",
+        options: [
+          {
+            id: "a",
+            text: "These three concepts have no actual relationship to signing failures",
+          },
+          {
+            id: "b",
+            text: "A signing failure is almost always traceable to a mismatch somewhere in this binding (expired certificate, mismatched capabilities, missing device), rather than being an inexplicable, opaque failure",
+          },
+          {
+            id: "c",
+            text: "Signing failures are entirely random and cannot be diagnosed systematically",
+          },
+          {
+            id: "d",
+            text: "Only certificates matter for diagnosing signing issues; App IDs and profiles are irrelevant",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because a provisioning profile is a binding of these three elements, most signing failures trace back to a mismatch in that binding, making the relationship itself the key to systematic diagnosis.",
+      },
+      {
+        id: "q3",
+        prompt: "Why do CI environments typically use manual signing (often via `fastlane match`) rather than Xcode's automatic signing management?",
+        options: [
+          {
+            id: "a",
+            text: "Manual signing is easier to set up than automatic signing",
+          },
+          {
+            id: "b",
+            text: "CI needs deterministic, reproducible signing behavior across every run, while Xcode's automatic signing can behave unpredictably in a headless CI context, potentially attempting to create new certificates or profiles rather than using an established one",
+          },
+          {
+            id: "c",
+            text: "Automatic signing is not actually supported by Xcode at all",
+          },
+          {
+            id: "d",
+            text: "Manual signing requires no certificates or profiles whatsoever",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "CI's need for consistent, predictable signing behavior across every automated run makes manual, explicit signing control more appropriate than Xcode's automatic management, which is designed more for interactive, individual developer use.",
+      },
+      {
+        id: "q4",
+        prompt: "What is \"capability drift,\" as described in 77.3?",
+        options: [
+          {
+            id: "a",
+            text: "A gradual degradation in an app's actual runtime capabilities over time",
+          },
+          {
+            id: "b",
+            text: "When an app's actual entitlements file and its corresponding App ID's configured capabilities in the Apple Developer portal fall out of sync",
+          },
+          {
+            id: "c",
+            text: "Capability drift refers to changes in device hardware capabilities across iOS versions",
+          },
+          {
+            id: "d",
+            text: "It describes drift in an app's version numbering scheme",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Capability drift specifically describes desynchronization between local entitlements configuration and the App ID's capability configuration on Apple's Developer portal.",
+      },
+      {
+        id: "q5",
+        prompt: "Why is capability drift described as a genuinely easy, common mistake?",
+        options: [
+          {
+            id: "a",
+            text: "Entitlements automatically synchronize with App ID configuration, making drift impossible",
+          },
+          {
+            id: "b",
+            text: "Entitlements can be added locally in Xcode without automatically, correspondingly updating the App ID's capability configuration on Apple's Developer portal, producing a mismatch",
+          },
+          {
+            id: "c",
+            text: "Capability drift only occurs due to Apple server outages, never developer action",
+          },
+          {
+            id: "d",
+            text: "This mistake can only occur when using manual signing, never automatic signing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because local entitlement changes don't automatically propagate to the App ID's portal configuration, a developer can easily enable a capability locally without the corresponding remote configuration being updated to match.",
+      },
+      {
+        id: "q6",
+        prompt: "What is the actual diagnostic skill emphasized in 77.4 for resolving signing failures?",
+        options: [
+          {
+            id: "a",
+            text: "Treating every signing error as one undifferentiated, mysterious problem",
+          },
+          {
+            id: "b",
+            text: "Recognizing specific, distinct failure categories (expired certificate, missing device registration, capability drift, expired profile) by carefully reading Xcode's specific error message, since each category has a distinct root cause and fix",
+          },
+          {
+            id: "c",
+            text: "Always regenerating every certificate and profile regardless of the specific error",
+          },
+          {
+            id: "d",
+            text: "Signing failures cannot actually be diagnosed and must simply be worked around",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that correctly identifying which specific failure category applies (based on the actual error message) is what turns signing issues from opaque blockers into straightforward, mechanical fixes.",
+      },
+      {
+        id: "q7",
+        prompt: "What does an `.xcarchive` produced by `Product > Archive` (or `xcodebuild archive`) contain?",
+        options: [
+          {
+            id: "a",
+            text: "Only the compiled binary, with no debug symbols",
+          },
+          {
+            id: "b",
+            text: "A complete, signed build bundle including debug symbols, from which a build can be exported in different forms depending on the distribution channel",
+          },
+          {
+            id: "c",
+            text: "Only source code, with no compiled output at all",
+          },
+          {
+            id: "d",
+            text: "Test results and code coverage data exclusively",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The archive bundles both the signed build and its debug symbols, making it the appropriate complete artifact for subsequent distribution or dSYM-related processing.",
+      },
+      {
+        id: "q8",
+        prompt: "Why is the `.xcarchive` (rather than an ordinary build product) the correct artifact for the dSYM upload automation discussed in section 76.13?",
+        options: [
+          {
+            id: "a",
+            text: "Ordinary build products always contain identical debug symbol information to archives",
+          },
+          {
+            id: "b",
+            text: "The archive genuinely contains everything needed both to distribute the app and to later symbolicate crash reports from that specific build, unlike a plain build output",
+          },
+          {
+            id: "c",
+            text: "dSYM files are never actually included in an `.xcarchive`",
+          },
+          {
+            id: "d",
+            text: "Archives cannot be used for any distribution purpose, only for symbolication",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because archives bundle debug symbols alongside the signed build, they're the correct artifact a release pipeline should preserve and process for both distribution and later crash symbolication needs.",
+      },
+      {
+        id: "q9",
+        prompt: "What distinguishes ad hoc distribution from enterprise distribution?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical distribution methods with different names",
+          },
+          {
+            id: "b",
+            text: "Ad hoc distribution requires explicit per-device UDID registration in the provisioning profile with a hard device count limit, while enterprise distribution allows installation on an organization's devices without per-device UDID registration, but is strictly limited to internal use",
+          },
+          {
+            id: "c",
+            text: "Enterprise distribution requires UDID registration, while ad hoc does not",
+          },
+          {
+            id: "d",
+            text: "Ad hoc distribution can be used for unlimited public distribution",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Ad hoc distribution is UDID-limited and appropriate for small-scale testing, while enterprise distribution avoids per-device registration but carries a strict internal-use-only contractual requirement.",
+      },
+      {
+        id: "q10",
+        prompt: "What real consequence can result from using enterprise distribution to distribute an app to the general public rather than internal employees?",
+        options: [
+          {
+            id: "a",
+            text: "There is no consequence; enterprise distribution can be used for any distribution purpose",
+          },
+          {
+            id: "b",
+            text: "Potential enterprise certificate revocation by Apple, since this use explicitly violates Apple's terms requiring enterprise distribution to remain genuinely internal-only",
+          },
+          {
+            id: "c",
+            text: "The app would simply fail to install on any device",
+          },
+          {
+            id: "d",
+            text: "Enterprise distribution automatically converts to App Store distribution in this case",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly notes that violating the internal-only requirement carries a real consequence — potential revocation of the enterprise certificate — reflecting Apple's contractual enforcement of this restriction.",
+      },
+      {
+        id: "q11",
+        prompt: "What genuinely different distribution model does MDM-based custom app distribution represent, according to 77.7?",
+        options: [
+          {
+            id: "a",
+            text: "It is functionally identical to standard App Store distribution",
+          },
+          {
+            id: "b",
+            text: "Centrally-administered, organization-controlled deployment (with the ability to also push configuration and enforce restrictions) rather than an end user discovering and installing an app through the public App Store",
+          },
+          {
+            id: "c",
+            text: "MDM distribution requires the App Store to approve every deployed app individually",
+          },
+          {
+            id: "d",
+            text: "MDM can only be used for distributing configuration settings, never actual app binaries",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MDM represents a fundamentally different model where an organization's IT department, not individual end users, controls installation and configuration, distinct from public App Store discovery and installation.",
+      },
+      {
+        id: "q12",
+        prompt: "What does Managed App Configuration allow an organization to do, according to 77.7?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing beyond installing the app binary itself",
+          },
+          {
+            id: "b",
+            text: "Pre-configure app settings pushed to the app at install/launch, letting organizations pre-configure things like a server endpoint without requiring user input",
+          },
+          {
+            id: "c",
+            text: "Managed App Configuration only applies to consumer, non-MDM apps",
+          },
+          {
+            id: "d",
+            text: "It exclusively controls the app's visual theme and branding",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section describes Managed App Configuration as letting organizations push pre-configured settings to an app automatically, avoiding the need for manual user configuration.",
+      },
+      {
+        id: "q13",
+        prompt: "What regulatory change is described in 77.8 as driving alternative app marketplaces on iOS?",
+        options: [
+          {
+            id: "a",
+            text: "A global change in Apple's App Store policy applying to all countries equally",
+          },
+          {
+            id: "b",
+            text: "The EU's Digital Markets Act, which has required Apple to support alternative app marketplaces and direct distribution outside the traditional App Store specifically within the EU",
+          },
+          {
+            id: "c",
+            text: "A change initiated voluntarily by Apple with no external regulatory pressure",
+          },
+          {
+            id: "d",
+            text: "A requirement that only applies to enterprise-distributed apps, not consumer apps",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section specifically attributes this shift to the EU's Digital Markets Act, a regulatory requirement scoped specifically to the EU rather than a global policy change.",
+      },
+      {
+        id: "q14",
+        prompt: "What role does Apple's notarization process play for apps distributed via EU alternative marketplaces?",
+        options: [
+          {
+            id: "a",
+            text: "Notarization replaces the need for any code signing entirely",
+          },
+          {
+            id: "b",
+            text: "It provides a baseline security/integrity check for apps distributed through these alternative channels, distinct from and less extensive than full App Store review",
+          },
+          {
+            id: "c",
+            text: "Notarization is identical in scope and rigor to full App Store review",
+          },
+          {
+            id: "d",
+            text: "Notarization only applies to apps distributed through the traditional App Store, not alternative marketplaces",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section describes notarization as Apple's attempt to preserve a minimal integrity guarantee for apps distributed outside traditional App Store review, while being distinct from and less extensive than that full review process.",
+      },
+      {
+        id: "q15",
+        prompt: "Is the EU alternative marketplace distribution model described as applying globally?",
+        options: [
+          {
+            id: "a",
+            text: "Yes, it applies identically to all countries worldwide",
+          },
+          {
+            id: "b",
+            text: "No — it is specifically scoped to the EU's regulatory requirements, with the traditional single-marketplace distribution model continuing to apply everywhere else",
+          },
+          {
+            id: "c",
+            text: "It only applies to apps developed by EU-based companies, regardless of where they're distributed",
+          },
+          {
+            id: "d",
+            text: "The scope of this regulatory change is identical to enterprise distribution rules",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit that this distribution model change is scoped specifically to the EU's regulatory requirements and does not apply globally.",
+      },
+      {
+        id: "q16",
+        prompt: "Why does the section describe manual signing as more appropriate than automatic signing specifically for automated build environments?",
+        options: [
+          {
+            id: "a",
+            text: "Manual signing requires no certificates at all, simplifying CI configuration",
+          },
+          {
+            id: "b",
+            text: "Automated environments need deterministic, explicitly-controlled signing behavior, which manual signing (often via tools like `fastlane match`) provides more reliably than Xcode's automatic management designed for interactive individual use",
+          },
+          {
+            id: "c",
+            text: "Automatic signing is faster than manual signing in every scenario",
+          },
+          {
+            id: "d",
+            text: "Manual signing is only used for enterprise distribution, never for App Store builds",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The predictability and determinism manual signing provides is specifically valuable for automated, headless CI environments where Xcode's interactive automatic signing behavior could be unreliable.",
+      },
+      {
+        id: "q17",
+        prompt: "According to 77.1, what does an App ID identify?",
+        options: [
+          {
+            id: "a",
+            text: "A specific developer's identity, identical to a certificate",
+          },
+          {
+            id: "b",
+            text: "A specific app (e.g., `com.example.myapp`), potentially with wildcard or explicit capability configuration",
+          },
+          {
+            id: "c",
+            text: "A specific physical device authorized to run a build",
+          },
+          {
+            id: "d",
+            text: "An App ID identifies a specific provisioning profile, not an app",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "An App ID's role is identifying a specific app, distinct from a certificate's role of proving developer identity and a provisioning profile's role of binding these elements together.",
+      },
+      {
+        id: "q18",
+        prompt: "What kind of error would \"Provisioning profile doesn't include device\" typically indicate, according to 77.4's diagnostic categories?",
+        options: [
+          {
+            id: "a",
+            text: "An expired certificate needing renewal",
+          },
+          {
+            id: "b",
+            text: "The specific test device's UDID isn't registered in the provisioning profile being used",
+          },
+          {
+            id: "c",
+            text: "A mismatch between local entitlements and App ID capability configuration",
+          },
+          {
+            id: "d",
+            text: "An issue entirely unrelated to code signing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This specific error category points directly to a device registration gap in the provisioning profile, distinct from certificate expiration or capability drift issues.",
+      },
+      {
+        id: "q19",
+        prompt: "Why is ad hoc distribution unsuitable for general internal company-wide distribution, according to 77.6?",
+        options: [
+          {
+            id: "a",
+            text: "Ad hoc distribution has no device limitations at all",
+          },
+          {
+            id: "b",
+            text: "Its UDID-based device limit makes it suitable only for small-scale testing, not broader internal distribution, which would more appropriately use enterprise distribution or MDM instead",
+          },
+          {
+            id: "c",
+            text: "Ad hoc distribution requires App Store review, unlike enterprise distribution",
+          },
+          {
+            id: "d",
+            text: "Ad hoc distribution can only be used for apps without any entitlements",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The hard device count limit tied to explicit UDID registration makes ad hoc distribution appropriate only for small-scale testing scenarios, not broader company-wide internal distribution.",
+      },
+      {
+        id: "q20",
+        prompt: "What common thread connects capability drift (77.3) and the broader signing diagnosis discussion (77.4)?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated topics with no shared theme",
+          },
+          {
+            id: "b",
+            text: "Capability drift is presented as one specific, common example of the kind of binding mismatch that the broader systematic diagnosis approach in 77.4 is designed to identify and resolve",
+          },
+          {
+            id: "c",
+            text: "Capability drift only relates to App Store submission, not code signing diagnosis",
+          },
+          {
+            id: "d",
+            text: "77.4 explicitly states that capability drift cannot actually cause signing failures",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Capability drift is one of the specific, diagnosable root causes listed within the broader systematic approach to identifying and resolving signing failures described in 77.4.",
+      },
+    ],
+  },
+  {
+    id: "app-store-quiz",
+    title: "App Store",
+    description: "20 questions covering the app record, metadata and ASO, screenshots, the privacy manifest, required reason APIs, privacy nutrition labels, TestFlight, submitting for review, App Review Guidelines, handling rejection, phased release, ratings prompts, and app size limits.",
+    relatedArticleSlug: "app-store",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Why must an App Store Connect app record be created before other submission steps can proceed?",
+        options: [
+          {
+            id: "a",
+            text: "It has no actual dependency relationship with other steps",
+          },
+          {
+            id: "b",
+            text: "TestFlight testing, metadata configuration, and privacy label declaration all require an established app record to attach to, making it the foundational first step in the submission pipeline",
+          },
+          {
+            id: "c",
+            text: "The app record is only needed at the very final stage of submission",
+          },
+          {
+            id: "d",
+            text: "App records are created automatically the first time a build is uploaded",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Several other workflow pieces (TestFlight, metadata, privacy labels) depend on the app record already existing, making its early creation a genuine prerequisite rather than something deferrable.",
+      },
+      {
+        id: "q2",
+        prompt: "Which metadata fields carry substantial App Store search weight, according to 78.2?",
+        options: [
+          {
+            id: "a",
+            text: "Only the description field, with name and subtitle having no search relevance",
+          },
+          {
+            id: "b",
+            text: "App name and subtitle, which are both weighted heavily in App Store search, unlike the keyword field which is invisible to users but also indexed for search",
+          },
+          {
+            id: "c",
+            text: "Only the invisible keyword field affects search, with name and subtitle being purely cosmetic",
+          },
+          {
+            id: "d",
+            text: "No metadata fields actually affect App Store search ranking",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies name and subtitle as carrying substantial search weight, alongside the separately-indexed but user-invisible keyword field, distinct from the description's role in conversion rather than search ranking.",
+      },
+      {
+        id: "q3",
+        prompt: "Why does the section recommend localizing screenshots, not just text metadata?",
+        options: [
+          {
+            id: "a",
+            text: "Screenshots cannot actually be localized under any circumstances",
+          },
+          {
+            id: "b",
+            text: "Screenshots showing genuinely localized in-app content provide more accurate, trustworthy insight into what a non-English-speaking user would actually experience, compared to translated captions overlaid on English-language UI",
+          },
+          {
+            id: "c",
+            text: "Localized screenshots have no effect on conversion rates",
+          },
+          {
+            id: "d",
+            text: "Screenshot localization is required by Apple for all apps regardless of target market",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section connects this to section 71.14's localization discussion, emphasizing that genuinely localized screenshots (not just translated captions) give a more accurate preview of the actual localized experience.",
+      },
+      {
+        id: "q4",
+        prompt: "What does the privacy manifest (`PrivacyInfo.xcprivacy`) require beyond an app's own first-party data practices?",
+        options: [
+          {
+            id: "a",
+            text: "Only the app's own first-party code needs to be declared; dependencies are exempt",
+          },
+          {
+            id: "b",
+            text: "Apple aggregates declarations from an app and all its SPM/CocoaPods dependencies into a combined manifest, meaning third-party dependencies must also declare their own data practices",
+          },
+          {
+            id: "c",
+            text: "The privacy manifest only applies to apps that don't use any third-party dependencies",
+          },
+          {
+            id: "d",
+            text: "Privacy manifests are optional and have no bearing on submission approval",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The aggregation across the entire dependency tree is a genuinely significant supply-chain transparency mechanism, surfacing dependency data practices a developer might not otherwise be aware of.",
+      },
+      {
+        id: "q5",
+        prompt: "What genuine privacy loophole do required reason API declarations specifically address?",
+        options: [
+          {
+            id: "a",
+            text: "Loopholes related to explicit, user-facing permission prompts like camera access",
+          },
+          {
+            id: "b",
+            text: "Certain APIs (like precise file timestamps) could historically be used to fingerprint a device or correlate user identity across apps without ever triggering a permission dialog a user would see",
+          },
+          {
+            id: "c",
+            text: "Required reason APIs address only encryption export compliance concerns",
+          },
+          {
+            id: "d",
+            text: "There is no actual privacy concern addressed by required reason API declarations",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explains that required reason APIs close a specific tracking loophole that existed without any user-facing permission prompt, unlike traditional runtime permissions for camera or location.",
+      },
+      {
+        id: "q6",
+        prompt: "How do privacy nutrition labels (78.6) parallel Accessibility Nutrition Labels from section 70.18?",
+        options: [
+          {
+            id: "a",
+            text: "They serve entirely unrelated purposes with no meaningful parallel",
+          },
+          {
+            id: "b",
+            text: "Both let users make an informed pre-download decision based on accurate declarations, with inaccurate declarations (whether careless or deliberate) undermining genuine user trust in the same way for both label types",
+          },
+          {
+            id: "c",
+            text: "Only Accessibility Nutrition Labels carry any real enforcement consequences",
+          },
+          {
+            id: "d",
+            text: "Privacy nutrition labels are a subset of Accessibility Nutrition Labels",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel — both label types exist to let users make informed decisions before downloading, and both carry genuine weight tied to accurate, honest declaration.",
+      },
+      {
+        id: "q7",
+        prompt: "What is the key trade-off between TestFlight internal and external testing?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful trade-off; both tiers behave identically",
+          },
+          {
+            id: "b",
+            text: "Internal testing offers immediate availability with no Apple review but is limited to team members, while external testing supports up to 10,000 testers but requires a Beta App Review step first",
+          },
+          {
+            id: "c",
+            text: "External testing is faster than internal testing in every respect",
+          },
+          {
+            id: "d",
+            text: "Internal testing requires Beta App Review, while external testing does not",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuine speed-versus-reach trade-off — internal testing prioritizes fast iteration, while external testing prioritizes broader, more representative pre-release validation at the cost of a review step.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does thorough pre-submission preparation reduce rejection risk, according to 78.8?",
+        options: [
+          {
+            id: "a",
+            text: "Pre-submission preparation has no actual effect on rejection likelihood",
+          },
+          {
+            id: "b",
+            text: "Many rejections stem not from an app's actual functionality being problematic, but from incomplete or inconsistent metadata, missing privacy declarations, or improperly provided export compliance information",
+          },
+          {
+            id: "c",
+            text: "All rejections are caused exclusively by genuine functionality bugs",
+          },
+          {
+            id: "d",
+            text: "Pre-submission checklists are only relevant for apps using in-app purchases",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section notes that many rejections are avoidable through careful attention to metadata completeness, privacy declarations, and compliance information, rather than reflecting genuine functionality problems.",
+      },
+      {
+        id: "q9",
+        prompt: "According to 78.9, where does rejection risk disproportionately concentrate in practice?",
+        options: [
+          {
+            id: "a",
+            text: "Equally across every single guideline with no particular concentration",
+          },
+          {
+            id: "b",
+            text: "Crashes/bugs, incomplete or broken functionality, inaccurate metadata/screenshots, and privacy declaration issues",
+          },
+          {
+            id: "c",
+            text: "Exclusively in App Store keyword selection",
+          },
+          {
+            id: "d",
+            text: "Only in apps that use custom product pages",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies these specific categories as accounting for a disproportionate share of actual rejections, making them worth extra pre-submission scrutiny compared to spreading equal attention everywhere.",
+      },
+      {
+        id: "q10",
+        prompt: "What practical advice does the section give for allocating pre-submission review time?",
+        options: [
+          {
+            id: "a",
+            text: "Spread exactly equal, shallow attention across every single guideline uniformly",
+          },
+          {
+            id: "b",
+            text: "Focus more time double-checking the specific, disproportionately common rejection categories, since the actual empirical distribution of rejections skews heavily toward this learnable set of concerns",
+          },
+          {
+            id: "c",
+            text: "Pre-submission review time should be spent exclusively on ASO optimization",
+          },
+          {
+            id: "d",
+            text: "Review time allocation has no measurable effect on submission outcomes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly recommends concentrating review effort on the categories known to disproportionately cause rejections, rather than distributing attention evenly across every guideline.",
+      },
+      {
+        id: "q11",
+        prompt: "When might a rejection be resolved without an actual code change, according to 78.10?",
+        options: [
+          {
+            id: "a",
+            text: "Never; every rejection requires modifying the app's code",
+          },
+          {
+            id: "b",
+            text: "When the rejection stems from a genuine misunderstanding of a feature's actual purpose or behavior, which can sometimes be resolved via clarifying information through the Resolution Center",
+          },
+          {
+            id: "c",
+            text: "Only rejections related to metadata can be resolved without code changes",
+          },
+          {
+            id: "d",
+            text: "Code changes are always required regardless of the rejection's actual cause",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights that reviewers have limited context, and a misunderstanding-based rejection can sometimes be resolved through clarification rather than an unnecessary code change and resubmission.",
+      },
+      {
+        id: "q12",
+        prompt: "Why does the section note that reviewers might lack full context for a submission?",
+        options: [
+          {
+            id: "a",
+            text: "Reviewers always have complete, perfect understanding of every app's functionality",
+          },
+          {
+            id: "b",
+            text: "A reviewer evaluating potentially thousands of apps has necessarily limited time to understand every submission's full context, which can lead to misunderstanding-based rejections",
+          },
+          {
+            id: "c",
+            text: "Reviewers deliberately ignore context to speed up the review process",
+          },
+          {
+            id: "d",
+            text: "This consideration only applies to apps submitted for the first time",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The practical reality of reviewing a large volume of submissions with limited time per app explains why misunderstanding-based rejections can occur, distinct from genuine guideline violations.",
+      },
+      {
+        id: "q13",
+        prompt: "What does phased release accomplish, according to 78.11?",
+        options: [
+          {
+            id: "a",
+            text: "It immediately releases a new version to 100% of the user base with no gradual rollout",
+          },
+          {
+            id: "b",
+            text: "It gradually rolls out a new version to an increasing percentage of existing users over roughly a week, letting a team catch a serious issue affecting only a small percentage of users before it reaches everyone",
+          },
+          {
+            id: "c",
+            text: "Phased release only applies to the very first version of an app, never subsequent updates",
+          },
+          {
+            id: "d",
+            text: "Phased release has no relationship to catching bugs or issues post-release",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The gradual percentage-based rollout schedule is specifically designed to limit the exposure of a serious, unanticipated issue before it reaches the full user base.",
+      },
+      {
+        id: "q14",
+        prompt: "What earlier risk-management principles does phased release directly extend, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "It has no relationship to any other risk-management concept in the curriculum",
+          },
+          {
+            id: "b",
+            text: "The same measure-before-full-commitment principle discussed for performance regression budgets (69.19) and merge queues (76.15), applied here to the final release process",
+          },
+          {
+            id: "c",
+            text: "Phased release is described as functionally identical to A/B testing product pages",
+          },
+          {
+            id: "d",
+            text: "It extends only the code signing diagnosis principles from section 77.4",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects phased release to the broader risk-management theme seen in performance budgets and merge queues — catching problems on a limited scale before full exposure.",
+      },
+      {
+        id: "q15",
+        prompt: "Why doesn't calling `requestReview()` guarantee that the rating prompt actually appears?",
+        options: [
+          {
+            id: "a",
+            text: "`requestReview()` always shows the prompt immediately, with no exceptions",
+          },
+          {
+            id: "b",
+            text: "iOS itself enforces frequency limits behind the scenes, meaning the system decides whether to actually show the prompt rather than the app being able to force it to appear on every call",
+          },
+          {
+            id: "c",
+            text: "`requestReview()` is deprecated and no longer functions at all",
+          },
+          {
+            id: "d",
+            text: "The prompt only appears if the app has fewer than 100 users",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The system-controlled nature of the API means an app can call it at appropriate moments, but iOS's own frequency limits determine whether the prompt is actually shown each time.",
+      },
+      {
+        id: "q16",
+        prompt: "What is the appropriate way for a well-designed app to use `requestReview()`, according to 78.12?",
+        options: [
+          {
+            id: "a",
+            text: "Calling it as frequently as possible to maximize the chance of a rating",
+          },
+          {
+            id: "b",
+            text: "Calling it at contextually appropriate moments (like after a clearly positive interaction) and trusting the system to decide whether showing the prompt at that moment is appropriate",
+          },
+          {
+            id: "c",
+            text: "Building a fully custom, unrestricted in-app rating prompt to bypass system limits entirely",
+          },
+          {
+            id: "d",
+            text: "Never calling `requestReview()` under any circumstances, since it cannot be controlled",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends contextually appropriate invocation while relying on the system's own frequency management, rather than assuming or attempting to force every call to produce a visible prompt.",
+      },
+      {
+        id: "q17",
+        prompt: "What does App Store Connect's product page A/B testing enable, according to 78.13?",
+        options: [
+          {
+            id: "a",
+            text: "Only manual, intuition-based selection of a single fixed listing with no measurement",
+          },
+          {
+            id: "b",
+            text: "Testing different listing variants (screenshots, preview videos, promotional text) against each other for actual conversion rate, informing which version should become the primary listing",
+          },
+          {
+            id: "c",
+            text: "A/B testing can only be used for pricing changes, not listing content",
+          },
+          {
+            id: "d",
+            text: "Product page A/B testing has no relationship to conversion rate measurement",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This feature provides measured, real conversion data to inform listing decisions, extending ASO from intuition-driven guessing into iterative, data-informed practice.",
+      },
+      {
+        id: "q18",
+        prompt: "How does A/B testing product pages extend the ASO discussion from 78.2, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for ASO entirely",
+          },
+          {
+            id: "b",
+            text: "It turns App Store listing optimization from a one-time, intuition-driven decision into an ongoing, data-informed practice, using real measured conversion data rather than guesswork",
+          },
+          {
+            id: "c",
+            text: "A/B testing has no meaningful relationship to ASO",
+          },
+          {
+            id: "d",
+            text: "ASO only concerns keywords, while A/B testing only concerns screenshots",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames A/B testing as extending ASO into measurable, iterative territory, providing real data to inform metadata and visual choices rather than relying purely on intuition.",
+      },
+      {
+        id: "q19",
+        prompt: "What concrete, real-world consequence does the section attribute to an oversized initial app download?",
+        options: [
+          {
+            id: "a",
+            text: "Oversized downloads have no measurable real-world impact",
+          },
+          {
+            id: "b",
+            text: "Users facing a cellular download warning (or an outright block) represent real, quantifiable download abandonment, giving on-demand resources genuine practical, business-relevant value",
+          },
+          {
+            id: "c",
+            text: "Oversized apps are automatically rejected during App Review regardless of functionality",
+          },
+          {
+            id: "d",
+            text: "Download size only affects storage usage, never actual download behavior",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames on-demand resources as addressing a concrete business impact — real user download abandonment triggered by cellular size warnings or blocks — not merely a theoretical optimization concern.",
+      },
+      {
+        id: "q20",
+        prompt: "How does 78.14's discussion of on-demand resources build on section 69.15's binary size material?",
+        options: [
+          {
+            id: "a",
+            text: "It contradicts 69.15's recommendations entirely",
+          },
+          {
+            id: "b",
+            text: "It applies the same underlying size-reduction technique specifically to the App Store's concrete download-size thresholds and their measurable, real user-facing consequences, rather than treating size reduction as purely theoretical",
+          },
+          {
+            id: "c",
+            text: "Section 69.15 and 78.14 discuss entirely unrelated topics",
+          },
+          {
+            id: "d",
+            text: "On-demand resources were only introduced in 78.14, with no prior mention in the curriculum",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly builds on 69.15's earlier introduction of on-demand resources, connecting the general size-reduction technique to the App Store's specific, concrete download thresholds and their real business impact.",
+      },
+    ],
+  },
 ];
 
 export function getAllQuizzes(): Quiz[] {
