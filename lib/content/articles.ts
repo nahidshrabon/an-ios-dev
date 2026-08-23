@@ -649,6 +649,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("localization.md"),
   },
+  {
+    slug: "xcode-and-the-build-system",
+    title: "Xcode and the Build System",
+    description:
+      "Xcode navigation and shortcuts, targets/schemes/configurations, build settings and inheritance, .xcconfig files, build phases and run scripts, per-configuration Info.plist, generated asset symbols, Debug vs. Release, optimization levels, strict concurrency settings, diagnosing slow builds, whole-module vs. incremental compilation, explicit modules, and #Playground.",
+    tags: ["xcode", "build-system", "tooling"],
+    publishedAt: "2026-08-16",
+    content: loadBody("xcode-and-the-build-system.md"),
+  },
+  {
+    slug: "swift-package-manager",
+    title: "Swift Package Manager",
+    description:
+      "Adding a package dependency, version rules and Package.resolved, creating your own package, Package.swift anatomy, package resources and bundles, local package development, evaluating dependencies, binary targets and XCFrameworks, build and command plugins, package traits, private registries, and migrating off CocoaPods.",
+    tags: ["spm", "package-manager", "dependencies"],
+    publishedAt: "2026-08-16",
+    content: loadBody("swift-package-manager.md"),
+  },
+  {
+    slug: "git-and-collaboration",
+    title: "Git and Collaboration",
+    description:
+      "Commits/staging/history, branching and merging, rebasing and interactive rebase, resolving merge conflicts in Xcode project files, .gitignore for Xcode, pull requests and review etiquette, writing commit messages that explain why, Git hooks, trunk-based development vs. release branches, and contributing to open source.",
+    tags: ["git", "collaboration", "version-control"],
+    publishedAt: "2026-08-16",
+    content: loadBody("git-and-collaboration.md"),
+  },
+  {
+    slug: "code-quality-tooling",
+    title: "Code Quality Tooling",
+    description:
+      "SwiftLint setup and rules, SwiftFormat/swift-format, writing custom lint rules, Periphery for dead code detection, Danger-Swift for PR automation, warnings-as-errors policy, and Sourcery for code generation.",
+    tags: ["tooling", "swiftlint", "code-quality"],
+    publishedAt: "2026-08-16",
+    content: loadBody("code-quality-tooling.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
