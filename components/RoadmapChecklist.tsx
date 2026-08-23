@@ -76,22 +76,60 @@ export function RoadmapChecklist({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parts, manualCompleted, readSlugs]);
 
+  const bestScores = Object.values(bestScoreByArticleSlug);
+  const quizzesTaken = bestScores.length;
+  const successRatePercent =
+    quizzesTaken > 0
+      ? Math.round(
+          (bestScores.reduce((sum, b) => sum + b.score / b.total, 0) /
+            quizzesTaken) *
+            100
+        )
+      : 0;
+
   return (
     <div>
       <PageHeader icon={FlagIcon} title="Roadmap" />
 
-      <p className="mt-2 flex max-w-2xl items-start gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-        <InfoIcon className="mt-0.5 size-4 shrink-0" />
-        <span>
-          A section auto-checks{" "}
-          <CheckIcon className="inline size-4 align-text-bottom text-emerald-700 dark:text-emerald-400" />{" "}
-          once you mark its article as{" "}
-          <span className="font-heading font-medium text-emerald-700 dark:text-emerald-400">
-            Read
+      <div className="mt-2 flex max-w-2xl flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="flex items-start gap-1.5">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          <span>
+            A section auto-checks{" "}
+            <CheckIcon className="inline size-4 align-text-bottom text-emerald-700 dark:text-emerald-400" />{" "}
+            once you mark its article as{" "}
+            <span className="font-heading font-medium text-emerald-700 dark:text-emerald-400">
+              Read
+            </span>
+            .
           </span>
-          .
-        </span>
-      </p>
+        </p>
+        <p className="flex items-start gap-1.5">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          Quiz success rate is your average score across every quiz
+          you&apos;ve taken.
+        </p>
+        <p className="flex items-start gap-1.5">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          <span>
+            The score badge{" "}
+            <TestIcon className="inline size-4 align-text-bottom text-accent" />{" "}
+            next to a section shows your best result on that article&apos;s
+            quiz.
+          </span>
+        </p>
+        <p className="flex items-start gap-1.5">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          <span>
+            The bookmark badge{" "}
+            <BookmarkIcon
+              className="inline size-4 align-text-bottom text-accent"
+              filled
+            />{" "}
+            shows how many headings you&apos;ve saved in that article.
+          </span>
+        </p>
+      </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <div className="flex items-center gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 sm:flex-1 dark:border-emerald-400/15 dark:bg-emerald-400/10">
@@ -112,6 +150,17 @@ export function RoadmapChecklist({
             </p>
           </div>
         </div>
+
+        {quizzesTaken > 0 && (
+          <div className="flex flex-col justify-center rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 sm:flex-1 dark:border-emerald-400/15 dark:bg-emerald-400/10">
+            <p className="font-heading text-sm text-emerald-700 dark:text-emerald-400">
+              Quiz success rate
+            </p>
+            <p className="font-heading mt-0.5 text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+              {successRatePercent}%
+            </p>
+          </div>
+        )}
 
         {nextSection && (
           <div className="flex items-center justify-between gap-4 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 sm:flex-1 dark:border-blue-400/15 dark:bg-blue-400/10">

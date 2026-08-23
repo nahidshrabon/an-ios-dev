@@ -87,23 +87,23 @@ export function QuizRunner({
                 key={question.id}
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
-                <p className="font-article font-medium">
-                  {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>{" "}
-                  <span
-                    className={`font-heading inline-block rounded-full px-2.5 py-1 align-middle text-sm ${
-                      !wasAnswered
-                        ? "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400"
-                        : graded.correct
-                          ? "bg-green-700/10 text-green-700 dark:text-green-400"
-                          : "bg-red-700/10 text-red-700 dark:text-red-400"
-                    }`}
-                  >
-                    {!wasAnswered
-                      ? "Not answered"
+                <span
+                  className={`font-heading inline-block rounded-full px-2.5 py-1 text-sm ${
+                    !wasAnswered
+                      ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400"
                       : graded.correct
-                        ? "Correct"
-                        : "Incorrect"}
-                  </span>
+                        ? "bg-green-700/10 text-green-700 dark:text-green-400"
+                        : "bg-red-700/10 text-red-700 dark:text-red-400"
+                  }`}
+                >
+                  {!wasAnswered
+                    ? "Not answered"
+                    : graded.correct
+                      ? "Correct"
+                      : "Incorrect"}
+                </span>
+                <p className="font-article mt-2 font-medium">
+                  {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
                 </p>
                 <ul className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
