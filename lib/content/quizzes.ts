@@ -12413,33 +12413,33 @@ export const quizzes: Quiz[] = [
         prompt: "What is the core architectural shift App Intents represents compared to SiriKit's `INIntent` model?",
         options: [
           { id: "a", text: "App Intents requires a completely separate app to be installed" },
-          { id: "b", text: "Rather than a separate, sandboxed Intents extension process communicating via IPC, App Intents live directly in the main app's process as ordinary Swift types conforming to a protocol" },
+          { id: "b", text: "There is no architectural difference; App Intents is simply a renamed version of SiriKit" },
           { id: "c", text: "App Intents only work with Siri, unlike SiriKit which also worked with Shortcuts" },
-          { id: "d", text: "There is no architectural difference; App Intents is simply a renamed version of SiriKit" },
+          { id: "d", text: "Rather than a separate, sandboxed Intents extension process communicating via IPC, App Intents live directly in the main app's process as ordinary Swift types conforming to a protocol" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section identifies this in-process, Swift-native design as the fundamental shift — replacing SiriKit's separate extension process and IPC communication with intents that are simply ordinary Swift types, a much simpler mental model that naturally extends across multiple system surfaces.",
       },
       {
         id: "q2",
         prompt: "What does a single `AppIntent` definition simultaneously power, according to 51.1?",
         options: [
-          { id: "a", text: "Only Siri voice requests" },
-          { id: "b", text: "Siri, the Shortcuts app, Spotlight suggestions, widgets, and more — all from one shared definition, with no separate integration code needed per surface" },
+          { id: "a", text: "Siri, Shortcuts, Spotlight, and widgets, all from one definition" },
+          { id: "b", text: "Only Siri voice requests, requiring separate code elsewhere" },
           { id: "c", text: "Only the Shortcuts app, requiring separate code for Siri" },
-          { id: "d", text: "Only third-party automation apps, not any first-party Apple surfaces" },
+          { id: "d", text: "Only third-party automation apps, not any first-party surfaces" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "App Intents' unified design means one intent definition automatically becomes available across multiple system surfaces simultaneously, a direct contrast to needing separate, surface-specific integration code under the older model.",
       },
       {
         id: "q3",
         prompt: "What is the purpose of an `AppIntent`'s `perform()` method?",
         options: [
-          { id: "a", text: "It only validates parameters with no actual side effects" },
-          { id: "b", text: "It contains the actual logic executed when the intent runs, and being `async throws`, can naturally call into the app's existing async service/repository layer" },
-          { id: "c", text: "It is only called during testing, never in production" },
-          { id: "d", text: "It replaces the need for any `@Parameter` declarations" },
+          { id: "a", text: "It only validates parameters, with no actual side effects at all" },
+          { id: "b", text: "Contains the actual logic run when the intent executes" },
+          { id: "c", text: "It is only called during testing, and never in production" },
+          { id: "d", text: "It replaces the need for any `@Parameter` declarations entirely" },
         ],
         correctOptionId: "b",
         explanation: "`perform()` is where the intent's real work happens — since it supports `async`/`await` and error throwing, a well-designed intent typically delegates to the app's existing business logic layer (section 45.5) rather than reimplementing logic separately.",
@@ -12448,46 +12448,46 @@ export const quizzes: Quiz[] = [
         id: "q4",
         prompt: "What does an intent's `parameterSummary` provide?",
         options: [
-          { id: "a", text: "A JSON schema for the intent's parameters" },
-          { id: "b", text: "A natural-language template showing how the intent, with its filled-in parameters, reads as a coherent sentence throughout Shortcuts and Siri" },
-          { id: "c", text: "A list of error codes the intent might throw" },
-          { id: "d", text: "The intent's expected execution time" },
+          { id: "a", text: "A JSON schema describing the intent's parameters directly" },
+          { id: "b", text: "A list of error codes the intent might throw at runtime" },
+          { id: "c", text: "A template showing how the intent reads as a sentence" },
+          { id: "d", text: "The intent's expected execution time, shown to the user" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`parameterSummary`, built with key-path references to `@Parameter` properties, produces the editable natural-language sentence users see and interact with directly in the Shortcuts app's visual editor — a genuine UX design element, not just technical metadata.",
       },
       {
         id: "q5",
         prompt: "What does `EntityQuery`'s `entities(for:)` method do, as distinct from `suggestedEntities()`?",
         options: [
-          { id: "a", text: "They are identical methods with different names" },
-          { id: "b", text: "`entities(for:)` resolves specific known identifiers back into full entity objects (e.g., loading a previously-selected recipe by ID); `suggestedEntities()` provides a reasonable default list shown before the user has typed anything" },
-          { id: "c", text: "`suggestedEntities()` is only called during testing" },
-          { id: "d", text: "`entities(for:)` is used exclusively for `AppEnum`, not `AppEntity`" },
+          { id: "a", text: "They are identical methods, just with different names" },
+          { id: "b", text: "`entities(for:)` is used exclusively for `AppEnum`, not `AppEntity`" },
+          { id: "c", text: "`suggestedEntities()` is only called during testing, never live" },
+          { id: "d", text: "One resolves known identifiers back into entities; the other suggests a default list" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These serve two distinct resolution needs — `entities(for:)` handles resolving already-known identifiers (like restoring a previously-configured Shortcut's saved selection), while `suggestedEntities()` populates an initial, helpful default list before the user has actively searched.",
       },
       {
         id: "q6",
         prompt: "When is `AppEnum` the appropriate choice over `AppEntity`?",
         options: [
-          { id: "a", text: "When a parameter needs to search across a large, dynamic dataset" },
-          { id: "b", text: "When a parameter represents a small, fixed set of choices (like a sort order or filter category) rather than an open-ended, searchable set of entities" },
+          { id: "a", text: "When a parameter is a small, fixed set of choices" },
+          { id: "b", text: "When a parameter needs to search across a large, dynamic dataset" },
           { id: "c", text: "`AppEnum` and `AppEntity` are interchangeable in every scenario" },
-          { id: "d", text: "`AppEnum` is only used for numeric parameters" },
+          { id: "d", text: "`AppEnum` is only used for numeric parameters, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`AppEnum` is designed for bounded, enumerable choice sets presented as a fixed picker — appropriate for exactly the kind of scenario a plain Swift `enum` would model elsewhere in the app (section 6), whereas `AppEntity` with `EntityQuery` is for open-ended, searchable data.",
       },
       {
         id: "q7",
         prompt: "What is the key advantage of an `AppShortcutsProvider`-declared App Shortcut over an ordinary custom Shortcut a user builds themselves?",
         options: [
-          { id: "a", text: "App Shortcuts run faster than custom Shortcuts" },
-          { id: "b", text: "Because they're pre-declared by the app with pre-written phrases, the system can surface them proactively in Spotlight and Siri suggestions before a user has manually configured anything, dramatically lowering the discovery barrier" },
+          { id: "a", text: "App Shortcuts run measurably faster than custom Shortcuts" },
+          { id: "b", text: "Pre-declared, so the system can surface them proactively" },
           { id: "c", text: "App Shortcuts cannot accept any parameters, unlike custom Shortcuts" },
-          { id: "d", text: "There is no meaningful difference between the two" },
+          { id: "d", text: "There is no meaningful difference between the two at all" },
         ],
         correctOptionId: "b",
         explanation: "App Shortcuts' key benefit is proactive discoverability — since the app itself declares the shortcut and its phrases upfront, the system can suggest it to users who've never manually built anything, unlike custom Shortcuts which require the user to already know App Intents exist and build their own automation.",
@@ -12496,44 +12496,44 @@ export const quizzes: Quiz[] = [
         id: "q8",
         prompt: "Why is `\\(.applicationName)` typically included in a shortcut phrase?",
         options: [
-          { id: "a", text: "It is purely decorative and has no functional purpose" },
-          { id: "b", text: "It's required so Siri can disambiguate which app's shortcut is being invoked when phrases might otherwise be ambiguous across multiple apps" },
-          { id: "c", text: "It automatically translates the phrase into every supported language" },
-          { id: "d", text: "It sets the phrase's execution priority relative to other apps' phrases" },
+          { id: "a", text: "It is purely decorative and has no functional purpose at all" },
+          { id: "b", text: "It automatically translates the phrase into every supported language" },
+          { id: "c", text: "So Siri can disambiguate which app's shortcut is meant" },
+          { id: "d", text: "It sets the phrase's execution priority relative to other apps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Including the app's name in the phrase helps Siri correctly identify which specific app's shortcut a user means to invoke, particularly important since similar-sounding phrases could otherwise exist across multiple different apps.",
       },
       {
         id: "q9",
         prompt: "Why is localizing shortcut phrases described as more nuanced than typical UI string translation?",
         options: [
-          { id: "a", text: "Shortcut phrases cannot actually be localized at all" },
-          { id: "b", text: "A phrase that sounds natural and unambiguous in one language may need a genuinely different sentence structure (not just a word-for-word translation) to sound natural when spoken aloud to Siri in another language" },
-          { id: "c", text: "Localization only applies to written text, never to voice-invoked phrases" },
-          { id: "d", text: "`LocalizedStringResource` cannot be used for shortcut phrases" },
+          { id: "a", text: "Shortcut phrases cannot actually be localized at all, ever" },
+          { id: "b", text: "`LocalizedStringResource` cannot be used for shortcut phrases at all" },
+          { id: "c", text: "Localization only applies to written text, never to spoken phrases" },
+          { id: "d", text: "A phrase natural in one language may need real restructuring" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because shortcut phrases are specifically meant to be spoken aloud and recognized by voice, a literal translation might produce an awkward or unnatural-sounding phrase — genuinely natural localization may require restructuring the sentence rather than simply substituting translated words.",
       },
       {
         id: "q10",
         prompt: "What does a snippet, as returned via `ShowsSnippetView`, provide beyond a generic spoken response?",
         options: [
-          { id: "a", text: "It replaces the need for the intent's `perform()` method entirely" },
-          { id: "b", text: "A small, custom SwiftUI view shown directly within the Siri/Shortcuts interface as rich visual confirmation or result, reusing the same view-building skills from throughout the SwiftUI material" },
-          { id: "c", text: "Snippets can only display plain text, no custom layout" },
+          { id: "a", text: "A small custom SwiftUI view shown as visual confirmation" },
+          { id: "b", text: "It replaces the need for the intent's `perform()` method entirely" },
+          { id: "c", text: "Snippets can only display plain text, with no custom layout" },
           { id: "d", text: "Snippets are only available for `LongRunningIntent` conformers" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Snippets let an intent provide meaningfully richer feedback than a generic \"Okay, done\" response, using ordinary SwiftUI view code — valuable for intents whose result benefits from visual context, like confirming exactly which item and details were affected.",
       },
       {
         id: "q11",
         prompt: "How does `RelevantEntities` (iOS 27) differ from `EntityQuery`'s `suggestedEntities()`?",
         options: [
-          { id: "a", text: "They are identical mechanisms with different names" },
-          { id: "b", text: "`RelevantEntities` is a proactive push mechanism where the app signals contextually relevant entities to the system ahead of time; `suggestedEntities()` responds reactively when the user is actively browsing a parameter's options" },
+          { id: "a", text: "They are identical mechanisms, just with different names" },
+          { id: "b", text: "One proactively pushes entities; the other responds live" },
           { id: "c", text: "`suggestedEntities()` only works for `AppEnum`, never `AppEntity`" },
           { id: "d", text: "`RelevantEntities` can only be used with `LongRunningIntent`" },
         ],
@@ -12544,12 +12544,12 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "What problem does `EntityCollection`'s cursor-based, lazy pagination design solve?",
         options: [
-          { id: "a", text: "It eliminates the need for `EntityQuery` entirely" },
-          { id: "b", text: "It avoids needing to eagerly load and return an entire potentially-huge collection just to satisfy a search that might only need the first handful of matching results, letting entity search scale gracefully to large datasets" },
-          { id: "c", text: "`EntityCollection` only works for datasets smaller than 10 items" },
+          { id: "a", text: "It eliminates the need for `EntityQuery` entirely, on its own" },
+          { id: "b", text: "`EntityCollection` only works for datasets smaller than 10 items" },
+          { id: "c", text: "Avoids eagerly loading a huge collection for a small search" },
           { id: "d", text: "It automatically caches all entities permanently in memory" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Without lazy pagination, resolving a search against a large dataset (thousands of recipes, for instance) would require loading everything into memory upfront — `EntityCollection`'s cursor-based approach mirrors general pagination patterns to fetch only what's actually needed as the user scrolls or continues searching.",
       },
       {
@@ -12557,23 +12557,23 @@ export const quizzes: Quiz[] = [
         prompt: "What problem does `SyncableEntity` address?",
         options: [
           { id: "a", text: "It speeds up entity resolution for large datasets" },
-          { id: "b", text: "If entity identifiers aren't consistently synced across a user's devices along with the underlying data, a Shortcut referencing a specific entity built on one device might fail to resolve that same entity correctly on another device" },
+          { id: "b", text: "It only applies to entities that never change" },
           { id: "c", text: "`SyncableEntity` replaces the need for `CloudKit` entirely" },
-          { id: "d", text: "It only applies to entities that never change" },
+          { id: "d", text: "If entity identifiers aren't consistently synced across a user's devices along with the underlying data, a Shortcut referencing a specific entity built on one device might fail to resolve that same entity correctly on another device" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`SyncableEntity` formalizes the requirement that an entity's identifier remain stable across a user's devices, connecting back to CloudKit's record identity model (section 44.1) — without this consistency, cross-device Shortcuts referencing specific data could break unpredictably.",
       },
       {
         id: "q14",
         prompt: "What is `LongRunningIntent` designed for, and what earlier concept does it directly parallel?",
         options: [
-          { id: "a", text: "Intents that should never actually complete" },
-          { id: "b", text: "Genuinely lengthy operations that can't reasonably complete within the standard short execution budget — directly paralleling `BGContinuedProcessingTask`'s role for long user-initiated background work (section 49.12)" },
+          { id: "a", text: "Genuinely lengthy operations that can't reasonably complete within the standard short execution budget — directly paralleling `BGContinuedProcessingTask`'s role for long user-initiated background work (section 49.12)" },
+          { id: "b", text: "Intents that should never actually complete" },
           { id: "c", text: "`LongRunningIntent` is only used for intents with no parameters" },
           { id: "d", text: "It has no relationship to any previously covered concept" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Just as `BGContinuedProcessingTask` addresses continuity for lengthy, user-initiated background work, `LongRunningIntent` addresses the analogous need within the App Intents world — signaling that a specific intent needs more time than the default budget, with live progress surfaced to the user.",
       },
       {
@@ -12581,9 +12581,9 @@ export const quizzes: Quiz[] = [
         prompt: "What does `ExecutionTargets` let an intent explicitly declare?",
         options: [
           { id: "a", text: "Which specific user is authorized to invoke the intent" },
-          { id: "b", text: "Which specific process/context the intent should run in — the main app process, a background extension, or potentially a different device — rather than the system having to implicitly guess" },
+          { id: "b", text: "Which process an intent runs in, not the system guessing" },
           { id: "c", text: "The maximum number of times the intent can be invoked per day" },
-          { id: "d", text: "The exact wording of the intent's Siri phrase" },
+          { id: "d", text: "The exact wording of the intent's Siri phrase itself" },
         ],
         correctOptionId: "b",
         explanation: "`ExecutionTargets` makes an intent's execution context requirement explicit — some intents (simple background mutations) can run without the app's UI, while others (needing to render a rich SwiftUI snippet) may require the foreground app process, and this declaration removes ambiguity about which is needed.",
@@ -12592,12 +12592,12 @@ export const quizzes: Quiz[] = [
         id: "q16",
         prompt: "Why does testing an `AppIntent` largely reuse the same techniques from section 47's dependency injection material?",
         options: [
-          { id: "a", text: "It doesn't; `AppIntentsTesting` requires an entirely separate testing approach" },
-          { id: "b", text: "Because a well-designed intent's `perform()` method is typically a thin wrapper delegating to the app's existing, already-injectable service layer, the same dependency substitution techniques apply directly" },
-          { id: "c", text: "`AppIntentsTesting` can only test intents with zero parameters" },
+          { id: "a", text: "It doesn't; `AppIntentsTesting` requires an entirely separate approach" },
+          { id: "b", text: "`AppIntentsTesting` can only test intents with zero parameters" },
+          { id: "c", text: "A thin wrapper delegating to the app's already-injectable services" },
           { id: "d", text: "Intent testing requires actually invoking Siri during the test run" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Since intents are designed to be thin wrappers around existing, already-testable business logic (rather than duplicating logic), the same protocol-based substitution and injection techniques from section 47 carry over naturally — `AppIntentsTesting`'s specific contribution is making it easy to construct and invoke intents directly in tests.",
       },
       {
@@ -12605,23 +12605,23 @@ export const quizzes: Quiz[] = [
         prompt: "What additional integration work is typically needed to make an existing `AppIntent` available via the Action Button or Control Center?",
         options: [
           { id: "a", text: "A completely separate, dedicated intent definition must be written for each entry point" },
-          { id: "b", text: "None beyond the intent already being a well-formed `AppIntent` with a clear title — this is a direct payoff of App Intents' unified, multi-surface design" },
+          { id: "b", text: "Action Button integration requires a separate paid Apple Developer entitlement" },
           { id: "c", text: "The app must be rewritten entirely in UIKit" },
-          { id: "d", text: "Action Button integration requires a separate paid Apple Developer entitlement" },
+          { id: "d", text: "None beyond the intent already being a well-formed `AppIntent` with a clear title — this is a direct payoff of App Intents' unified, multi-surface design" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because App Intents was designed from the outset to power multiple system surfaces from one shared definition, an intent originally built for Siri/Shortcuts automatically becomes eligible for Action Button/Control Center assignment with no additional per-surface work — a direct benefit of the unified architecture described in 51.1.",
       },
       {
         id: "q18",
         prompt: "What does Visual Intelligence integration represent, according to 51.16?",
         options: [
-          { id: "a", text: "A stable, long-established capability with no further development expected" },
-          { id: "b", text: "A genuinely advanced, still-maturing integration point where the system can proactively suggest relevant app actions based on visual context (like a photographed dish), rather than the user explicitly invoking an action by name" },
+          { id: "a", text: "A genuinely advanced, still-maturing integration point where the system can proactively suggest relevant app actions based on visual context (like a photographed dish), rather than the user explicitly invoking an action by name" },
+          { id: "b", text: "A stable, long-established capability with no further development expected" },
           { id: "c", text: "A feature exclusive to third-party apps, unavailable to first-party Apple apps" },
           { id: "d", text: "A replacement for `AppShortcutsProvider`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section explicitly frames Visual Intelligence as an actively-evolving edge of App Intents' capabilities — extending the framework's reach from explicit user requests toward proactive suggestions triggered by visual understanding, representing where the framework is still expanding.",
       },
       {
@@ -12641,11 +12641,11 @@ export const quizzes: Quiz[] = [
         prompt: "What broader architectural lesson does the SiriKit-to-App-Intents migration (51.17) illustrate?",
         options: [
           { id: "a", text: "Framework migrations are always equally painful regardless of an app's internal architecture" },
-          { id: "b", text: "Disciplined separation of concerns (like keeping business logic isolated from a specific integration surface) pays off concretely when a significant framework-level migration only needs to touch a comparatively small, well-isolated slice of the codebase" },
-          { id: "c", text: "Migrations should always be avoided entirely in favor of maintaining legacy frameworks indefinitely" },
+          { id: "b", text: "Migrations should always be avoided entirely in favor of maintaining legacy frameworks indefinitely" },
+          { id: "c", text: "Disciplined separation of concerns (like keeping business logic isolated from a specific integration surface) pays off concretely when a significant framework-level migration only needs to touch a comparatively small, well-isolated slice of the codebase" },
           { id: "d", text: "App Intents makes architectural discipline unnecessary going forward" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section explicitly frames this migration scenario as a concrete illustration of the architectural principles from section 45 paying off in practice — good separation of concerns isn't just an abstract ideal, it directly reduces the blast radius of exactly this kind of significant, real-world framework transition.",
       },
     ],
@@ -12660,22 +12660,22 @@ export const quizzes: Quiz[] = [
         id: "q1",
         prompt: "What are the three core pieces every widget is built from?",
         options: [
-          { id: "a", text: "A `ViewController`, a `Delegate`, and a `Storyboard`" },
-          { id: "b", text: "A `TimelineProvider` supplying data over time, a SwiftUI view rendering each timeline entry, and a `Widget` conformer tying them together" },
+          { id: "a", text: "A `TimelineProvider` supplying data over time, a SwiftUI view rendering each timeline entry, and a `Widget` conformer tying them together" },
+          { id: "b", text: "A `ViewController`, a `Delegate`, and a `Storyboard`" },
           { id: "c", text: "A database, a network client, and a cache" },
           { id: "d", text: "An `App`, a `Scene`, and a `WindowGroup`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "These three pieces form the fundamental anatomy of any widget — the provider supplies the data, the SwiftUI view renders it, and the `Widget` conformer (like `RecipeWidget`) wires the two together into a complete widget definition.",
       },
       {
         id: "q2",
         prompt: "Why can't a widget extension directly access the main app's in-memory state?",
         options: [
-          { id: "a", text: "Widgets are not written in Swift" },
-          { id: "b", text: "A widget extension runs as its own separate, sandboxed process from the main app, so it can only work with data explicitly persisted somewhere the extension can also read" },
+          { id: "a", text: "Widgets are not written in Swift at all, unlike the main app" },
+          { id: "b", text: "A separate, sandboxed process using only explicitly persisted shared data" },
           { id: "c", text: "Widgets have no access to any persistent storage whatsoever" },
-          { id: "d", text: "This limitation only applies to Lock Screen widgets, not Home Screen widgets" },
+          { id: "d", text: "This limitation only applies to Lock Screen widgets, not Home Screen ones" },
         ],
         correctOptionId: "b",
         explanation: "Because the widget extension is a genuinely separate process, it has no direct access to the main app's runtime memory — any data it displays must come from shared, persisted storage (like an App Group container) rather than being read directly out of the app's live state.",
@@ -12685,44 +12685,44 @@ export const quizzes: Quiz[] = [
         prompt: "Why does `getTimeline()` typically return several future entries at once rather than just one?",
         options: [
           { id: "a", text: "WidgetKit requires a minimum of three entries per timeline" },
-          { id: "b", text: "It's a direct consequence of the strict reload budget — front-loading multiple entries lets the system advance through scheduled content on its own without needing to re-invoke the provider for each individual transition" },
-          { id: "c", text: "Multiple entries are required for the widget to compile" },
+          { id: "b", text: "Multiple entries are required for the widget to compile at all" },
+          { id: "c", text: "The reload budget, avoiding extra provider re-invocations" },
           { id: "d", text: "Single-entry timelines are not supported by WidgetKit at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Since reloading the timeline provider itself consumes budget, supplying several dated entries in one call lets WidgetKit automatically advance through them as their scheduled dates pass, without needing additional, budget-consuming reload calls for each transition.",
       },
       {
         id: "q4",
         prompt: "What is the difference between `placeholder()` and `getSnapshot()` in a `TimelineProvider`?",
         options: [
-          { id: "a", text: "They are identical methods called in different contexts with no functional distinction" },
-          { id: "b", text: "`placeholder()` provides generic, non-personalized content shown briefly while real data loads; `getSnapshot()` provides a quick, representative preview used in contexts like the widget gallery" },
-          { id: "c", text: "`getSnapshot()` is only called once per app lifetime" },
-          { id: "d", text: "`placeholder()` is deprecated in favor of `getSnapshot()`" },
+          { id: "a", text: "They are identical methods called in different contexts with no distinction" },
+          { id: "b", text: "`placeholder()` is deprecated in favor of `getSnapshot()` entirely" },
+          { id: "c", text: "`getSnapshot()` is only called once per app lifetime, ever" },
+          { id: "d", text: "`placeholder()` shows generic content; `getSnapshot()` gives a preview" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These serve distinct purposes in the widget lifecycle — `placeholder()` is a generic stand-in shown momentarily before real content is ready, while `getSnapshot()` provides a representative (though not necessarily live) preview for contexts like widget selection.",
       },
       {
         id: "q5",
         prompt: "Why does the section describe the choice of reload `policy` as a genuine trade-off?",
         options: [
-          { id: "a", text: "There is no actual trade-off; `.atEnd` is always the correct choice" },
-          { id: "b", text: "The system imposes a strict daily reload budget shared across a widget's instances, so requesting frequent reloads (a widget refreshing every 15 minutes, for example) exhausts that budget far faster than computing a handful of entries covering several hours in one reload" },
+          { id: "a", text: "The system imposes a strict daily reload budget shared across a widget's instances, so requesting frequent reloads (a widget refreshing every 15 minutes, for example) exhausts that budget far faster than computing a handful of entries covering several hours in one reload" },
+          { id: "b", text: "There is no actual trade-off; `.atEnd` is always the correct choice" },
           { id: "c", text: "Reload policies only affect visual styling, not actual data freshness" },
           { id: "d", text: "`.never` is always the most budget-efficient choice regardless of content needs" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because the reload budget is limited, more frequent reload requests consume it faster — the trade-off is between wanting fresh content sooner (frequent reloads) and staying within a limited daily allowance (fewer, more front-loaded reloads), directly connecting to the resource-discipline theme from section 49.13's background execution budgets.",
       },
       {
         id: "q6",
         prompt: "How does `@Environment(\\.widgetFamily)` relate to `horizontalSizeClass`/`verticalSizeClass` (section 33.1)?",
         options: [
-          { id: "a", text: "They are unrelated, entirely separate mechanisms" },
-          { id: "b", text: "Both let a single view definition adapt its layout to different presentation contexts — `widgetFamily` is specific to widget size categories, while size classes are the more general SwiftUI adaptive layout mechanism" },
-          { id: "c", text: "`widgetFamily` can only report exactly two possible values" },
+          { id: "a", text: "They are unrelated, entirely separate mechanisms with no overlap" },
+          { id: "b", text: "Both adapt one view to different contexts, just at different scopes" },
+          { id: "c", text: "`widgetFamily` can only report exactly two possible values, ever" },
           { id: "d", text: "Size classes replace the need for `widgetFamily` entirely within widgets" },
         ],
         correctOptionId: "b",
@@ -12733,11 +12733,11 @@ export const quizzes: Quiz[] = [
         prompt: "What does `AppIntentConfiguration` replace, and what infrastructure powers it?",
         options: [
           { id: "a", text: "It replaces `TimelineProvider` entirely; it is powered by Core Data" },
-          { id: "b", text: "It replaces the older `IntentConfiguration`/`INIntent`-based system, powered by the same `@Parameter`/`AppEntity` infrastructure from section 51's App Intents material" },
-          { id: "c", text: "It is a completely new, unrelated system with no connection to App Intents" },
-          { id: "d", text: "`AppIntentConfiguration` is only used for Lock Screen widgets" },
+          { id: "b", text: "It is a completely new, unrelated system with no connection to App Intents" },
+          { id: "c", text: "Replaces the older `IntentConfiguration`, using App Intents infrastructure" },
+          { id: "d", text: "`AppIntentConfiguration` is only used for Lock Screen widgets, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Consistent with App Intents' broader transition away from the older SiriKit-era model, widget configuration now uses `WidgetConfigurationIntent` built on the same `AppIntent`/`AppEntity` infrastructure covered in section 51, rather than a separate, widget-specific configuration mechanism.",
       },
       {
@@ -12745,31 +12745,31 @@ export const quizzes: Quiz[] = [
         prompt: "What does `Button(intent:)` enable within a widget?",
         options: [
           { id: "a", text: "It opens the containing app and navigates to a specific screen" },
-          { id: "b", text: "It directly invokes the specified `AppIntent`'s `perform()` method in the background, without requiring the widget to open the containing app or present any UI" },
+          { id: "b", text: "It requires the app to be already running in the foreground" },
           { id: "c", text: "It can only be used to dismiss the widget from the Home Screen" },
-          { id: "d", text: "It requires the app to be already running in the foreground" },
+          { id: "d", text: "Invokes the intent's `perform()` directly in the background" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Interactive widget buttons trigger an `AppIntent` directly, in the background, without launching the app — reusing the exact same `AppIntent` infrastructure that might also power that same action via Siri or Shortcuts, reflecting App Intents' unified design.",
       },
       {
         id: "q9",
         prompt: "What rendering characteristic distinguishes Lock Screen and StandBy widget families from Home Screen widgets?",
         options: [
-          { id: "a", text: "Lock Screen widgets render at a higher resolution" },
-          { id: "b", text: "They impose tighter space and rendering constraints, typically rendering in a monochrome, high-contrast style using the system's tint color rather than arbitrary custom colors" },
+          { id: "a", text: "They impose tighter space and rendering constraints, typically rendering in a monochrome, high-contrast style using the system's tint color rather than arbitrary custom colors" },
+          { id: "b", text: "Lock Screen widgets render at a higher resolution" },
           { id: "c", text: "Lock Screen widgets cannot display any text, only icons" },
           { id: "d", text: "StandBy widgets are identical in every respect to Home Screen widgets" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Accessory widget families (used for Lock Screen and StandBy) are meaningfully more constrained than Home Screen widgets — favoring simplicity, high contrast, and glanceability (often via system tint color) over the richer, full-color styling Home Screen widgets can use.",
       },
       {
         id: "q10",
         prompt: "What is the connection between Lock Screen accessory widget families and watchOS complications (section 33.8)?",
         options: [
-          { id: "a", text: "There is no connection; they are entirely separate systems" },
-          { id: "b", text: "They share the same underlying WidgetKit infrastructure and widget family names (like `.accessoryCircular`), since Lock Screen widgets and watch complications use closely related presentation concepts" },
+          { id: "a", text: "There is no connection at all; they are entirely separate systems" },
+          { id: "b", text: "Shares the same WidgetKit infrastructure and family names" },
           { id: "c", text: "watchOS complications predate WidgetKit and are unrelated to it" },
           { id: "d", text: "Lock Screen widgets can only be built using watchOS-specific APIs" },
         ],
@@ -12780,36 +12780,36 @@ export const quizzes: Quiz[] = [
         id: "q11",
         prompt: "How does `ControlWidget` differ architecturally from a standard `Widget`?",
         options: [
-          { id: "a", text: "`ControlWidget` is simply a renamed alias for `Widget` with no functional difference" },
-          { id: "b", text: "`ControlWidget` is its own distinct WidgetKit surface, intentionally simpler and more compact, meant for instantly-recognizable, single-purpose actions (like a toggle or button) rather than glanceable information displays" },
-          { id: "c", text: "`ControlWidget` cannot be backed by an `AppIntent`, unlike standard widgets" },
-          { id: "d", text: "`ControlWidget` only works on macOS, not iOS" },
+          { id: "a", text: "`ControlWidget` is simply a renamed alias for `Widget` with no difference" },
+          { id: "b", text: "`ControlWidget` cannot be backed by an `AppIntent`, unlike standard widgets" },
+          { id: "c", text: "Its own compact WidgetKit surface, for single-purpose actions like a toggle" },
+          { id: "d", text: "`ControlWidget` only works on macOS, and not on iOS" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`ControlWidget` powers Control Center controls specifically, and is deliberately more compact and single-purpose than a full `Widget` — appropriate for quick, recognizable actions (like Camera or Flashlight toggles) rather than the richer information display a standard widget provides.",
       },
       {
         id: "q12",
         prompt: "What is `WidgetCenter.shared.reloadTimelines(ofKind:)` used for?",
         options: [
-          { id: "a", text: "It permanently deletes a widget from the Home Screen" },
-          { id: "b", text: "It's the explicit signal the main app sends to prompt WidgetKit to re-invoke the widget's `TimelineProvider` sooner than its next scheduled reload, keeping the widget current after a meaningful data change" },
-          { id: "c", text: "It is called automatically by the system and never needs to be invoked manually" },
-          { id: "d", text: "It only works for Live Activities, not standard widgets" },
+          { id: "a", text: "It permanently deletes a widget from the Home Screen entirely" },
+          { id: "b", text: "It only works for Live Activities, not standard widgets at all" },
+          { id: "c", text: "It is called automatically by the system and never needs manual invocation" },
+          { id: "d", text: "Prompts WidgetKit to re-invoke the provider sooner than scheduled" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Since a widget's existing timeline otherwise only refreshes according to its own reload policy, `reloadTimelines(ofKind:)` gives the main app an explicit way to request a sooner refresh after a data change the widget should reflect, like a newly favorited recipe.",
       },
       {
         id: "q13",
         prompt: "Why do widgets operate under stricter rendering constraints (no scrolling, restricted gestures, limited modifiers) than a full app screen?",
         options: [
-          { id: "a", text: "This is a temporary limitation that will be removed in future WidgetKit versions" },
-          { id: "b", text: "A widget is fundamentally meant to be a glanceable, quickly-rendered snapshot rather than a miniature interactive app, and the constraints keep widgets lightweight and fast to render across potentially many simultaneous widgets on a Home Screen" },
+          { id: "a", text: "A widget is fundamentally meant to be a glanceable, quickly-rendered snapshot rather than a miniature interactive app, and the constraints keep widgets lightweight and fast to render across potentially many simultaneous widgets on a Home Screen" },
+          { id: "b", text: "This is a temporary limitation that will be removed in future WidgetKit versions" },
           { id: "c", text: "These constraints only apply to third-party widgets, not first-party Apple widgets" },
           { id: "d", text: "The constraints exist purely for App Store review compliance with no technical rationale" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The rendering restrictions are a deliberate design choice reflecting a widget's intended role — a static, glanceable snapshot rather than a full interactive experience — and keeping the rendering environment restrictive helps ensure widgets remain fast and lightweight even when a Home Screen hosts many of them simultaneously.",
       },
       {
@@ -12828,36 +12828,36 @@ export const quizzes: Quiz[] = [
         id: "q15",
         prompt: "What is the key difference in how a Live Activity is initiated compared to a standard widget?",
         options: [
-          { id: "a", text: "They are initiated identically, with no meaningful difference" },
-          { id: "b", text: "A Live Activity is initiated directly from the main app's own process (typically in response to a user action, like starting a timer), unlike a widget, which the system manages independently via its `TimelineProvider`" },
-          { id: "c", text: "Live Activities can only be started by push notification, never by the app directly" },
-          { id: "d", text: "Widgets require explicit user action to start, while Live Activities start automatically" },
+          { id: "a", text: "They are initiated identically, with no meaningful difference at all" },
+          { id: "b", text: "Live Activities can only be started by push notification, never by the app" },
+          { id: "c", text: "Started directly from the app's own process, unlike a system-managed widget" },
+          { id: "d", text: "Widgets require explicit user action to start, Live Activities start automatically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Unlike a widget's ongoing, system-managed timeline, a Live Activity is explicitly started by the app itself via `Activity.request()`, typically directly triggered by something the user just did (like starting a cooking timer) — a fundamentally different initiation model.",
       },
       {
         id: "q16",
         prompt: "What does `Activity.end()`'s `dismissalPolicy` parameter control?",
         options: [
-          { id: "a", text: "Whether the activity can ever be restarted" },
-          { id: "b", text: "Exactly when the Live Activity disappears from the Lock Screen after ending — `.immediate` removes it right away, versus giving the user a brief window to see the final state before automatic dismissal" },
-          { id: "c", text: "Which app the activity's data is shared with" },
-          { id: "d", text: "The color scheme used for the activity's final state" },
+          { id: "a", text: "Whether the activity can ever be restarted after it ends" },
+          { id: "b", text: "The color scheme used for the activity's final state display" },
+          { id: "c", text: "Which app the activity's data is shared with afterward" },
+          { id: "d", text: "When the activity disappears — immediate or a brief delay" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`dismissalPolicy` governs the visual transition after an activity ends — developers can choose to remove it from view immediately or allow a brief period where the final state remains visible before the system automatically dismisses it.",
       },
       {
         id: "q17",
         prompt: "What is the purpose of the Dynamic Island's compact and minimal regions, as distinct from the expanded region?",
         options: [
-          { id: "a", text: "They are only used for debugging and never actually shown to users" },
-          { id: "b", text: "They communicate the activity's most essential information in an extremely constrained space (potentially just one or two characters), for contexts where the Island's space is shared with other system UI or further limited" },
-          { id: "c", text: "Compact and minimal regions can display the exact same content as the expanded region with no size restriction" },
-          { id: "d", text: "Only the expanded region is ever actually rendered; compact/minimal exist purely as a fallback for older devices" },
+          { id: "a", text: "Convey the most essential info in an extremely constrained space" },
+          { id: "b", text: "They are only used for debugging and never actually shown to users" },
+          { id: "c", text: "Compact/minimal can display the exact same content with no size restriction" },
+          { id: "d", text: "Only the expanded region is ever rendered; the others are a fallback" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The Dynamic Island presents genuinely different layouts depending on available space and competing system UI — compact and minimal regions must convey essential information extremely concisely, while the expanded region (shown on long-press) has more room but still needs to remain glanceable.",
       },
       {
@@ -12877,11 +12877,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why won't breakpoints set in the main app's Xcode scheme trigger for code running inside a widget extension?",
         options: [
           { id: "a", text: "Breakpoints are disabled by default for all extension code" },
-          { id: "b", text: "The widget extension is a genuinely separate process with its own lifecycle, so debugging its code requires explicitly selecting the widget extension target as the active scheme, not just the main app's scheme" },
-          { id: "c", text: "Widget extensions cannot be debugged under any circumstances" },
-          { id: "d", text: "This is a known Xcode bug with no workaround" },
+          { id: "b", text: "Widget extensions cannot be debugged under any circumstances at all" },
+          { id: "c", text: "A separate process, so debugging needs the extension's own scheme" },
+          { id: "d", text: "This is a known Xcode bug with no workaround available" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Since the widget extension runs as its own distinct process, a debugger attached to the main app's process simply has no visibility into what's happening inside the extension — explicitly choosing the widget extension as the scheme's target is required to actually debug its `TimelineProvider` or view code.",
       },
       {
@@ -12889,11 +12889,11 @@ export const quizzes: Quiz[] = [
         prompt: "According to 52.15, what is a very common cause of \"my widget isn't updating\" bugs that turns out not to be a genuine code defect?",
         options: [
           { id: "a", text: "Incorrect Swift syntax in the `TimelineProvider`" },
-          { id: "b", text: "Reload budget exhaustion — a widget that's requested too many reloads recently may simply be throttled, not broken, which is worth checking before assuming the provider logic itself has a bug" },
+          { id: "b", text: "The user's device being in Airplane Mode" },
           { id: "c", text: "The widget's `Info.plist` being misconfigured" },
-          { id: "d", text: "The user's device being in Airplane Mode" },
+          { id: "d", text: "Reload budget exhaustion — a widget that's requested too many reloads recently may simply be throttled, not broken, which is worth checking before assuming the provider logic itself has a bug" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because the reload budget (52.3) can silently throttle a widget's update frequency, an apparently \"stuck\" or \"stale\" widget is frequently a budget exhaustion issue rather than an actual bug in the timeline provider's logic — checking budget status is recommended as an early debugging step before deeper investigation.",
       },
     ],
@@ -12908,20 +12908,20 @@ export const quizzes: Quiz[] = [
         id: "q1",
         prompt: "Why does an app extension run as a separate, sandboxed process rather than as code inside the host app?",
         options: [
-          { id: "a", text: "It's purely a historical accident with no real design rationale" },
-          { id: "b", text: "For security and stability — an extension can't access the host app's internal data beyond what's explicitly handed to it, and if it crashes, it can't take down the host app hosting it" },
+          { id: "a", text: "For security and stability — an extension can't access the host app's internal data beyond what's explicitly handed to it, and if it crashes, it can't take down the host app hosting it" },
+          { id: "b", text: "It's purely a historical accident with no real design rationale" },
           { id: "c", text: "Separate processes make extensions run faster with no other benefit" },
           { id: "d", text: "Apple requires separate processes purely for App Store bookkeeping purposes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The separate-process architecture provides genuine isolation benefits — sandboxing limits what an extension can access, and process separation means an extension crash is contained to the extension itself, protecting the host app (like Photos or Safari) from being destabilized by a misbehaving extension.",
       },
       {
         id: "q2",
         prompt: "How does an extension's resource budget compare to the main app's?",
         options: [
-          { id: "a", text: "Extensions get identical or greater resource budgets compared to the main app" },
-          { id: "b", text: "Extensions operate under a strict, meaningfully lower memory limit and a more constrained, short-lived lifecycle than the main app" },
+          { id: "a", text: "Extensions get identical or greater resource budgets than the main app" },
+          { id: "b", text: "A stricter, lower memory limit and a more constrained, short-lived life" },
           { id: "c", text: "Resource budgets are identical for all extension types and the main app" },
           { id: "d", text: "Extensions have no memory limit at all, unlike the main app" },
         ],
@@ -12932,12 +12932,12 @@ export const quizzes: Quiz[] = [
         id: "q3",
         prompt: "What does a share extension's `extensionContext?.inputItems` carry?",
         options: [
-          { id: "a", text: "The host app's entire internal data model" },
-          { id: "b", text: "Whatever content the user is sharing (a URL, image, plain text, etc.), each identified by a type identifier" },
-          { id: "c", text: "A list of every extension currently installed on the device" },
-          { id: "d", text: "The user's Apple ID credentials" },
+          { id: "a", text: "The host app's entire internal data model, exposed directly" },
+          { id: "b", text: "A list of every extension currently installed on the device" },
+          { id: "c", text: "Whatever content the user is sharing, identified by type" },
+          { id: "d", text: "The user's Apple ID credentials, passed for authentication" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`inputItems` represents the specific content the user chose to share from the host app — the extension's job is to extract and act on this content, not to access anything else about the host app or device beyond what's explicitly provided.",
       },
       {
@@ -12945,33 +12945,33 @@ export const quizzes: Quiz[] = [
         prompt: "What must a share extension call to signal it has finished processing, returning control to the host app?",
         options: [
           { id: "a", text: "`dismiss(animated:)`" },
-          { id: "b", text: "`extensionContext?.completeRequest(returningItems:)`" },
+          { id: "b", text: "`terminate()`" },
           { id: "c", text: "`applicationDidFinishLaunching()`" },
-          { id: "d", text: "`terminate()`" },
+          { id: "d", text: "`extensionContext?.completeRequest(returningItems:)`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`completeRequest(returningItems:)` is the required signal telling the system the extension is done — at which point the share sheet is dismissed and control returns to whatever app the user was originally sharing from.",
       },
       {
         id: "q5",
         prompt: "What is the subtle but real distinction between a share extension and an action extension?",
         options: [
-          { id: "a", text: "They are functionally identical, just with different icons" },
-          { id: "b", text: "A share extension is generally about *sending* content somewhere (into your app for later processing); an action extension is more often about *transforming* or *acting on* content in place, potentially returning a modified result" },
+          { id: "a", text: "A share extension sends content for later use; an action extension transforms it in place" },
+          { id: "b", text: "They are functionally identical, just with different icons" },
           { id: "c", text: "Action extensions cannot access any shared content at all" },
-          { id: "d", text: "Share extensions can only handle images, while action extensions handle text exclusively" },
+          { id: "d", text: "Share extensions can only handle images, action extensions only text" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "While both use the same underlying `NSExtensionItem`/`extensionContext` mechanics, their intended use cases differ — share extensions typically consume content for later use, while action extensions typically transform content and may hand a modified result back to the host app.",
       },
       {
         id: "q6",
         prompt: "What is `textDocumentProxy` used for in a custom keyboard extension?",
         options: [
-          { id: "a", text: "Accessing the host app's full internal database" },
-          { id: "b", text: "Interacting with whatever text field currently has focus in the host app — inserting text, deleting characters, and reading limited context around the cursor" },
-          { id: "c", text: "Downloading updates to the keyboard's dictionary" },
-          { id: "d", text: "Requesting the user's location" },
+          { id: "a", text: "Accessing the host app's full internal database directly" },
+          { id: "b", text: "Interacting with the currently focused text field" },
+          { id: "c", text: "Downloading updates to the keyboard's own dictionary" },
+          { id: "d", text: "Requesting the user's current location for autocomplete" },
         ],
         correctOptionId: "b",
         explanation: "`textDocumentProxy` is the keyboard extension's specific, sandboxed interface to the currently-focused text field in whatever app the user is typing into — providing text manipulation capability without giving the keyboard broader access to the host app's other data.",
@@ -12980,12 +12980,12 @@ export const quizzes: Quiz[] = [
         id: "q7",
         prompt: "Why does a keyboard extension needing network access require the user to explicitly grant \"Full Access\"?",
         options: [
-          { id: "a", text: "Full Access is required for all keyboard extensions regardless of functionality" },
-          { id: "b", text: "Given the significant privacy sensitivity of a keyboard that could, in principle, observe everything a user types across every app, network access (needed for something like predictive text) requires an explicit, separate user grant" },
-          { id: "c", text: "Full Access only controls whether the keyboard can change its color scheme" },
+          { id: "a", text: "Full Access is required for all keyboard extensions regardless of function" },
+          { id: "b", text: "Full Access only controls whether the keyboard can change its color scheme" },
+          { id: "c", text: "Given a keyboard's privacy sensitivity, network access needs a grant" },
           { id: "d", text: "Full Access is a deprecated setting with no current functional effect" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "A keyboard occupies an especially sensitive position (potentially observing all typed input across every app), so network access specifically requires an explicit additional permission grant, reflecting the heightened privacy stakes of this particular extension type.",
       },
       {
@@ -12993,23 +12993,23 @@ export const quizzes: Quiz[] = [
         prompt: "What must `finishContentEditing` produce in a photo editing extension, and why does it matter?",
         options: [
           { id: "a", text: "A plain `UIImage` with no additional metadata" },
-          { id: "b", text: "A `PHContentEditingOutput` including both the rendered edited image and `PHAdjustmentData` describing the edit non-destructively, so Photos can preserve the ability to revert to the original" },
+          { id: "b", text: "Nothing; `finishContentEditing` has no required return value" },
           { id: "c", text: "A JSON file describing the edit in plain text" },
-          { id: "d", text: "Nothing; `finishContentEditing` has no required return value" },
+          { id: "d", text: "A `PHContentEditingOutput` including both the rendered edited image and `PHAdjustmentData` describing the edit non-destructively, so Photos can preserve the ability to revert to the original" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The non-destructive editing model is central to how Photos works — by requiring both the rendered result and adjustment data describing the edit, Photos retains the ability to revert to the unedited original even after a custom extension has applied its own edits.",
       },
       {
         id: "q9",
         prompt: "What is distinctive about Safari web extensions compared to the other extension types in this section?",
         options: [
-          { id: "a", text: "They cannot be distributed through the App Store" },
-          { id: "b", text: "They're built primarily in JavaScript against the cross-browser WebExtensions API standard, with only a thin native wrapper needed, unlike the native Swift/UIKit code of other extension types" },
-          { id: "c", text: "Safari web extensions require no code at all, only configuration files" },
-          { id: "d", text: "They can only run on macOS, never iOS" },
+          { id: "a", text: "Built in JavaScript against the WebExtensions standard" },
+          { id: "b", text: "They cannot be distributed through the App Store at all" },
+          { id: "c", text: "Safari web extensions require no code at all, only configuration" },
+          { id: "d", text: "They can only run on macOS, and never on iOS" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Safari web extensions represent a genuinely different technology stack within this section — built on the same JavaScript/HTML/CSS WebExtensions model used by Chrome and Firefox, enabling meaningful cross-browser code reuse, unlike the native Swift extension types covered elsewhere.",
       },
       {
@@ -13017,9 +13017,9 @@ export const quizzes: Quiz[] = [
         prompt: "What advantage does `SFSafariViewController` provide over a custom `WKWebView`-based browser?",
         options: [
           { id: "a", text: "`SFSafariViewController` cannot display any web content at all" },
-          { id: "b", text: "It shares Safari's cookies, saved passwords, and other browsing data — a user already logged into a website in Safari sees that same logged-in state reflected immediately" },
+          { id: "b", text: "Shares Safari's cookies and passwords, reflecting logged-in state" },
           { id: "c", text: "`WKWebView` is always faster and should always be preferred instead" },
-          { id: "d", text: "There is no meaningful difference between the two approaches" },
+          { id: "d", text: "There is no meaningful difference between the two approaches at all" },
         ],
         correctOptionId: "b",
         explanation: "`SFSafariViewController`'s key advantage is sharing genuine browsing context with the system's actual Safari browser (including login state), providing a more seamless experience than a custom `WKWebView` browser, which starts with none of that shared context by default.",
@@ -13028,45 +13028,45 @@ export const quizzes: Quiz[] = [
         id: "q11",
         prompt: "When is a custom `WKWebView`-based browser more appropriate than `SFSafariViewController`?",
         options: [
-          { id: "a", text: "Never; `SFSafariViewController` should always be used for any web content" },
-          { id: "b", text: "Specifically when an app needs deeper control over the browsing experience — custom chrome, JavaScript injection, tighter integration with in-app navigation — that `SFSafariViewController`'s more constrained, standardized presentation doesn't allow" },
-          { id: "c", text: "Only when displaying content longer than 1000 words" },
-          { id: "d", text: "Only for apps that don't support iOS 15 or later" },
+          { id: "a", text: "Never; `SFSafariViewController` should always be used for any content" },
+          { id: "b", text: "Only when displaying content longer than 1000 words total" },
+          { id: "c", text: "When an app needs deeper control — custom chrome or JS injection" },
+          { id: "d", text: "Only for apps that don't support iOS 15 or later versions" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The trade-off favors `SFSafariViewController` for simple, standard web content display (with the benefit of shared Safari context), while `WKWebView` is appropriate when an app genuinely needs customization capabilities beyond what the standardized Safari presentation permits.",
       },
       {
         id: "q12",
         prompt: "What makes an App Clip's near-instant launch possible?",
         options: [
-          { id: "a", text: "App Clips are pre-installed on every device by default" },
-          { id: "b", text: "A strict binary size limit meaningfully smaller than a full app's permitted size, which fundamentally shapes App Clip design toward a genuinely minimal, single-purpose slice of functionality" },
+          { id: "a", text: "App Clips are pre-installed on every device by default already" },
+          { id: "b", text: "App Clips run entirely on Apple's servers with no on-device code" },
           { id: "c", text: "App Clips bypass the App Store's review process entirely" },
-          { id: "d", text: "App Clips run entirely on Apple's servers with no on-device code" },
+          { id: "d", text: "A strict binary size limit far smaller than a full app's" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The strict size budget is explicitly what enables the near-instant launch experience — a much smaller download/install footprint than a full app is what makes it plausible for an App Clip to appear within seconds of a QR code scan.",
       },
       {
         id: "q13",
         prompt: "What is the intended use case for an App Clip, according to 53.8?",
         options: [
-          { id: "a", text: "Providing the complete feature set of the full app in a smaller package" },
-          { id: "b", text: "A single, focused, quick task (viewing a menu, ordering a specific item, unlocking a scooter) rather than the full app experience" },
-          { id: "c", text: "Replacing the need for a full app entirely for all use cases" },
-          { id: "d", text: "Running background data synchronization tasks" },
+          { id: "a", text: "A single, focused, quick task rather than the full app experience" },
+          { id: "b", text: "Providing the complete feature set of the full app in a smaller package" },
+          { id: "c", text: "Replacing the need for a full app entirely, for all use cases" },
+          { id: "d", text: "Running background data synchronization tasks on the user's behalf" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "App Clips are deliberately designed around one specific, narrow task rather than attempting to replicate the full app's breadth — the strict size constraint reinforces this design intent, since cramming full-app functionality into the smaller budget isn't feasible.",
       },
       {
         id: "q14",
         prompt: "How does App Clip invocation routing relate to universal link handling from section 49.6-49.7?",
         options: [
-          { id: "a", text: "They are entirely unrelated mechanisms" },
-          { id: "b", text: "App Clip invocation routing deliberately echoes universal link handling — an invocation URL, much like a universal link, carries the specific context needed to jump directly to relevant content without navigating through general app structure first" },
-          { id: "c", text: "App Clips cannot use any URL-based routing at all" },
+          { id: "a", text: "They are entirely unrelated mechanisms with no shared design" },
+          { id: "b", text: "Echoes universal links, jumping directly to relevant content" },
+          { id: "c", text: "App Clips cannot use any URL-based routing at all, ever" },
           { id: "d", text: "Universal links can only be used by full apps, never App Clips" },
         ],
         correctOptionId: "b",
@@ -13076,46 +13076,46 @@ export const quizzes: Quiz[] = [
         id: "q15",
         prompt: "What distinguishes Network Extension from the other extension types covered in this section?",
         options: [
-          { id: "a", text: "It is the simplest extension type to implement" },
-          { id: "b", text: "It operates at a genuinely lower network-stack level, intercepting and processing network traffic system-wide, rather than integrating with a specific user-facing app context" },
-          { id: "c", text: "Network Extension has no access to any network traffic at all" },
-          { id: "d", text: "It is functionally identical to a share extension" },
+          { id: "a", text: "It is the simplest extension type to implement, by far" },
+          { id: "b", text: "Network Extension has no access to any network traffic at all" },
+          { id: "c", text: "Operates at a lower network-stack level, system-wide" },
+          { id: "d", text: "It is functionally identical to a share extension, just renamed" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Network Extension's defining characteristic is operating at the device's overall network stack level — a fundamentally different, lower-level scope than extension types that integrate with a specific UI context like sharing or keyboard input.",
       },
       {
         id: "q16",
         prompt: "What are the two key considerations the section identifies as especially important for Network Extension development?",
         options: [
-          { id: "a", text: "Battery life and screen brightness" },
-          { id: "b", text: "Performance (since it sits in the path of all network traffic) and security (given its privileged position observing and potentially modifying all network communication)" },
-          { id: "c", text: "App icon design and localization" },
-          { id: "d", text: "Compatibility with older iOS versions only" },
+          { id: "a", text: "Battery life and screen brightness, above all other factors" },
+          { id: "b", text: "Compatibility with older iOS versions only, nothing else" },
+          { id: "c", text: "App icon design and localization, above other concerns" },
+          { id: "d", text: "Performance, since it sits in the traffic path, and security" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because Network Extension processes potentially all of a device's network traffic, both performance (avoiding becoming a bottleneck) and security (given the sensitivity of its privileged access) are called out as genuinely elevated concerns compared to other, more narrowly-scoped extension types.",
       },
       {
         id: "q17",
         prompt: "Why can practices that are merely wasteful in a main app be outright fatal within an extension, according to 53.11?",
         options: [
-          { id: "a", text: "There is no actual difference in consequence between the two contexts" },
-          { id: "b", text: "Given how much lower an extension's memory ceiling typically is compared to the main app, exceeding the limit causes immediate process termination, whereas the same wasteful memory use in the main app might just be inefficient without crashing" },
-          { id: "c", text: "Extensions cannot allocate any memory at all" },
-          { id: "d", text: "This concern only applies to Network Extension, not other extension types" },
+          { id: "a", text: "A far lower memory ceiling means exceeding it causes termination" },
+          { id: "b", text: "There is no actual difference in consequence between the two contexts" },
+          { id: "c", text: "Extensions cannot allocate any memory at all, under any circumstance" },
+          { id: "d", text: "This concern only applies to Network Extension, not other types" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section highlights this asymmetry explicitly — an extension's much stricter memory ceiling means exceeding it causes an immediate, hard crash, whereas the same excess memory usage in the main app's more generous budget might merely be inefficient rather than fatal.",
       },
       {
         id: "q18",
         prompt: "What defensive practice does 53.11 suggest for a share extension processing a large photo?",
         options: [
-          { id: "a", text: "Always load the full-resolution original image regardless of actual need" },
-          { id: "b", text: "Avoid loading full-resolution images when a smaller size will do, given how much lower an extension's memory ceiling is compared to the main app" },
+          { id: "a", text: "Always load the full-resolution original image regardless of need" },
+          { id: "b", text: "Avoid loading full-resolution images when a smaller size will do" },
           { id: "c", text: "Photos should never be processed within extensions under any circumstances" },
-          { id: "d", text: "Convert all images to video format before processing" },
+          { id: "d", text: "Convert all images to video format before processing them" },
         ],
         correctOptionId: "b",
         explanation: "Since an extension's memory budget is much tighter than the main app's, loading more image data than strictly necessary (like a full-resolution original when only a thumbnail is needed for a preview) is a common, avoidable cause of extension crashes.",
@@ -13124,12 +13124,12 @@ export const quizzes: Quiz[] = [
         id: "q19",
         prompt: "What diagnostic tool does 53.11 recommend for testing extension memory usage?",
         options: [
-          { id: "a", text: "The Xcode console alone, with no additional tooling" },
-          { id: "b", text: "Instruments' Allocations tool, specifically targeting the extension process rather than just the main app" },
-          { id: "c", text: "The App Store Connect analytics dashboard" },
-          { id: "d", text: "A third-party memory profiler, since Instruments cannot target extensions" },
+          { id: "a", text: "The Xcode console alone, with no additional tooling needed" },
+          { id: "b", text: "The App Store Connect analytics dashboard, checked periodically" },
+          { id: "c", text: "Instruments' Allocations tool, targeting the extension process" },
+          { id: "d", text: "A third-party profiler, since Instruments can't target extensions" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because extensions run as separate processes with their own distinct memory characteristics, profiling tools need to specifically target the extension process (not just the main app) to accurately diagnose memory issues unique to that extension's stricter budget.",
       },
       {
@@ -13137,11 +13137,11 @@ export const quizzes: Quiz[] = [
         prompt: "What common architectural theme connects share extensions, action extensions, and photo editing extensions, despite their different specific purposes?",
         options: [
           { id: "a", text: "They all require Network Extension entitlements" },
-          { id: "b", text: "They all operate through a sandboxed, separate-process model receiving specific content (via `NSExtensionItem` or `PHContentEditingInput`) from a host app, processing it, and returning results or completing without broader access to the host app's other data" },
+          { id: "b", text: "They are all built using JavaScript rather than Swift" },
           { id: "c", text: "They all require the user to grant Full Access" },
-          { id: "d", text: "They are all built using JavaScript rather than Swift" },
+          { id: "d", text: "They all operate through a sandboxed, separate-process model receiving specific content (via `NSExtensionItem` or `PHContentEditingInput`) from a host app, processing it, and returning results or completing without broader access to the host app's other data" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Despite differing in their specific content types and use cases, these extension types share the same fundamental architectural pattern described in 53.1 — sandboxed, separate-process execution that receives limited, explicitly-provided content, processes it, and completes without broader access to the host app's internal state.",
       },
     ],
@@ -13157,33 +13157,33 @@ export const quizzes: Quiz[] = [
         prompt: "What are the two distinct location permission tiers, and how do they differ?",
         options: [
           { id: "a", text: "\"Basic\" and \"Premium,\" differing in accuracy only" },
-          { id: "b", text: "\"When In Use\" (location available only while actively using the app) and \"Always\" (location available even when backgrounded), with \"Always\" subject to additional system scrutiny" },
+          { id: "b", text: "There is only one permission tier for all location access" },
           { id: "c", text: "\"Foreground\" and \"Background,\" which are functionally identical" },
-          { id: "d", text: "There is only one permission tier for all location access" },
+          { id: "d", text: "\"When In Use\" (location available only while actively using the app) and \"Always\" (location available even when backgrounded), with \"Always\" subject to additional system scrutiny" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These two tiers represent fundamentally different levels of access — \"When In Use\" limits location to active app use, while \"Always\" extends access into background execution, a meaningfully more sensitive capability requiring additional user consideration.",
       },
       {
         id: "q2",
         prompt: "Why does Apple require \"Always\" authorization to typically be requested as a staged, two-step process rather than immediately at first launch?",
         options: [
-          { id: "a", text: "Technical limitations prevent requesting it directly" },
-          { id: "b", text: "This staged approach exists specifically to prevent apps from over-requesting background location access before users understand why it's genuinely needed" },
+          { id: "a", text: "Prevents apps from over-requesting background access too soon" },
+          { id: "b", text: "Technical limitations prevent requesting it directly at all" },
           { id: "c", text: "Apple charges an additional fee for direct \"Always\" requests" },
-          { id: "d", text: "Two-step requests are required only for apps targeting iOS versions before 15" },
+          { id: "d", text: "Two-step requests are required only for apps targeting pre-iOS 15" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The deliberate design — first granting \"When In Use,\" then later requesting the \"Always\" upgrade at a contextually appropriate moment — is meant to ensure users understand and have context for why the more sensitive, always-on permission is being requested, rather than blanket-requesting it upfront.",
       },
       {
         id: "q3",
         prompt: "How does `CLLocationUpdate.liveUpdates()` differ from the older `CLLocationManagerDelegate`-based approach?",
         options: [
-          { id: "a", text: "They are functionally identical, just named differently" },
-          { id: "b", text: "`CLLocationUpdate.liveUpdates()` provides an `AsyncSequence`-based stream directly usable with `for try await`, replacing the older delegate-callback pattern requiring a separate delegate object and `didUpdateLocations` method" },
-          { id: "c", text: "The delegate-based approach is the more modern of the two" },
-          { id: "d", text: "`CLLocationUpdate.liveUpdates()` cannot be canceled once started" },
+          { id: "a", text: "They are functionally identical, just named differently between the two" },
+          { id: "b", text: "Provides an `AsyncSequence` stream, replacing delegate callbacks" },
+          { id: "c", text: "The delegate-based approach is the more modern of the two APIs" },
+          { id: "d", text: "`CLLocationUpdate.liveUpdates()` cannot be canceled once started at all" },
         ],
         correctOptionId: "b",
         explanation: "This represents the same broader shift toward `AsyncSequence`-based APIs seen throughout modern Apple frameworks — location updates now integrate naturally with structured concurrency's `for try await` pattern, rather than requiring a separate delegate object implementing callback methods.",
@@ -13192,12 +13192,12 @@ export const quizzes: Quiz[] = [
         id: "q4",
         prompt: "What does breaking out of a `for try await update in updates` loop accomplish for location tracking?",
         options: [
-          { id: "a", text: "It has no effect; location tracking continues regardless" },
-          { id: "b", text: "It cleanly cancels the underlying location tracking, consistent with structured concurrency's cancellation model" },
-          { id: "c", text: "It permanently revokes the app's location permission" },
-          { id: "d", text: "It only pauses tracking for exactly 60 seconds" },
+          { id: "a", text: "It has no effect at all; location tracking continues regardless" },
+          { id: "b", text: "It permanently revokes the app's location permission entirely" },
+          { id: "c", text: "Cleanly cancels the underlying location tracking" },
+          { id: "d", text: "It only pauses tracking for exactly 60 seconds, then resumes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because `CLLocationUpdate.liveUpdates()` integrates with structured concurrency, breaking out of the iteration loop (or canceling the containing `Task`) cleanly stops the underlying location tracking, mirroring the general cancellation behavior of `AsyncSequence`-based APIs.",
       },
       {
@@ -13205,33 +13205,33 @@ export const quizzes: Quiz[] = [
         prompt: "What is \"reduced accuracy\" location, and how does it differ from full accuracy?",
         options: [
           { id: "a", text: "Reduced accuracy is only available on older devices" },
-          { id: "b", text: "It's a coarser, roughly city-block-level location a user can independently grant instead of precise GPS coordinates, with an app able to request a temporary precise-accuracy upgrade for a specific, justified purpose" },
+          { id: "b", text: "Only \"Always\" authorization can include reduced accuracy; \"When In Use\" cannot" },
           { id: "c", text: "Reduced accuracy location is always identical to full accuracy in practice" },
-          { id: "d", text: "Only \"Always\" authorization can include reduced accuracy; \"When In Use\" cannot" },
+          { id: "d", text: "It's a coarser, roughly city-block-level location a user can independently grant instead of precise GPS coordinates, with an app able to request a temporary precise-accuracy upgrade for a specific, justified purpose" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Reduced accuracy gives users a more private default (coarser location) while still allowing apps to request precise, temporary upgrades when genuinely needed — an independent axis of control from the When In Use/Always permission tiers.",
       },
       {
         id: "q6",
         prompt: "What must accompany a call to `requestTemporaryFullAccuracyAuthorization(withPurposeKey:)`?",
         options: [
-          { id: "a", text: "Nothing; it works without any additional configuration" },
-          { id: "b", text: "A corresponding purpose string declared in `Info.plist`, explaining to the user exactly why precise location is needed for this specific request" },
-          { id: "c", text: "A separate, paid entitlement from Apple" },
-          { id: "d", text: "The app must already have \"Always\" authorization" },
+          { id: "a", text: "A purpose string in `Info.plist` explaining the need" },
+          { id: "b", text: "Nothing at all; it works without any additional configuration" },
+          { id: "c", text: "A separate, paid entitlement from Apple, purchased in advance" },
+          { id: "d", text: "The app must already have \"Always\" authorization granted" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Similar to ordinary usage description strings (section 54.1/49.3), the temporary precise-accuracy upgrade requires its own declared purpose string, maintaining the same privacy-transparency principle for this more granular accuracy distinction.",
       },
       {
         id: "q7",
         prompt: "What does `CLMonitor` provide, and how does it relate to the pattern established by `CLLocationUpdate`?",
         options: [
-          { id: "a", text: "`CLMonitor` has no relationship to `CLLocationUpdate`; they are unrelated APIs" },
-          { id: "b", text: "`CLMonitor` provides async region enter/exit notifications, embracing the same `AsyncSequence`-based iteration pattern as `CLLocationUpdate`, replacing older region-monitoring delegate callbacks" },
+          { id: "a", text: "It has no relationship to `CLLocationUpdate` at all; they are unrelated" },
+          { id: "b", text: "Async region enter/exit notifications, using the same async pattern" },
           { id: "c", text: "`CLMonitor` can only be used for significant location change monitoring" },
-          { id: "d", text: "`CLMonitor` requires the app to be actively in the foreground to function" },
+          { id: "d", text: "`CLMonitor` requires the app to be actively in the foreground to work" },
         ],
         correctOptionId: "b",
         explanation: "`CLMonitor` follows the same modern async design philosophy as `CLLocationUpdate` — `await monitor.events` produces a stream of region transition events processed via `for await`, consistent with the broader shift away from delegate-based location APIs.",
@@ -13241,11 +13241,11 @@ export const quizzes: Quiz[] = [
         prompt: "What underlying infrastructure does `CLMonitor`-based region monitoring rely on to work even when the app isn't actively running?",
         options: [
           { id: "a", text: "The app must be manually relaunched by the user periodically" },
-          { id: "b", text: "System-level geofencing infrastructure, rather than the app needing to continuously poll its own location" },
-          { id: "c", text: "A background `URLSession` connection that must remain open at all times" },
-          { id: "d", text: "Region monitoring only works while the app is actively in the foreground" },
+          { id: "b", text: "A background `URLSession` connection that must stay open always" },
+          { id: "c", text: "System-level geofencing, rather than the app polling its own location" },
+          { id: "d", text: "Region monitoring only works while the app is actively foregrounded" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Region monitoring relies on the system's own geofencing capability to detect entry/exit events even when the app process isn't actively running, rather than requiring the app itself to continuously check its own location in the background.",
       },
       {
@@ -13253,33 +13253,33 @@ export const quizzes: Quiz[] = [
         prompt: "What is the key trade-off of significant location change monitoring compared to continuous tracking?",
         options: [
           { id: "a", text: "There is no trade-off; significant location change is strictly better in every way" },
-          { id: "b", text: "It's far more battery-efficient, only delivering updates when the device has moved a meaningfully large distance, at the cost of coarser, less frequent updates unsuitable for fine-grained, real-time positioning needs" },
+          { id: "b", text: "It provides more precise location data than continuous tracking" },
           { id: "c", text: "Significant location change monitoring requires \"When In Use\" only, never \"Always\"" },
-          { id: "d", text: "It provides more precise location data than continuous tracking" },
+          { id: "d", text: "It's far more battery-efficient, only delivering updates when the device has moved a meaningfully large distance, at the cost of coarser, less frequent updates unsuitable for fine-grained, real-time positioning needs" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Significant location change trades precision and update frequency for substantial battery savings — appropriate for general location awareness over time, but inappropriate for use cases like active navigation that need `CLLocationUpdate.liveUpdates()`'s finer-grained, real-time data despite its higher battery cost.",
       },
       {
         id: "q10",
         prompt: "What is the purpose of the persistent blue indicator shown when an app uses background location?",
         options: [
-          { id: "a", text: "It has no functional purpose and is purely cosmetic" },
-          { id: "b", text: "It's a deliberate, non-optional transparency measure ensuring users always have clear, ongoing visibility into which apps are tracking their location even when those apps aren't actively open, as a check against silent background tracking" },
+          { id: "a", text: "It's a deliberate, non-optional transparency measure ensuring users always have clear, ongoing visibility into which apps are tracking their location even when those apps aren't actively open, as a check against silent background tracking" },
+          { id: "b", text: "It has no functional purpose and is purely cosmetic" },
           { id: "c", text: "It only appears once per app installation and then disappears permanently" },
           { id: "d", text: "It can be disabled by the app developer if desired" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The blue indicator is deliberately designed to be impossible for the user to miss or silence — reflecting the heightened sensitivity of background location access and ensuring ongoing, non-optional transparency about which apps are actively tracking location in the background.",
       },
       {
         id: "q11",
         prompt: "How does placing `Annotation`s within a SwiftUI `Map` relate to patterns from earlier SwiftUI material?",
         options: [
-          { id: "a", text: "It has no relationship to any previously covered pattern" },
-          { id: "b", text: "The declarative, `ForEach`-driven approach directly mirrors patterns from `List`/`ForEach` (section 26.2) — each data item drives an `Annotation`'s placement, similar to how each item drives a row" },
-          { id: "c", text: "`Annotation` placement requires an entirely different, non-declarative API style" },
-          { id: "d", text: "`Map` cannot be combined with `ForEach` at all" },
+          { id: "a", text: "It has no relationship to any previously covered pattern at all" },
+          { id: "b", text: "The `ForEach`-driven approach mirrors `List`, one item per annotation" },
+          { id: "c", text: "`Annotation` placement requires an entirely different, non-declarative style" },
+          { id: "d", text: "`Map` cannot be combined with `ForEach` at all, ever" },
         ],
         correctOptionId: "b",
         explanation: "Placing map annotations via `ForEach` over a data collection echoes the exact same declarative pattern used for list rows — each data item (a restaurant, in the example) drives the placement and content of one `Annotation`, consistent with SwiftUI's general data-driven view construction approach.",
@@ -13288,36 +13288,36 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "What is the difference between `Marker` and `Annotation` for placing content on a `Map`?",
         options: [
-          { id: "a", text: "They are functionally identical with no differences" },
-          { id: "b", text: "`Annotation`'s trailing closure accepts arbitrary SwiftUI content, unlike the simpler, standard-pin-only presentation `Marker` provides" },
-          { id: "c", text: "`Marker` supports custom content, while `Annotation` only supports standard pins" },
+          { id: "a", text: "They are functionally identical, with no differences at all" },
+          { id: "b", text: "`Marker` supports custom content, while `Annotation` only supports pins" },
+          { id: "c", text: "`Annotation` accepts arbitrary content; `Marker` is a standard pin" },
           { id: "d", text: "`Marker` can only be used with `MapCircle`, never standalone" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`Annotation` offers more flexibility, letting arbitrary custom SwiftUI views (icons, labels, even interactive controls) be placed at a coordinate, while `Marker` provides a simpler, more standardized pin-style presentation without that same customization flexibility.",
       },
       {
         id: "q13",
         prompt: "What is `MapPolyline` used for?",
         options: [
-          { id: "a", text: "Displaying text labels on the map" },
-          { id: "b", text: "Visualizing a route or path — like a walking or driving route between two points — as a line drawn on the map" },
-          { id: "c", text: "Requesting location permission from the user" },
-          { id: "d", text: "Converting coordinates into addresses" },
+          { id: "a", text: "Displaying text labels on the map at fixed coordinates" },
+          { id: "b", text: "Converting coordinates into human-readable addresses directly" },
+          { id: "c", text: "Requesting location permission from the user beforehand" },
+          { id: "d", text: "Visualizing a route or path as a line drawn on the map" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`MapPolyline` renders geographic path data as a line overlay on the map, well suited to displaying a computed route's geometry (such as the polyline data returned by `MKDirections`, section 54.11) directly to the user.",
       },
       {
         id: "q14",
         prompt: "What does `MapCameraPosition` control, and what earlier SwiftUI concept is it analogous to?",
         options: [
-          { id: "a", text: "It controls the map's color scheme; it's analogous to `@Environment(\\.colorScheme)`" },
-          { id: "b", text: "It controls exactly what region/viewpoint the map currently displays, programmatically adjustable — the map equivalent of controlling a `ScrollView`'s scroll position via `scrollPosition` (section 26.16)" },
-          { id: "c", text: "`MapCameraPosition` only affects annotation styling, not the actual displayed region" },
+          { id: "a", text: "Controls the displayed region, the map equivalent of `scrollPosition`" },
+          { id: "b", text: "It controls the map's color scheme, analogous to `@Environment(\\.colorScheme)`" },
+          { id: "c", text: "`MapCameraPosition` only affects annotation styling, not the region" },
           { id: "d", text: "It has no relationship to any previously covered SwiftUI concept" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Just as `scrollPosition` provides programmatic read/write control over a `ScrollView`'s current position, `MapCameraPosition` provides the equivalent capability for `Map` — both letting the app both observe and programmatically adjust the currently displayed viewport.",
       },
       {
@@ -13325,8 +13325,8 @@ export const quizzes: Quiz[] = [
         prompt: "What does `request.region` do in an `MKLocalSearch.Request`?",
         options: [
           { id: "a", text: "It strictly limits results to exactly that region with no exceptions" },
-          { id: "b", text: "It biases (though doesn't strictly limit) results toward a specific geographic area, meaning a search run near the user's location returns geographically relevant results rather than matches from anywhere in the world" },
-          { id: "c", text: "It has no effect on search results whatsoever" },
+          { id: "b", text: "Biases results toward a region without strictly limiting them to it" },
+          { id: "c", text: "It has no effect on search results whatsoever, in any case" },
           { id: "d", text: "It is required only for searches with more than 10 expected results" },
         ],
         correctOptionId: "b",
@@ -13336,46 +13336,46 @@ export const quizzes: Quiz[] = [
         id: "q16",
         prompt: "What two things does an `MKRoute` (returned by `MKDirections`) provide that serve different purposes?",
         options: [
-          { id: "a", text: "Only a distance value and nothing else" },
-          { id: "b", text: "A `polyline` property (providing the coordinate data needed for `MapPolyline` to visually render the route) and a `steps` property (providing individual turn-by-turn instructions suitable for a textual directions list)" },
-          { id: "c", text: "Only turn-by-turn text instructions, with no geographic coordinate data" },
-          { id: "d", text: "A list of nearby restaurants along the route" },
+          { id: "a", text: "Only a distance value and nothing else besides that" },
+          { id: "b", text: "Only turn-by-turn text instructions, with no coordinate data" },
+          { id: "c", text: "A `polyline` for the route, and `steps` for turn-by-turn text" },
+          { id: "d", text: "A list of nearby restaurants along the route itself" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`MKRoute` serves both visual and textual presentation needs — `polyline` supplies the geometric path data for map overlay rendering, while `steps` supplies the discrete, human-readable turn-by-turn instructions for a directions list.",
       },
       {
         id: "q17",
         prompt: "Why does `transportType` (`.walking`, `.automobile`, `.transit`) meaningfully change the computed route in `MKDirections`?",
         options: [
-          { id: "a", text: "It only affects the color of the displayed route line, not the actual path" },
-          { id: "b", text: "A walking route may reasonably take paths a driving route cannot (and vice versa), so the transport type genuinely changes both the computed route's path and its estimated travel time" },
-          { id: "c", text: "`transportType` has no actual effect on route computation" },
-          { id: "d", text: "Only `.automobile` is a supported transport type; the others are placeholders" },
+          { id: "a", text: "It only affects the color of the displayed route line, nothing else" },
+          { id: "b", text: "Only `.automobile` is a supported transport type; others are placeholders" },
+          { id: "c", text: "`transportType` has no actual effect on route computation at all" },
+          { id: "d", text: "A walking route can take paths a driving route can't, changing path and time" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Different modes of transportation have genuinely different valid paths (a walking route can use pedestrian paths a car cannot, while a driving route must follow roads) — `transportType` ensures the computed route and its time estimate reflect the actual mode of travel being planned for.",
       },
       {
         id: "q18",
         prompt: "What does `MKLookAroundSceneRequest` need to determine before `LookAroundPreview` can render anything?",
         options: [
-          { id: "a", text: "The user's home address" },
-          { id: "b", text: "Whether Look Around imagery is even available for a given coordinate, since not every location has coverage, and if so, the actual scene data needed to render it" },
-          { id: "c", text: "The user's current network connection speed" },
-          { id: "d", text: "Whether the device supports LiDAR" },
+          { id: "a", text: "Whether Look Around coverage exists for the coordinate" },
+          { id: "b", text: "The user's home address, needed to look up coverage" },
+          { id: "c", text: "The user's current network connection speed at request time" },
+          { id: "d", text: "Whether the device supports LiDAR hardware specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because Look Around coverage isn't universal, the request must first determine (asynchronously) whether imagery exists for the requested coordinate at all, and only then provide the actual scene data — this availability check is a necessary first step before any rendering can occur.",
       },
       {
         id: "q19",
         prompt: "What is the difference between geocoding and reverse geocoding?",
         options: [
-          { id: "a", text: "They are the same operation performed twice" },
-          { id: "b", text: "Geocoding converts a human-readable address into geographic coordinates; reverse geocoding converts coordinates into a human-readable address/placemark — opposite directions of the same underlying conversion" },
-          { id: "c", text: "Geocoding only works for addresses in the United States" },
-          { id: "d", text: "Reverse geocoding requires an active internet connection, while geocoding does not" },
+          { id: "a", text: "They are the same operation, just performed twice in sequence" },
+          { id: "b", text: "Geocoding turns an address into coordinates; reverse reverses that" },
+          { id: "c", text: "Geocoding only works for addresses in the United States specifically" },
+          { id: "d", text: "Reverse geocoding requires an internet connection, geocoding does not" },
         ],
         correctOptionId: "b",
         explanation: "These two operations handle opposite conversion directions — geocoding is appropriate when starting with address text that needs coordinates (for mapping or distance calculation), while reverse geocoding is appropriate when starting with raw coordinates that need a human-readable representation for display.",
@@ -13384,12 +13384,12 @@ export const quizzes: Quiz[] = [
         id: "q20",
         prompt: "When would reverse geocoding be the appropriate tool, according to 54.13?",
         options: [
-          { id: "a", text: "When a user has typed an address into a text field that needs to be located on a map" },
-          { id: "b", text: "When converting a raw coordinate (like the device's current GPS location) into a human-readable street address or place name suitable for display, rather than showing raw latitude/longitude numbers" },
-          { id: "c", text: "When computing the distance between two named cities" },
-          { id: "d", text: "When searching for nearby coffee shops" },
+          { id: "a", text: "When a user has typed an address that needs to be located on a map" },
+          { id: "b", text: "When computing the distance between two named cities directly" },
+          { id: "c", text: "Converting a raw coordinate into a readable address or place name" },
+          { id: "d", text: "When searching for nearby coffee shops around the user" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Reverse geocoding is specifically suited to the \"coordinates in, readable address out\" direction — a common use case being converting the device's current GPS coordinates into a friendly displayed address like \"123 Main St, Anytown\" rather than showing raw numeric coordinates to the user.",
       },
     ],
@@ -13405,33 +13405,33 @@ export const quizzes: Quiz[] = [
         prompt: "Why doesn't an app using `PHPickerViewController` need explicit photo library permission?",
         options: [
           { id: "a", text: "It always requires full permission anyway" },
-          { id: "b", text: "The picker UI runs in a separate, system-owned process, and the app only receives the specific items the user actually selected" },
+          { id: "b", text: "It only works with photos already inside the app's own sandbox" },
           { id: "c", text: "Apple removed all permission requirements for photo access" },
-          { id: "d", text: "It only works with photos already inside the app's own sandbox" },
+          { id: "d", text: "The picker UI runs in a separate, system-owned process, and the app only receives the specific items the user actually selected" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because the picker itself is presented and operated outside the app's process, the app never sees the full library — it only receives what the user explicitly chose, eliminating the need for broad permission for the common single-selection use case.",
       },
       {
         id: "q2",
         prompt: "When is direct PhotoKit access (`PHAsset`/`PHFetchResult`) more appropriate than `PHPickerViewController`?",
         options: [
-          { id: "a", text: "Never; `PHPickerViewController` should always be preferred" },
-          { id: "b", text: "When an app's core purpose genuinely requires browsing or querying across the user's entire photo library, such as a gallery or editing app" },
-          { id: "c", text: "Only when the app needs to select exactly one photo" },
-          { id: "d", text: "PhotoKit and `PHPickerViewController` are interchangeable with no meaningful difference" },
+          { id: "a", text: "When the app's core purpose requires browsing the entire photo library" },
+          { id: "b", text: "Never; `PHPickerViewController` should always be preferred instead" },
+          { id: "c", text: "Only when the app needs to select exactly one photo at a time" },
+          { id: "d", text: "PhotoKit and `PHPickerViewController` are interchangeable, with no difference" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "PhotoKit's broader, queryable access is suited to apps whose purpose genuinely requires seeing across the whole library, unlike the single-selection, privacy-preserving picker use case.",
       },
       {
         id: "q3",
         prompt: "What does \"Limited\" photo library authorization let a user do?",
         options: [
-          { id: "a", text: "Grant full access permanently with no way to change it" },
-          { id: "b", text: "Select a specific subset of photos the app can see, with the ability to add more later via a system-presented picker, without exposing the rest of the library" },
+          { id: "a", text: "Grant full access permanently, with no way to change it later" },
+          { id: "b", text: "Select a specific subset the app can see, expandable later" },
           { id: "c", text: "Deny all photo access while still allowing the app to function normally" },
-          { id: "d", text: "Automatically grant access to videos but not photos" },
+          { id: "d", text: "Automatically grant access to videos, but not to photos" },
         ],
         correctOptionId: "b",
         explanation: "Limited access lets the user control exactly which photos an app can see, and `presentLimitedLibraryPicker(from:)` lets the app offer a convenient way to expand that selection later.",
@@ -13440,12 +13440,12 @@ export const quizzes: Quiz[] = [
         id: "q4",
         prompt: "What is the purpose of `beginConfiguration()`/`commitConfiguration()` when setting up an `AVCaptureSession`?",
         options: [
-          { id: "a", text: "They start and stop actual video recording" },
-          { id: "b", text: "They bracket a batch of session changes so they're applied together atomically, rather than incrementally" },
-          { id: "c", text: "They are required only for audio sessions, never video" },
-          { id: "d", text: "They request camera permission from the user" },
+          { id: "a", text: "They start and stop actual video recording directly" },
+          { id: "b", text: "They are required only for audio sessions, never for video" },
+          { id: "c", text: "Brackets session changes to apply them atomically" },
+          { id: "d", text: "They request camera permission from the user directly" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Bracketing configuration changes lets the capture session apply a batch of input/output changes as one atomic reconfiguration rather than reacting to each individual change as it happens.",
       },
       {
@@ -13453,23 +13453,23 @@ export const quizzes: Quiz[] = [
         prompt: "Why should `canAddInput`/`canAddOutput` be checked before actually adding to an `AVCaptureSession`?",
         options: [
           { id: "a", text: "They are purely optional style conventions with no functional effect" },
-          { id: "b", text: "A session can genuinely reject certain input/output combinations depending on hardware capability and existing configuration, making the check a real correctness requirement" },
-          { id: "c", text: "These checks are deprecated and no longer necessary" },
-          { id: "d", text: "They only matter when using `AVCaptureVideoDataOutput`" },
+          { id: "b", text: "They only matter when using `AVCaptureVideoDataOutput` specifically" },
+          { id: "c", text: "These checks are deprecated and no longer necessary at all" },
+          { id: "d", text: "A session can reject certain input/output combinations" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because sessions can reject certain combinations, checking `canAddInput`/`canAddOutput` first is necessary to avoid a runtime failure, not just defensive best practice.",
       },
       {
         id: "q6",
         prompt: "How is a photo capture result delivered when using `AVCapturePhotoOutput`?",
         options: [
-          { id: "a", text: "Synchronously, as the direct return value of `capturePhoto(with:delegate:)`" },
-          { id: "b", text: "Asynchronously, through the `AVCapturePhotoCaptureDelegate` callback" },
-          { id: "c", text: "By polling a completion property in a loop" },
-          { id: "d", text: "Photos cannot be captured programmatically at all" },
+          { id: "a", text: "Asynchronously, through the `AVCapturePhotoCaptureDelegate` callback" },
+          { id: "b", text: "Synchronously, as the direct return value of `capturePhoto(with:delegate:)`" },
+          { id: "c", text: "By polling a completion property in a loop repeatedly" },
+          { id: "d", text: "Photos cannot be captured programmatically at all, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`capturePhoto(with:delegate:)` triggers the capture, but the actual result arrives later through the delegate's `didFinishProcessingPhoto` callback, reflecting the asynchronous nature of the capture pipeline.",
       },
       {
@@ -13477,7 +13477,7 @@ export const quizzes: Quiz[] = [
         prompt: "What distinguishes video recording via `AVCaptureMovieFileOutput` from photo capture, in terms of temporal structure?",
         options: [
           { id: "a", text: "There is no meaningful difference; both are single discrete requests" },
-          { id: "b", text: "Video recording is a start/stop-bounded, continuous operation, writing to a file until an explicit stop call, unlike photo capture's single-moment request/response" },
+          { id: "b", text: "A continuous, start/stop-bounded operation, unlike a single photo" },
           { id: "c", text: "Video recording completes instantly with no delegate callback needed" },
           { id: "d", text: "Photo capture requires explicit start/stop calls, while video does not" },
         ],
@@ -13489,35 +13489,35 @@ export const quizzes: Quiz[] = [
         prompt: "What queue does `AVCaptureVideoDataOutputSampleBufferDelegate`'s `captureOutput(_:didOutput:from:)` callback typically run on, and why does this matter?",
         options: [
           { id: "a", text: "The main thread, so UI updates can happen directly with no dispatching" },
-          { id: "b", text: "A dedicated capture queue rather than the main thread, meaning processing must be fast enough to keep up with the frame rate or work must be explicitly offloaded" },
-          { id: "c", text: "A random background thread chosen anew for each frame" },
+          { id: "b", text: "A random background thread chosen anew for each individual frame" },
+          { id: "c", text: "A dedicated capture queue, keeping up with the frame rate" },
           { id: "d", text: "It doesn't run on any queue; it blocks the capture session entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because this callback fires continuously at the capture frame rate on a dedicated queue, any processing performed inside it must be fast enough to avoid dropped frames, or heavier work must be explicitly offloaded elsewhere.",
       },
       {
         id: "q9",
         prompt: "What is the relationship between `AVPlayer` and SwiftUI's `VideoPlayer`?",
         options: [
-          { id: "a", text: "They are entirely unrelated, competing APIs" },
-          { id: "b", text: "`VideoPlayer` wraps `AVPlayer` for direct, declarative use within a SwiftUI view hierarchy, similar in spirit to other UIKit-to-SwiftUI bridging patterns" },
+          { id: "a", text: "They are entirely unrelated, competing APIs with no connection" },
+          { id: "b", text: "`AVPlayer` only works with audio, while `VideoPlayer` only handles video" },
           { id: "c", text: "`VideoPlayer` replaces `AVPlayer` entirely, and `AVPlayer` is deprecated" },
-          { id: "d", text: "`AVPlayer` only works with audio, while `VideoPlayer` only works with video" },
+          { id: "d", text: "`VideoPlayer` wraps `AVPlayer` for declarative use inside a SwiftUI view" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`VideoPlayer` is a SwiftUI-native wrapper around the foundational `AVPlayer` engine, providing standard playback controls out of the box for the common case.",
       },
       {
         id: "q10",
         prompt: "When would an app choose to work directly with `AVPlayer`/`AVPlayerLayer` instead of using `VideoPlayer`?",
         options: [
-          { id: "a", text: "Never; `VideoPlayer` should always be used regardless of requirements" },
-          { id: "b", text: "When the app needs custom playback UI, like a bespoke scrubber or custom overlay controls, beyond what `VideoPlayer`'s standard controls provide" },
+          { id: "a", text: "When the app needs custom playback UI beyond `VideoPlayer`'s standard controls" },
+          { id: "b", text: "Never; `VideoPlayer` should always be used regardless of requirements" },
           { id: "c", text: "`AVPlayer` cannot be used directly; it requires `VideoPlayer` as an intermediary" },
-          { id: "d", text: "Only when targeting macOS instead of iOS" },
+          { id: "d", text: "Only when targeting macOS instead of iOS specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`VideoPlayer` trades customization for convenience; apps needing full control over playback presentation instead work directly with `AVPlayer`/`AVPlayerLayer`, typically via a `UIViewRepresentable` wrapper.",
       },
       {
@@ -13536,46 +13536,46 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "Why is handling `AVAudioSession.interruptionNotification` important for an app with audio playback?",
         options: [
-          { id: "a", text: "It is purely optional and has no impact on user experience" },
-          { id: "b", text: "It allows the app to gracefully pause playback when interrupted (e.g., by a phone call) and optionally resume once the interruption ends" },
-          { id: "c", text: "It is only relevant for apps using `AVAudioEngine`, not `AVPlayer`" },
-          { id: "d", text: "It controls the app's audio category rather than interruptions" },
+          { id: "a", text: "It is purely optional and has no impact on user experience at all" },
+          { id: "b", text: "It is only relevant for apps using `AVAudioEngine`, not `AVPlayer`" },
+          { id: "c", text: "Lets the app gracefully pause playback when interrupted" },
+          { id: "d", text: "It controls the app's audio category rather than interruptions themselves" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Properly handling interruption notifications lets an app pause playback gracefully during something like an incoming call and resume afterward, rather than continuing to play over or crashing during the interruption.",
       },
       {
         id: "q13",
         prompt: "When is `AVAudioEngine` more appropriate than `AVPlayer` for audio playback?",
         options: [
-          { id: "a", text: "Never; `AVPlayer` is strictly superior in every case" },
-          { id: "b", text: "When an app needs genuine audio synthesis, real-time effects processing, or fine-grained mixing control beyond simple playback" },
-          { id: "c", text: "`AVAudioEngine` is only usable for recording, never playback" },
-          { id: "d", text: "When playing a single audio file with standard controls" },
+          { id: "a", text: "Never; `AVPlayer` is strictly superior in every case, always" },
+          { id: "b", text: "When playing a single audio file with standard controls only" },
+          { id: "c", text: "`AVAudioEngine` is only usable for recording, and never for playback" },
+          { id: "d", text: "When an app needs real synthesis, effects, or fine-grained mixing" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`AVAudioEngine`'s node-graph model is suited to apps doing genuine audio work like synthesis or real-time effects, while `AVPlayer` remains the simpler, more appropriate choice for straightforward media file playback.",
       },
       {
         id: "q14",
         prompt: "What must be properly configured before `AVAudioRecorder` can function correctly?",
         options: [
-          { id: "a", text: "Nothing beyond calling `record()`" },
-          { id: "b", text: "The `AVAudioSession` must be set to a category like `.record` or `.playAndRecord`" },
-          { id: "c", text: "An `AVCaptureSession` must be running simultaneously" },
-          { id: "d", text: "The device's silent switch must be disabled" },
+          { id: "a", text: "The `AVAudioSession` must be set to a recording-capable category" },
+          { id: "b", text: "Nothing beyond calling `record()` on the recorder directly" },
+          { id: "c", text: "An `AVCaptureSession` must be running simultaneously alongside it" },
+          { id: "d", text: "The device's silent switch must be disabled before recording" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Audio recording depends on the audio session being configured with an appropriate recording-capable category; without this, recording will not function correctly regardless of the recorder's own settings.",
       },
       {
         id: "q15",
         prompt: "What is the primary purpose of `AVAssetExportSession`?",
         options: [
-          { id: "a", text: "Capturing live video from the camera" },
-          { id: "b", text: "Transcoding/exporting a video asset to a different format, resolution, or quality preset, commonly used before uploading captured video" },
-          { id: "c", text: "Recording audio directly from the microphone" },
-          { id: "d", text: "Displaying video with standard playback controls" },
+          { id: "a", text: "Capturing live video directly from the camera in real time" },
+          { id: "b", text: "Transcoding a video asset to a different format" },
+          { id: "c", text: "Recording audio directly from the microphone into a file" },
+          { id: "d", text: "Displaying video with standard playback controls on screen" },
         ],
         correctOptionId: "b",
         explanation: "Export presets let an app convert a captured or composed video into a more space-efficient format, commonly used to prepare video for upload or sharing rather than transmitting a larger raw capture.",
@@ -13585,45 +13585,45 @@ export const quizzes: Quiz[] = [
         prompt: "What is the core building block used by `AVMutableComposition` to combine, trim, and layer video/audio tracks?",
         options: [
           { id: "a", text: "`AVAssetExportSession`" },
-          { id: "b", text: "`insertTimeRange(_:of:at:)`, placing a specific time range from a source track at a specific point in the composition's own timeline" },
-          { id: "c", text: "`AVCapturePhotoSettings`" },
+          { id: "b", text: "`AVCapturePhotoSettings`" },
+          { id: "c", text: "`insertTimeRange(_:of:at:)`, placing a source range at a point in the timeline" },
           { id: "d", text: "`MPRemoteCommandCenter`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Repeatedly calling `insertTimeRange(_:of:at:)` at different points is how clips get concatenated, trimmed (by inserting only a sub-range), or layered (by inserting overlapping audio and video tracks) into one composition.",
       },
       {
         id: "q17",
         prompt: "What advantage does HLS adaptive streaming provide during playback with `AVPlayer`?",
         options: [
-          { id: "a", text: "It requires the app to manually implement bitrate-switching logic" },
-          { id: "b", text: "`AVPlayer` automatically switches between multiple encoded quality levels based on current network conditions, with no manual bitrate-switching logic required" },
-          { id: "c", text: "It only supports a single fixed quality level" },
-          { id: "d", text: "It disables offline playback entirely" },
+          { id: "a", text: "It requires the app to manually implement bitrate-switching logic itself" },
+          { id: "b", text: "It disables offline playback entirely, for any downloaded content" },
+          { id: "c", text: "It only supports a single fixed quality level, regardless of network" },
+          { id: "d", text: "`AVPlayer` automatically switches quality based on network conditions" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "HLS encodes video at multiple quality levels, and `AVPlayer` transparently handles switching between them based on network conditions, providing smooth playback without requiring the app to manage bitrate logic itself.",
       },
       {
         id: "q18",
         prompt: "What underlying infrastructure does `AVAssetDownloadURLSession` build on, enabling offline HLS downloads?",
         options: [
-          { id: "a", text: "A dedicated proprietary download protocol unrelated to `URLSession`" },
-          { id: "b", text: "The same background `URLSession` infrastructure covered in section 40.8" },
+          { id: "a", text: "The same background `URLSession` infrastructure used for general downloads" },
+          { id: "b", text: "A dedicated proprietary download protocol unrelated to `URLSession`" },
           { id: "c", text: "`AVAudioEngine`'s node-graph pipeline" },
           { id: "d", text: "`PHImageManager`'s image loading system" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`AVAssetDownloadURLSession` extends the same background `URLSession` infrastructure used for general background downloads, applying it specifically to adaptive streaming assets for offline playback.",
       },
       {
         id: "q19",
         prompt: "What distinguishes MusicKit from ShazamKit?",
         options: [
-          { id: "a", text: "They are two names for the exact same framework with no functional difference" },
-          { id: "b", text: "MusicKit provides programmatic access to Apple Music's catalog and playback, while ShazamKit provides on-device and catalog-matched audio recognition to identify a song from a sample" },
-          { id: "c", text: "MusicKit is only for recognition, while ShazamKit is only for catalog browsing" },
-          { id: "d", text: "Neither framework can be used together in the same app" },
+          { id: "a", text: "They are two names for the exact same framework with no difference" },
+          { id: "b", text: "MusicKit accesses Apple Music's catalog; ShazamKit recognizes audio" },
+          { id: "c", text: "MusicKit is only for recognition, while ShazamKit is only for browsing" },
+          { id: "d", text: "Neither framework can be used together in the same app at all" },
         ],
         correctOptionId: "b",
         explanation: "MusicKit and ShazamKit serve complementary but distinct purposes — catalog access/playback versus audio fingerprint-based recognition — and are commonly used together in music-adjacent app experiences.",
@@ -13633,11 +13633,11 @@ export const quizzes: Quiz[] = [
         prompt: "What does publishing accurate info through `MPNowPlayingInfoCenter` and wiring up `MPRemoteCommandCenter` enable for an app?",
         options: [
           { id: "a", text: "Faster video encoding performance" },
-          { id: "b", text: "The app's playback appearing and being controllable from Control Center, the Lock Screen, and connected devices like CarPlay, without needing to unlock the phone or open the app" },
-          { id: "c", text: "Automatic photo library permission grants" },
+          { id: "b", text: "Automatic photo library permission grants" },
+          { id: "c", text: "The app's playback appearing and being controllable from Control Center, the Lock Screen, and connected devices like CarPlay, without needing to unlock the phone or open the app" },
           { id: "d", text: "Reduced memory usage during video capture" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This system integration is what makes an app's media playback feel like a first-class citizen of the broader media ecosystem, letting users control playback from the Lock Screen, AirPods, or a car dashboard without opening the app directly.",
       },
     ],
@@ -19015,6 +19015,1958 @@ export const quizzes: Quiz[] = [
         ],
         correctOptionId: "b",
         explanation: "The example given describes the app's launch code checking test-mode arguments and configuring itself to use something like an in-memory fake store instead of a real backend, directly connecting to the fake test double concept from section 66.1.",
+      },
+    ],
+  },
+  {
+    id: "debugging-quiz",
+    title: "Debugging",
+    description: "20 questions covering breakpoints, LLDB commands, async/concurrency debugging, common crash types, watchdog terminations, the View Hierarchy and Memory Graph debuggers, Zombie Objects, sanitizers, Logger, symbolication, and debugging extensions.",
+    relatedArticleSlug: "debugging",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Why are conditional breakpoints particularly valuable for debugging a bug within a loop processing many items?",
+        options: [
+          {
+            id: "a",
+            text: "They stop execution on every single loop iteration",
+          },
+          {
+            id: "b",
+            text: "They let execution pause exactly once, precisely at the iteration matching the specified condition, avoiding manually stepping through many irrelevant iterations",
+          },
+          {
+            id: "c",
+            text: "Conditional breakpoints can only be used outside of loops",
+          },
+          {
+            id: "d",
+            text: "They disable the loop entirely during debugging",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A condition like `index == 47` lets a developer skip directly to the one relevant iteration rather than manually continuing through dozens of irrelevant ones.",
+      },
+      {
+        id: "q2",
+        prompt: "What does a \"log message, automatically continue\" breakpoint action effectively provide?",
+        options: [
+          {
+            id: "a",
+            text: "A way to permanently delete a line of code",
+          },
+          {
+            id: "b",
+            text: "The equivalent of a `print` statement at that line without editing and rebuilding source code, letting diagnostic output be added or adjusted instantly between debugging runs",
+          },
+          {
+            id: "c",
+            text: "It stops execution permanently at that line",
+          },
+          {
+            id: "d",
+            text: "It only works for symbolic breakpoints, not line breakpoints",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Log breakpoint actions decouple adding diagnostic output from the edit-compile-run cycle, avoiding the time cost of editing, rebuilding, and later removing temporary print statements.",
+      },
+      {
+        id: "q3",
+        prompt: "What is the key difference between \"step over\" and \"step into\" when debugging?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical and produce the same debugging behavior",
+          },
+          {
+            id: "b",
+            text: "\"Step over\" executes a called function without entering it, while \"step into\" descends into the called function's own implementation, and choosing correctly between them keeps debugging sessions efficiently focused",
+          },
+          {
+            id: "c",
+            text: "\"Step into\" can only be used on breakpoints, not during normal execution",
+          },
+          {
+            id: "d",
+            text: "\"Step over\" always terminates the debugging session",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Judiciously stepping over well-understood code and stepping into only suspected problem functions avoids wasting time navigating through irrelevant implementation details.",
+      },
+      {
+        id: "q4",
+        prompt: "Why is `v` (variable) noticeably faster than `p` (print) for simple variable inspection in LLDB?",
+        options: [
+          {
+            id: "a",
+            text: "`v` and `p` have identical performance characteristics",
+          },
+          {
+            id: "b",
+            text: "`v` looks up a known variable directly from the current frame without going through LLDB's full expression evaluator, while `p` invokes the complete expression evaluation machinery",
+          },
+          {
+            id: "c",
+            text: "`p` can only inspect primitive types, while `v` handles all types",
+          },
+          {
+            id: "d",
+            text: "`v` requires a rebuild before it can be used",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `v` bypasses full expression evaluation for direct variable lookup, it's faster for the simple case, while `p`/`po` provide the overhead of full expression evaluation necessary for actual expressions or method calls.",
+      },
+      {
+        id: "q5",
+        prompt: "What can LLDB's `expression` command do beyond simply inspecting a value?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing beyond inspection; it is identical to `po`",
+          },
+          {
+            id: "b",
+            text: "Execute arbitrary code within the paused process's context, including reassigning variables or calling methods, letting a developer test a hypothesis without restarting the app",
+          },
+          {
+            id: "c",
+            text: "`expression` can only be used to terminate the debugging session",
+          },
+          {
+            id: "d",
+            text: "It can only inspect static, compile-time-known values",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`expression` can genuinely modify live process state — reassigning variables, triggering method calls — letting a developer interactively test hypotheses without a full edit-compile-run cycle.",
+      },
+      {
+        id: "q6",
+        prompt: "Why can naive thread-based stepping produce confusing results when debugging async Swift code?",
+        options: [
+          {
+            id: "a",
+            text: "Async code never actually suspends, so stepping behaves identically to synchronous code",
+          },
+          {
+            id: "b",
+            text: "An async function's execution isn't guaranteed to stay on one OS thread across an `await` suspension point, so thread-based stepping (assuming sequential, single-thread execution) can appear to jump to a seemingly unrelated thread",
+          },
+          {
+            id: "c",
+            text: "LLDB cannot debug async code under any circumstances",
+          },
+          {
+            id: "d",
+            text: "Async functions never contain suspension points",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because structured concurrency doesn't guarantee thread continuity across suspension points, naive stepping can be confusing without LLDB's specific async-aware support presenting the logical flow coherently.",
+      },
+      {
+        id: "q7",
+        prompt: "What genuine debugging need do task backtraces address?",
+        options: [
+          {
+            id: "a",
+            text: "They are only useful for debugging UI layout issues",
+          },
+          {
+            id: "b",
+            text: "Understanding which task a given piece of suspended code belongs to and what spawned it, which is considerably harder to diagnose from a single task's isolated stack trace alone in a hierarchical, multi-task scenario",
+          },
+          {
+            id: "c",
+            text: "Task backtraces replace the need for any breakpoints",
+          },
+          {
+            id: "d",
+            text: "They only work for synchronous, non-concurrent code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "For bugs involving several concurrently running, hierarchically related tasks, understanding the full task tree (which task spawned which) is often essential to diagnosing the actual root cause.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does Swift trap with a crash on an out-of-range array index rather than returning a garbage value?",
+        options: [
+          {
+            id: "a",
+            text: "This is a bug in Swift that will eventually be fixed",
+          },
+          {
+            id: "b",
+            text: "It reflects Swift's broader safety philosophy of failing loudly and immediately at the point of an invalid operation, rather than allowing a memory-safety violation to silently corrupt state and manifest confusingly elsewhere later",
+          },
+          {
+            id: "c",
+            text: "Out-of-range access always returns `nil` instead of crashing",
+          },
+          {
+            id: "d",
+            text: "This behavior only applies to arrays, never other collection types",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this trap-on-invalid-access behavior as a deliberate design choice consistent with Swift's safety-first philosophy, even though the resulting crash is disruptive when it occurs.",
+      },
+      {
+        id: "q9",
+        prompt: "What is typically the right fix for a recurring force-unwrap nil crash?",
+        options: [
+          {
+            id: "a",
+            text: "Adding more `!` operators to force the value through regardless",
+          },
+          {
+            id: "b",
+            text: "Using `if let`/`guard let` or `#require` instead of an unconditional force-unwrap, after examining what could have caused the optional to actually be nil at that point",
+          },
+          {
+            id: "c",
+            text: "Force-unwrap crashes cannot be fixed and must be avoided by never using optionals",
+          },
+          {
+            id: "d",
+            text: "Restarting the app whenever this crash occurs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends replacing unconditional force-unwraps with safe unwrapping patterns, after diagnosing why the value could actually be nil at that specific point — an incorrect assumption or unhandled code path.",
+      },
+      {
+        id: "q10",
+        prompt: "Why is `EXC_BAD_ACCESS` typically harder to diagnose than an index-out-of-range or force-unwrap crash?",
+        options: [
+          {
+            id: "a",
+            text: "`EXC_BAD_ACCESS` always includes a complete, accurate stack trace to the root cause",
+          },
+          {
+            id: "b",
+            text: "The crash's actual symptom (accessing bad memory) often occurs at a point in code far removed from the actual root cause, like an object deallocated prematurely elsewhere",
+          },
+          {
+            id: "c",
+            text: "`EXC_BAD_ACCESS` is actually easier to diagnose than the other two crash types",
+          },
+          {
+            id: "d",
+            text: "This crash type only occurs in Objective-C code, never Swift",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `EXC_BAD_ACCESS` frequently reflects a use-after-free or dangling reference bug, the crash location and the actual root cause are often two genuinely different places in the code, requiring tools like the Memory Graph Debugger or Address Sanitizer.",
+      },
+      {
+        id: "q11",
+        prompt: "What does a watchdog termination code like `0x8badf00d` indicate?",
+        options: [
+          {
+            id: "a",
+            text: "A specific line of code that crashed due to a logic error",
+          },
+          {
+            id: "b",
+            text: "That the system forcibly killed the app for taking too long during a specific lifecycle phase (launch, resume, background task completion), pointing toward a performance problem rather than a conventional logic bug",
+          },
+          {
+            id: "c",
+            text: "A memory corruption error identical to `EXC_BAD_ACCESS`",
+          },
+          {
+            id: "d",
+            text: "A networking timeout unrelated to app lifecycle",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Watchdog terminations reflect the app being too slow during a lifecycle transition, directing debugging effort toward profiling that specific phase's performance rather than searching for a conventional crash-causing bug.",
+      },
+      {
+        id: "q12",
+        prompt: "What does the View Hierarchy Debugger reveal that's difficult to determine purely from reading Auto Layout constraint source code?",
+        options: [
+          {
+            id: "a",
+            text: "The exact compiler version used to build the app",
+          },
+          {
+            id: "b",
+            text: "The actual, real runtime layout — an unexpectedly hidden view, a zero-sized frame, or an unintended overlap — rather than requiring a developer to mentally simulate what constraints should theoretically produce",
+          },
+          {
+            id: "c",
+            text: "Network request timing during view loading",
+          },
+          {
+            id: "d",
+            text: "The app's memory allocation graph",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The View Hierarchy Debugger visualizes the actual runtime layer structure, making subtle layout bugs immediately visible rather than requiring mental simulation of constraint behavior from source code alone.",
+      },
+      {
+        id: "q13",
+        prompt: "What does Xcode's Memory Graph Debugger's purple exclamation mark icon indicate?",
+        options: [
+          {
+            id: "a",
+            text: "A syntax error in the current source file",
+          },
+          {
+            id: "b",
+            text: "An object Xcode suspects is involved in a retain cycle, directly pointing to specific objects rather than requiring manual tracing through code",
+          },
+          {
+            id: "c",
+            text: "A view that failed to render correctly",
+          },
+          {
+            id: "d",
+            text: "A network request that timed out",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Xcode's automatic flagging of suspected retain cycles considerably narrows the search for the actual strong reference incorrectly keeping objects alive, compared to manually reasoning through the object graph.",
+      },
+      {
+        id: "q14",
+        prompt: "What diagnostic workflow does 68.14 describe for tracing a specific retain cycle?",
+        options: [
+          {
+            id: "a",
+            text: "Randomly commenting out code until the cycle disappears",
+          },
+          {
+            id: "b",
+            text: "Selecting a flagged, suspiciously-still-alive object and examining its \"Object Reference\" panel, which lists what's holding a strong reference to it, tracing that chain back to its source",
+          },
+          {
+            id: "c",
+            text: "Rewriting the entire object graph from scratch",
+          },
+          {
+            id: "d",
+            text: "Disabling ARC entirely for the affected objects",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This systematic workflow — inspect what holds a strong reference, trace the chain back — is a repeatable approach considerably more reliable than attempting to spot cycles purely by reading source code.",
+      },
+      {
+        id: "q15",
+        prompt: "What trade-off does enabling Zombie Objects introduce?",
+        options: [
+          {
+            id: "a",
+            text: "No trade-off; it has zero effect on the app's runtime behavior",
+          },
+          {
+            id: "b",
+            text: "Deallocated objects aren't actually freed (so memory usage grows during a debug session), in exchange for a dramatically clearer, immediately actionable error identifying exactly which deallocated object was accessed",
+          },
+          {
+            id: "c",
+            text: "It permanently disables ARC for the entire app",
+          },
+          {
+            id: "d",
+            text: "It only works in release builds, never debug builds",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Zombie Objects trades debug-session memory growth (objects aren't genuinely freed) for turning a confusing `EXC_BAD_ACCESS` into a specific, readable diagnostic identifying the accessed deallocated instance.",
+      },
+      {
+        id: "q16",
+        prompt: "What is Address Sanitizer's core diagnostic value?",
+        options: [
+          {
+            id: "a",
+            text: "It only detects data races between threads, not memory corruption",
+          },
+          {
+            id: "b",
+            text: "It catches memory errors (buffer overflows, use-after-free, uninitialized memory use) at the exact moment they occur, rather than allowing them to silently corrupt memory that manifests as a confusing crash later",
+          },
+          {
+            id: "c",
+            text: "Address Sanitizer replaces the need for the Memory Graph Debugger entirely",
+          },
+          {
+            id: "d",
+            text: "It can only be used in shipped, release-configuration builds",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "ASan's \"catch it immediately, with full context\" approach is more diagnostically useful than debugging a crash whose stack trace only reflects where corrupted memory finally, visibly failed.",
+      },
+      {
+        id: "q17",
+        prompt: "Why is Thread Sanitizer described as a genuinely important complement to Swift's compile-time concurrency checking, not a redundant tool?",
+        options: [
+          {
+            id: "a",
+            text: "Thread Sanitizer and compile-time checking catch exactly the same set of bugs",
+          },
+          {
+            id: "b",
+            text: "Certain data races can still occur despite static analysis (particularly around `@unchecked Sendable` usage or non-Swift interop), and TSan catches these at runtime by observing genuine concurrent memory access patterns",
+          },
+          {
+            id: "c",
+            text: "Thread Sanitizer replaces the need for `@MainActor` entirely",
+          },
+          {
+            id: "d",
+            text: "Compile-time concurrency checking is being deprecated in favor of Thread Sanitizer",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "TSan provides a dynamic safety net for data races that compile-time checking, however sophisticated, cannot guarantee to catch in every case, particularly around unchecked or interop code.",
+      },
+      {
+        id: "q18",
+        prompt: "What does `Logger`'s default privacy behavior do differently from a plain `print` statement?",
+        options: [
+          {
+            id: "a",
+            text: "`Logger` and `print` behave identically with respect to privacy",
+          },
+          {
+            id: "b",
+            text: "`Logger` redacts interpolated string values (`<private>`) by default unless explicitly marked `.public`, protecting potentially sensitive data, while `print` has no privacy concept and includes everything verbatim",
+          },
+          {
+            id: "c",
+            text: "`print` automatically redacts sensitive values, while `Logger` never does",
+          },
+          {
+            id: "d",
+            text: "`Logger` cannot be used to log any user-related data under any circumstances",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`Logger`'s privacy-by-default design requires explicit opt-in to expose specific values, protecting genuinely sensitive data by default without requiring careful manual redaction at every log call site, unlike plain `print`.",
+      },
+      {
+        id: "q19",
+        prompt: "Why must a dSYM correspond to the *exact* build that produced a given crash?",
+        options: [
+          {
+            id: "a",
+            text: "dSYMs are universal and work correctly with any build of an app",
+          },
+          {
+            id: "b",
+            text: "Addresses in a compiled binary shift between even minor rebuilds, so a mismatched dSYM produces either failed symbolication or subtly incorrect symbolication pointing to the wrong function or line",
+          },
+          {
+            id: "c",
+            text: "dSYMs only matter for debug builds, never release builds",
+          },
+          {
+            id: "d",
+            text: "This requirement was removed in recent Xcode versions",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because binary addresses shift between builds due to compiler optimizations and code changes, only the exact matching dSYM can reliably translate a crash's raw addresses back into correct, readable symbols.",
+      },
+      {
+        id: "q20",
+        prompt: "Why must a widget or extension be debugged by attaching to its own separate process rather than the main app's process?",
+        options: [
+          {
+            id: "a",
+            text: "Widgets and extensions actually run within the main app's own process",
+          },
+          {
+            id: "b",
+            text: "An extension runs as a genuinely separate process from its host app (per the extension sandboxing model from section 53.1), so breakpoints set on the main app's scheme will never be hit by code running inside the extension",
+          },
+          {
+            id: "c",
+            text: "Extensions cannot be debugged under any circumstances",
+          },
+          {
+            id: "d",
+            text: "Debugging extensions requires a completely different debugger unrelated to LLDB",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because extensions run in their own separate, sandboxed process (as established in section 53.1), correctly debugging extension-specific code requires selecting that extension's own scheme and attaching the debugger to its actual process.",
+      },
+    ],
+  },
+  {
+    id: "performance-quiz",
+    title: "Performance",
+    description: "20 questions covering measuring before optimizing, Instruments tools, os_signpost, launch time, scroll performance and frame budgets, ProMotion, image downsampling, main thread hangs, jetsam, binary size, MetricKit, Organizer, energy impact, and performance budgets.",
+    relatedArticleSlug: "performance",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What is the single most important performance principle underlying every tool in this section?",
+        options: [
+          {
+            id: "a",
+            text: "Always optimize the code that looks most complex",
+          },
+          {
+            id: "b",
+            text: "Measuring actual performance data before making optimization changes, since intuition about what's \"probably slow\" is frequently wrong",
+          },
+          {
+            id: "c",
+            text: "Optimizing every function equally, regardless of measured impact",
+          },
+          {
+            id: "d",
+            text: "Performance work should only happen after an app has shipped",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames measure-first as the foundational discipline — optimizing based on guesswork risks wasting effort on code that isn't actually the genuine bottleneck.",
+      },
+      {
+        id: "q2",
+        prompt: "Why does Time Profiler use statistical sampling rather than tracing every function call?",
+        options: [
+          {
+            id: "a",
+            text: "Sampling is less accurate and provides no real benefit over tracing",
+          },
+          {
+            id: "b",
+            text: "Sampling introduces comparatively little overhead to the profiled app's execution, avoiding the risk of the profiling process itself distorting the performance being measured",
+          },
+          {
+            id: "c",
+            text: "Tracing every call is technically impossible in Instruments",
+          },
+          {
+            id: "d",
+            text: "Statistical sampling only works for single-threaded apps",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The trade-off favors low overhead over exhaustive tracing precision, since a heavy tracing profiler could itself meaningfully slow down and distort the very code being measured.",
+      },
+      {
+        id: "q3",
+        prompt: "What kind of memory problem is the Allocations instrument particularly effective at surfacing?",
+        options: [
+          {
+            id: "a",
+            text: "Only genuinely unreachable, leaked memory",
+          },
+          {
+            id: "b",
+            text: "Memory growing steadily over time during a repeated operation (like scrolling) that should be memory-neutral once a steady state is reached",
+          },
+          {
+            id: "c",
+            text: "Allocations can only measure CPU time, not memory",
+          },
+          {
+            id: "d",
+            text: "Allocations is exclusively used for detecting UI layout issues",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A live object count that keeps climbing rather than stabilizing during repeated operations is a measurable signal Allocations is well-suited to surface, distinct from Leaks' stricter focus.",
+      },
+      {
+        id: "q4",
+        prompt: "How does the Leaks instrument differ from the Allocations instrument?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical tools with different names",
+          },
+          {
+            id: "b",
+            text: "Leaks specifically targets genuinely unreachable-yet-allocated memory (a true leak), while Allocations is better suited to the broader question of whether memory usage is growing more than expected, even for cases that don't meet the strict leak definition",
+          },
+          {
+            id: "c",
+            text: "Allocations can only be used on iOS, while Leaks only works on macOS",
+          },
+          {
+            id: "d",
+            text: "Leaks measures CPU time, while Allocations measures memory",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section distinguishes Leaks' strict, well-defined focus (unreachable yet allocated) from Allocations' broader utility for investigating any unexpected memory growth pattern, including cases like an unbounded cache.",
+      },
+      {
+        id: "q5",
+        prompt: "What diagnostic combination does the section highlight as genuinely powerful for finding the root cause of scroll jank?",
+        options: [
+          {
+            id: "a",
+            text: "Using only the Leaks instrument in isolation",
+          },
+          {
+            id: "b",
+            text: "Correlating Animation Hitches' flagged problem frames with simultaneously recorded Time Profiler data, connecting exactly when a hitch happened to what the CPU was doing at that moment",
+          },
+          {
+            id: "c",
+            text: "Running Animation Hitches without any other instrument",
+          },
+          {
+            id: "d",
+            text: "Comparing binary size before and after a release",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Cross-referencing hitch timing with CPU activity data directly connects the visible stuttering symptom to its actual, specific root cause, rather than knowing only that stuttering occurred.",
+      },
+      {
+        id: "q6",
+        prompt: "When is reaching for System Trace appropriate, according to 69.6?",
+        options: [
+          {
+            id: "a",
+            text: "For every performance investigation, regardless of suspected cause",
+          },
+          {
+            id: "b",
+            text: "When a performance problem's root cause is suspected to lie in the broader system context surrounding the app (thread contention, scheduling delays from other system activity) rather than in the app's own code logic",
+          },
+          {
+            id: "c",
+            text: "System Trace can only be used for detecting memory leaks",
+          },
+          {
+            id: "d",
+            text: "System Trace replaces the need for Time Profiler entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "System Trace represents an escalation beyond app-focused tools, appropriate specifically for genuinely system-level performance issues, paralleling the escalation to a sysdiagnose for system-level crash/error diagnosis (section 68.23).",
+      },
+      {
+        id: "q7",
+        prompt: "What genuine gap does `os_signpost` fill compared to a generic profiler view?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for any profiling tools entirely",
+          },
+          {
+            id: "b",
+            text: "It lets a developer measure the actual duration of a meaningful, named operation (like \"loading the recommendations feed\") that wouldn't otherwise be distinguishable from surrounding code in a generic function-level view",
+          },
+          {
+            id: "c",
+            text: "`os_signpost` can only measure network request duration",
+          },
+          {
+            id: "d",
+            text: "Signposts have no visibility within Instruments' timeline",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Signposts provide measurement aligned with an operation's actual user-facing meaning, considerably easier to reason about than reconstructing that duration manually from a generic call tree.",
+      },
+      {
+        id: "q8",
+        prompt: "What is the key difference between pre-main and post-main app launch time?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical phases with no meaningful distinction",
+          },
+          {
+            id: "b",
+            text: "Pre-main time is dominated by dynamic linker work loading frameworks/libraries before the app's own code runs, while post-main time is the app's own code executing from `main` through the first frame — each requiring genuinely different mitigation strategies",
+          },
+          {
+            id: "c",
+            text: "Post-main time always occurs before pre-main time",
+          },
+          {
+            id: "d",
+            text: "Pre-main time is entirely controlled by the app's own launch-path code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Correctly diagnosing which phase is the actual bottleneck (via Instruments' App Launch template) is a prerequisite to applying the right category of fix, since reducing frameworks addresses pre-main while streamlining launch code addresses post-main.",
+      },
+      {
+        id: "q9",
+        prompt: "What launch-time optimization principle does 69.9 describe?",
+        options: [
+          {
+            id: "a",
+            text: "Blocking the entire launch sequence on all initialization work, regardless of urgency",
+          },
+          {
+            id: "b",
+            text: "Deferring non-essential work (like analytics initialization) until after the first frame is displayed, rather than blocking launch on it",
+          },
+          {
+            id: "c",
+            text: "Launch time cannot be meaningfully optimized once an app has shipped",
+          },
+          {
+            id: "d",
+            text: "All singletons must be initialized eagerly at app launch for correctness",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends auditing what genuinely must happen before the user sees anything versus what can be deferred, directly paralleling the latency-budgeting discipline discussed for Foundation Models sessions and background tasks.",
+      },
+      {
+        id: "q10",
+        prompt: "Approximately what per-frame time budget does 60Hz scrolling require, and how does this compare to ProMotion's 120Hz?",
+        options: [
+          {
+            id: "a",
+            text: "16ms at 60Hz, roughly the same at 120Hz",
+          },
+          {
+            id: "b",
+            text: "Roughly 16.67ms at 60Hz, and roughly 8.33ms — a meaningfully tighter budget — at ProMotion's up to 120Hz",
+          },
+          {
+            id: "c",
+            text: "8ms at 60Hz, and 16ms at 120Hz",
+          },
+          {
+            id: "d",
+            text: "Frame budget is unrelated to refresh rate",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The numeric frame budget scales inversely with refresh rate, meaning ProMotion's higher refresh rate leaves meaningfully less time per frame than the traditional 60Hz assumption.",
+      },
+      {
+        id: "q11",
+        prompt: "Why does code that comfortably fit within a 60Hz frame budget not automatically fit within ProMotion's budget?",
+        options: [
+          {
+            id: "a",
+            text: "ProMotion displays actually have a more generous frame budget than 60Hz displays",
+          },
+          {
+            id: "b",
+            text: "ProMotion's tighter ~8ms budget leaves less performance headroom than the traditional ~16ms 60Hz budget, meaning performance that felt generous at 60Hz can evaporate at 120Hz",
+          },
+          {
+            id: "c",
+            text: "ProMotion displays disable frame budget constraints entirely",
+          },
+          {
+            id: "d",
+            text: "Frame budgets only apply to static content, not scrolling",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that performance testing on ProMotion hardware specifically is necessary, since 60Hz-era performance intuition doesn't automatically translate to smooth performance at ProMotion's tighter budget.",
+      },
+      {
+        id: "q12",
+        prompt: "Why does downsampling an image during decode (rather than decoding full-size and scaling afterward) matter for performance?",
+        options: [
+          {
+            id: "a",
+            text: "Downsampling during decode has no measurable performance benefit",
+          },
+          {
+            id: "b",
+            text: "It avoids both the wasted CPU time of decoding unnecessarily large image data and the wasted memory holding an oversized decoded result, when the image will only be displayed at a smaller size",
+          },
+          {
+            id: "c",
+            text: "Downsampling during decode always produces lower-quality images than decoding full-size",
+          },
+          {
+            id: "d",
+            text: "This technique only applies to video content, not still images",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Naively decoding full resolution only to display at a smaller size wastes both decode-time CPU and the memory holding the unnecessarily large result — downsampling during decode avoids both costs simultaneously.",
+      },
+      {
+        id: "q13",
+        prompt: "How does a main thread hang differ from a dropped animation frame?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical phenomena described with different terminology",
+          },
+          {
+            id: "b",
+            text: "A hang represents a more severe, sustained unresponsiveness where the app becomes genuinely unresponsive to interaction, distinct from a dropped frame's brief, momentary stutter",
+          },
+          {
+            id: "c",
+            text: "Dropped frames are always more severe than hangs",
+          },
+          {
+            id: "d",
+            text: "Hangs only occur on background threads, never the main thread",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section distinguishes hangs as a more severe category — sustained unresponsiveness to touch and interaction — from the more cosmetic, momentary stutter of a single dropped frame.",
+      },
+      {
+        id: "q14",
+        prompt: "What connection does the section draw between main thread hangs and watchdog terminations (section 68.11)?",
+        options: [
+          {
+            id: "a",
+            text: "There is no relationship between the two concepts",
+          },
+          {
+            id: "b",
+            text: "A sufficiently long hang can even trigger a watchdog termination if it persists long enough during a lifecycle-sensitive phase",
+          },
+          {
+            id: "c",
+            text: "Watchdog terminations only occur due to memory issues, never hangs",
+          },
+          {
+            id: "d",
+            text: "Main thread hangs always resolve on their own without any system intervention",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects severe, persistent hangs to the risk of triggering a watchdog termination during a sensitive lifecycle phase, reinforcing why hang elimination is a high-priority concern.",
+      },
+      {
+        id: "q15",
+        prompt: "What distinguishes a jetsam termination from a conventional app crash?",
+        options: [
+          {
+            id: "a",
+            text: "Jetsam terminations always produce a detailed crash report pointing to a specific line of code",
+          },
+          {
+            id: "b",
+            text: "There's no crash report pointing to a specific crashing line, since the app was terminated externally by the system for using too much memory, requiring active memory monitoring during development to diagnose",
+          },
+          {
+            id: "c",
+            text: "Jetsam only affects background apps, never foreground apps",
+          },
+          {
+            id: "d",
+            text: "Jetsam terminations are identical to watchdog terminations in cause and diagnosis",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because jetsam is an external, system-triggered termination for excessive memory use rather than a code-level failure, there's no traditional crash report — diagnosis requires proactive memory footprint monitoring rather than reactive crash investigation.",
+      },
+      {
+        id: "q16",
+        prompt: "What genuine user-facing benefit does binary size reduction provide, beyond technical tidiness?",
+        options: [
+          {
+            id: "a",
+            text: "None; binary size has no effect on user experience",
+          },
+          {
+            id: "b",
+            text: "A smaller download is faster and more likely to complete successfully on a poor network connection, and on-demand resources let content be deferred until actually needed rather than forcing everyone to download everything upfront",
+          },
+          {
+            id: "c",
+            text: "Binary size only affects developers, never end users",
+          },
+          {
+            id: "d",
+            text: "Reducing binary size always requires removing user-facing features",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Smaller downloads improve install success rates on poor connections, and on-demand resources let users avoid downloading content they may never actually use, both genuine user-facing benefits.",
+      },
+      {
+        id: "q17",
+        prompt: "What does `MetricKit` provide that development-time Instruments profiling cannot?",
+        options: [
+          {
+            id: "a",
+            text: "`MetricKit` and Instruments provide identical data from identical sources",
+          },
+          {
+            id: "b",
+            text: "Aggregated, privacy-preserving performance data collected from real users' actual devices, network conditions, and usage patterns in production, which a developer's own testing can never fully replicate",
+          },
+          {
+            id: "c",
+            text: "`MetricKit` can only be used before an app ships, not after",
+          },
+          {
+            id: "d",
+            text: "`MetricKit` exclusively measures binary size, not runtime performance",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MetricKit's value lies in capturing real-world diversity (device models, network conditions, memory pressure, usage patterns) invisible to a developer's own testing, however thorough that testing might be.",
+      },
+      {
+        id: "q18",
+        prompt: "What capability does Xcode Organizer add on top of raw MetricKit data?",
+        options: [
+          {
+            id: "a",
+            text: "Organizer can only display binary size, not other performance metrics",
+          },
+          {
+            id: "b",
+            text: "Aggregated, trend-visualizing presentation directly within Xcode, including automatic regression detection flagging when a metric has measurably worsened following a specific app version's release",
+          },
+          {
+            id: "c",
+            text: "Organizer requires manually re-implementing MetricKit's data collection from scratch",
+          },
+          {
+            id: "d",
+            text: "Organizer has no relationship to MetricKit whatsoever",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Organizer surfaces MetricKit-sourced data in trend form with automatic regression detection, closing the loop on the measure-first discipline by surfacing degradation tied to specific releases rather than relying on reactive user complaints.",
+      },
+      {
+        id: "q19",
+        prompt: "Why can a CPU-light app still have poor energy impact, according to 69.18?",
+        options: [
+          {
+            id: "a",
+            text: "Energy impact is determined exclusively by CPU usage, so this scenario is impossible",
+          },
+          {
+            id: "b",
+            text: "Energy impact is also independently driven by network radio usage, GPS/location usage, screen brightness, and background activity — a CPU-light app polling a network endpoint frequently can still meaningfully drain battery",
+          },
+          {
+            id: "c",
+            text: "Only apps with heavy CPU usage can have any measurable energy impact",
+          },
+          {
+            id: "d",
+            text: "Energy impact only matters for apps using Core ML models",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly notes that energy impact is a distinct concern from CPU efficiency — power-hungry subsystems like network radios or location services can drive significant battery cost even when CPU usage measured by Time Profiler looks low.",
+      },
+      {
+        id: "q20",
+        prompt: "How does a CI-enforced performance regression budget (69.19) differ from Organizer's regression detection (69.17) in terms of when it catches problems?",
+        options: [
+          {
+            id: "a",
+            text: "They catch regressions at exactly the same point in the development process",
+          },
+          {
+            id: "b",
+            text: "A CI-enforced budget catches a regression before it ever reaches users, proactively failing or flagging a build, while Organizer's detection is reactive, surfacing regressions only after a version has already been released to real users",
+          },
+          {
+            id: "c",
+            text: "Organizer catches regressions earlier than a CI-enforced budget",
+          },
+          {
+            id: "d",
+            text: "Neither approach can actually catch performance regressions reliably",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames CI-enforced budgets as the most proactive point on a spectrum — catching regressions before release — compared to Organizer's after-the-fact detection based on real-world, already-shipped usage data.",
+      },
+    ],
+  },
+  {
+    id: "accessibility-quiz",
+    title: "Accessibility",
+    description: "20 questions covering VoiceOver, accessibility labels/values/hints/traits, grouping and custom actions, the rotor, accessibilityRepresentation, reading order, Dynamic Type, Reduce Motion/Transparency, tap targets, Switch/Voice Control, Full Keyboard Access, the Accessibility Inspector, and media accessibility.",
+    relatedArticleSlug: "accessibility",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What is described as the single most important accessibility testing practice?",
+        options: [
+          {
+            id: "a",
+            text: "Reading Apple's accessibility documentation thoroughly",
+          },
+          {
+            id: "b",
+            text: "Actually turning VoiceOver on and attempting to use one's own app with it, rather than relying purely on reading accessibility-related code or documentation",
+          },
+          {
+            id: "c",
+            text: "Writing unit tests for accessibility labels",
+          },
+          {
+            id: "d",
+            text: "Hiring an external accessibility consultant before any internal testing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that firsthand VoiceOver navigation surfaces problems genuinely difficult to anticipate purely by reasoning about code, making direct hands-on testing the foundational practice.",
+      },
+      {
+        id: "q2",
+        prompt: "Why does an icon-only button require an explicit `accessibilityLabel`?",
+        options: [
+          {
+            id: "a",
+            text: "SwiftUI automatically provides a perfect label for every icon",
+          },
+          {
+            id: "b",
+            text: "Without an explicit label, VoiceOver would announce something unhelpful like \"button\" or leave the element effectively unlabeled and unusable, since the icon has no inherent text",
+          },
+          {
+            id: "c",
+            text: "Accessibility labels are only needed for text-based elements, not icons",
+          },
+          {
+            id: "d",
+            text: "Icon-only buttons cannot be used with VoiceOver under any circumstances",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "An explicit label bridges the gap between an icon's purely visual meaning (obvious to sighted users) and a meaningful spoken equivalent for VoiceOver users.",
+      },
+      {
+        id: "q3",
+        prompt: "What is the distinction between an accessibility value and an accessibility hint?",
+        options: [
+          {
+            id: "a",
+            text: "They are interchangeable terms for the same concept",
+          },
+          {
+            id: "b",
+            text: "The value communicates an element's current state (like a slider's position), while the hint provides additional guidance about what will happen upon interaction, and both supplement rather than replace the label",
+          },
+          {
+            id: "c",
+            text: "The hint communicates state, while the value provides interaction guidance",
+          },
+          {
+            id: "d",
+            text: "Values and hints can only be used together, never independently",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Value reflects current state (dynamically changing, like a slider position), while hint explains non-obvious interaction consequences — both are distinct supplements to the stable, core label.",
+      },
+      {
+        id: "q4",
+        prompt: "Why should hints be used only when a control's action genuinely isn't obvious from its label alone?",
+        options: [
+          {
+            id: "a",
+            text: "Hints are required on every single interactive element regardless of clarity",
+          },
+          {
+            id: "b",
+            text: "VoiceOver users who already understand common patterns don't benefit from, and can find tedious, an unnecessary hint on every self-explanatory button",
+          },
+          {
+            id: "c",
+            text: "Hints have no effect on the spoken VoiceOver experience",
+          },
+          {
+            id: "d",
+            text: "Hints can only be applied to slider controls, not buttons",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Overusing hints on already-obvious controls creates a verbose, tedious spoken experience, so hints are best reserved for cases where genuine additional guidance is needed.",
+      },
+      {
+        id: "q5",
+        prompt: "What broader navigation benefit does correctly applying the `.isHeader` trait provide?",
+        options: [
+          {
+            id: "a",
+            text: "It has no effect on VoiceOver navigation, only visual styling",
+          },
+          {
+            id: "b",
+            text: "VoiceOver users frequently navigate by heading via the rotor, jumping directly between sections rather than swiping through every element sequentially — missing header traits denies this efficient, structure-aware navigation",
+          },
+          {
+            id: "c",
+            text: "The `.isHeader` trait is purely decorative with no functional impact",
+          },
+          {
+            id: "d",
+            text: "Headers can only be navigated by scrolling, not by rotor",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Correct header traits enable rotor-based jumping between sections, providing VoiceOver users the same efficient, structure-aware navigation sighted users get for free by visually scanning a screen.",
+      },
+      {
+        id: "q6",
+        prompt: "When is `.accessibilityElement(children: .combine)` an appropriate choice?",
+        options: [
+          {
+            id: "a",
+            text: "Never; all elements should always remain individually navigable",
+          },
+          {
+            id: "b",
+            text: "When a group of related visual elements genuinely represents one conceptual unit that shouldn't require several separate swipes to fully understand, like an icon plus label plus value",
+          },
+          {
+            id: "c",
+            text: "Only for elements that are already individually well-labeled",
+          },
+          {
+            id: "d",
+            text: "Combining elements always makes VoiceOver navigation slower",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Combining elements that represent one conceptual unit (like a cart icon, item count, and price) provides the same efficient, holistic understanding a sighted user gets in a single glance, in one swipe rather than several.",
+      },
+      {
+        id: "q7",
+        prompt: "What genuine gap do custom accessibility actions (`accessibilityAction`) address?",
+        options: [
+          {
+            id: "a",
+            text: "They replace the need for accessibility labels entirely",
+          },
+          {
+            id: "b",
+            text: "A parity gap between sighted and VoiceOver interaction models — a sighted user's swipe-to-reveal gesture is meaningless within VoiceOver's own distinct gesture vocabulary, so custom actions restore equivalent functional access",
+          },
+          {
+            id: "c",
+            text: "Custom actions can only be used for delete operations",
+          },
+          {
+            id: "d",
+            text: "They are purely cosmetic and have no functional purpose",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Custom actions expose functionality (like reply, delete, mark unread) that a sighted user might discover via swipe or long-press but which wouldn't otherwise be discoverable through VoiceOver's own gesture model.",
+      },
+      {
+        id: "q8",
+        prompt: "What does a custom rotor category, like \"Unread Messages,\" provide that the system's default rotor categories don't?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; custom rotors duplicate default categories exactly",
+          },
+          {
+            id: "b",
+            text: "Efficient, non-linear access to app-specific content structure (like jumping directly between only unread messages) that default categories (headings, links, form controls) don't naturally capture",
+          },
+          {
+            id: "c",
+            text: "Custom rotors can only be used for navigating between app screens, not content within a screen",
+          },
+          {
+            id: "d",
+            text: "Custom rotors replace the need for accessibility labels on individual elements",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Custom rotor categories mirror the efficient navigation default rotor categories provide, but tailored to an app's specific content structure that isn't naturally captured by the system's built-in categories.",
+      },
+      {
+        id: "q9",
+        prompt: "Why does a custom, hand-drawn control (built with `Canvas` drawing calls) need `accessibilityRepresentation`?",
+        options: [
+          {
+            id: "a",
+            text: "Custom-drawn controls automatically inherit full accessibility semantics from their drawing code",
+          },
+          {
+            id: "b",
+            text: "A hand-drawn control has no inherent accessibility semantics, since VoiceOver has no understanding of arbitrary drawn pixels, so a developer must explicitly substitute a semantically equivalent standard representation",
+          },
+          {
+            id: "c",
+            text: "`accessibilityRepresentation` is only needed for text-based custom views",
+          },
+          {
+            id: "d",
+            text: "Custom drawn controls cannot be made accessible under any circumstances",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because VoiceOver has no built-in understanding of raw drawn pixels, `accessibilityRepresentation` lets a developer substitute something like a standard `Slider` for accessibility purposes, even while the actual visual remains fully custom.",
+      },
+      {
+        id: "q10",
+        prompt: "Why might `accessibilitySortPriority` be needed even when every individual element already has a correct label?",
+        options: [
+          {
+            id: "a",
+            text: "Sort priority only affects visual layout, not VoiceOver announcement order",
+          },
+          {
+            id: "b",
+            text: "A view hierarchy's structural code order doesn't always match the intended logical reading order (especially with overlapping content or custom layouts), and an incorrect order can be disorienting even with perfectly labeled elements",
+          },
+          {
+            id: "c",
+            text: "`accessibilitySortPriority` is deprecated and has no effect",
+          },
+          {
+            id: "d",
+            text: "Reading order is always automatically correct regardless of code structure",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Even perfectly labeled elements can produce a confusing experience if announced in an illogical order (e.g., a checkout button announced before the total it applies to), which `accessibilitySortPriority` explicitly corrects.",
+      },
+      {
+        id: "q11",
+        prompt: "Why is testing only within the standard Dynamic Type range considered a meaningful gap?",
+        options: [
+          {
+            id: "a",
+            text: "Standard and accessibility size ranges behave identically in every layout",
+          },
+          {
+            id: "b",
+            text: "A layout that looks fine at standard sizes can break — with excessive wrapping, truncation, or overlapping content — at the largest accessibility sizes, which some users genuinely need to use the app at all",
+          },
+          {
+            id: "c",
+            text: "Accessibility size ranges are rarely used by any real users",
+          },
+          {
+            id: "d",
+            text: "Dynamic Type only affects font weight, not size",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Users relying on the accessibility size range genuinely need that larger text, so thorough testing must specifically include the largest accessibility sizes, not just confirm scaling works within the more commonly tested standard range.",
+      },
+      {
+        id: "q12",
+        prompt: "Why is respecting Reduce Motion described as a genuine accessibility requirement rather than a stylistic preference?",
+        options: [
+          {
+            id: "a",
+            text: "Reduce Motion has no real effect on user comfort or usability",
+          },
+          {
+            id: "b",
+            text: "For users sensitive to parallax or large-scale movement, ignoring this setting can cause genuine physical discomfort (motion sickness-like symptoms), making the app actively unpleasant or unusable",
+          },
+          {
+            id: "c",
+            text: "Reduce Motion only affects battery life, not user comfort",
+          },
+          {
+            id: "d",
+            text: "Reduce Motion is a deprecated setting no longer relevant on current iOS versions",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames Reduce Motion support as addressing a genuine physical sensory need, not unlike other accessibility accommodations, since ignoring it can cause real discomfort for sensitive users.",
+      },
+      {
+        id: "q13",
+        prompt: "What distinct visual accessibility needs do Reduce Transparency and Increase Contrast each address?",
+        options: [
+          {
+            id: "a",
+            text: "They address the exact same need and are functionally redundant",
+          },
+          {
+            id: "b",
+            text: "Reduce Transparency addresses legibility issues from blur/translucency effects, while Increase Contrast more broadly strengthens contrast for users with various visual impairments regardless of transparency specifically",
+          },
+          {
+            id: "c",
+            text: "Both settings exclusively affect dark mode appearance",
+          },
+          {
+            id: "d",
+            text: "Neither setting has any effect on text legibility",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "These are described as genuinely distinct needs — transparency-related legibility issues versus broader contrast needs — both worth explicit, separate support in an app's design.",
+      },
+      {
+        id: "q14",
+        prompt: "What design principle connects Differentiate Without Color to accessibility labels and traits, according to 70.13?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful connection between these concepts",
+          },
+          {
+            id: "b",
+            text: "In both cases, meaning should never depend solely on a single sensory channel (sight generally, or color specifically) — a redundant path to the same understanding should always be provided",
+          },
+          {
+            id: "c",
+            text: "Differentiate Without Color only applies to text content, never icons",
+          },
+          {
+            id: "d",
+            text: "Labels and traits are unrelated to color perception entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct parallel — just as VoiceOver users need a non-visual equivalent of visual information, users with color vision deficiencies need a non-color-dependent equivalent, following the same underlying \"no single sensory channel as sole carrier of meaning\" principle.",
+      },
+      {
+        id: "q15",
+        prompt: "What technique correctly addresses the minimum 44×44 point tap target requirement for a visually small icon button?",
+        options: [
+          {
+            id: "a",
+            text: "Increasing the icon's own visual size to fill the entire 44×44 area",
+          },
+          {
+            id: "b",
+            text: "Expanding the actual interactive frame beyond the icon's visible bounds via `.frame(minWidth:minHeight:)`, preserving both the small visual design and a genuinely usable tappable area",
+          },
+          {
+            id: "c",
+            text: "Tap target size only matters for text buttons, not icon buttons",
+          },
+          {
+            id: "d",
+            text: "Shrinking the tappable area to exactly match the small icon's visible bounds",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The key technique is separating visual size from tappable area size — expanding the interactive frame while keeping the icon visually small preserves both intended design and genuine usability.",
+      },
+      {
+        id: "q16",
+        prompt: "What do Switch Control and Voice Control have in common, according to 70.15?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated to VoiceOver's accessibility infrastructure",
+          },
+          {
+            id: "b",
+            text: "Both depend on the same underlying accessibility properties (labels, traits) already established for VoiceOver support, meaning correctly implemented labels benefit multiple assistive technologies simultaneously",
+          },
+          {
+            id: "c",
+            text: "Switch Control and Voice Control cannot be used on the same device",
+          },
+          {
+            id: "d",
+            text: "They require completely separate, redundant labeling work from VoiceOver support",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights that accessibility labeling work done for VoiceOver isn't VoiceOver-specific — it's foundational infrastructure that simultaneously benefits Switch Control and Voice Control users too.",
+      },
+      {
+        id: "q17",
+        prompt: "What specifically requires deliberate developer attention for Full Keyboard Access support?",
+        options: [
+          {
+            id: "a",
+            text: "Standard SwiftUI controls, which require extensive custom keyboard handling",
+          },
+          {
+            id: "b",
+            text: "Genuinely custom, non-standard controls, which need explicit `.focusable()` support and appropriate key-event handling, since standard controls generally participate in keyboard focus automatically",
+          },
+          {
+            id: "c",
+            text: "Full Keyboard Access requires no developer work of any kind",
+          },
+          {
+            id: "d",
+            text: "Only text fields need any keyboard accessibility consideration",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Standard controls generally work automatically with keyboard focus navigation, mirroring the pattern seen with `accessibilityRepresentation` (70.8) — it's custom controls that need explicit attention to participate correctly.",
+      },
+      {
+        id: "q18",
+        prompt: "How does the Accessibility Inspector's automated audit relate to `performAccessibilityAudit()` from section 67.9?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated tools serving different purposes",
+          },
+          {
+            id: "b",
+            text: "Both surface the same broad categories of accessibility issues (missing labels, contrast problems, undersized targets), with the Inspector providing interactive exploration during development and `performAccessibilityAudit()` providing an automated, continuously-run check within a UI test suite",
+          },
+          {
+            id: "c",
+            text: "`performAccessibilityAudit()` replaces the need for the Accessibility Inspector entirely",
+          },
+          {
+            id: "d",
+            text: "The Accessibility Inspector can only be used after an app has shipped, not during development",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly frames these as complementary tools covering the same issue categories at different points in the development workflow — interactive investigation versus automated, continuous test integration.",
+      },
+      {
+        id: "q19",
+        prompt: "Why does accurate self-declaration matter for Accessibility Nutrition Labels?",
+        options: [
+          {
+            id: "a",
+            text: "Self-declaration is purely a marketing formality with no real user impact",
+          },
+          {
+            id: "b",
+            text: "A user with a disability can use the labels to make an informed decision about whether an app is likely usable before investing time downloading it, so honest declaration (rather than over-claiming) directly affects users' ability to make good decisions",
+          },
+          {
+            id: "c",
+            text: "Nutrition Labels are automatically generated and cannot be inaccurate",
+          },
+          {
+            id: "d",
+            text: "Nutrition Labels only affect App Store search ranking, not actual user decisions",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that accurate declaration carries genuine weight — it lets users with disabilities make informed pre-download decisions, meaning over-claiming support undermines real user trust and decision-making.",
+      },
+      {
+        id: "q20",
+        prompt: "Why are captions and audio descriptions described as complementary rather than either being fully sufficient alone?",
+        options: [
+          {
+            id: "a",
+            text: "They serve identical purposes and either one alone provides complete media accessibility",
+          },
+          {
+            id: "b",
+            text: "Captions provide deaf/hard-of-hearing users access to spoken/sound content, while audio descriptions provide blind/low-vision users access to visually-conveyed information a video might never verbally state — each addresses a genuinely distinct need",
+          },
+          {
+            id: "c",
+            text: "Only audio descriptions are actually necessary; captions are optional",
+          },
+          {
+            id: "d",
+            text: "Captions and audio descriptions can never both be included in the same media asset",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Each accommodation addresses a distinct sensory need — captions for auditory content, audio descriptions for visual content not otherwise verbalized — making both necessary for genuinely comprehensive media accessibility, neither sufficient alone.",
+      },
+    ],
+  },
+  {
+    id: "localization-quiz",
+    title: "Localization",
+    description: "20 questions covering String Catalogs, translation states and comments, pluralization, device/width variations, AttributedString/Markdown, FormatStyle, locale-aware sorting, RTL layout, non-Gregorian calendars, DST edge cases, pseudolocalization, App Store metadata, and AI-assisted localization.",
+    relatedArticleSlug: "localization",
+    questions: [
+      {
+        id: "q1",
+        prompt: "How does automatic extraction into a String Catalog improve on the older, separate `.strings`-file-per-language workflow?",
+        options: [
+          {
+            id: "a",
+            text: "It requires more manual maintenance than the older approach",
+          },
+          {
+            id: "b",
+            text: "Xcode scans source code directly and keeps the String Catalog synchronized with actual usage, surfacing new strings needing translation and flagging strings whose source has changed, reducing bookkeeping burden",
+          },
+          {
+            id: "c",
+            text: "String Catalogs cannot detect when source strings have changed",
+          },
+          {
+            id: "d",
+            text: "Automatic extraction only works for English-language strings",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Rather than manually maintaining parallel per-language files that can drift out of sync, Xcode's automatic extraction keeps the String Catalog synchronized with actual source code usage.",
+      },
+      {
+        id: "q2",
+        prompt: "Why do developer-provided comments matter for strings like \"Close\" in a String Catalog?",
+        options: [
+          {
+            id: "a",
+            text: "Comments are purely optional metadata with no effect on translation quality",
+          },
+          {
+            id: "b",
+            text: "A short string like \"Close\" is genuinely ambiguous out of context (verb vs. adjective), and a translator working from an isolated string list has no way to disambiguate without the developer's comment",
+          },
+          {
+            id: "c",
+            text: "Comments are only needed for strings longer than 20 characters",
+          },
+          {
+            id: "d",
+            text: "Translators never need any additional context beyond the string itself",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Comments provide disambiguating context a translator couldn't otherwise infer from an isolated, out-of-context string, making them a high-leverage investment for genuinely ambiguous strings.",
+      },
+      {
+        id: "q3",
+        prompt: "Why is pluralization described as more complex than English speakers might assume?",
+        options: [
+          {
+            id: "a",
+            text: "All languages use the same singular/plural distinction as English",
+          },
+          {
+            id: "b",
+            text: "Languages like Arabic or Polish require several distinct grammatical plural categories depending on exact count (zero, one, few, many, other), unlike English's simple singular/plural distinction",
+          },
+          {
+            id: "c",
+            text: "Pluralization is not actually supported by String Catalogs",
+          },
+          {
+            id: "d",
+            text: "Only English requires plural handling; other languages use a single fixed form",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "String Catalogs' plural rule support exists specifically to handle the genuine linguistic complexity of languages requiring multiple distinct plural categories, not just English's simpler two-category system.",
+      },
+      {
+        id: "q4",
+        prompt: "What genuine limitation of treating localization purely as language translation do device and width variations address?",
+        options: [
+          {
+            id: "a",
+            text: "They have no real purpose beyond visual polish",
+          },
+          {
+            id: "b",
+            text: "The right wording for a UI element can depend on available space just as much as on language (e.g., \"Delete\" vs. \"Del\" in a compact-width context), and variations let this be handled through the same structured mechanism as language translation",
+          },
+          {
+            id: "c",
+            text: "Device variations only apply to watchOS, never other platforms",
+          },
+          {
+            id: "d",
+            text: "Width variations replace the need for pluralization rules entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Device and width variations acknowledge that appropriate wording depends on context beyond just language, letting space-driven wording differences be handled structurally rather than through ad hoc code.",
+      },
+      {
+        id: "q5",
+        prompt: "Why is Markdown-embedded localization in `AttributedString` an improvement over concatenating separately-localized string fragments?",
+        options: [
+          {
+            id: "a",
+            text: "Concatenation always produces grammatically correct results in every language",
+          },
+          {
+            id: "b",
+            text: "Concatenating fragments around fixed formatting can produce grammatically incorrect results in languages with different word order, while Markdown-embedded localization lets the entire sentence be translated as one coherent, naturally-ordered unit",
+          },
+          {
+            id: "c",
+            text: "`AttributedString` cannot actually contain any formatting information",
+          },
+          {
+            id: "d",
+            text: "Markdown formatting is not supported within localized strings at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Translating a whole sentence with embedded Markdown as one unit lets a translator naturally reorder words per their language's grammar while still preserving intended formatting like bold or links.",
+      },
+      {
+        id: "q6",
+        prompt: "What genuine correctness concern (not just cosmetic) does `FormatStyle`'s number/currency formatting address?",
+        options: [
+          {
+            id: "a",
+            text: "`FormatStyle` has no effect on how numbers are actually displayed",
+          },
+          {
+            id: "b",
+            text: "The decimal/grouping separator swap between locales (comma vs. period serving opposite roles) can cause a price to be genuinely misread as a different numeric value if handled incorrectly",
+          },
+          {
+            id: "c",
+            text: "Currency formatting only affects font choice, not actual numeric interpretation",
+          },
+          {
+            id: "d",
+            text: "This concern only applies to cryptocurrency values, not standard currencies",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "An incorrect separator convention isn't merely stylistic — it can cause a number to be misread as an entirely different value, making correct, automatic locale-aware formatting a genuine correctness matter.",
+      },
+      {
+        id: "q7",
+        prompt: "Why does naive, simple string comparison (raw Unicode codepoint comparison) frequently produce wrong sort orders?",
+        options: [
+          {
+            id: "a",
+            text: "Unicode codepoint comparison is always correct regardless of language",
+          },
+          {
+            id: "b",
+            text: "Accented characters, different alphabetical traditions, and locale-specific collation rules (like German umlaut sorting) all require locale-aware comparison to match what a user of that locale would consider correctly sorted",
+          },
+          {
+            id: "c",
+            text: "Sorting is identical across all languages and locales",
+          },
+          {
+            id: "d",
+            text: "`localizedStandardCompare` produces less accurate results than raw codepoint comparison",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Real-world text sorting requires accounting for locale-specific collation conventions that raw codepoint comparison ignores entirely, producing results that don't match actual linguistic expectations.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does consistently using leading/trailing (rather than left/right) in SwiftUI layout code matter for RTL support?",
+        options: [
+          {
+            id: "a",
+            text: "Leading/trailing and left/right behave identically in SwiftUI",
+          },
+          {
+            id: "b",
+            text: "Leading/trailing are direction-relative concepts SwiftUI automatically flips for RTL locales, while left/right would require manually detecting RTL and conditionally swapping positioning throughout the codebase",
+          },
+          {
+            id: "c",
+            text: "RTL support requires abandoning SwiftUI's layout system entirely",
+          },
+          {
+            id: "d",
+            text: "Left/right positioning automatically adapts to RTL without any special handling",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Using direction-aware primitives lets SwiftUI handle RTL mirroring automatically, avoiding the considerably more error-prone approach of manually detecting layout direction and conditionally swapping literal left/right positioning.",
+      },
+      {
+        id: "q9",
+        prompt: "Why shouldn't a company logo image be flipped for RTL locales, while a \"forward\" arrow should?",
+        options: [
+          {
+            id: "a",
+            text: "Neither image type should ever be flipped under any circumstances",
+          },
+          {
+            id: "b",
+            text: "Directional imagery like arrows conveys meaning through direction and should flip to preserve that meaning under RTL, while non-directional imagery like a logo has no directional meaning to preserve and would look wrong if mirrored",
+          },
+          {
+            id: "c",
+            text: "Logos are always automatically excluded from RTL mirroring by the system",
+          },
+          {
+            id: "d",
+            text: "Only text content can be mirrored for RTL; images are never affected",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This is a genuine per-image design judgment — directional meaning (like \"forward\" progress) should be preserved via mirroring, while non-directional imagery like logos has no such meaning to preserve and would look nonsensical if flipped.",
+      },
+      {
+        id: "q10",
+        prompt: "What problem can occur if an app hardcodes Gregorian-specific date logic?",
+        options: [
+          {
+            id: "a",
+            text: "Gregorian-specific logic works correctly for every user regardless of locale",
+          },
+          {
+            id: "b",
+            text: "It can produce genuinely incorrect or confusing results for users whose actual calendar preference (Islamic, Hebrew, Buddhist, Japanese era-based) differs from the Gregorian assumption",
+          },
+          {
+            id: "c",
+            text: "Non-Gregorian calendars are not actually supported by any Apple framework",
+          },
+          {
+            id: "d",
+            text: "This only affects apps distributed outside the United States",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Properly using `Calendar` and locale-aware formatting respects users' actual calendar preferences, rather than silently imposing a Western-centric Gregorian assumption on every user.",
+      },
+      {
+        id: "q11",
+        prompt: "Why are DST transition bugs described as a classic, recurring category of subtle date/time bug?",
+        options: [
+          {
+            id: "a",
+            text: "DST transitions occur constantly throughout the year, making them easy to test",
+          },
+          {
+            id: "b",
+            text: "They only manifest during specific, narrow windows when a transition actually occurs (twice a year in DST-observing regions), meaning code can work correctly for 363 days while still containing a genuine bug",
+          },
+          {
+            id: "c",
+            text: "DST transitions have been completely eliminated on modern iOS devices",
+          },
+          {
+            id: "d",
+            text: "DST bugs only affect apps that don't use `Calendar` at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because DST transitions occur in narrow, infrequent windows, bugs related to them can remain hidden during most testing and only surface during those specific boundary conditions, making deliberate DST-boundary testing necessary.",
+      },
+      {
+        id: "q12",
+        prompt: "What does the naive approach of treating a time zone as a fixed offset (e.g., subtracting a fixed number of hours) fail to account for?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; fixed-offset math is always correct for time zone handling",
+          },
+          {
+            id: "b",
+            text: "DST transitions, which create genuinely ambiguous (occurring twice) or nonexistent (skipped) hours that fixed-offset arithmetic doesn't correctly handle",
+          },
+          {
+            id: "c",
+            text: "Fixed-offset math only fails for non-Gregorian calendars, not DST",
+          },
+          {
+            id: "d",
+            text: "Time zones never actually have variable offsets",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A time zone's offset isn't actually fixed year-round in DST-observing regions, so naive fixed-offset math breaks specifically during transition windows, unlike proper `Calendar`/`TimeZone`-aware date arithmetic.",
+      },
+      {
+        id: "q13",
+        prompt: "What is the genuine value of pseudolocalization testing, according to 71.13?",
+        options: [
+          {
+            id: "a",
+            text: "It provides final, ready-to-ship translations for every supported language",
+          },
+          {
+            id: "b",
+            text: "It catches localization-readiness problems (like layout breaking under longer text) before real translations even exist, since layouts that break under pseudolocalized text would likely also break under real, similarly-lengthened translations",
+          },
+          {
+            id: "c",
+            text: "Pseudolocalization can only be used after all real translations are already complete",
+          },
+          {
+            id: "d",
+            text: "It has no relationship to actual translation length or layout behavior",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Pseudolocalization deliberately expands string length and alters characters to surface layout/hardcoding issues early, well before real translation work is complete or even commissioned.",
+      },
+      {
+        id: "q14",
+        prompt: "What does pseudolocalization typically do to strings to surface bugs?",
+        options: [
+          {
+            id: "a",
+            text: "It translates strings into a randomly selected real language",
+          },
+          {
+            id: "b",
+            text: "It deliberately expands string length (since translations are often longer than English) and replaces characters with accented look-alikes, without requiring translation into an actual target language",
+          },
+          {
+            id: "c",
+            text: "It removes all text from the UI entirely",
+          },
+          {
+            id: "d",
+            text: "It converts all strings to uppercase only",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section describes pseudolocalization as artificially lengthening strings and substituting accented characters specifically to surface truncation, wrapping, and hardcoded-string issues without needing real translations.",
+      },
+      {
+        id: "q15",
+        prompt: "Why is App Store metadata localization described as a genuinely distinct localization surface from in-app String Catalog work?",
+        options: [
+          {
+            id: "a",
+            text: "They are actually the same thing, managed through the same Xcode interface",
+          },
+          {
+            id: "b",
+            text: "App Store Connect separately supports localizing the store listing itself (name, subtitle, description, keywords, screenshots) per market, distinct from and in addition to in-app string localization",
+          },
+          {
+            id: "c",
+            text: "App Store metadata cannot be localized under any circumstances",
+          },
+          {
+            id: "d",
+            text: "In-app localization automatically localizes the App Store listing as well",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Metadata localization happens through App Store Connect, covering the store listing itself, which is a genuinely separate concern from in-app content localized via the String Catalog.",
+      },
+      {
+        id: "q16",
+        prompt: "Why can even a perfectly localized in-app experience underperform in a given market, according to 71.14?",
+        options: [
+          {
+            id: "a",
+            text: "In-app localization quality has no relationship to App Store performance",
+          },
+          {
+            id: "b",
+            text: "An app's discoverability and conversion rate depend heavily on whether the store listing itself is properly localized — a perfectly localized in-app experience can't help if the untranslated store listing fails to convince someone to download it in the first place",
+          },
+          {
+            id: "c",
+            text: "App Store algorithms ignore metadata localization entirely",
+          },
+          {
+            id: "d",
+            text: "Store listings are automatically translated regardless of developer action",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights that store listing localization directly affects discoverability and conversion, meaning in-app localization quality alone doesn't guarantee good market performance if the listing itself remains untranslated.",
+      },
+      {
+        id: "q17",
+        prompt: "What state do AI-drafted translations receive within the String Catalog, according to 71.15?",
+        options: [
+          {
+            id: "a",
+            text: "They are automatically marked as fully \"translated\" and final, requiring no review",
+          },
+          {
+            id: "b",
+            text: "The same \"needs review\" state that any other unreviewed translation would carry, integrating AI assistance into the existing review workflow rather than bypassing it",
+          },
+          {
+            id: "c",
+            text: "AI-drafted translations receive no state metadata at all",
+          },
+          {
+            id: "d",
+            text: "They automatically overwrite any existing human-reviewed translations",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Placing AI-drafted translations in the same \"needs review\" state as any other unreviewed translation ensures they go through the existing review workflow rather than shipping unreviewed.",
+      },
+      {
+        id: "q18",
+        prompt: "What is the genuine value AI-assisted localization provides, according to 71.15 and the earlier discussion in section 61.5?",
+        options: [
+          {
+            id: "a",
+            text: "It fully replaces the need for any human translator review",
+          },
+          {
+            id: "b",
+            text: "It accelerates the first draft of translation work, while the human review step remains essential before any translation, AI-drafted or otherwise, actually ships",
+          },
+          {
+            id: "c",
+            text: "AI-assisted localization can only be used for pluralization rules, not general translation",
+          },
+          {
+            id: "d",
+            text: "It eliminates the need for translation states and comments entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Both sections consistently frame AI-assisted localization as accelerating the first draft, not eliminating the human review discipline that remains necessary before shipping any translation.",
+      },
+      {
+        id: "q19",
+        prompt: "How does `Date.FormatStyle` differ from manually constructing date format strings per locale (the older `DateFormatter` pattern)?",
+        options: [
+          {
+            id: "a",
+            text: "Both approaches require identical manual, locale-specific format string knowledge",
+          },
+          {
+            id: "b",
+            text: "`Date.FormatStyle` automatically adapts component order, separators, and calendar conventions to the current locale without the developer needing to manually encode locale-specific formatting knowledge",
+          },
+          {
+            id: "c",
+            text: "`Date.FormatStyle` only works for the U.S. locale and requires manual configuration for all others",
+          },
+          {
+            id: "d",
+            text: "`DateFormatter` produces more accurate results than `FormatStyle` in every case",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`Date.FormatStyle`'s automatic, locale-driven formatting handles subtle conventions correctly without requiring the app's own code to encode locale-specific formatting logic manually.",
+      },
+      {
+        id: "q20",
+        prompt: "What broader theme connects String Catalog comments (71.2), pseudolocalization (71.13), and App Store metadata localization (71.14)?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated aspects of shipping a localized app",
+          },
+          {
+            id: "b",
+            text: "Each addresses a distinct but genuinely important dimension of localization quality — translator context, early bug detection, and store discoverability — that goes beyond simply translating in-app string text",
+          },
+          {
+            id: "c",
+            text: "All three exclusively concern date and number formatting",
+          },
+          {
+            id: "d",
+            text: "These three topics only matter for RTL languages specifically",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "These topics each highlight that genuinely thorough localization extends beyond simple text translation — providing translator context, catching layout issues early, and ensuring the store listing itself is properly localized are all necessary, complementary dimensions of quality localization.",
       },
     ],
   },

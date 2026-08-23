@@ -613,6 +613,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("ui-testing.md"),
   },
+  {
+    slug: "debugging",
+    title: "Debugging",
+    description:
+      "Breakpoints and actions, the variables view and stepping, LLDB's po/p/v and expression, async/task debugging, reading common crash types and watchdog terminations, the View Hierarchy and Memory Graph debuggers, Zombie Objects, sanitizers, Logger/os_log, Console.app, symbolication, sysdiagnose, and debugging extensions.",
+    tags: ["debugging", "lldb", "instruments"],
+    publishedAt: "2026-08-16",
+    content: loadBody("debugging.md"),
+  },
+  {
+    slug: "performance",
+    title: "Performance",
+    description:
+      "Measuring before optimizing, Instruments' Time Profiler/Allocations/Leaks/Animation Hitches/System Trace, os_signpost, launch time phases, scroll performance and frame budgets, ProMotion, image downsampling, main thread hangs, jetsam limits, binary size, MetricKit, Organizer, energy impact, and performance budgets.",
+    tags: ["performance", "instruments", "metrickit"],
+    publishedAt: "2026-08-16",
+    content: loadBody("performance.md"),
+  },
+  {
+    slug: "accessibility",
+    title: "Accessibility",
+    description:
+      "VoiceOver navigation and testing, accessibility labels/values/hints/traits, grouping and custom actions, the rotor, accessibilityRepresentation, reading order, Dynamic Type, Reduce Motion/Transparency, Increase Contrast, Differentiate Without Color, tap target sizes, Switch/Voice Control, Full Keyboard Access, the Accessibility Inspector, Nutrition Labels, and media captions.",
+    tags: ["accessibility", "voiceover", "dynamic-type"],
+    publishedAt: "2026-08-16",
+    content: loadBody("accessibility.md"),
+  },
+  {
+    slug: "localization",
+    title: "Localization",
+    description:
+      "String Catalogs and extraction, translation states and comments, pluralization, device/width variations, AttributedString/Markdown localization, FormatStyle for dates and numbers, locale-aware sorting, RTL layout and mirroring, non-Gregorian calendars, time zone/DST edge cases, pseudolocalization, App Store metadata, and AI-assisted localization.",
+    tags: ["localization", "internationalization", "rtl"],
+    publishedAt: "2026-08-16",
+    content: loadBody("localization.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {
