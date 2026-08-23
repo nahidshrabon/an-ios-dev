@@ -144,9 +144,9 @@ export const roadmap: RoadmapPart[] = [
     id: "part-10",
     title: "Quality",
     sections: [
-      section(65, "Testing Foundations"),
-      section(66, "Advanced Testing"),
-      section(67, "UI Testing"),
+      section(65, "Testing Foundations", "testing-foundations"),
+      section(66, "Advanced Testing", "advanced-testing"),
+      section(67, "UI Testing", "ui-testing"),
       section(68, "Debugging"),
       section(69, "Performance"),
       section(70, "Accessibility"),

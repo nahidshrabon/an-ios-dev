@@ -586,6 +586,33 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("realitykit-arkit-and-visionos.md"),
   },
+  {
+    slug: "testing-foundations",
+    title: "Testing Foundations",
+    description:
+      "Why tests exist, Swift Testing's @Test/#expect/#require, @Suite grouping, parameterized and zipped/cross-product tests, test traits and tags, .serialized/.timeLimit, testing async code, confirmation() for callbacks, writing testable code, mock services, XCTest literacy, and incremental migration.",
+    tags: ["testing", "swift-testing", "xctest"],
+    publishedAt: "2026-08-16",
+    content: loadBody("testing-foundations.md"),
+  },
+  {
+    slug: "advanced-testing",
+    title: "Advanced Testing",
+    description:
+      "Test doubles beyond mocks, testing actors and isolated code, TestClock, snapshot testing setup and cross-device considerations, testing SwiftUI/@Observable state and App Intents, contract testing, recorded fixtures vs. live integration, honest code coverage, property-based and mutation testing, test plans, and sharding.",
+    tags: ["testing", "swift-testing", "snapshot-testing"],
+    publishedAt: "2026-08-16",
+    content: loadBody("advanced-testing.md"),
+  },
+  {
+    slug: "ui-testing",
+    title: "UI Testing",
+    description:
+      "XCUITest setup and recording, element queries and predicates, accessibility identifiers as stable selectors, waiting strategies, handling system permission dialogs, launch arguments for test-only state, the page object pattern, diagnosing flaky UI tests, the accessibility audit API, and screenshots in test reports.",
+    tags: ["testing", "xcuitest", "ui-testing"],
+    publishedAt: "2026-08-16",
+    content: loadBody("ui-testing.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

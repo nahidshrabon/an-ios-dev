@@ -17554,6 +17554,1470 @@ export const quizzes: Quiz[] = [
       },
     ],
   },
+  {
+    id: "testing-foundations-quiz",
+    title: "Testing Foundations",
+    description: "20 questions covering why tests exist, Swift Testing's @Test/#expect/#require, @Suite, parameterized tests, traits and tags, async testing, confirmation(), testable code design, mocks, and XCTest migration.",
+    relatedArticleSlug: "testing-foundations",
+    questions: [
+      {
+        id: "q1",
+        prompt: "According to 65.1, what is the actual argument for why tests exist?",
+        options: [
+          {
+            id: "a",
+            text: "To prove that code works correctly at the exact moment it was written",
+          },
+          {
+            id: "b",
+            text: "To provide confidence that a future change hasn't silently broken something that used to work, catching regressions automatically rather than relying on manual re-verification",
+          },
+          {
+            id: "c",
+            text: "Tests exist purely to satisfy code coverage metrics",
+          },
+          {
+            id: "d",
+            text: "Tests exist only to document how code is supposed to behave, with no functional value",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames tests as an investment in future changeability — their real value is catching regressions when code changes later, not merely confirming current correctness.",
+      },
+      {
+        id: "q2",
+        prompt: "What makes a test \"genuinely valuable\" rather than merely present, according to 65.1?",
+        options: [
+          {
+            id: "a",
+            text: "Whether the test technically exists for a given piece of code",
+          },
+          {
+            id: "b",
+            text: "Whether the test would genuinely fail if the behavior it's protecting were actually broken",
+          },
+          {
+            id: "c",
+            text: "Whether the test has a long, descriptive name",
+          },
+          {
+            id: "d",
+            text: "Whether the test runs quickly",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit that a test's real value comes from whether it would actually catch a genuine regression, not simply whether some test exists nominally covering that code.",
+      },
+      {
+        id: "q3",
+        prompt: "What is distinctive about `#expect`'s failure behavior compared to a test that stops at the first failure?",
+        options: [
+          {
+            id: "a",
+            text: "`#expect` immediately halts test execution on any failure",
+          },
+          {
+            id: "b",
+            text: "`#expect` records a failure but continues executing the test, letting a single test surface multiple independent problems in one run",
+          },
+          {
+            id: "c",
+            text: "`#expect` never actually reports failures, only warnings",
+          },
+          {
+            id: "d",
+            text: "`#expect` can only be used once per test function",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`#expect`'s continue-on-failure behavior lets independent assertions within one test all be evaluated and reported, rather than stopping at the first failure and requiring multiple test runs to discover each issue.",
+      },
+      {
+        id: "q4",
+        prompt: "When is `#require` the more appropriate choice over `#expect`?",
+        options: [
+          {
+            id: "a",
+            text: "`#require` should always be used instead of `#expect` in every situation",
+          },
+          {
+            id: "b",
+            text: "When a subsequent line of test code genuinely cannot proceed meaningfully without the requirement holding true, such as unwrapping an optional that later code depends on",
+          },
+          {
+            id: "c",
+            text: "`#require` and `#expect` are functionally identical with no meaningful distinction",
+          },
+          {
+            id: "d",
+            text: "`#require` should only be used for testing UI code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`#require` stops execution immediately when continuing would be meaningless (like proceeding after a failed unwrap), while `#expect` suits genuinely independent assertions.",
+      },
+      {
+        id: "q5",
+        prompt: "Why can `@Suite` test types be structs rather than requiring class inheritance from `XCTestCase`?",
+        options: [
+          {
+            id: "a",
+            text: "Swift Testing does not actually support struct-based test suites",
+          },
+          {
+            id: "b",
+            text: "Swift Testing doesn't rely on XCTest's inheritance-based test discovery mechanism, and each test method gets a fresh instance of the suite type, providing clean isolation without explicit setUp/tearDown",
+          },
+          {
+            id: "c",
+            text: "Structs are required because classes cannot contain test methods",
+          },
+          {
+            id: "d",
+            text: "`@Suite` only works with classes, never structs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because Swift Testing doesn't depend on `XCTestCase` inheritance, suites can be structs, with each test getting a fresh instance automatically providing test isolation for properties like shared `let` values.",
+      },
+      {
+        id: "q6",
+        prompt: "What problem does `@Test(arguments:)` parameterized testing solve?",
+        options: [
+          {
+            id: "a",
+            text: "It eliminates the need for any assertions within a test",
+          },
+          {
+            id: "b",
+            text: "It avoids the repetition of writing nearly-identical test functions differing only in input value, covering multiple cases with one maintained test body",
+          },
+          {
+            id: "c",
+            text: "Parameterized tests can only test a single input value at a time",
+          },
+          {
+            id: "d",
+            text: "It replaces the need for `#expect` entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Rather than writing separate near-duplicate test functions for each input value, one parameterized test body covers all provided argument values, with each reported as an independent pass/fail result.",
+      },
+      {
+        id: "q7",
+        prompt: "What is the difference between zipped and cross-product argument testing?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical mechanisms with different names",
+          },
+          {
+            id: "b",
+            text: "Zipping iterates two collections together element by element for meaningfully related pairs, while cross-product testing exercises every combination of values from multiple collections",
+          },
+          {
+            id: "c",
+            text: "Cross-product testing can only use a single collection",
+          },
+          {
+            id: "d",
+            text: "Zipped testing always produces more test invocations than cross-product testing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Zipping is appropriate for specifically related input pairs, while cross-product testing is appropriate when every combination of independent dimensions needs coverage — choosing the wrong one either under-tests or creates meaningless pairings.",
+      },
+      {
+        id: "q8",
+        prompt: "What does the `.disabled` trait provide that simply commenting out a failing test does not?",
+        options: [
+          {
+            id: "a",
+            text: "No meaningful difference; both approaches are equivalent",
+          },
+          {
+            id: "b",
+            text: "The disabled test remains visible in test output as explicitly skipped (with an optional documented reason), rather than being silently absent from the test run entirely",
+          },
+          {
+            id: "c",
+            text: "`.disabled` tests still execute and can still fail",
+          },
+          {
+            id: "d",
+            text: "`.disabled` permanently deletes the test from the codebase",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A `.disabled` test with a documented reason stays visible as skipped in test output, providing structured, traceable status information that commenting out code entirely would lose.",
+      },
+      {
+        id: "q9",
+        prompt: "What orthogonal categorization capability do tags provide, beyond suite-based grouping?",
+        options: [
+          {
+            id: "a",
+            text: "Tags can only be used within a single suite, never across suites",
+          },
+          {
+            id: "b",
+            text: "Tags let tests be categorized along independent dimensions (like `.slow` or `.networking`), enabling selective test runs that include or exclude tests matching specific tags regardless of suite structure",
+          },
+          {
+            id: "c",
+            text: "Tags replace the need for `@Suite` entirely",
+          },
+          {
+            id: "d",
+            text: "Tags can only be applied to entire test targets, never individual tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because a test's suite membership and its tags are independent classification dimensions, tags enable filtering (like excluding `.slow` tests for fast CI feedback) that would be awkward to achieve through suite structure alone.",
+      },
+      {
+        id: "q10",
+        prompt: "Why does `.serialized` exist, given that Swift Testing runs tests in parallel by default?",
+        options: [
+          {
+            id: "a",
+            text: "Parallel execution is always unsafe and should never be used",
+          },
+          {
+            id: "b",
+            text: "Tests that share genuinely stateful resources (a shared database connection, a mutable singleton) need serialization to avoid data races that concurrent access would otherwise produce",
+          },
+          {
+            id: "c",
+            text: "`.serialized` is required for every test suite regardless of shared state",
+          },
+          {
+            id: "d",
+            text: "`.serialized` only affects how test results are displayed, not execution order",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`.serialized` is a deliberate, explicit opt-out from default parallel execution, needed specifically when tests share mutable state that isn't safe for concurrent access — the same class of concern as general concurrency data races.",
+      },
+      {
+        id: "q11",
+        prompt: "How does testing async code in Swift Testing compare to XCTest's older `XCTestExpectation`/`wait(for:timeout:)` pattern?",
+        options: [
+          {
+            id: "a",
+            text: "Swift Testing requires even more boilerplate than XCTestExpectation",
+          },
+          {
+            id: "b",
+            text: "Because `@Test` functions can themselves be `async`, testing an async function is as direct as `await`-ing it and asserting afterward, without needing separate expectation/waiting infrastructure",
+          },
+          {
+            id: "c",
+            text: "Swift Testing cannot test async code at all",
+          },
+          {
+            id: "d",
+            text: "XCTestExpectation and Swift Testing's async support are functionally identical with no simplification",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Swift Testing's `async` test functions let async code under test be awaited directly, a meaningful simplification over XCTest's expectation-based waiting pattern for the common case.",
+      },
+      {
+        id: "q12",
+        prompt: "What gap does `confirmation()` address?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for `#expect` in all synchronous tests",
+          },
+          {
+            id: "b",
+            text: "It provides a way to assert a callback was invoked for code using completion handlers or delegate callbacks rather than async/await, bridging older callback-based APIs into Swift Testing's assertion model",
+          },
+          {
+            id: "c",
+            text: "`confirmation()` can only be used with fully async, non-callback-based APIs",
+          },
+          {
+            id: "d",
+            text: "It has no relationship to testing callback-based code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`confirmation()` specifically bridges callback-based APIs (not yet migrated to async/await) into Swift Testing, letting a test verify that a callback was actually invoked.",
+      },
+      {
+        id: "q13",
+        prompt: "What earlier curriculum example does the section compare `confirmation()` to?",
+        options: [
+          {
+            id: "a",
+            text: "`Transaction.updates`'s AsyncSequence pattern",
+          },
+          {
+            id: "b",
+            text: "`withCheckedContinuation` bridging a callback-based API into async/await, as seen in the PhotoKit example from section 55.2",
+          },
+          {
+            id: "c",
+            text: "`NLEmbedding`'s similarity search",
+          },
+          {
+            id: "d",
+            text: "`CATransaction`'s atomic batching",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct parallel between `confirmation()` bridging callbacks into test assertions and `withCheckedContinuation` bridging callback-based production APIs into async/await, as seen with PhotoKit in 55.2.",
+      },
+      {
+        id: "q14",
+        prompt: "Why are pure functions inherently easier to test than code entangled with global state?",
+        options: [
+          {
+            id: "a",
+            text: "Pure functions cannot actually be tested with Swift Testing",
+          },
+          {
+            id: "b",
+            text: "A pure function's output is determined entirely by its input with no hidden dependencies, so a test simply calls it with known inputs and asserts on the returned output",
+          },
+          {
+            id: "c",
+            text: "Pure functions always run faster than impure functions",
+          },
+          {
+            id: "d",
+            text: "Pure functions require special test infrastructure not needed for other code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because pure functions have no hidden dependencies on external or global state, testing them is as simple as providing known inputs and checking the output, without needing to manage or mock any implicit context.",
+      },
+      {
+        id: "q15",
+        prompt: "What benefit does favoring pure functions provide beyond testability, according to 65.12?",
+        options: [
+          {
+            id: "a",
+            text: "No benefit beyond testability exists",
+          },
+          {
+            id: "b",
+            text: "Easier reasoning about correctness and safer use in concurrent contexts, since there's no shared mutable state to race on",
+          },
+          {
+            id: "c",
+            text: "Pure functions eliminate the need for any type checking",
+          },
+          {
+            id: "d",
+            text: "Pure functions cannot be used within SwiftUI views",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section notes that favoring pure functions is a genuine design principle with benefits extending beyond testing, including easier correctness reasoning and safety in concurrent contexts, connecting back to Part 2's concurrency material.",
+      },
+      {
+        id: "q16",
+        prompt: "How does dependency injection (65.13) make code like `ProfileViewModel` testable?",
+        options: [
+          {
+            id: "a",
+            text: "By hardcoding a specific network implementation directly into the view model",
+          },
+          {
+            id: "b",
+            text: "By depending on a protocol (like `UserServicing`) rather than a concrete implementation, allowing a test to substitute a fast, deterministic mock in place of the real network-dependent service",
+          },
+          {
+            id: "c",
+            text: "Dependency injection has no relationship to testability",
+          },
+          {
+            id: "d",
+            text: "By requiring every dependency to be a global singleton",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Depending on an abstraction (protocol) rather than a concrete implementation is what allows tests to substitute mock implementations, directly building on the dependency injection principles from section 47.",
+      },
+      {
+        id: "q17",
+        prompt: "What can a mock service built from the same protocol as production code do that a real implementation typically cannot conveniently do in a test?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing different; mocks and real implementations behave identically",
+          },
+          {
+            id: "b",
+            text: "Deterministically control exactly what is returned, including simulating specific error conditions, without the flakiness or slowness genuine network calls would introduce",
+          },
+          {
+            id: "c",
+            text: "Mocks can only return successful results, never simulate failures",
+          },
+          {
+            id: "d",
+            text: "Mocks require an active network connection to function",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A mock conforming to the same protocol lets a test control exact return values and error conditions deterministically, avoiding the real network's inherent slowness and flakiness during test runs.",
+      },
+      {
+        id: "q18",
+        prompt: "Why does the section argue that XCTest literacy remains practically necessary despite Swift Testing being the modern framework?",
+        options: [
+          {
+            id: "a",
+            text: "XCTest has been completely removed from the platform",
+          },
+          {
+            id: "b",
+            text: "A great deal of existing Swift codebases, and UI testing specifically, still use `XCTestCase` subclasses, making basic XCTest literacy necessary for working in and around legacy test code",
+          },
+          {
+            id: "c",
+            text: "Swift Testing cannot run on any current iOS version",
+          },
+          {
+            id: "d",
+            text: "XCTest and Swift Testing use identical syntax, so no separate literacy is needed",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because existing test suites (especially UI test targets, covered in section 67) commonly still rely on XCTest's class-inheritance pattern, understanding it remains a practical necessity even for developers primarily writing new Swift Testing code.",
+      },
+      {
+        id: "q19",
+        prompt: "What does XCTest/Swift Testing interoperability (introduced in iOS 27) enable, according to 65.16?",
+        options: [
+          {
+            id: "a",
+            text: "It requires immediately converting all XCTest code to Swift Testing before any benefit is gained",
+          },
+          {
+            id: "b",
+            text: "Running XCTest-based and Swift Testing-based tests within the same test target and test run, letting a project incrementally adopt Swift Testing without a disruptive full migration",
+          },
+          {
+            id: "c",
+            text: "It prevents XCTest and Swift Testing from ever coexisting in the same project",
+          },
+          {
+            id: "d",
+            text: "It only allows one framework to be used per Xcode project, never both",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Interoperability is what makes gradual migration practical — new tests can be written in Swift Testing while existing XCTest tests continue running unmodified, side by side, in the same project.",
+      },
+      {
+        id: "q20",
+        prompt: "What does the section recommend as a practical, incremental XCTest migration strategy?",
+        options: [
+          {
+            id: "a",
+            text: "Convert every existing XCTest test to Swift Testing immediately, regardless of whether it's being modified",
+          },
+          {
+            id: "b",
+            text: "Write all new tests in Swift Testing going forward, converting existing tests opportunistically (when already being modified) rather than as a dedicated, all-at-once conversion effort",
+          },
+          {
+            id: "c",
+            text: "Leave all existing tests in XCTest permanently and never write new tests in Swift Testing",
+          },
+          {
+            id: "d",
+            text: "Only convert tests that are currently failing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends an opportunistic strategy — new tests in Swift Testing, converting existing tests when already being touched for other reasons, and prioritizing genuinely high-value conversions (like tests that would benefit from parameterization) over converting stable, already-working tests purely for consistency.",
+      },
+    ],
+  },
+  {
+    id: "advanced-testing-quiz",
+    title: "Advanced Testing",
+    description: "20 questions covering test double taxonomy, testing actors, TestClock, snapshot testing, testing SwiftUI/@Observable and App Intents, contract testing, fixtures vs. live integration, code coverage, property-based and mutation testing, and test plans/sharding.",
+    relatedArticleSlug: "advanced-testing",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What distinguishes a \"fake\" from a \"stub\" among test doubles?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical terms for the same concept",
+          },
+          {
+            id: "b",
+            text: "A fake provides a genuinely working, simplified implementation (like an in-memory database), while a stub simply returns canned responses with no real underlying behavior",
+          },
+          {
+            id: "c",
+            text: "A stub verifies interactions, while a fake never does",
+          },
+          {
+            id: "d",
+            text: "Fakes can only be used for network-related tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A stub returns fixed, canned responses with no real logic, while a fake is a simplified but genuinely functioning implementation, useful when a test's logic depends on realistic, stateful behavior.",
+      },
+      {
+        id: "q2",
+        prompt: "According to 66.1, what kind of test double is the `MockUserService` example from section 65.14, despite its name?",
+        options: [
+          {
+            id: "a",
+            text: "A spy, since it wraps a real object",
+          },
+          {
+            id: "b",
+            text: "Really a stub, since it returns a canned response with no verification of how it was called",
+          },
+          {
+            id: "c",
+            text: "A fake, since it has genuinely working internal logic",
+          },
+          {
+            id: "d",
+            text: "None of the test double categories apply to it",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section notes that despite being named \"Mock,\" the earlier example is technically a stub under this more precise taxonomy, since it just returns a fixed value without verifying interactions.",
+      },
+      {
+        id: "q3",
+        prompt: "Why can a test function properly `await` calls into an actor's isolated methods without any special testing infrastructure?",
+        options: [
+          {
+            id: "a",
+            text: "Actor isolation rules are disabled within test code",
+          },
+          {
+            id: "b",
+            text: "Swift's compiler-enforced isolation checking applies to test code exactly as it would to production code, and an async test function can cross isolation boundaries like any other async calling context",
+          },
+          {
+            id: "c",
+            text: "Actors cannot be tested at all under Swift Testing",
+          },
+          {
+            id: "d",
+            text: "Test code always runs on the same isolation domain as the actor being tested",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because actor isolation is compiler-enforced rather than a runtime convention, tests get the same correctness guarantees production code does, with no way to accidentally bypass isolation checking in test code.",
+      },
+      {
+        id: "q4",
+        prompt: "What does `TestClock` allow a test to do?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing different from waiting on the real system clock",
+          },
+          {
+            id: "b",
+            text: "Advance simulated time explicitly and instantly, rather than the test actually waiting for real wall-clock time to pass",
+          },
+          {
+            id: "c",
+            text: "`TestClock` can only be used for testing UI animations, not async delays",
+          },
+          {
+            id: "d",
+            text: "`TestClock` disables all time-related code during tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`TestClock` lets a test advance simulated time instantly, letting time-dependent behavior (like a debounce) be tested in milliseconds rather than genuinely waiting real seconds.",
+      },
+      {
+        id: "q5",
+        prompt: "What must be true of production code for `TestClock` to actually be usable in testing it?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; `TestClock` works with any code regardless of how it accesses time",
+          },
+          {
+            id: "b",
+            text: "The production code must be written against the generic `Clock` protocol rather than hardcoding calls using the system's real clock directly",
+          },
+          {
+            id: "c",
+            text: "Production code must avoid using `Task.sleep` entirely",
+          },
+          {
+            id: "d",
+            text: "`TestClock` requires the production code to be written in Objective-C",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This directly extends the dependency injection principle from 65.13 applied to time — code must depend on the abstract `Clock` protocol, not a hardcoded real-clock dependency, for `TestClock` substitution to work.",
+      },
+      {
+        id: "q6",
+        prompt: "What class of bug does snapshot testing catch that purely assertion-based tests would miss?",
+        options: [
+          {
+            id: "a",
+            text: "Logic errors in a view model's computed properties",
+          },
+          {
+            id: "b",
+            text: "Visual regressions, like an accidental layout change that visually breaks a view while all underlying data values remain technically correct",
+          },
+          {
+            id: "c",
+            text: "Network timeout errors",
+          },
+          {
+            id: "d",
+            text: "Memory leaks in view controllers",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Snapshot testing compares actual rendered pixels, catching visual regressions that assertion-based tests checking only individual property values would completely miss.",
+      },
+      {
+        id: "q7",
+        prompt: "Why does snapshot testing require deliberate configuration across devices and OS versions?",
+        options: [
+          {
+            id: "a",
+            text: "Snapshot tests are unaffected by device or OS differences",
+          },
+          {
+            id: "b",
+            text: "Rendering can genuinely differ across device sizes, OS versions, and appearance settings, so an unconfigured setup risks false failures from environmental differences rather than genuine regressions",
+          },
+          {
+            id: "c",
+            text: "Snapshot testing only works on a single, fixed device configuration by design",
+          },
+          {
+            id: "d",
+            text: "OS version differences never affect font rendering or layout metrics",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because rendering can subtly differ across environments, a well-run snapshot testing setup pins generation and comparison to a consistent configuration (often via CI) to avoid false failures purely from environmental drift.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does the section prefer testing an `@Observable` view model's logic over inspecting SwiftUI view structure directly?",
+        options: [
+          {
+            id: "a",
+            text: "View structure inspection is always faster to write",
+          },
+          {
+            id: "b",
+            text: "Testing underlying logic is more stable and robust, since view structure inspection tends to be brittle and tightly coupled to SwiftUI's internal view representation, while business logic worth verifying lives in the view model",
+          },
+          {
+            id: "c",
+            text: "SwiftUI views cannot be tested in any way",
+          },
+          {
+            id: "d",
+            text: "`@Observable` view models cannot be tested independently of their views",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames logic-focused testing as more robust and stable than view structure inspection, reserving visual verification for snapshot testing (66.4) instead.",
+      },
+      {
+        id: "q9",
+        prompt: "Why is testing `@Observable` state changes described as comparatively direct?",
+        options: [
+          {
+            id: "a",
+            text: "`@Observable` types require a specialized SwiftUI test harness to instantiate",
+          },
+          {
+            id: "b",
+            text: "`@Observable` types are plain Swift objects with normal properties, so a test can simply create an instance, mutate state, and assert on resulting values without SwiftUI-specific testing infrastructure",
+          },
+          {
+            id: "c",
+            text: "`@Observable` objects cannot be tested outside of a running app",
+          },
+          {
+            id: "d",
+            text: "Testing `@Observable` state requires snapshot testing exclusively",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `@Observable` objects are ordinary Swift objects from a testing perspective, no special view-hosting or observation-tracking test infrastructure is needed — they're exercised through their normal public interface.",
+      },
+      {
+        id: "q10",
+        prompt: "What makes `AppIntent` implementations directly testable via `AppIntentsTesting`?",
+        options: [
+          {
+            id: "a",
+            text: "Testing an intent requires simulating an actual Siri voice invocation",
+          },
+          {
+            id: "b",
+            text: "An intent's actual logic lives in an ordinary, directly callable `perform()` method, not entangled with Siri's invocation machinery, so it can be tested like any other Swift type's method",
+          },
+          {
+            id: "c",
+            text: "`AppIntentsTesting` can only verify that an intent compiles, not its actual behavior",
+          },
+          {
+            id: "d",
+            text: "Intents cannot be tested without the Shortcuts app installed",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `perform()` is an ordinary, directly callable method, testing an intent requires no more special infrastructure than testing any other method, letting Siri/Shortcuts logic be verified with standard testing approaches.",
+      },
+      {
+        id: "q11",
+        prompt: "What gap does contract testing address that purely mock-based unit testing cannot catch?",
+        options: [
+          {
+            id: "a",
+            text: "Contract testing verifies UI layout correctness",
+          },
+          {
+            id: "b",
+            text: "A mock-based test only verifies client behavior given the shape a developer *assumed* the backend returns, while contract testing validates against the backend's actual current behavior or a jointly-maintained schema, catching real drift",
+          },
+          {
+            id: "c",
+            text: "Contract testing is identical to snapshot testing but for network responses",
+          },
+          {
+            id: "d",
+            text: "Mock-based tests already fully catch backend response shape changes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A hand-written mock can never detect that the real backend's response shape has silently changed, since it only reflects the developer's original assumption — contract testing specifically validates against actual backend behavior or contract to catch this drift.",
+      },
+      {
+        id: "q12",
+        prompt: "What trade-off exists between recorded fixtures and live integration tests?",
+        options: [
+          {
+            id: "a",
+            text: "There is no trade-off; live integration tests are strictly better in every way",
+          },
+          {
+            id: "b",
+            text: "Recorded fixtures provide fast, reliable, offline-capable tests but can grow stale, while live integration tests provide maximum realism at the cost of speed, reliability, and requiring real network/backend availability",
+          },
+          {
+            id: "c",
+            text: "Recorded fixtures require an active network connection, while live integration tests do not",
+          },
+          {
+            id: "d",
+            text: "Live integration tests are always faster than recorded fixture tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuine trade-off — fixtures offer speed and determinism but can become outdated, while live tests offer realism but at real cost to speed and reliability, with most projects using both deliberately.",
+      },
+      {
+        id: "q13",
+        prompt: "Why is a high code coverage percentage described as a \"meaningfully weaker signal\" than it might first appear?",
+        options: [
+          {
+            id: "a",
+            text: "Coverage tools are generally unreliable and produce inaccurate numbers",
+          },
+          {
+            id: "b",
+            text: "Code being executed during a test says nothing about whether that execution was actually verified by a meaningful assertion — coverage measures execution, not verification",
+          },
+          {
+            id: "c",
+            text: "Coverage percentage always corresponds directly to test suite quality",
+          },
+          {
+            id: "d",
+            text: "High coverage is impossible to achieve in any real codebase",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section's core point is that coverage tracks whether code ran during tests, not whether the test actually asserted anything meaningful about that code's behavior — a test can achieve full coverage while verifying nothing.",
+      },
+      {
+        id: "q14",
+        prompt: "How does the section recommend code coverage actually be used?",
+        options: [
+          {
+            id: "a",
+            text: "As a direct, reliable proxy for overall test suite quality",
+          },
+          {
+            id: "b",
+            text: "As a tool for finding code with no test coverage at all — a genuine gap worth investigating — rather than as a quality score for code that already has some coverage",
+          },
+          {
+            id: "c",
+            text: "Coverage should be entirely ignored and never measured",
+          },
+          {
+            id: "d",
+            text: "Coverage should be the sole metric used to evaluate developer performance",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly recommends using coverage to identify genuinely untested code, rather than treating a coverage percentage as certifying the quality of tests that do exist.",
+      },
+      {
+        id: "q15",
+        prompt: "What is the genuine value of property-based testing, according to 66.12?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for any example-based tests entirely",
+          },
+          {
+            id: "b",
+            text: "Random input generation can surface edge cases (boundary conditions, extreme values) that a human test author wouldn't have thought to write by hand, unlike hand-picked example-based tests",
+          },
+          {
+            id: "c",
+            text: "Property-based testing only works for testing UI code",
+          },
+          {
+            id: "d",
+            text: "Property-based tests always run faster than parameterized tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights that property-based testing's value comes from generating many random inputs that can stumble onto edge cases a human author systematically wouldn't think to include in hand-picked examples.",
+      },
+      {
+        id: "q16",
+        prompt: "What gap does mutation testing address that code coverage alone cannot?",
+        options: [
+          {
+            id: "a",
+            text: "Mutation testing measures how fast a test suite runs",
+          },
+          {
+            id: "b",
+            text: "Mutation testing directly measures whether the test suite would actually notice if production code's behavior were subtly wrong, by introducing deliberate bugs and checking whether tests catch them",
+          },
+          {
+            id: "c",
+            text: "Mutation testing replaces the need for code coverage measurement in every scenario",
+          },
+          {
+            id: "d",
+            text: "Mutation testing only applies to UI tests, not unit tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Mutation testing directly tests whether the suite would actually detect subtly broken behavior (via introduced \"mutants\"), providing a more rigorous quality signal than coverage percentage alone, though at real computational cost.",
+      },
+      {
+        id: "q17",
+        prompt: "Why does mutation testing cost meaningfully more to run than a standard test pass?",
+        options: [
+          {
+            id: "a",
+            text: "Mutation testing requires manual review of every line of code",
+          },
+          {
+            id: "b",
+            text: "It requires running the entire test suite once per generated mutant, multiplying the total execution time compared to a single standard test pass",
+          },
+          {
+            id: "c",
+            text: "Mutation testing only runs once regardless of codebase size",
+          },
+          {
+            id: "d",
+            text: "Mutation testing has no meaningful performance cost compared to coverage measurement",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because a fresh full test suite run is needed for each individual mutant introduced, mutation testing's total cost scales with the number of mutants generated, making it considerably more expensive than one standard test run.",
+      },
+      {
+        id: "q18",
+        prompt: "What do Xcode test plans (`.xctestplan`) provide?",
+        options: [
+          {
+            id: "a",
+            text: "A way to disable code coverage measurement entirely",
+          },
+          {
+            id: "b",
+            text: "A reusable, shareable configuration bundling which tests to run, environment variables, and other run-time options, letting different testing scenarios be defined once and selected explicitly",
+          },
+          {
+            id: "c",
+            text: "Test plans can only be used for UI tests, never unit tests",
+          },
+          {
+            id: "d",
+            text: "Test plans replace the need for `@Suite` grouping",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Test plans separate \"what tests exist\" from \"how a given scenario should run them,\" letting scenarios like a fast pre-commit check or a full nightly run be defined once as reusable, version-controlled configurations.",
+      },
+      {
+        id: "q19",
+        prompt: "How does test sharding differ from Swift Testing's built-in parallel execution within a single test run?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical mechanisms operating at the same level",
+          },
+          {
+            id: "b",
+            text: "Sharding distributes entire chunks of a test suite across separate machines or CI runners, a coarser-grained approach than Swift Testing's in-process parallelism across CPU cores on one machine, and the two compose together",
+          },
+          {
+            id: "c",
+            text: "Sharding replaces the need for parallel execution within a single process entirely",
+          },
+          {
+            id: "d",
+            text: "Sharding can only be used for UI tests, not unit tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Sharding operates at a coarser, multi-machine level distinct from in-process parallelism, and the section notes these two techniques compose naturally as complementary layers of parallelization.",
+      },
+      {
+        id: "q20",
+        prompt: "According to the section, what practical strategy do most well-tested projects use regarding recorded fixtures and live integration tests?",
+        options: [
+          {
+            id: "a",
+            text: "Exclusively recorded fixtures, never any live integration tests",
+          },
+          {
+            id: "b",
+            text: "Both deliberately — recorded fixtures for the bulk of fast, frequently-run unit tests, with a smaller number of live integration tests run less frequently to catch fixture staleness",
+          },
+          {
+            id: "c",
+            text: "Exclusively live integration tests, since fixtures are considered obsolete",
+          },
+          {
+            id: "d",
+            text: "Neither approach; only manual QA testing is used for backend integration",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends using both approaches together — fast fixtures for frequent unit testing, complemented by a smaller set of periodically-run live integration tests specifically to catch fixture staleness over time.",
+      },
+    ],
+  },
+  {
+    id: "ui-testing-quiz",
+    title: "UI Testing",
+    description: "20 questions covering XCUITest setup, element queries, accessibility identifiers, waiting strategies, system permission dialogs, launch arguments, the page object pattern, flaky test diagnosis, accessibility audits, and screenshots.",
+    relatedArticleSlug: "ui-testing",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What is XCUITest's fundamental architectural distinction from the testing approaches covered in sections 65-66?",
+        options: [
+          {
+            id: "a",
+            text: "XCUITest runs entirely within the same process as the app's own code",
+          },
+          {
+            id: "b",
+            text: "XCUITest exercises the app as a genuinely separate process, interacting purely through the accessibility layer the way a real user or VoiceOver would",
+          },
+          {
+            id: "c",
+            text: "XCUITest can only test backend API responses, not UI interaction",
+          },
+          {
+            id: "d",
+            text: "XCUITest and unit tests use identical underlying execution mechanisms",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Unlike unit-level tests exercising code directly, XCUITest drives the app from outside as a separate process via the accessibility layer, making it the closest approximation to real end-user behavior, at the cost of speed and fragility.",
+      },
+      {
+        id: "q2",
+        prompt: "When is an XCUITest element query (like `app.buttons[\"Submit\"]`) actually evaluated against the UI?",
+        options: [
+          {
+            id: "a",
+            text: "Immediately at the moment the query object is constructed",
+          },
+          {
+            id: "b",
+            text: "Lazily — the query isn't actually searched against the accessibility hierarchy until an action or assertion is performed against it",
+          },
+          {
+            id: "c",
+            text: "Queries are evaluated once at app launch and cached permanently",
+          },
+          {
+            id: "d",
+            text: "Queries can never be constructed before their target element exists",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Query objects describe how to find an element but don't search until accessed, which is why they can be constructed before the target exists and why waiting strategies can repeatedly re-evaluate the same query.",
+      },
+      {
+        id: "q3",
+        prompt: "Why is matching on `accessibilityIdentifier` preferred over matching on visible label text in UI tests?",
+        options: [
+          {
+            id: "a",
+            text: "Visible text matching is always faster to execute",
+          },
+          {
+            id: "b",
+            text: "It decouples tests from content that legitimately changes for unrelated reasons, like copy edits or localization, which shouldn't break a test verifying underlying flow behavior",
+          },
+          {
+            id: "c",
+            text: "`accessibilityIdentifier` is required by Apple for all UI elements",
+          },
+          {
+            id: "d",
+            text: "Visible text cannot be queried at all in XCUITest",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Identifier-based selectors remain stable even when visible, localizable text changes for reasons unrelated to what the test is actually verifying, making tests robust against cosmetic changes.",
+      },
+      {
+        id: "q4",
+        prompt: "Why is a fixed `Thread.sleep()` call considered a genuine anti-pattern in UI testing?",
+        options: [
+          {
+            id: "a",
+            text: "`sleep()` calls are not supported by XCUITest at all",
+          },
+          {
+            id: "b",
+            text: "It's simultaneously too slow when a condition resolves quickly (wasting time) and too fast when it doesn't (producing flaky failures on slower conditions), unlike polling-based waiting",
+          },
+          {
+            id: "c",
+            text: "`sleep()` calls always produce faster test execution than any alternative",
+          },
+          {
+            id: "d",
+            text: "Fixed sleeps are only problematic in unit tests, not UI tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A fixed sleep either wastes time waiting the full duration unnecessarily or fails when conditions take longer than expected, while `waitForExistence`-style polling resolves as soon as the condition is genuinely met.",
+      },
+      {
+        id: "q5",
+        prompt: "Why do system permission dialogs require special handling via `addUIInterruptionMonitor`?",
+        options: [
+          {
+            id: "a",
+            text: "Permission dialogs are actually part of the app's own element hierarchy and require no special handling",
+          },
+          {
+            id: "b",
+            text: "Permission dialogs are presented by iOS itself, existing entirely outside the normal element hierarchy XCUITest queries operate against, so without a registered handler a test would hang indefinitely",
+          },
+          {
+            id: "c",
+            text: "`addUIInterruptionMonitor` is only needed for network-related test failures",
+          },
+          {
+            id: "d",
+            text: "System dialogs never appear during automated UI test runs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because these dialogs are presented by the system rather than the app under test, they exist outside XCUITest's normal element queries, requiring an interruption monitor to detect and dismiss them so the test doesn't hang.",
+      },
+      {
+        id: "q6",
+        prompt: "What does passing launch arguments to `XCUIApplication` typically enable?",
+        options: [
+          {
+            id: "a",
+            text: "Changing which physical device the test runs on",
+          },
+          {
+            id: "b",
+            text: "Putting the app into a specific, deterministic test-only state (pre-seeded data, mocked network layer, skipped onboarding) without needing to manually navigate through normal app flow",
+          },
+          {
+            id: "c",
+            text: "Launch arguments have no effect unless the app explicitly ignores them",
+          },
+          {
+            id: "d",
+            text: "Automatically generating new UI test code",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Launch arguments let a test configure the app into a known state directly at launch, simplifying tests that would otherwise need to fragile-ly automate a full realistic user journey just to reach the screen under test.",
+      },
+      {
+        id: "q7",
+        prompt: "What must be true of an app's own code for launch-argument-based test configuration to actually work?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing; launch arguments work automatically with no app-side cooperation",
+          },
+          {
+            id: "b",
+            text: "The app's own launch code must check for the relevant arguments (e.g., via `ProcessInfo.processInfo.arguments`) and configure itself accordingly, such as using a fake data store instead of a real backend",
+          },
+          {
+            id: "c",
+            text: "The app must be compiled with a separate, test-only binary",
+          },
+          {
+            id: "d",
+            text: "Launch arguments only work for apps using UIKit, not SwiftUI",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This pattern requires deliberate cooperation from the app itself, checking launch arguments and configuring test-appropriate behavior (like substituting a fake store) in response.",
+      },
+      {
+        id: "q8",
+        prompt: "What is the core benefit of the page object pattern for UI tests?",
+        options: [
+          {
+            id: "a",
+            text: "It eliminates the need for accessibility identifiers entirely",
+          },
+          {
+            id: "b",
+            text: "It wraps a screen's element queries and interactions behind a dedicated type, so when a UI changes, only that type needs updating rather than every individual test using raw, scattered element queries",
+          },
+          {
+            id: "c",
+            text: "Page objects make UI tests run significantly faster",
+          },
+          {
+            id: "d",
+            text: "The page object pattern is required by XCUITest and cannot be avoided",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Centralizing element queries in a page object means UI changes require updating only that object's implementation, while tests using it continue to compile and read unchanged, improving maintainability.",
+      },
+      {
+        id: "q9",
+        prompt: "What common sources of flakiness should be checked when diagnosing a flaky UI test, according to 67.8?",
+        options: [
+          {
+            id: "a",
+            text: "Only network-related issues are relevant to UI test flakiness",
+          },
+          {
+            id: "b",
+            text: "Missing or insufficient wait calls, shared non-isolated state between test runs, hardcoded assumptions about screen size or locale, and animations not fully disabled during test runs",
+          },
+          {
+            id: "c",
+            text: "Flakiness in UI tests is always caused by incorrect accessibility identifiers",
+          },
+          {
+            id: "d",
+            text: "UI tests cannot be flaky if written correctly; flakiness only occurs in unit tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section lists several genuine sources of UI test flakiness worth checking systematically, given UI tests' inherent dependence on timing, animation, and system state.",
+      },
+      {
+        id: "q10",
+        prompt: "Why does flakiness in UI tests specifically deserve particular diagnostic attention, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "Flaky UI tests have no meaningful impact on a development team",
+          },
+          {
+            id: "b",
+            text: "It directly undermines the actual value tests provide, since intermittent failures unrelated to real regressions erode trust in the suite's signal, eventually leading to failures being ignored rather than investigated",
+          },
+          {
+            id: "c",
+            text: "Flaky tests are always faster to fix than reliably failing tests",
+          },
+          {
+            id: "d",
+            text: "UI test flakiness only affects test execution time, not test reliability",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section connects flakiness back to the core argument for why tests exist (65.1) — flaky failures erode trust in the test suite, eventually causing failures to be dismissed rather than genuinely investigated, defeating the tests' purpose.",
+      },
+      {
+        id: "q11",
+        prompt: "What does `performAccessibilityAudit()` check for, when run as part of a UI test?",
+        options: [
+          {
+            id: "a",
+            text: "Only whether the app compiles successfully",
+          },
+          {
+            id: "b",
+            text: "Common accessibility issues like missing labels, insufficient contrast, and undersized tap targets, programmatically as part of the UI test run",
+          },
+          {
+            id: "c",
+            text: "Network response times and API contract compliance",
+          },
+          {
+            id: "d",
+            text: "Code coverage percentage for the tested screen",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`performAccessibilityAudit()` runs an automated check for common accessibility problems, surfacing issues that would otherwise require manual review to catch.",
+      },
+      {
+        id: "q12",
+        prompt: "What parallel does the section draw between `performAccessibilityAudit()` and snapshot testing (section 66.4)?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical mechanisms",
+          },
+          {
+            id: "b",
+            text: "Both catch a category of regression (accessibility issues, visual issues respectively) that neither functional assertion-based tests nor one-time manual review would reliably catch on an ongoing basis",
+          },
+          {
+            id: "c",
+            text: "Snapshot testing replaces the need for accessibility audits entirely",
+          },
+          {
+            id: "d",
+            text: "`performAccessibilityAudit()` can only be used within snapshot tests",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel — both tools provide automated, continuous detection of a specific regression category that standard functional testing and periodic manual review would likely miss over time.",
+      },
+      {
+        id: "q13",
+        prompt: "Why are automatic failure screenshots particularly valuable for diagnosing UI test failures?",
+        options: [
+          {
+            id: "a",
+            text: "Screenshots are purely decorative and provide no diagnostic value",
+          },
+          {
+            id: "b",
+            text: "A test log showing only \"element not found\" provides considerably less diagnostic information than an actual screenshot, which might immediately reveal the real cause, like an unexpected system alert or a stuck loading spinner",
+          },
+          {
+            id: "c",
+            text: "Screenshots are required by Xcode and cannot be disabled",
+          },
+          {
+            id: "d",
+            text: "Screenshots only matter for tests that are already passing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "A visual screenshot at the moment of failure often immediately reveals context (an unexpected alert, unresolved loading state) that a text-only failure message would leave the developer guessing about.",
+      },
+      {
+        id: "q14",
+        prompt: "What is the purpose of `XCTAttachment` with `lifetime = .keepAlways`?",
+        options: [
+          {
+            id: "a",
+            text: "It permanently deletes the test after it runs",
+          },
+          {
+            id: "b",
+            text: "It attaches supplementary content, like a screenshot, to a test's report, explicitly preserving it rather than allowing it to be discarded",
+          },
+          {
+            id: "c",
+            text: "It disables all future screenshot capture for the test suite",
+          },
+          {
+            id: "d",
+            text: "It is used exclusively for capturing network request logs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`XCTAttachment` with `.keepAlways` explicitly attaches content like a screenshot to the test report and ensures it's preserved, providing visual context alongside the pass/fail result.",
+      },
+      {
+        id: "q15",
+        prompt: "What role does Xcode's UI test recording feature serve, according to 67.1?",
+        options: [
+          {
+            id: "a",
+            text: "It produces final, production-ready test code requiring no further changes",
+          },
+          {
+            id: "b",
+            text: "It generates initial test code automatically by recording a developer's manual interaction, providing a useful starting point subsequently refined into a maintainable test",
+          },
+          {
+            id: "c",
+            text: "Recording can only capture button taps, not text entry or swipes",
+          },
+          {
+            id: "d",
+            text: "UI test recording is deprecated and no longer available in Xcode",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames recording as a useful starting point for generating initial test code, which is then typically refined (e.g., by extracting into a page object) into a more maintainable final test.",
+      },
+      {
+        id: "q16",
+        prompt: "How does XCUITest's separate-process architecture relate to its trade-offs compared to unit-level tests?",
+        options: [
+          {
+            id: "a",
+            text: "The separate-process model makes UI tests both faster and more reliable than unit tests",
+          },
+          {
+            id: "b",
+            text: "The separate-process model makes UI tests the closest approximation to real end-user behavior, but at the cost of being considerably slower and more fragile than unit-level tests exercising code directly",
+          },
+          {
+            id: "c",
+            text: "There is no meaningful trade-off between UI tests and unit tests",
+          },
+          {
+            id: "d",
+            text: "UI tests exercise code directly, identical to unit tests, just with added screenshots",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit about this trade-off — the realism gained from exercising the app as a genuine separate process comes at the cost of speed and fragility compared to direct, in-process unit testing.",
+      },
+      {
+        id: "q17",
+        prompt: "Why might a UI test need to perform a \"trivial interaction\" (like `app.tap()`) after registering an interruption monitor, per the example in 67.5?",
+        options: [
+          {
+            id: "a",
+            text: "Trivial interactions are purely decorative and have no functional purpose",
+          },
+          {
+            id: "b",
+            text: "The interruption monitor's handler check is often triggered by subsequent interaction with the app, so a small interaction can help ensure the monitor actually gets a chance to detect and handle the alert",
+          },
+          {
+            id: "c",
+            text: "This step is required to disable the interruption monitor",
+          },
+          {
+            id: "d",
+            text: "Trivial interactions are needed to close the app entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The example notes that a trivial interaction is often needed to trigger the interruption monitor's check, since the monitor doesn't necessarily fire purely on the alert's appearance alone.",
+      },
+      {
+        id: "q18",
+        prompt: "What does an `NSPredicate`-based query enable in XCUITest element location, beyond simple type or identifier-based queries?",
+        options: [
+          {
+            id: "a",
+            text: "NSPredicate queries can only match on element type, nothing else",
+          },
+          {
+            id: "b",
+            text: "More complex matching criteria, such as matching elements whose label contains a specific substring",
+          },
+          {
+            id: "c",
+            text: "NSPredicate queries are used exclusively for handling system permission dialogs",
+          },
+          {
+            id: "d",
+            text: "NSPredicate queries replace the need for `accessibilityIdentifier` entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`NSPredicate`-based queries allow more flexible, complex matching criteria (like substring matching on a label) beyond simple type or identifier lookups.",
+      },
+      {
+        id: "q19",
+        prompt: "What does the page object pattern primarily centralize?",
+        options: [
+          {
+            id: "a",
+            text: "All of an app's network request handling",
+          },
+          {
+            id: "b",
+            text: "A screen's element queries and interactions behind a dedicated type, giving tests a stable, readable interface",
+          },
+          {
+            id: "c",
+            text: "The app's entire accessibility identifier list in a single global file",
+          },
+          {
+            id: "d",
+            text: "Test execution scheduling and parallelization settings",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The page object pattern's core purpose is centralizing a specific screen's element queries and interaction logic behind a dedicated type, rather than scattering raw queries throughout individual tests.",
+      },
+      {
+        id: "q20",
+        prompt: "According to 67.6, what specific example is given of test-only configuration an app might apply based on launch arguments?",
+        options: [
+          {
+            id: "a",
+            text: "Changing the app's display language permanently",
+          },
+          {
+            id: "b",
+            text: "Using an in-memory fake data store (recall `FakeUserStore` from 66.1) instead of hitting a real backend",
+          },
+          {
+            id: "c",
+            text: "Disabling all accessibility features during the test",
+          },
+          {
+            id: "d",
+            text: "Automatically submitting App Store review metadata",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The example given describes the app's launch code checking test-mode arguments and configuring itself to use something like an in-memory fake store instead of a real backend, directly connecting to the fake test double concept from section 66.1.",
+      },
+    ],
+  },
 ];
 
 export function getAllQuizzes(): Quiz[] {
