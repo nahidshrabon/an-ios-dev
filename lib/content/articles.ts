@@ -559,6 +559,33 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("ai-assisted-development.md"),
   },
+  {
+    slug: "core-animation-and-graphics",
+    title: "Core Animation and Graphics",
+    description:
+      "The layer tree and CALayer, implicit vs. explicit animation, CABasicAnimation/CAKeyframeAnimation, CATransaction, CADisplayLink, the commit cycle, offscreen rendering costs, Core Graphics drawing and PDF generation, Core Image filters and custom CIKernel filters, and color management including wide gamut and HDR/EDR.",
+    tags: ["graphics", "core-animation", "core-graphics"],
+    publishedAt: "2026-08-16",
+    content: loadBody("core-animation-and-graphics.md"),
+  },
+  {
+    slug: "metal",
+    title: "Metal",
+    description:
+      "Apple's low-level GPU programming framework: devices, command queues, and buffers, building a render pipeline, Metal Shading Language basics, vertex and fragment shaders, compute shaders, Metal Performance Shaders, MetalFX upscaling, and profiling with the Metal debugger.",
+    tags: ["graphics", "metal", "gpu"],
+    publishedAt: "2026-08-16",
+    content: loadBody("metal.md"),
+  },
+  {
+    slug: "realitykit-arkit-and-visionos",
+    title: "RealityKit, ARKit, and visionOS",
+    description:
+      "RealityKit's entity-component model and RealityView, USDZ assets and Reality Composer Pro, shader graph materials, ARKit world tracking, plane/image/object detection, scene reconstruction and occlusion, face and body tracking, and visionOS windows, volumes, immersive spaces, ornaments, gaze/pinch input, hand tracking, and performance budgets.",
+    tags: ["graphics", "realitykit", "arkit", "visionos"],
+    publishedAt: "2026-08-16",
+    content: loadBody("realitykit-arkit-and-visionos.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

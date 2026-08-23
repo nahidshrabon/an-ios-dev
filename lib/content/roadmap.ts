@@ -135,9 +135,9 @@ export const roadmap: RoadmapPart[] = [
     id: "part-9",
     title: "Graphics and Immersive",
     sections: [
-      section(62, "Core Animation and Graphics"),
-      section(63, "Metal"),
-      section(64, "RealityKit, ARKit, and visionOS"),
+      section(62, "Core Animation and Graphics", "core-animation-and-graphics"),
+      section(63, "Metal", "metal"),
+      section(64, "RealityKit, ARKit, and visionOS", "realitykit-arkit-and-visionos"),
     ],
   },
   {

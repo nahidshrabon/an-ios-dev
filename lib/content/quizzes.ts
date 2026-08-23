@@ -16090,6 +16090,1470 @@ export const quizzes: Quiz[] = [
       },
     ],
   },
+  {
+    id: "core-animation-and-graphics-quiz",
+    title: "Core Animation and Graphics",
+    description: "20 questions covering the CALayer tree, implicit/explicit animation, CATransaction, CADisplayLink, the commit cycle, offscreen rendering, Core Graphics/PDF drawing, Core Image filters, and color management.",
+    relatedArticleSlug: "core-animation-and-graphics",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Where do visual properties like `cornerRadius` and `shadowOpacity` actually live, and why does this matter?",
+        options: [
+          {
+            id: "a",
+            text: "On the `UIView` itself; `CALayer` has no visual properties",
+          },
+          {
+            id: "b",
+            text: "On the backing `CALayer`, reflecting a genuine architectural separation where the view handles interaction/layout and the layer handles rendering/animation",
+          },
+          {
+            id: "c",
+            text: "They exist equally on both the view and layer with no meaningful distinction",
+          },
+          {
+            id: "d",
+            text: "These properties only exist on `UIViewController`, not on views or layers",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The view/layer split is a real architectural separation — visual, renderable properties live on `CALayer`, while `UIView` handles touch handling, layout, and higher-level behavior, and many advanced Core Animation capabilities require working with layers directly.",
+      },
+      {
+        id: "q2",
+        prompt: "What is \"implicit animation\" in Core Animation?",
+        options: [
+          {
+            id: "a",
+            text: "An animation that must always be explicitly triggered with `CABasicAnimation`",
+          },
+          {
+            id: "b",
+            text: "The default animated behavior that occurs when an animatable layer property is changed outside of an explicit animation block, without any animation object being created manually",
+          },
+          {
+            id: "c",
+            text: "An animation that only occurs when `CATransaction.setDisableActions(true)` is called",
+          },
+          {
+            id: "d",
+            text: "A deprecated animation style no longer supported",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Layers animate certain property changes by default even without an explicit animation call — this implicit behavior is a common source of confusion, and can be suppressed via `setDisableActions(true)` when an instant change is actually desired.",
+      },
+      {
+        id: "q3",
+        prompt: "What is a crucial, easy-to-miss detail about `CABasicAnimation`/`CAKeyframeAnimation` added via `add(_:forKey:)`?",
+        options: [
+          {
+            id: "a",
+            text: "They permanently change the layer's underlying model property value",
+          },
+          {
+            id: "b",
+            text: "They add a purely visual, presentation-layer animation — the model-layer property value doesn't change unless separately set, meaning a layer can visually animate while its underlying property snaps back once the animation is removed",
+          },
+          {
+            id: "c",
+            text: "They cannot be removed once added to a layer",
+          },
+          {
+            id: "d",
+            text: "They automatically update the corresponding `UIView`'s frame property",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Animations added via `add(_:forKey:)` are visual-only on the presentation layer; without separately updating the model layer's actual property value, the layer can snap back to its original value once the animation is removed.",
+      },
+      {
+        id: "q4",
+        prompt: "What does `CATransaction` allow, as demonstrated in 62.4?",
+        options: [
+          {
+            id: "a",
+            text: "Only a single layer property can be changed per transaction",
+          },
+          {
+            id: "b",
+            text: "Grouping a batch of layer changes into a single atomic update, sharing animation duration, timing function, and a single completion handler across the whole group",
+          },
+          {
+            id: "c",
+            text: "`CATransaction` has no relationship to animation timing or duration",
+          },
+          {
+            id: "d",
+            text: "`CATransaction` can only be used to disable animations, never configure them",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`CATransaction` lets multiple layer property changes share the same animation duration and timing, with one completion block firing once for the entire batch, mirroring the same \"batch and commit atomically\" pattern seen in `AVCaptureSession` configuration.",
+      },
+      {
+        id: "q5",
+        prompt: "Why is `CADisplayLink` preferred over `Timer` for frame-by-frame custom animation logic?",
+        options: [
+          {
+            id: "a",
+            text: "`Timer` and `CADisplayLink` provide identical timing precision",
+          },
+          {
+            id: "b",
+            text: "`CADisplayLink` fires synchronized precisely with the display's actual refresh rate, providing tighter timing guarantees than `Timer`'s comparatively imprecise, run-loop-dependent firing",
+          },
+          {
+            id: "c",
+            text: "`CADisplayLink` is deprecated in favor of `Timer`",
+          },
+          {
+            id: "d",
+            text: "`Timer` can only fire once, while `CADisplayLink` fires repeatedly",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`CADisplayLink`'s precise synchronization with actual display refresh timing makes it the appropriate choice for smooth, frame-perfect custom animation, game loops, or physics simulations, unlike general-purpose `Timer`.",
+      },
+      {
+        id: "q6",
+        prompt: "According to 62.6, what happens when a layer's `position` is read immediately after being set within the same run loop iteration?",
+        options: [
+          {
+            id: "a",
+            text: "It returns the old value until the next run loop iteration begins",
+          },
+          {
+            id: "b",
+            text: "It returns the newly set value immediately, since the model layer updates right away, even though the visual update doesn't appear until the commit cycle completes",
+          },
+          {
+            id: "c",
+            text: "Reading a layer property immediately after setting it always throws an error",
+          },
+          {
+            id: "d",
+            text: "The property becomes permanently inaccessible until the commit cycle finishes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The model layer's property updates immediately upon being set, which is why reading it back right away reflects the new value, even though the actual visual update on screen only appears once the commit cycle (layout, display, commit) completes.",
+      },
+      {
+        id: "q7",
+        prompt: "What are the three conceptual phases of one Core Animation commit cycle, as described in 62.6?",
+        options: [
+          {
+            id: "a",
+            text: "Fetch, decode, execute",
+          },
+          {
+            id: "b",
+            text: "Layout, display, and commit",
+          },
+          {
+            id: "c",
+            text: "Begin, animate, end",
+          },
+          {
+            id: "d",
+            text: "Request, response, render",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The commit cycle proceeds through layout (resolving pending layout changes), display (CPU-side rendering of layer content needing redraw), and commit (packaging and sending the layer tree to the render server for GPU-side compositing).",
+      },
+      {
+        id: "q8",
+        prompt: "Why does a shadow without an explicit `shadowPath` commonly trigger costly offscreen rendering?",
+        options: [
+          {
+            id: "a",
+            text: "Shadows never require any additional rendering computation",
+          },
+          {
+            id: "b",
+            text: "Without an explicit path, Core Animation must compute the shadow's shape automatically, forcing the layer to render to an offscreen buffer first before compositing — a more expensive operation than direct compositing",
+          },
+          {
+            id: "c",
+            text: "`shadowPath` has no effect on rendering performance",
+          },
+          {
+            id: "d",
+            text: "Offscreen rendering only affects `cornerRadius`, not shadows",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The automatic shape computation for a path-less shadow forces an offscreen rendering pass; providing an explicit `shadowPath` avoids this expensive computation, letting the shadow render without the offscreen pass.",
+      },
+      {
+        id: "q9",
+        prompt: "How can offscreen rendering issues be diagnosed, according to 62.7?",
+        options: [
+          {
+            id: "a",
+            text: "There is no way to diagnose offscreen rendering; it must be assumed present",
+          },
+          {
+            id: "b",
+            text: "Instruments' Core Animation instrument explicitly flags offscreen-rendered layers, making it a genuinely diagnosable cause of dropped frames during scrolling",
+          },
+          {
+            id: "c",
+            text: "Only Xcode's memory graph debugger can reveal offscreen rendering",
+          },
+          {
+            id: "d",
+            text: "Offscreen rendering can only be detected by manually counting frame drops",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The Core Animation instrument in Instruments directly flags layers being rendered offscreen, making this a measurable, diagnosable performance issue rather than a purely theoretical concern.",
+      },
+      {
+        id: "q10",
+        prompt: "What does `UIGraphicsImageRenderer` provide compared to the older `UIGraphicsBeginImageContext` pattern?",
+        options: [
+          {
+            id: "a",
+            text: "It removes all access to the underlying `CGContext`",
+          },
+          {
+            id: "b",
+            text: "A modern, safer wrapper around the older manual image context pattern, while still exposing the underlying `CGContext` for imperative drawing calls",
+          },
+          {
+            id: "c",
+            text: "It can only be used for generating PDFs, not images",
+          },
+          {
+            id: "d",
+            text: "It has no relationship to Core Graphics at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`UIGraphicsImageRenderer` modernizes and simplifies the older manual context-management pattern while still providing access to `CGContext` for actual drawing operations.",
+      },
+      {
+        id: "q11",
+        prompt: "How does `UIGraphicsPDFRenderer`-generated PDF content differ from a PDF created by capturing a rendered view as an image?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful difference between the two approaches",
+          },
+          {
+            id: "b",
+            text: "`UIGraphicsPDFRenderer` produces genuinely vector-based content that remains crisp at any zoom level or print resolution, unlike a rasterized bitmap embedded in a PDF wrapper",
+          },
+          {
+            id: "c",
+            text: "`UIGraphicsPDFRenderer` can only produce lower-quality output than a captured image",
+          },
+          {
+            id: "d",
+            text: "Vector PDFs generated this way cannot include text, only shapes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because `UIGraphicsPDFRenderer` draws directly into a vector PDF context, the resulting document scales crisply at any zoom or print resolution, unlike a rasterized image simply wrapped in a PDF.",
+      },
+      {
+        id: "q12",
+        prompt: "What does it mean that Core Image's filter graph is \"lazily evaluated\"?",
+        options: [
+          {
+            id: "a",
+            text: "Filters execute immediately as soon as they are configured",
+          },
+          {
+            id: "b",
+            text: "Chaining several filters builds up a description of the processing pipeline without executing any of it until an output is explicitly requested, letting Core Image optimize the combined operation",
+          },
+          {
+            id: "c",
+            text: "Lazy evaluation means filters can never be chained together",
+          },
+          {
+            id: "d",
+            text: "Lazy evaluation only applies to custom `CIKernel` filters, not built-in ones",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Core Image defers actual execution until output is requested (e.g., via `createCGImage`), allowing it to optimize a chained sequence of filters as a whole, often more efficiently than executing each filter as a separate eager pass.",
+      },
+      {
+        id: "q13",
+        prompt: "When is authoring a custom `CIKernel` filter appropriate, according to 62.11?",
+        options: [
+          {
+            id: "a",
+            text: "For every image processing task, regardless of complexity",
+          },
+          {
+            id: "b",
+            text: "Specifically when a needed effect genuinely isn't achievable by composing Core Image's substantial built-in filter library, given that custom kernel code requires real GPU programming understanding",
+          },
+          {
+            id: "c",
+            text: "Custom kernels should always be preferred over built-in filters for performance",
+          },
+          {
+            id: "d",
+            text: "`CIKernel` is required for any use of `CIFilter` at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Given the specialization and GPU programming knowledge required, custom `CIKernel` filters are reserved for genuinely novel processing needs not already covered by Core Image's extensive built-in filter library.",
+      },
+      {
+        id: "q14",
+        prompt: "What visible consequence can result from incorrect color management, according to 62.12?",
+        options: [
+          {
+            id: "a",
+            text: "Colors always render identically regardless of color space handling",
+          },
+          {
+            id: "b",
+            text: "An image genuinely captured in Display P3 but processed through a pipeline that implicitly assumes sRGB can produce visibly incorrect, desaturated colors",
+          },
+          {
+            id: "c",
+            text: "Incorrect color management only affects video content, never still images",
+          },
+          {
+            id: "d",
+            text: "Wide gamut color spaces are automatically corrected by the system regardless of app behavior",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Since Display P3 represents a wider range of colors than sRGB, processing wide-gamut content through a pipeline that implicitly assumes sRGB can visibly desaturate or misrepresent the original colors.",
+      },
+      {
+        id: "q15",
+        prompt: "What relationship does the section draw between HDR/EDR rendering (62.13) and color management (62.12)?",
+        options: [
+          {
+            id: "a",
+            text: "They are entirely unrelated topics",
+          },
+          {
+            id: "b",
+            text: "HDR/EDR extends the range of representable brightness, just as wide-gamut color management extends the range of representable color, and both require explicit pipeline opt-in to avoid clipping or tone-mapping",
+          },
+          {
+            id: "c",
+            text: "HDR/EDR replaces the need for color management entirely",
+          },
+          {
+            id: "d",
+            text: "Color management only applies to still images, while HDR/EDR only applies to video",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames HDR/EDR as a direct extension of the same underlying principle as wide-gamut color management — both require deliberate, explicit handling in the rendering pipeline to fully take advantage of extended color or brightness range.",
+      },
+      {
+        id: "q16",
+        prompt: "What does setting `wantsExtendedDynamicRangeContent = true` on a `CAMetalLayer` enable?",
+        options: [
+          {
+            id: "a",
+            text: "It disables all color management for the layer",
+          },
+          {
+            id: "b",
+            text: "It allows HDR/EDR content to render with its full brightness range on supported displays, rather than being tone-mapped down to standard dynamic range",
+          },
+          {
+            id: "c",
+            text: "It converts the layer's content from vector to raster format",
+          },
+          {
+            id: "d",
+            text: "It has no effect on rendering; it is purely metadata",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This explicit opt-in is what allows a layer to actually display HDR content's extended brightness range on capable hardware, rather than having that content silently clipped or tone-mapped to standard dynamic range.",
+      },
+      {
+        id: "q17",
+        prompt: "What parallel does the section draw between `CATransaction`'s grouping behavior and material from section 55?",
+        options: [
+          {
+            id: "a",
+            text: "No parallel is drawn between the two sections",
+          },
+          {
+            id: "b",
+            text: "`CATransaction`'s \"batch changes, commit atomically\" pattern mirrors `AVCaptureSession`'s `beginConfiguration`/`commitConfiguration` pattern from section 55.4",
+          },
+          {
+            id: "c",
+            text: "`CATransaction` is described as functionally identical to `AVCaptureSession`",
+          },
+          {
+            id: "d",
+            text: "The section claims `CATransaction` replaced `AVCaptureSession` in a recent iOS release",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Both patterns batch multiple related changes together and apply them as one atomic update, a design pattern the section explicitly connects across the two otherwise-unrelated frameworks.",
+      },
+      {
+        id: "q18",
+        prompt: "What underlies SwiftUI's `Canvas` view (recall section 30), according to 62.8?",
+        options: [
+          {
+            id: "a",
+            text: "`Canvas` has no relationship to Core Graphics",
+          },
+          {
+            id: "b",
+            text: "Much of what `Canvas` compiles down to is built on the same lower-level Core Graphics (`CGContext`) drawing API covered in this section",
+          },
+          {
+            id: "c",
+            text: "`Canvas` is implemented entirely using Core Animation layers with no Core Graphics involvement",
+          },
+          {
+            id: "d",
+            text: "`Canvas` only works through Core Image filters",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section notes that Core Graphics underlies higher-level abstractions including much of what SwiftUI's `Canvas` view ultimately compiles down to for its declarative drawing.",
+      },
+      {
+        id: "q19",
+        prompt: "Why might forcing layout with `layoutIfNeeded()` mid-cycle be a useful technique, per 62.6?",
+        options: [
+          {
+            id: "a",
+            text: "It has no relationship to Core Animation's commit cycle",
+          },
+          {
+            id: "b",
+            text: "It can be used to synchronize custom animation code with Core Animation's own internal update timing, though the section notes it's occasionally overused",
+          },
+          {
+            id: "c",
+            text: "It permanently disables the commit cycle for the affected view",
+          },
+          {
+            id: "d",
+            text: "It is required before any layer property can be changed",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Understanding the commit cycle clarifies why forcing layout mid-cycle can help synchronize custom code with Core Animation's internal timing, while also being a technique that's easy to overuse or apply unnecessarily.",
+      },
+      {
+        id: "q20",
+        prompt: "Which scenario is most likely to benefit measurably from providing an explicit `shadowPath`, according to the section?",
+        options: [
+          {
+            id: "a",
+            text: "A single, static, off-screen view that never appears during scrolling",
+          },
+          {
+            id: "b",
+            text: "A scroll-heavy interface like a table or collection view with many shadowed cells, where unmitigated offscreen rendering across dozens of visible cells is a frequent, diagnosable cause of dropped frames",
+          },
+          {
+            id: "c",
+            text: "A view that never has a shadow applied to it",
+          },
+          {
+            id: "d",
+            text: "An app that only displays static images with no animation",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section specifically calls out scroll-heavy interfaces with many shadowed cells (referencing sections 26 and 37) as a common real-world case where explicit `shadowPath` provides a measurable, diagnosable performance improvement.",
+      },
+    ],
+  },
+  {
+    id: "metal-quiz",
+    title: "Metal",
+    description: "20 questions covering Metal's device/queue/buffer model, render pipelines, MSL, vertex/fragment/compute shaders, Metal Performance Shaders, MetalFX upscaling, and the Metal debugger.",
+    relatedArticleSlug: "metal",
+    questions: [
+      {
+        id: "q1",
+        prompt: "When is reaching for Metal directly appropriate, according to 63.1?",
+        options: [
+          {
+            id: "a",
+            text: "For every graphics task, regardless of complexity",
+          },
+          {
+            id: "b",
+            text: "When an app's graphics or compute needs genuinely exceed what higher-level frameworks like Core Animation, Core Image, or RealityKit can provide",
+          },
+          {
+            id: "c",
+            text: "Metal should never be used in production apps",
+          },
+          {
+            id: "d",
+            text: "Only for apps that don't use SwiftUI at all",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Metal is appropriate specifically when higher-level frameworks' automation is what's standing in the way of a genuine requirement, such as custom game rendering or specialized GPU compute beyond what those frameworks offer.",
+      },
+      {
+        id: "q2",
+        prompt: "What trade-off does reaching for Metal directly involve, compared to higher-level graphics frameworks?",
+        options: [
+          {
+            id: "a",
+            text: "Metal provides less control but is easier to use correctly",
+          },
+          {
+            id: "b",
+            text: "Metal provides essentially complete control over the GPU, but requires the developer to correctly handle far more of what higher-level frameworks otherwise manage automatically",
+          },
+          {
+            id: "c",
+            text: "There is no meaningful trade-off; Metal is strictly easier in every way",
+          },
+          {
+            id: "d",
+            text: "Metal cannot be used alongside any higher-level framework",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Metal's power comes with meaningfully more responsibility — much of what frameworks like Core Animation or RealityKit handle automatically must be managed explicitly when working directly with Metal.",
+      },
+      {
+        id: "q3",
+        prompt: "What do `MTLDevice`, `MTLCommandQueue`, and `MTLBuffer` respectively represent?",
+        options: [
+          {
+            id: "a",
+            text: "Three interchangeable names for the same object",
+          },
+          {
+            id: "b",
+            text: "The actual GPU hardware, the object scheduling work for that device, and the object holding data accessible to GPU code",
+          },
+          {
+            id: "c",
+            text: "Three different shader stages in the graphics pipeline",
+          },
+          {
+            id: "d",
+            text: "Configuration options for MetalFX upscaling only",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`MTLDevice` represents the GPU hardware itself, `MTLCommandQueue` schedules work for it, and `MTLBuffer` holds data like vertex data or compute input/output — the foundational objects underlying all Metal work.",
+      },
+      {
+        id: "q4",
+        prompt: "How often should a `MTLDevice` and `MTLCommandQueue` typically be created within an app's lifetime?",
+        options: [
+          {
+            id: "a",
+            text: "A new instance must be created for every single draw call",
+          },
+          {
+            id: "b",
+            text: "Typically once — the device is created once per app session since the GPU doesn't change, and the command queue is created once and reused to submit work over the app's lifetime",
+          },
+          {
+            id: "c",
+            text: "They must be recreated every frame for correctness",
+          },
+          {
+            id: "d",
+            text: "They are automatically created and destroyed by SwiftUI",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Both are foundational, session-long objects — created once and reused, rather than recreated repeatedly, which would be wasteful given their setup cost.",
+      },
+      {
+        id: "q5",
+        prompt: "Why should `MTLRenderPipelineState` be built once and reused rather than rebuilt per-frame?",
+        options: [
+          {
+            id: "a",
+            text: "It has no measurable cost either way",
+          },
+          {
+            id: "b",
+            text: "Compiling a render pipeline state is a genuinely expensive operation relative to using it to draw, so it should be built once at setup time and reused across every subsequent frame's draw calls",
+          },
+          {
+            id: "c",
+            text: "`MTLRenderPipelineState` can only be created exactly once per app launch, with no exceptions",
+          },
+          {
+            id: "d",
+            text: "Rebuilding it per frame is required for correct rendering",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes a \"pay the setup cost once, reuse repeatedly\" principle — pipeline state compilation is costly, so it should happen once rather than being repeated unnecessarily every frame.",
+      },
+      {
+        id: "q6",
+        prompt: "What analogous \"build once, reuse repeatedly\" pattern from earlier in the curriculum does the section connect to `MTLRenderPipelineState`'s setup cost?",
+        options: [
+          {
+            id: "a",
+            text: "`AVAssetExportSession`'s export presets being configured once rather than reconstructed for every export (section 55.12)",
+          },
+          {
+            id: "b",
+            text: "`Transaction.updates`'s continuous observation pattern",
+          },
+          {
+            id: "c",
+            text: "`CATransaction`'s atomic batching behavior",
+          },
+          {
+            id: "d",
+            text: "`PHPickerViewController`'s privacy-preserving selection model",
+          },
+        ],
+        correctOptionId: "a",
+        explanation: "The section explicitly draws this parallel to `AVAssetExportSession`'s presets from section 55.12 as another example of paying a setup cost once and reusing the configured result repeatedly.",
+      },
+      {
+        id: "q7",
+        prompt: "What is Metal Shading Language (MSL) based on, and what do attributes like `[[position]]` and `[[buffer(0)]]` accomplish?",
+        options: [
+          {
+            id: "a",
+            text: "MSL is based on Swift; attributes are purely cosmetic",
+          },
+          {
+            id: "b",
+            text: "MSL is a C++-based language; attributes explicitly declare how data flows between CPU-side Swift code and GPU-side shader functions",
+          },
+          {
+            id: "c",
+            text: "MSL requires no compilation step at all",
+          },
+          {
+            id: "d",
+            text: "Attributes are only used in compute shaders, never in vertex/fragment shaders",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MSL's C++ foundation combined with attribute annotations explicitly and manually declares data binding between CPU and GPU code, reflecting Metal's low-level, explicit nature.",
+      },
+      {
+        id: "q8",
+        prompt: "How does MSL's explicit, attribute-driven data binding compare to `@Generable`'s structural binding in Foundation Models (section 58.7)?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical approaches",
+          },
+          {
+            id: "b",
+            text: "MSL's binding is meaningfully more low-level and manual, reflecting Metal's position at the opposite end of the abstraction spectrum from high-level, declarative frameworks like Foundation Models",
+          },
+          {
+            id: "c",
+            text: "`@Generable` is more low-level than MSL's attribute system",
+          },
+          {
+            id: "d",
+            text: "There is no meaningful comparison drawn between the two",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly contrasts MSL's explicit, manual binding with `@Generable`'s implicit structural binding, situating Metal as a much lower-level, more manual approach on the overall abstraction spectrum.",
+      },
+      {
+        id: "q9",
+        prompt: "What is the role of the vertex shader in the graphics pipeline?",
+        options: [
+          {
+            id: "a",
+            text: "It runs once per pixel to compute the final color",
+          },
+          {
+            id: "b",
+            text: "It runs once per vertex, transforming vertex positions and computing per-vertex data like color or texture coordinates",
+          },
+          {
+            id: "c",
+            text: "It only runs for compute shaders, not rendering",
+          },
+          {
+            id: "d",
+            text: "It has no role in modern Metal pipelines",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The vertex shader is one of the two primary programmable stages, executing once per vertex to transform positions and compute per-vertex attributes.",
+      },
+      {
+        id: "q10",
+        prompt: "What does the `[[stage_in]]` attribute signal in a fragment shader?",
+        options: [
+          {
+            id: "a",
+            text: "That the shader receives raw, uninterpolated vertex data",
+          },
+          {
+            id: "b",
+            text: "That the fragment shader receives its input via automatic interpolation of the vertex shader's per-vertex outputs across each triangle's surface",
+          },
+          {
+            id: "c",
+            text: "That the shader should skip execution for that fragment",
+          },
+          {
+            id: "d",
+            text: "That the shader is a compute kernel, not a fragment shader",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`[[stage_in]]` indicates automatic GPU interpolation of vertex shader outputs across a triangle's surface, which is how smooth color gradients are achieved without explicit interpolation code in the fragment shader.",
+      },
+      {
+        id: "q11",
+        prompt: "How do compute shaders differ in execution model from the vertex/fragment graphics pipeline?",
+        options: [
+          {
+            id: "a",
+            text: "Compute shaders are tied to rendering geometry just like vertex/fragment shaders",
+          },
+          {
+            id: "b",
+            text: "Compute shaders are dispatched across a grid of independent threads for general-purpose parallel computation, not tied to rendering a triangle to the screen",
+          },
+          {
+            id: "c",
+            text: "Compute shaders can only process a single value at a time, with no parallelism",
+          },
+          {
+            id: "d",
+            text: "Compute shaders replace the need for vertex shaders entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Compute shaders reflect a fundamentally different model — massively parallel, general-purpose data processing dispatched across threads, rather than the geometry-rendering-specific vertex/fragment pipeline.",
+      },
+      {
+        id: "q12",
+        prompt: "What does `thread_position_in_grid` identify within a compute kernel?",
+        options: [
+          {
+            id: "a",
+            text: "The screen pixel coordinates being rendered",
+          },
+          {
+            id: "b",
+            text: "Which thread, within the dispatched grid of parallel threads, is currently executing, letting each thread independently process its own slice of data",
+          },
+          {
+            id: "c",
+            text: "The current frame number being rendered",
+          },
+          {
+            id: "d",
+            text: "The vertex index within a triangle",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Each compute thread is identified by its position in the dispatched grid, allowing independent, parallel processing of different data slices across many threads simultaneously.",
+      },
+      {
+        id: "q13",
+        prompt: "What does Metal Performance Shaders (MPS) provide?",
+        options: [
+          {
+            id: "a",
+            text: "A replacement for the entire Metal API",
+          },
+          {
+            id: "b",
+            text: "A library of pre-built, highly optimized GPU kernels for common operations like image processing and matrix operations, sparing developers from hand-writing and tuning their own MSL kernels",
+          },
+          {
+            id: "c",
+            text: "MPS is only usable for neural network training, not inference or image processing",
+          },
+          {
+            id: "d",
+            text: "MPS eliminates the need for `MTLDevice` and `MTLCommandQueue`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MPS provides pre-optimized, ready-to-use kernels for frequently-needed operations like Gaussian blur, avoiding the need to hand-write and tune custom MSL for problems already well-solved.",
+      },
+      {
+        id: "q14",
+        prompt: "What parallel does the section draw between MPS and Core ML (section 59)?",
+        options: [
+          {
+            id: "a",
+            text: "MPS and Core ML are described as functionally unrelated",
+          },
+          {
+            id: "b",
+            text: "MPS's relationship to raw Metal programming parallels Core ML's relationship to raw neural network implementation — both provide a higher-level, pre-optimized library sparing developers from significant implementation effort",
+          },
+          {
+            id: "c",
+            text: "Core ML is built entirely on top of MPS with no independent functionality",
+          },
+          {
+            id: "d",
+            text: "MPS replaces the need for Core ML entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct structural parallel — in both cases, a pre-optimized library handles substantial engineering effort for common operations, letting developers use well-tested, already-tuned solutions rather than building from scratch.",
+      },
+      {
+        id: "q15",
+        prompt: "What does MetalFX upscaling trade off?",
+        options: [
+          {
+            id: "a",
+            text: "It has no trade-offs; it is strictly better in every dimension",
+          },
+          {
+            id: "b",
+            text: "Rendering a scene at a lower internal resolution for better performance, then intelligently upscaling to the target display resolution — trading some image quality for a meaningful performance gain",
+          },
+          {
+            id: "c",
+            text: "It trades color accuracy for frame rate, unrelated to resolution",
+          },
+          {
+            id: "d",
+            text: "It only works with compute shaders, not the graphics pipeline",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "MetalFX's core value proposition is rendering at reduced internal resolution for performance, then using intelligent upscaling to recover much of the visual quality at the target output resolution.",
+      },
+      {
+        id: "q16",
+        prompt: "What earlier trade-off from section 59.5 does MetalFX's resolution/performance trade-off parallel?",
+        options: [
+          {
+            id: "a",
+            text: "The `LanguageModel` protocol's cloud routing decision",
+          },
+          {
+            id: "b",
+            text: "Core ML's quantization/palettization trade-off, where compressing model weights trades some accuracy for reduced size, just as lower internal resolution trades some fidelity for performance",
+          },
+          {
+            id: "c",
+            text: "HealthKit's read/write authorization granularity",
+          },
+          {
+            id: "d",
+            text: "`AVAssetExportSession`'s preset selection",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects MetalFX's quality/performance trade-off to the same underlying pattern as Core ML's quantization/palettization trade-off from section 59.5 — both trade some fidelity for meaningful efficiency gains.",
+      },
+      {
+        id: "q17",
+        prompt: "What does Xcode's Metal debugger / GPU frame capture tool let a developer do?",
+        options: [
+          {
+            id: "a",
+            text: "Only view source code without any runtime inspection",
+          },
+          {
+            id: "b",
+            text: "Step through an individual captured frame's actual GPU commands, inspect resource bindings, and visualize performance bottlenecks",
+          },
+          {
+            id: "c",
+            text: "Automatically rewrite inefficient shader code",
+          },
+          {
+            id: "d",
+            text: "Convert MSL code into Swift automatically",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Frame capture provides direct inspection of the actual sequence of GPU commands, resource bindings, and per-stage timing for a specific captured frame, enabling precise performance diagnosis.",
+      },
+      {
+        id: "q18",
+        prompt: "What broader diagnostic principle does the Metal debugger's frame capture share with the Core ML performance report (59.7) and the Core Animation instrument (62.7)?",
+        options: [
+          {
+            id: "a",
+            text: "All three tools are used exclusively for memory leak detection",
+          },
+          {
+            id: "b",
+            text: "A \"measure, don't guess\" principle — using actual, measured tool output to identify performance bottlenecks rather than reasoning about performance purely from source code",
+          },
+          {
+            id: "c",
+            text: "They all exclusively measure network latency",
+          },
+          {
+            id: "d",
+            text: "None of these tools have any principle in common",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly ties these three diagnostic tools together under the same principle: measuring actual behavior (compute unit assignment, offscreen rendering, GPU command timing) rather than guessing from source code alone.",
+      },
+      {
+        id: "q19",
+        prompt: "Why is a `MTLBuffer` necessary in the Metal execution model?",
+        options: [
+          {
+            id: "a",
+            text: "It replaces the need for `MTLCommandQueue` entirely",
+          },
+          {
+            id: "b",
+            text: "It holds data — such as vertex data, uniforms, or compute input/output — that needs to be accessible to GPU code",
+          },
+          {
+            id: "c",
+            text: "It is only used for storing compiled shader binaries",
+          },
+          {
+            id: "d",
+            text: "It has no functional purpose beyond debugging",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`MTLBuffer` is the mechanism for making CPU-side data (vertex positions, compute inputs, etc.) accessible to GPU-executed code, forming one of the three foundational Metal objects.",
+      },
+      {
+        id: "q20",
+        prompt: "Which statement correctly reflects the relationship between vertex shaders, fragment shaders, and compute shaders?",
+        options: [
+          {
+            id: "a",
+            text: "All three execute identically and interchangeably in every pipeline",
+          },
+          {
+            id: "b",
+            text: "Vertex and fragment shaders form the graphics-specific rendering pipeline (per-vertex and per-pixel stages), while compute shaders provide a separate, general-purpose parallel computation model not tied to rendering geometry",
+          },
+          {
+            id: "c",
+            text: "Compute shaders are simply a renamed version of fragment shaders",
+          },
+          {
+            id: "d",
+            text: "Vertex shaders always run after fragment shaders in the pipeline",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section distinguishes the graphics-specific vertex/fragment pipeline (rendering geometry to pixels) from compute shaders' fundamentally different, general-purpose parallel data processing model.",
+      },
+    ],
+  },
+  {
+    id: "realitykit-arkit-and-visionos-quiz",
+    title: "RealityKit, ARKit, and visionOS",
+    description: "20 questions covering RealityKit's ECS model and RealityView, USDZ and Reality Composer Pro, ARKit world/plane/image tracking and occlusion, face/body tracking, and visionOS scene types, input, and performance.",
+    relatedArticleSlug: "realitykit-arkit-and-visionos",
+    questions: [
+      {
+        id: "q1",
+        prompt: "How does RealityKit's Entity-Component-System (ECS) model differ from a traditional inheritance-based scene graph?",
+        options: [
+          {
+            id: "a",
+            text: "ECS requires every entity to inherit from a specific class defining its capabilities",
+          },
+          {
+            id: "b",
+            text: "An entity's actual behavior and appearance emerge entirely from which components have been attached to it, rather than being determined by class inheritance",
+          },
+          {
+            id: "c",
+            text: "ECS and inheritance-based scene graphs are functionally identical concepts",
+          },
+          {
+            id: "d",
+            text: "Components can only be attached to entities at compile time, never at runtime",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "ECS composes behavior and appearance from attached components rather than class hierarchy, letting the same generic `Entity` type represent very different kinds of objects purely based on its component composition.",
+      },
+      {
+        id: "q2",
+        prompt: "What is the defining characteristic of the \"S\" (System) in RealityKit's ECS model?",
+        options: [
+          {
+            id: "a",
+            text: "Systems store all of an entity's visual data directly",
+          },
+          {
+            id: "b",
+            text: "Systems implement per-frame logic that queries for entities with a specific component combination and updates them, keeping behavioral logic separate from the data components themselves",
+          },
+          {
+            id: "c",
+            text: "Systems replace the need for components entirely",
+          },
+          {
+            id: "d",
+            text: "Systems can only be used for physics simulation, no other behavior",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The defining ECS separation is data (components) from behavior (systems) — a system queries for matching entities and applies logic each frame, while components themselves hold no logic.",
+      },
+      {
+        id: "q3",
+        prompt: "How does `RealityView`'s update closure relate to SwiftUI's broader reactivity model?",
+        options: [
+          {
+            id: "a",
+            text: "It is entirely unrelated to SwiftUI's declarative state-driven approach",
+          },
+          {
+            id: "b",
+            text: "It provides the same declarative, state-driven update pattern used elsewhere in SwiftUI, reconciling RealityKit entities to match current state rather than requiring manual, imperative mutation",
+          },
+          {
+            id: "c",
+            text: "`RealityView` requires imperative, non-declarative code with no relationship to SwiftUI state",
+          },
+          {
+            id: "d",
+            text: "The update closure only runs once, at initial setup",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "`RealityView`'s update closure mirrors SwiftUI's general reactivity model — changes to observed state trigger reconciliation of the RealityKit scene, consistent with SwiftUI's declarative philosophy discussed in Part 3.",
+      },
+      {
+        id: "q4",
+        prompt: "Why is USDZ's status as an open, self-contained format significant?",
+        options: [
+          {
+            id: "a",
+            text: "USDZ files can only be used within a single specific app",
+          },
+          {
+            id: "b",
+            text: "It enables USDZ to serve as a genuine interchange format — assets from professional 3D tools can be exported to USDZ and loaded into RealityKit, and the same file can be viewed directly via AR Quick Look outside any custom app",
+          },
+          {
+            id: "c",
+            text: "USDZ is a proprietary Apple format incompatible with any external tool",
+          },
+          {
+            id: "d",
+            text: "USDZ files cannot include materials or textures, only raw geometry",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "USDZ's open, self-contained, standardized nature allows interoperability across professional 3D tools and direct system-level viewing via AR Quick Look, a meaningful advantage over a proprietary, app-specific format.",
+      },
+      {
+        id: "q5",
+        prompt: "What parallel does the section draw between Reality Composer Pro's workflow and earlier curriculum material?",
+        options: [
+          {
+            id: "a",
+            text: "No parallel is drawn to any other section",
+          },
+          {
+            id: "b",
+            text: "It parallels other visual-tool-plus-generated-code patterns, like `.storekit` configuration files (56.13) or Core ML `.mlpackage` files (59.2), where non-code configuration is authored visually and referenced from Swift",
+          },
+          {
+            id: "c",
+            text: "Reality Composer Pro is described as functionally identical to Xcode's Interface Builder",
+          },
+          {
+            id: "d",
+            text: "It parallels ShazamKit's audio fingerprint matching process",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects Reality Composer Pro's visual-authoring-plus-Swift-reference workflow to the same pattern seen with `.storekit` files and Core ML `.mlpackage` files elsewhere in the curriculum.",
+      },
+      {
+        id: "q6",
+        prompt: "Where do shader graph materials sit relative to RealityKit's built-in materials and Metal's manual shader programming?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical to RealityKit's built-in `SimpleMaterial`",
+          },
+          {
+            id: "b",
+            text: "They occupy a middle ground, providing much of custom shader programming's visual flexibility through a visual node-based interface, without requiring hand-written Metal Shading Language",
+          },
+          {
+            id: "c",
+            text: "They require exactly the same MSL code as raw Metal shaders",
+          },
+          {
+            id: "d",
+            text: "Shader graph materials can only be used for particle effects, never surface appearance",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Shader graph materials provide sophisticated procedural visual effects through visual authoring, sitting between RealityKit's simple built-in materials and the full complexity of hand-written MSL shader code (section 63.4).",
+      },
+      {
+        id: "q7",
+        prompt: "What is the core technical achievement underlying ARKit's world tracking?",
+        options: [
+          {
+            id: "a",
+            text: "Using only the camera, with no motion sensor input at all",
+          },
+          {
+            id: "b",
+            text: "Visual-inertial odometry — fusing camera imagery with motion sensor data to continuously estimate device position with greater accuracy and stability than either source alone",
+          },
+          {
+            id: "c",
+            text: "World tracking relies exclusively on GPS positioning",
+          },
+          {
+            id: "d",
+            text: "World tracking requires a LiDAR sensor on every supported device",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "World tracking's fused visual-inertial approach (combining camera and Core Motion sensor data) is what enables virtual content to appear stably anchored in the real world as the device moves.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does anchoring virtual content to a detected `ARPlaneAnchor` produce a more convincing result than anchoring to an arbitrary fixed point?",
+        options: [
+          {
+            id: "a",
+            text: "`ARPlaneAnchor` has no effect on how virtual content is rendered",
+          },
+          {
+            id: "b",
+            text: "It makes the object appear to genuinely rest on a real surface, updating its apparent position appropriately as ARKit refines its estimate of the plane's exact position and extent",
+          },
+          {
+            id: "c",
+            text: "Arbitrary fixed points always produce more stable results than plane anchoring",
+          },
+          {
+            id: "d",
+            text: "Plane anchors can only be used for vertical surfaces, not horizontal ones",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Anchoring to a detected plane ties virtual content to an actual real-world surface's tracked position, producing the visual effect of an object genuinely resting on that surface rather than floating at an arbitrary point.",
+      },
+      {
+        id: "q9",
+        prompt: "How does image tracking differ from generic plane detection?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical approaches to anchoring content",
+          },
+          {
+            id: "b",
+            text: "Image tracking recognizes a specific, pre-registered known image (like a poster or product package) and provides orientation directly from that image's known geometry, distinct from plane detection's general \"find any flat surface\" approach",
+          },
+          {
+            id: "c",
+            text: "Plane detection requires a specific reference image, while image tracking does not",
+          },
+          {
+            id: "d",
+            text: "Image tracking cannot provide any orientation information",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Image tracking targets a specific, known visual marker and derives orientation from its known geometry, while plane detection more generally searches for any flat surface without requiring a pre-registered reference.",
+      },
+      {
+        id: "q10",
+        prompt: "What hardware capability does realistic occlusion via scene reconstruction depend on?",
+        options: [
+          {
+            id: "a",
+            text: "Occlusion works identically on all devices regardless of hardware",
+          },
+          {
+            id: "b",
+            text: "A LiDAR scanner, which builds a detailed real-time 3D mesh of the environment enabling ARKit to correctly render virtual objects as hidden behind real objects in front of them",
+          },
+          {
+            id: "c",
+            text: "Occlusion only requires the standard camera, with no additional sensor",
+          },
+          {
+            id: "d",
+            text: "Occlusion is a purely software feature requiring no hardware dependency",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Scene reconstruction's real-time environmental mesh, which enables realistic occlusion, specifically depends on LiDAR-equipped hardware being available to build that detailed mesh.",
+      },
+      {
+        id: "q11",
+        prompt: "What do face tracking's blend shape coefficients represent?",
+        options: [
+          {
+            id: "a",
+            text: "Raw, unstructured pixel data from the camera feed",
+          },
+          {
+            id: "b",
+            text: "A standardized, numeric representation of specific facial expressions (a value from 0 to 1 for each of dozens of defined expression categories), useful for driving an animated avatar",
+          },
+          {
+            id: "c",
+            text: "The exact 3D mesh geometry of the entire face with no expression data",
+          },
+          {
+            id: "d",
+            text: "Blend shapes are exclusive to body tracking, not face tracking",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Blend shape coefficients reduce a face's complex expression state into structured, numeric data (like `.mouthSmileLeft` or `.browInnerUp`) that can directly drive avatar animation.",
+      },
+      {
+        id: "q12",
+        prompt: "What determines the appropriate visionOS scene type (window, volume, or immersive space) for a given piece of content?",
+        options: [
+          {
+            id: "a",
+            text: "Immersive spaces should always be used regardless of content type, since they are inherently superior",
+          },
+          {
+            id: "b",
+            text: "The content's actual nature — a settings screen suits a window, a 3D object to examine suits a volume, and a fully immersive experience suits an immersive space",
+          },
+          {
+            id: "c",
+            text: "Only windows can display any SwiftUI content; volumes and immersive spaces cannot",
+          },
+          {
+            id: "d",
+            text: "The choice is arbitrary and has no bearing on user experience",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuine design decision matched to content's actual nature, not a case where more immersion is automatically better regardless of what's being displayed.",
+      },
+      {
+        id: "q13",
+        prompt: "What specific role do hover effects play in visionOS's interaction model, according to 64.13?",
+        options: [
+          {
+            id: "a",
+            text: "Hover effects have no functional purpose beyond visual decoration",
+          },
+          {
+            id: "b",
+            text: "They confirm to the user that their gaze is currently targeting a specific interactive element, since there's no cursor or touch contact point providing that feedback the way a mouse or finger would",
+          },
+          {
+            id: "c",
+            text: "Hover effects replace the need for pinch gestures entirely",
+          },
+          {
+            id: "d",
+            text: "Hover effects only function within immersive spaces, never in windows",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because visionOS's gaze-based targeting has no physical contact point for continuous feedback, hover effects specifically serve to confirm what the user's gaze is currently targeting before a pinch selection occurs.",
+      },
+      {
+        id: "q14",
+        prompt: "Why do standard SwiftUI `Button` and tap gesture APIs largely work unchanged on visionOS?",
+        options: [
+          {
+            id: "a",
+            text: "They don't work unchanged; every interactive element must be rewritten for visionOS",
+          },
+          {
+            id: "b",
+            text: "The platform automatically translates gaze-plus-pinch into the equivalent of a standard tap event, requiring little to no modification to existing touch/click-oriented SwiftUI code",
+          },
+          {
+            id: "c",
+            text: "visionOS does not support any standard SwiftUI interactive controls",
+          },
+          {
+            id: "d",
+            text: "Gaze and pinch can only be used with custom, visionOS-specific UI components",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "visionOS handles the gaze+pinch-to-tap translation automatically at the platform level, meaning existing SwiftUI interaction code largely continues to function correctly without modification.",
+      },
+      {
+        id: "q15",
+        prompt: "When is reaching for raw hand tracking data (`HandTrackingProvider`) appropriate, as opposed to relying on standard gaze-and-pinch input?",
+        options: [
+          {
+            id: "a",
+            text: "It should always be used instead of standard gaze-and-pinch for every interaction",
+          },
+          {
+            id: "b",
+            text: "When an experience genuinely needs custom gesture recognition or direct hand-object interaction beyond what the standard, system-handled pinch gesture already provides",
+          },
+          {
+            id: "c",
+            text: "Hand tracking is required for any visionOS app to function at all",
+          },
+          {
+            id: "d",
+            text: "Hand tracking replaces the need for `ARWorldTrackingConfiguration` entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames hand tracking as a deliberate escalation to lower-level capability, appropriate specifically when custom gesture recognition or direct manipulation genuinely exceeds what standard pinch-to-select provides.",
+      },
+      {
+        id: "q16",
+        prompt: "What earlier examples does the section compare hand tracking's \"escalation to lower-level capability\" pattern to?",
+        options: [
+          {
+            id: "a",
+            text: "`PHPickerViewController` and `AVPlayer`",
+          },
+          {
+            id: "b",
+            text: "Core Bluetooth's peripheral role (57.7) and custom `CIKernel` filters (62.11)",
+          },
+          {
+            id: "c",
+            text: "`Transaction.updates` and `VerificationResult`",
+          },
+          {
+            id: "d",
+            text: "`NLTokenizer` and `NLTagger`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel — reaching for hand tracking, like reaching for Core Bluetooth's peripheral role or a custom `CIKernel`, represents a deliberate move to lower-level, more specialized capability when standard abstractions aren't sufficient.",
+      },
+      {
+        id: "q17",
+        prompt: "What does spatial video/photo capture rely on, technically, according to 64.16?",
+        options: [
+          {
+            id: "a",
+            text: "An entirely separate capture framework unrelated to `AVCaptureSession`",
+          },
+          {
+            id: "b",
+            text: "The standard `AVCaptureSession` foundation from section 55.4, configured with a spatial-capable format capturing two slightly offset camera views for stereoscopic depth",
+          },
+          {
+            id: "c",
+            text: "Spatial capture requires no camera hardware at all",
+          },
+          {
+            id: "d",
+            text: "Spatial video can only be captured directly on a Vision Pro headset itself",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Spatial capture builds directly on the same `AVCaptureSession` infrastructure covered in section 55.4, simply using a spatial-capable format for stereoscopic, depth-viewable content.",
+      },
+      {
+        id: "q18",
+        prompt: "Why are performance budgets described as more critical on Vision Pro than on a typical iPhone app?",
+        options: [
+          {
+            id: "a",
+            text: "Vision Pro has no meaningful performance constraints compared to other devices",
+          },
+          {
+            id: "b",
+            text: "Missing Vision Pro's required frame rate and latency can produce genuine user discomfort, a well-documented consequence in immersive headset experiences, unlike iPhone frame drops which are merely a visible quality issue",
+          },
+          {
+            id: "c",
+            text: "Performance budgets are identical in stakes across all Apple platforms",
+          },
+          {
+            id: "d",
+            text: "Vision Pro automatically compensates for any performance shortfall with no visible effect",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit that inadequate frame rate/latency in an immersive headset context can cause genuine physical discomfort, raising the stakes of performance budgeting beyond a typical 2D app's quality concerns.",
+      },
+      {
+        id: "q19",
+        prompt: "Which profiling tools from earlier sections does 64.17 identify as relevant to Vision Pro performance discipline?",
+        options: [
+          {
+            id: "a",
+            text: "The Core ML performance report and `AVAssetExportSession` presets",
+          },
+          {
+            id: "b",
+            text: "Offscreen rendering cost analysis (62.7) and Metal frame capture (63.9)",
+          },
+          {
+            id: "c",
+            text: "The App Store Connect analytics dashboard",
+          },
+          {
+            id: "d",
+            text: "`NLEmbedding` similarity search",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects Vision Pro's performance requirements to the offscreen rendering discipline from 62.7 and the Metal debugger's frame capture from 63.9, framing them as genuine requirements rather than polish concerns in this context.",
+      },
+      {
+        id: "q20",
+        prompt: "What technique does the section recommend for models viewed at varying distances in a visionOS scene?",
+        options: [
+          {
+            id: "a",
+            text: "Always rendering every model at maximum polygon count regardless of viewing distance",
+          },
+          {
+            id: "b",
+            text: "LOD (level of detail) techniques, alongside preferring simpler geometry where visual fidelity allows and profiling actual on-device performance rather than assuming simulator performance is representative",
+          },
+          {
+            id: "c",
+            text: "Disabling all 3D content entirely to avoid performance issues",
+          },
+          {
+            id: "d",
+            text: "Using only 2D windows, never volumes or immersive spaces, to avoid 3D rendering costs",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends LOD techniques for models viewed at varying distances, alongside general polygon count discipline and on-device (not just simulator) profiling, as concrete performance-conscious practices for visionOS content.",
+      },
+    ],
+  },
 ];
 
 export function getAllQuizzes(): Quiz[] {
