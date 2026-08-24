@@ -157,13 +157,15 @@ export function QuizRunner({
           })}
         </div>
 
-        <Link
-          href="/quizzes"
-          className="mt-8 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
-        >
-          <ChevronLeftIcon className="size-4" />
-          Back to quizzes
-        </Link>
+        <div className="mt-8">
+          <Link
+            href="/quizzes"
+            className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+          >
+            <ChevronLeftIcon className="size-4" />
+            Back to quizzes
+          </Link>
+        </div>
       </div>
     );
   }
@@ -252,13 +254,15 @@ export function QuizRunner({
         {submitting ? "Submitting…" : "Submit"}
       </button>
 
-      <Link
-        href="/quizzes"
-        className="mt-8 inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
-      >
-        <ChevronLeftIcon className="size-4" />
-        Back to quizzes
-      </Link>
+      <div className="mt-8">
+        <Link
+          href="/quizzes"
+          className="inline-flex items-center gap-1.5 text-base font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+        >
+          <ChevronLeftIcon className="size-4" />
+          Back to quizzes
+        </Link>
+      </div>
     </div>
   );
 }
