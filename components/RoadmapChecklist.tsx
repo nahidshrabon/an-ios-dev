@@ -132,19 +132,19 @@ export function RoadmapChecklist({
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 sm:flex-1 dark:border-emerald-400/15 dark:bg-emerald-400/10">
+        <div className="flex items-center gap-3 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 sm:flex-1 dark:border-blue-400/15 dark:bg-blue-400/10">
           <ProgressRing percent={percent} size={44} strokeWidth={4}>
             <span className="font-heading text-xs font-semibold">
               {percent}%
             </span>
           </ProgressRing>
           <div>
-            <p className="font-heading text-sm text-emerald-700 dark:text-emerald-400">
+            <p className="font-heading text-sm text-blue-700 dark:text-blue-400">
               Roadmap progress
             </p>
-            <p className="font-heading mt-0.5 text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+            <p className="font-heading mt-0.5 text-xl font-semibold text-blue-700 dark:text-blue-400">
               {completedCount}
-              <span className="text-sm text-emerald-600/80 dark:text-emerald-400/80">
+              <span className="text-sm text-blue-600/80 dark:text-blue-400/80">
                 /{totalSections}
               </span>
             </p>
