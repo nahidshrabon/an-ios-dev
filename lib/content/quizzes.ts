@@ -5073,7 +5073,7 @@ public struct StringifyMacro: ExpressionMacro {
     questions: [
       {
         id: "q1",
-        prompt: "How does `AsyncIteratorProtocol`'s `next()` differ from `IteratorProtocol`'s `next()` (recall section 14.1)?",
+        prompt: "How does `AsyncIteratorProtocol`'s `next()` differ from `IteratorProtocol`'s `next()`?",
         options: [
           { id: "a", text: "`next()` is `async`, allowing genuine suspension unlike the synchronous version" },
           { id: "b", text: "`AsyncIteratorProtocol` doesn't actually have any `next()` method at all" },
@@ -5201,11 +5201,29 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A `subscript` plus `startIndex`/`endIndex`, exactly mirroring `Collection`'s own requirements" },
         ],
         correctOptionId: "c",
-        explanation: "This mirrors `Sequence`'s own two-protocol structure (section 14.1) exactly, just with an asynchronous `next()` — implementing `makeAsyncIterator()` plus an `AsyncIteratorProtocol`-conforming iterator type with an `async` `next()` gives you a fully custom, reusable `AsyncSequence` type.",
+        explanation: "This mirrors `Sequence`'s own two-protocol structure exactly, just with an asynchronous `next()` — implementing `makeAsyncIterator()` plus an `AsyncIteratorProtocol`-conforming iterator type with an `async` `next()` gives you a fully custom, reusable `AsyncSequence` type.",
       },
       {
         id: "q12",
-        prompt: "In the custom `Countdown: AsyncSequence` example, what allows each element's production to genuinely suspend, unlike the synchronous `Sequence` version from section 14.1?",
+        prompt: "Given the code below, what allows each element's production to genuinely suspend, unlike a synchronous `Sequence`'s `next()`?",
+        codeExample: `struct Countdown: AsyncSequence {
+    typealias Element = Int
+    let start: Int
+
+    struct AsyncIterator: AsyncIteratorProtocol {
+        var current: Int
+        mutating func next() async -> Int? {
+            guard current > 0 else { return nil }
+            try? await Task.sleep(for: .seconds(1))   // simulate async work between elements
+            defer { current -= 1 }
+            return current
+        }
+    }
+
+    func makeAsyncIterator() -> AsyncIterator {
+        AsyncIterator(current: start)
+    }
+}`,
         options: [
           { id: "a", text: "Declaring the enclosing struct type as `final`, and nothing else besides that" },
           { id: "b", text: "Applying the `@escaping` attribute specifically to the iterator's `next()` method" },
@@ -5213,7 +5231,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Marking `next()` `async`, letting it call `Task.sleep` between producing elements" },
         ],
         correctOptionId: "d",
-        explanation: "The core structural change from the synchronous `Countdown` (section 14.1) to this async version is marking `next()` as `async`, which permits genuine suspension inside it — here, using `Task.sleep` to simulate a delay between producing each countdown value, something a synchronous iterator's `next()` could never do.",
+        explanation: "The core structural change from a synchronous iterator to this async version is marking `next()` as `async`, which permits genuine suspension inside it — here, using `Task.sleep` to simulate a delay between producing each countdown value, something a synchronous iterator's `next()` could never do.",
       },
       {
         id: "q13",
@@ -5277,7 +5295,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "What is a practical real-world use case for chunking mentioned in the lesson?",
+        prompt: "What is a practical real-world use case for chunking an async sequence?",
         options: [
           { id: "a", text: "Rendering individual SwiftUI view instances strictly one at a time, in sequence" },
           { id: "b", text: "Batching analytics events into fewer network requests instead of one per event" },
@@ -5285,7 +5303,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Converting a plain `String` value into an array of its individual `Character`s" },
         ],
         correctOptionId: "b",
-        explanation: "The lesson specifically calls out batching analytics events as a common, practical use case for chunking — directly reducing network overhead by grouping many individual events into fewer, larger batch requests instead of one request per event.",
+        explanation: "Batching analytics events is a common, practical use case for chunking — directly reducing network overhead by grouping many individual events into fewer, larger batch requests instead of one request per event.",
       },
       {
         id: "q19",
@@ -5301,7 +5319,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q20",
-        prompt: "How does `Observations` relate to `withObservationTracking` (recall section 14.20)?",
+        prompt: "How does `Observations` relate to `withObservationTracking`?",
         options: [
           { id: "a", text: "`Observations` is compatible only with `ObservableObject`, never with `@Observable` types" },
           { id: "b", text: "`withObservationTracking` is a newer replacement that has fully superseded `Observations`" },
@@ -5309,7 +5327,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Both use the same `Observation` tracking; one fires once, the other is continuous" },
         ],
         correctOptionId: "d",
-        explanation: "Both leverage the same underlying `Observation` module tracking mechanism, but differ in consumption style: `withObservationTracking`'s `onChange` fires exactly once for the next change (recall section 14.20), while `Observations` provides an ongoing, iterable `AsyncSequence` of successive changes, better suited to being consumed alongside other async-sequence operators like `merge` or `chunked`.",
+        explanation: "Both leverage the same underlying `Observation` module tracking mechanism, but differ in consumption style: `withObservationTracking`'s `onChange` fires exactly once for the next change, while `Observations` provides an ongoing, iterable `AsyncSequence` of successive changes, better suited to being consumed alongside other async-sequence operators like `merge` or `chunked`.",
       },
     ],
   },
@@ -5413,11 +5431,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Cancellation is cooperative, checked via `isCancelled`, like Swift Concurrency's model" },
         ],
         correctOptionId: "d",
-        explanation: "Just like Swift Concurrency's `Task.isCancelled`/`checkCancellation()` (section 18.8), `Operation` cancellation is cooperative — calling `cancel()` merely sets a flag that the operation's own code must check via `isCancelled` and respond to, rather than forcibly halting execution.",
+        explanation: "Just like Swift Concurrency's `Task.isCancelled`/`checkCancellation()`, `Operation` cancellation is cooperative — calling `cancel()` merely sets a flag that the operation's own code must check via `isCancelled` and respond to, rather than forcibly halting execution.",
       },
       {
         id: "q9",
-        prompt: "What is the relationship between `NSLock`/`os_unfair_lock` and the `@unchecked Sendable` example from section 20.4?",
+        prompt: "What is the relationship between `NSLock`/`os_unfair_lock` and `@unchecked Sendable`?",
         options: [
           { id: "a", text: "They're exactly the manual sync needed to honestly fulfill `@unchecked Sendable`'s promise" },
           { id: "b", text: "They're entirely unrelated concepts drawn from completely different areas of Swift" },
@@ -5501,7 +5519,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q16",
-        prompt: "How does `objectWillChange`'s notification granularity compare to `@Observable`'s tracking, as referenced from sections 14.20/25.13?",
+        prompt: "How does `objectWillChange`'s notification granularity compare to `@Observable`'s tracking?",
         options: [
           { id: "a", text: "Neither mechanism has any meaningful granularity distinctions whatsoever, at all" },
           { id: "b", text: "`objectWillChange` is coarser-grained; `@Observable` tracks per-property, more finely" },
@@ -5509,7 +5527,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "They're fully identical in granularity, with genuinely no meaningful difference at all" },
         ],
         correctOptionId: "b",
-        explanation: "`objectWillChange` fires as a blanket \"something changed\" signal regardless of which specific `@Published` property changed, whereas `@Observable`'s underlying `Observation` module tracking (section 14.20) is precise per-property, notifying only observers that actually read the specific property that changed — a meaningfully finer-grained system.",
+        explanation: "`objectWillChange` fires as a blanket \"something changed\" signal regardless of which specific `@Published` property changed, whereas `@Observable`'s underlying `Observation` module tracking is precise per-property, notifying only observers that actually read the specific property that changed — a meaningfully finer-grained system.",
       },
       {
         id: "q17",
@@ -5525,7 +5543,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "In the GCD-to-structured-concurrency migration example, what does `async let user = fetchUser(); async let settings = fetchSettings(); let (loadedUser, loadedSettings) = await (user, settings)` replace?",
+        prompt: "What does `async let user = fetchUser(); async let settings = fetchSettings(); let (loadedUser, loadedSettings) = await (user, settings)` replace, compared to the equivalent GCD code?",
         options: [
           { id: "a", text: "A dispatch barrier applied specifically on an otherwise fully-concurrent queue" },
           { id: "b", text: "A single, solitary `DispatchQueue.main.async` call, and absolutely nothing more" },
@@ -5533,11 +5551,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A `DispatchGroup` with manual enter/leave calls, followed by `notify(queue:)`" },
         ],
         correctOptionId: "d",
-        explanation: "This is precisely the structured-concurrency replacement shown in the lesson for the classic `DispatchGroup` pattern of tracking multiple independent async operations — `async let` (section 18.2) achieves the same \"wait for both to finish\" behavior without the manual `enter()`/`leave()`/`notify()` bookkeeping.",
+        explanation: "This is precisely the structured-concurrency replacement for the classic `DispatchGroup` pattern of tracking multiple independent async operations — `async let` achieves the same \"wait for both to finish\" behavior without the manual `enter()`/`leave()`/`notify()` bookkeeping.",
       },
       {
         id: "q19",
-        prompt: "According to the lesson, what is the broader theme connecting the migration of both GCD code and Combine code to their modern Swift Concurrency equivalents?",
+        prompt: "What is the broader theme connecting the migration of both GCD code and Combine code to their modern Swift Concurrency equivalents?",
         options: [
           { id: "a", text: "There's genuinely no meaningful connection at all; the migrations are entirely separate" },
           { id: "b", text: "Legacy tools and modern tools are structurally unable to ever coexist within the same codebase" },
@@ -5545,7 +5563,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Modern equivalents are strictly and definitively less capable and should always be avoided" },
         ],
         correctOptionId: "c",
-        explanation: "The unifying theme across this section's migration guidance is replacing manual, discipline-dependent patterns (careful `DispatchGroup` bookkeeping, manual Combine subscription/cancellable management) with structured, compiler-enforced equivalents that achieve the same underlying goals more safely and with less room for developer error.",
+        explanation: "The unifying theme is replacing manual, discipline-dependent patterns (careful `DispatchGroup` bookkeeping, manual Combine subscription/cancellable management) with structured, compiler-enforced equivalents that achieve the same underlying goals more safely and with less room for developer error.",
       },
       {
         id: "q20",
@@ -5557,7 +5575,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "They remain common in existing codebases; understanding them helps maintain that code" },
         ],
         correctOptionId: "d",
-        explanation: "The lesson frames this entire section around legacy literacy: while new code should generally favor Swift Concurrency and `@Observable`, GCD, locks, and Combine remain prevalent throughout existing production codebases and third-party libraries, making familiarity with their core concepts essential for working in and maintaining that code.",
+        explanation: "While new code should generally favor Swift Concurrency and `@Observable`, GCD, locks, and Combine remain prevalent throughout existing production codebases and third-party libraries, making familiarity with their core concepts essential for working in and maintaining that code.",
       },
     ],
   },
@@ -5653,7 +5671,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q8",
-        prompt: "What does a view modifier fundamentally do, given that views are immutable descriptions (recall 23.2)?",
+        prompt: "What does a view modifier fundamentally do, given that views are immutable descriptions?",
         options: [
           { id: "a", text: "It fully deletes the original view and replaces it with an entirely unrelated one" },
           { id: "b", text: "It directly mutates the original view's own properties, permanently, in place" },
@@ -5685,7 +5703,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "As a set of independent properties, all applied simultaneously to the original base view" },
         ],
         correctOptionId: "b",
-        explanation: "The lesson explicitly frames this as the key mental model for resolving modifier-order confusion: each modifier wraps whatever came before it, producing a nested, cumulative composition — not a flat set of properties applied all at once to the original, unwrapped view.",
+        explanation: "This is the key mental model for resolving modifier-order confusion: each modifier wraps whatever came before it, producing a nested, cumulative composition — not a flat set of properties applied all at once to the original, unwrapped view.",
       },
       {
         id: "q11",
@@ -5733,7 +5751,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`.title` unconditionally renders larger than any fixed size, regardless of any settings" },
         ],
         correctOptionId: "b",
-        explanation: "This is a significant, low-effort accessibility win: semantic text styles participate in Dynamic Type scaling automatically, while a fixed-size font ignores the user's text-size preference entirely — which is why the lesson explicitly recommends preferring semantic styles for the vast majority of app text.",
+        explanation: "This is a significant, low-effort accessibility win: semantic text styles participate in Dynamic Type scaling automatically, while a fixed-size font ignores the user's text-size preference entirely — which is why semantic styles are recommended for the vast majority of app text.",
       },
       {
         id: "q15",
@@ -5781,7 +5799,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Because explicit color scheme checks unconditionally render faster than semantic colors always" },
         ],
         correctOptionId: "b",
-        explanation: "The lesson specifically recommends reserving explicit `colorScheme` checks for genuinely non-color-related logic differences (like swapping entire image assets) between light and dark mode — for straightforward color adaptation, semantic colors (23.9) already handle the vast majority of cases automatically and more simply.",
+        explanation: "The recommendation is to reserve explicit `colorScheme` checks for genuinely non-color-related logic differences (like swapping entire image assets) between light and dark mode — for straightforward color adaptation, semantic colors already handle the vast majority of cases automatically and more simply.",
       },
       {
         id: "q19",
@@ -5797,7 +5815,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q20",
-        prompt: "Which best summarizes the relationship between `Text`'s Markdown support and `AttributedString` from section 14.17?",
+        prompt: "Which best summarizes the relationship between `Text`'s Markdown support and `AttributedString`?",
         options: [
           { id: "a", text: "Markdown syntax is structurally usable only when explicitly wrapped inside a `Label`, never plain `Text`" },
           { id: "b", text: "`AttributedString` is structurally unable to be used with `Text` at all; it's exclusive to `UILabel`" },
@@ -5885,7 +5903,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Yes, always, unconditionally, and completely, with absolutely no exceptions whatsoever, ever" },
         ],
         correctOptionId: "b",
-        explanation: "The lesson explicitly frames `.frame()` as a request rather than an absolute guarantee — while it strongly influences a view's size, it operates within SwiftUI's broader proposal/response negotiation system (24.8), which can still affect the final outcome under certain constraints.",
+        explanation: "`.frame()` is a request rather than an absolute guarantee — while it strongly influences a view's size, it operates within SwiftUI's broader proposal/response negotiation system, which can still affect the final outcome under certain constraints.",
       },
       {
         id: "q7",
@@ -5981,7 +5999,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`.mask()` is structurally restricted to being usable only with `Image` views, and nothing else whatsoever" },
         ],
         correctOptionId: "b",
-        explanation: "`.clipShape()` is the simpler, shape-specific tool (cropping to a `Circle`, `RoundedRectangle`, etc.), while `.mask()` is more powerful and general, using any view's own rendered content (like a `Text`'s glyph shapes) as an opacity-based template determining visibility — as shown in the gradient-text example.",
+        explanation: "`.clipShape()` is the simpler, shape-specific tool (cropping to a `Circle`, `RoundedRectangle`, etc.), while `.mask()` is more powerful and general, using any view's own rendered content (like a `Text`'s glyph shapes) as an opacity-based template determining visibility.",
       },
       {
         id: "q15",
@@ -5993,7 +6011,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Using `.mask()` exclusively, with `.overlay()` being structurally entirely unnecessary here" },
         ],
         correctOptionId: "c",
-        explanation: "This is the exact pattern demonstrated in the lesson: clip the image to a `Circle()`, then add a `.overlay(Circle().stroke(...))` — using the identical `Circle()` shape for both the clip and the stroke guarantees the border ring precisely aligns with the clipped boundary.",
+        explanation: "The pattern is to clip the image to a `Circle()`, then add a `.overlay(Circle().stroke(...))` — using the identical `Circle()` shape for both the clip and the stroke guarantees the border ring precisely aligns with the clipped boundary.",
       },
       {
         id: "q16",
@@ -6021,7 +6039,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "What is `GeometryReader`'s most significant practical drawback, as covered in this section?",
+        prompt: "What is `GeometryReader`'s most significant practical drawback?",
         options: [
           { id: "a", text: "It's functional only and exclusively when dark mode happens to be active, and fails otherwise entirely" },
           { id: "b", text: "It always greedily expands to fill all available space, which frequently disrupts a layout's natural sizing" },
@@ -6065,7 +6083,7 @@ public struct StringifyMacro: ExpressionMacro {
     questions: [
       {
         id: "q1",
-        prompt: "Why does `@State` storage survive across `body` re-evaluations, even though the view value itself is recreated constantly (recall section 23.2)?",
+        prompt: "Why does `@State` storage survive across `body` re-evaluations, even though the view value itself is recreated constantly?",
         options: [
           { id: "a", text: "`@State`'s storage lives independently of the view value, persisted separately across renders" },
           { id: "b", text: "It doesn't actually survive at all; every `body` call unconditionally resets `@State` to its initial value" },
@@ -6281,7 +6299,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "What specifically triggers a view's `body` to re-evaluate, according to this section?",
+        prompt: "What specifically triggers a view's `body` to re-evaluate?",
         options: [
           { id: "a", text: "A piece of state the view actually reads during `body` changing — unread state changing triggers nothing" },
           { id: "b", text: "Any state change occurring anywhere in the entire app whatsoever, completely regardless of relevance, always" },
@@ -6301,7 +6319,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Only classes unconditionally benefit from `@State` this way; the guarantee never applies to `@Observable`" },
         ],
         correctOptionId: "c",
-        explanation: "Since view values themselves are recreated constantly as cheap, disposable descriptions (recall section 23.2), a plain, unwrapped property would be re-initialized on every single one of those recreations. `@State` specifically decouples its storage from that view-value lifecycle, guaranteeing the wrapped object is created exactly once and persisted thereafter — essential for a view-owned, expensive-to-create `@Observable` model.",
+        explanation: "Since view values themselves are recreated constantly as cheap, disposable descriptions, a plain, unwrapped property would be re-initialized on every single one of those recreations. `@State` specifically decouples its storage from that view-value lifecycle, guaranteeing the wrapped object is created exactly once and persisted thereafter — essential for a view-owned, expensive-to-create `@Observable` model.",
       },
     ],
   },
@@ -6321,7 +6339,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "The ability to display text content, which `VStack` is structurally unable to do at all" },
         ],
         correctOptionId: "a",
-        explanation: "`List` is purpose-built for row-based, scrollable content — unlike `VStack`, it automatically handles scrolling and provides standard list chrome (dividers, insets) plus built-in integration with the row-oriented features (swipe actions, selection, editing) covered throughout this section.",
+        explanation: "`List` is purpose-built for row-based, scrollable content — unlike `VStack`, it automatically handles scrolling and provides standard list chrome (dividers, insets) plus built-in integration with row-oriented features like swipe actions, selection, and editing.",
       },
       {
         id: "q2",
@@ -6505,7 +6523,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q17",
-        prompt: "How does `.onScrollGeometryChange()` relate to `.onGeometryChange()` from section 24.20?",
+        prompt: "How does `.onScrollGeometryChange()` relate to `.onGeometryChange()`?",
         options: [
           { id: "a", text: "`.onScrollGeometryChange()` unconditionally requires wrapping the scroll view in a `GeometryReader`" },
           { id: "b", text: "They're unconditionally unrelated, entirely separate mechanisms with no shared philosophy" },
@@ -6541,7 +6559,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q20",
-        prompt: "What are the most common underlying causes of scrolling stutter in a `List`/`ScrollView`, according to this section?",
+        prompt: "What are the most common underlying causes of scrolling stutter in a `List`/`ScrollView`?",
         options: [
           { id: "a", text: "Using an unconditionally excessive number of `Section` views throughout a single list, without exception, regardless of context" },
           { id: "b", text: "Expensive synchronous per-row computation, uncached images, and skipping lazy containers for large content" },
@@ -7249,7 +7267,28 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q17",
-        prompt: "In the transaction-scoping example, why does the green rectangle resize instantly while the blue rectangle animates smoothly, even though both respond to the same `withAnimation()`-wrapped state change?",
+        prompt: "Given the code below, why does the green rectangle resize instantly while the blue rectangle animates smoothly, even though both respond to the same `withAnimation()`-wrapped state change?",
+        codeExample: `struct TransactionScopingView: View {
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.blue)
+                .frame(width: isExpanded ? 250 : 100, height: 80)
+
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.green)
+                .frame(width: isExpanded ? 250 : 100, height: 80)
+                .transaction { transaction in
+                    transaction.animation = nil
+                }
+        }
+        .onTapGesture {
+            withAnimation(.spring) { isExpanded.toggle() }
+        }
+    }
+}`,
         options: [
           { id: "a", text: "`RoundedRectangle` unconditionally behaves differently from every other shape type, with no override, in every case" },
           { id: "b", text: "The green rectangle's `.transaction()` explicitly sets `transaction.animation = nil`, overriding the context" },
@@ -7273,7 +7312,16 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "In the debugging example, why does calling `.id(count)` on a `Text` view defeat the intended counting animation?",
+        prompt: "Given the code below, why does calling `.id(count)` on a `Text` view defeat the intended counting animation?",
+        codeExample: `struct BadIdentityExampleView: View {
+    @State private var count = 0
+
+    var body: some View {
+        Text("\\(count)")
+            .id(count) // new identity every change — defeats animation
+            .onTapGesture { withAnimation { count += 1 } }
+    }
+}`,
         options: [
           { id: "a", text: "Changing `.id()` alongside the animated value forces SwiftUI to treat the view as an new instance" },
           { id: "b", text: "`Text` views are unconditionally unable to ever be animated under any circumstance whatsoever" },
