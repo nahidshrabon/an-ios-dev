@@ -164,14 +164,17 @@ export const roadmap: RoadmapPart[] = [
       section(76, "CI/CD", "ci-cd"),
       section(77, "Code Signing and Distribution", "code-signing-and-distribution"),
       section(78, "App Store", "app-store"),
-      section(79, "Security and Privacy"),
-      section(80, "Observability and Analytics"),
+      section(79, "Security and Privacy", "security-and-privacy"),
+      section(80, "Observability and Analytics", "observability-and-analytics"),
     ],
   },
   {
     id: "part-12",
     title: "Beyond the App",
-    sections: [section(81, "Swift Outside iOS"), section(82, "Engineering Craft")],
+    sections: [
+      section(81, "Swift Outside iOS", "swift-outside-ios"),
+      section(82, "Engineering Craft", "engineering-craft"),
+    ],
   },
 ];
 

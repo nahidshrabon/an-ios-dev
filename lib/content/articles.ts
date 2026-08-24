@@ -712,6 +712,42 @@ export const articles: Article[] = [
     publishedAt: "2026-08-16",
     content: loadBody("app-store.md"),
   },
+  {
+    slug: "security-and-privacy",
+    title: "Security and Privacy",
+    description:
+      "Threat modeling, where secrets should and shouldn't live, CryptoKit hashing/HMAC/symmetric/public key cryptography, Secure Enclave-backed keys, biometrics, certificate pinning, jailbreak/tamper detection, App Tracking Transparency, SKAdNetwork/AdAttributionKit, secure logging, supply chain auditing, GDPR/CCPA, and data minimization.",
+    tags: ["security", "privacy", "cryptokit"],
+    publishedAt: "2026-08-16",
+    content: loadBody("security-and-privacy.md"),
+  },
+  {
+    slug: "observability-and-analytics",
+    title: "Observability and Analytics",
+    description:
+      "Event taxonomy design, type-safe analytics events, batching/offline queueing, crash reporting and symbolication, reading crash reports in Organizer, crash-free session rate as an SLO, hang rate monitoring, ingesting MetricKit, distributed tracing, feature flags/remote config, kill switches, A/B testing assignment/exposure logging, and feature flag debt.",
+    tags: ["observability", "analytics", "feature-flags"],
+    publishedAt: "2026-08-16",
+    content: loadBody("observability-and-analytics.md"),
+  },
+  {
+    slug: "swift-outside-ios",
+    title: "Swift Outside iOS",
+    description:
+      "Server-side Swift with Vapor and Hummingbird, SwiftNIO event loops, sharing model code between app and server, Swift on Linux, the static Linux SDK, Swift for WebAssembly, Embedded Swift for microcontrollers, swift-log/metrics/service-lifecycle, and cross-platform UI trade-offs.",
+    tags: ["swift", "server-side", "vapor"],
+    publishedAt: "2026-08-16",
+    content: loadBody("swift-outside-ios.md"),
+  },
+  {
+    slug: "engineering-craft",
+    title: "Engineering Craft",
+    description:
+      "Technical design documents, architecture decision records, code review judgment, estimation and breaking down epics, managing tech debt, mobile incident response, rollback vs. hotfix, blameless postmortems, mentoring, interview loops and preparation, portfolios, staying current, open-source contribution, and technical writing.",
+    tags: ["career", "engineering-craft", "mentoring"],
+    publishedAt: "2026-08-16",
+    content: loadBody("engineering-craft.md"),
+  },
 ];
 
 export function getAllArticles(): Article[] {

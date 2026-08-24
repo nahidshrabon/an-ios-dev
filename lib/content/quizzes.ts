@@ -23876,6 +23876,1958 @@ unit4A = nil
       },
     ],
   },
+  {
+    id: "security-and-privacy-quiz",
+    title: "Security and Privacy",
+    description: "20 questions covering threat modeling, secret handling, CryptoKit hashing/encryption/signatures, Secure Enclave keys, biometrics, certificate pinning, jailbreak detection, App Tracking Transparency, secure logging, supply chain auditing, GDPR/CCPA, and data minimization.",
+    relatedArticleSlug: "security-and-privacy",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What genuine value does threat modeling provide, according to 79.1?",
+        options: [
+          {
+            id: "a",
+            text: "It guarantees an app can never be successfully attacked",
+          },
+          {
+            id: "b",
+            text: "It prevents scattered, unfocused security effort that either over-invests in unlikely threats or under-invests in likely ones, helping calibrate security effort to an app's actual, specific risk profile",
+          },
+          {
+            id: "c",
+            text: "Threat modeling is purely a documentation exercise with no effect on actual security decisions",
+          },
+          {
+            id: "d",
+            text: "It replaces the need for any actual security implementation work",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Threat modeling's core value is helping teams correctly calibrate security investment (like certificate pinning or Secure Enclave keys) to an app's actual risk profile, rather than applying security techniques ad hoc.",
+      },
+      {
+        id: "q2",
+        prompt: "Why can't client-side obfuscation genuinely protect a hardcoded API key embedded in an app's binary?",
+        options: [
+          {
+            id: "a",
+            text: "Obfuscation techniques are actually unbreakable and provide complete protection",
+          },
+          {
+            id: "b",
+            text: "The app must eventually decode and use the actual secret at runtime, meaning a sufficiently motivated attacker with access to the compiled binary can always eventually extract it",
+          },
+          {
+            id: "c",
+            text: "API keys cannot actually be embedded in compiled binaries at all",
+          },
+          {
+            id: "d",
+            text: "Obfuscation only fails for keys longer than 32 characters",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because the app itself must use the actual secret at runtime, no amount of client-side obfuscation provides genuine security against a determined attacker — the only truly secure approach is keeping genuinely sensitive secrets server-side.",
+      },
+      {
+        id: "q3",
+        prompt: "What design goal does CryptoKit pursue, according to 79.3?",
+        options: [
+          {
+            id: "a",
+            text: "Maximizing the flexibility of insecure cryptographic configurations",
+          },
+          {
+            id: "b",
+            text: "Making the correct, secure use of cryptography the easy, default path, reducing the risk of cryptographic implementation mistakes compared to older, lower-level C APIs",
+          },
+          {
+            id: "c",
+            text: "CryptoKit intentionally makes secure usage more difficult to discourage its use",
+          },
+          {
+            id: "d",
+            text: "CryptoKit only supports insecure legacy hashing algorithms",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "CryptoKit's Swift-native, misuse-resistant design specifically aims to make safe cryptographic usage the natural, straightforward path, unlike more error-prone lower-level APIs.",
+      },
+      {
+        id: "q4",
+        prompt: "What does AES-GCM's \"authenticated\" encryption property provide beyond simple confidentiality?",
+        options: [
+          {
+            id: "a",
+            text: "Nothing additional; authenticated encryption is identical to unauthenticated encryption",
+          },
+          {
+            id: "b",
+            text: "Verification that encrypted data hasn't been tampered with — tampering causes decryption to fail explicitly, rather than silently producing corrupted plaintext with no indication of tampering",
+          },
+          {
+            id: "c",
+            text: "Authenticated encryption only works for text data, never binary data",
+          },
+          {
+            id: "d",
+            text: "It eliminates the need for a symmetric key entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "GCM mode's authentication tag detects tampering during decryption, causing explicit failure rather than silently returning corrupted, incorrect plaintext that might otherwise be processed unknowingly.",
+      },
+      {
+        id: "q5",
+        prompt: "What fundamentally distinguishes asymmetric (public key) cryptography from symmetric encryption, according to 79.5?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical approaches with different names",
+          },
+          {
+            id: "b",
+            text: "Verification of a signature doesn't require possessing the same secret used to create it — anyone with the public key can verify, while only the private key holder could have created a valid signature",
+          },
+          {
+            id: "c",
+            text: "Asymmetric cryptography requires sharing the private key with anyone who needs to verify a signature",
+          },
+          {
+            id: "d",
+            text: "Symmetric encryption is always more secure than asymmetric cryptography",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights this fundamentally different trust model — public key verification doesn't require the shared-secret approach symmetric encryption relies on.",
+      },
+      {
+        id: "q6",
+        prompt: "What earlier curriculum mechanism does the section connect to the foundation of asymmetric cryptography?",
+        options: [
+          {
+            id: "a",
+            text: "`Package.resolved`'s version pinning",
+          },
+          {
+            id: "b",
+            text: "App Attest (recall section 57.16), which needs to prove authenticity without embedding a shared, extractable secret",
+          },
+          {
+            id: "c",
+            text: "`CATransaction`'s atomic batching behavior",
+          },
+          {
+            id: "d",
+            text: "`NLEmbedding`'s similarity search",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects asymmetric cryptography's trust model to App Attest's need to prove authenticity without relying on an extractable shared secret.",
+      },
+      {
+        id: "q7",
+        prompt: "What makes Secure Enclave-backed keys genuinely stronger than software-only key storage, even compared to ordinary Keychain storage?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful difference between Secure Enclave-backed and ordinary Keychain-stored keys",
+          },
+          {
+            id: "b",
+            text: "A Secure Enclave-backed key's private material never leaves the isolated hardware at all — not even the app's own process or a jailbroken device's root access can directly extract the raw key, unlike ordinary Keychain keys which exist as extractable bytes",
+          },
+          {
+            id: "c",
+            text: "Secure Enclave keys are actually less secure than standard Keychain storage",
+          },
+          {
+            id: "d",
+            text: "Secure Enclave-backed keys can only be used for encryption, never signing",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The architectural, physical isolation of Secure Enclave-backed key material provides a genuinely stronger guarantee than any software-only approach, since even privileged code cannot access the raw key bytes.",
+      },
+      {
+        id: "q8",
+        prompt: "Why does an app using `LAContext` for Face ID/Touch ID authentication never actually receive a user's raw biometric data?",
+        options: [
+          {
+            id: "a",
+            text: "`LAContext` sends biometric data to Apple's servers for processing instead",
+          },
+          {
+            id: "b",
+            text: "Biometric processing happens entirely within the Secure Enclave's isolated hardware, with the app receiving only a simple success/failure result",
+          },
+          {
+            id: "c",
+            text: "Biometric data is actually accessible to the app but developers are contractually forbidden from using it",
+          },
+          {
+            id: "d",
+            text: "`LAContext` only works with device passcode, never actual biometric data",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This directly connects to the Secure Enclave's hardware isolation discussed in 79.6 — the entire biometric comparison happens within isolated hardware, with the app only receiving a boolean result.",
+      },
+      {
+        id: "q9",
+        prompt: "What genuine security scenario does monitoring `evaluatedPolicyDomainState` address?",
+        options: [
+          {
+            id: "a",
+            text: "Detecting network connectivity changes",
+          },
+          {
+            id: "b",
+            text: "Detecting when enrolled biometric data has changed (a new fingerprint or face added, or all biometric data removed), which could indicate an unauthorized person has enrolled their own biometric data on a temporarily accessible device",
+          },
+          {
+            id: "c",
+            text: "Monitoring changes to an app's own code signature",
+          },
+          {
+            id: "d",
+            text: "Verifying that a certificate hasn't expired",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "This detection specifically guards against the scenario where someone other than the device owner enrolls additional biometric data during temporary device access, which a security-sensitive app should detect rather than blindly trust.",
+      },
+      {
+        id: "q10",
+        prompt: "Why does certificate pinning require genuine, deliberate operational discipline around rotation?",
+        options: [
+          {
+            id: "a",
+            text: "Pinned certificates never need to be updated once configured",
+          },
+          {
+            id: "b",
+            text: "The pin must be updated before the actual server certificate is rotated/renewed, or the app will suddenly reject all connections to its own legitimate backend once the old, pinned certificate expires",
+          },
+          {
+            id: "c",
+            text: "Certificate rotation has no effect on a pinned app's connectivity",
+          },
+          {
+            id: "d",
+            text: "Certificate pinning automatically updates itself when the server certificate changes",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because a pinned app hardcodes an expected certificate/key value, failing to coordinate pin updates with actual server certificate rotation causes the app to reject its own legitimate backend connections.",
+      },
+      {
+        id: "q11",
+        prompt: "What is the genuine trade-off with jailbreak/tamper detection, according to 79.10?",
+        options: [
+          {
+            id: "a",
+            text: "It provides an absolute, foolproof guarantee against all forms of tampering",
+          },
+          {
+            id: "b",
+            text: "It provides a real, meaningful deterrent against unsophisticated or casual tampering, but essentially no guarantee against a genuinely determined, sophisticated attacker who can identify and bypass client-side detection logic",
+          },
+          {
+            id: "c",
+            text: "Jailbreak detection is entirely useless and provides no security value whatsoever",
+          },
+          {
+            id: "d",
+            text: "Jailbreak detection is only relevant for apps that don't use CryptoKit",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuinely limited but real deterrent, distinct from the stronger, hardware-backed guarantee App Attest provides for genuine tamper-resistance needs.",
+      },
+      {
+        id: "q12",
+        prompt: "How does App Attest (section 57.16) relate to jailbreak detection heuristics, according to 79.10?",
+        options: [
+          {
+            id: "a",
+            text: "They are functionally identical approaches to the same problem",
+          },
+          {
+            id: "b",
+            text: "App Attest addresses the same underlying integrity-verification goal but through hardware-backed attestation rather than client-side heuristic detection, making it the meaningfully stronger mechanism where genuine tamper-resistance matters",
+          },
+          {
+            id: "c",
+            text: "App Attest is weaker than jailbreak detection heuristics",
+          },
+          {
+            id: "d",
+            text: "Jailbreak detection replaces the need for App Attest entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section positions App Attest's hardware-backed approach as meaningfully stronger than heuristic-based jailbreak detection, which provides only a limited, secondary layer of protection.",
+      },
+      {
+        id: "q13",
+        prompt: "What genuine shift in default posture does App Tracking Transparency represent, according to 79.11?",
+        options: [
+          {
+            id: "a",
+            text: "ATT made cross-app tracking easier and more accessible for advertisers",
+          },
+          {
+            id: "b",
+            text: "Rather than cross-app tracking being possible by default with an opt-out buried in settings, ATT requires an explicit, standardized, system-level opt-in prompt before any cross-app tracking can occur at all",
+          },
+          {
+            id: "c",
+            text: "ATT eliminated all forms of advertising attribution entirely",
+          },
+          {
+            id: "d",
+            text: "ATT only applies to apps that don't use SKAdNetwork",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames ATT as a meaningfully stronger privacy default — shifting from opt-out-by-default to explicit opt-in — compared to the industry's prior tracking norms.",
+      },
+      {
+        id: "q14",
+        prompt: "What business problem do SKAdNetwork and AdAttributionKit specifically address?",
+        options: [
+          {
+            id: "a",
+            text: "They eliminate the need for any advertising attribution measurement at all",
+          },
+          {
+            id: "b",
+            text: "Advertisers and app developers still have a legitimate need to measure advertising effectiveness, and these frameworks provide aggregated, privacy-preserving attribution signals without the individual-level tracking data ATT now gates behind explicit permission",
+          },
+          {
+            id: "c",
+            text: "These frameworks require even more precise individual-level tracking than was previously possible",
+          },
+          {
+            id: "d",
+            text: "SKAdNetwork and AdAttributionKit are unrelated to App Tracking Transparency",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "These frameworks exist specifically to reconcile legitimate advertising measurement needs with ATT's stronger privacy default, providing aggregated signals rather than precise individual tracking.",
+      },
+      {
+        id: "q15",
+        prompt: "How does secure logging discipline (79.13) connect to the `Logger` privacy annotation material from section 68.19?",
+        options: [
+          {
+            id: "a",
+            text: "There is no connection; secure logging and `Logger`'s privacy annotations are unrelated",
+          },
+          {
+            id: "b",
+            text: "Secure logging directly extends `Logger`'s redaction-by-default privacy annotations into a deliberate security and compliance practice, since logs inadvertently containing PII can themselves become a genuine data protection liability",
+          },
+          {
+            id: "c",
+            text: "Secure logging replaces the need for `Logger`'s privacy annotations entirely",
+          },
+          {
+            id: "d",
+            text: "`Logger`'s privacy annotations only matter for debugging, never for compliance",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames secure logging as a practical extension of `Logger`'s existing privacy annotation system, connecting good logging hygiene directly to genuine regulatory compliance obligations discussed in 79.15.",
+      },
+      {
+        id: "q16",
+        prompt: "What supply chain security practice does 79.14 connect to `Package.resolved`'s reproducibility guarantee from section 73.2?",
+        options: [
+          {
+            id: "a",
+            text: "`Package.resolved` has no relevance to supply chain security at all",
+          },
+          {
+            id: "b",
+            text: "Pinning to exact, previously-reviewed dependency versions via `Package.resolved` prevents an app from automatically pulling in a newly-published, potentially-compromised version without deliberate review, extending build reproducibility into a security practice",
+          },
+          {
+            id: "c",
+            text: "`Package.resolved` should be deleted to improve supply chain security",
+          },
+          {
+            id: "d",
+            text: "Supply chain security only concerns binary targets, never regular source dependencies",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly reframes `Package.resolved`'s version pinning as serving a security purpose beyond build consistency — preventing automatic adoption of unreviewed, potentially compromised dependency updates.",
+      },
+      {
+        id: "q17",
+        prompt: "Why does the section describe GDPR/CCPA compliance and technical security engineering as \"genuinely intertwined concerns\"?",
+        options: [
+          {
+            id: "a",
+            text: "Legal compliance and technical security are entirely separate, unrelated tracks of work",
+          },
+          {
+            id: "b",
+            text: "A user's right to request data deletion has genuine technical implications for how data storage is architected, and appropriate security measures directly connect to the CryptoKit and secure storage practices covered earlier in the section",
+          },
+          {
+            id: "c",
+            text: "GDPR and CCPA only apply to companies with no actual technical infrastructure",
+          },
+          {
+            id: "d",
+            text: "Technical security measures have no bearing on legal compliance obligations",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that legal obligations like data deletion rights and security requirements directly depend on and connect to the technical architecture and security practices covered throughout the section.",
+      },
+      {
+        id: "q18",
+        prompt: "What does data minimization accomplish that other security techniques (encryption, secure storage) do not, according to 79.16?",
+        options: [
+          {
+            id: "a",
+            text: "Data minimization is identical in effect to encryption",
+          },
+          {
+            id: "b",
+            text: "It sidesteps entire categories of risk by simply not collecting unnecessary data in the first place, eliminating the corresponding risk surface entirely, rather than protecting data that's already been collected",
+          },
+          {
+            id: "c",
+            text: "Data minimization only applies to financial data, never other personal information",
+          },
+          {
+            id: "d",
+            text: "Data minimization has no relationship to GDPR/CCPA compliance",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Unlike encryption or secure storage, which protect already-collected data, data minimization eliminates risk by never collecting unnecessary data in the first place, an elegant, upstream approach to risk reduction.",
+      },
+      {
+        id: "q19",
+        prompt: "What example does the section give of data minimization in practice for a weather app?",
+        options: [
+          {
+            id: "a",
+            text: "Collecting a user's exact birthdate for personalized weather alerts",
+          },
+          {
+            id: "b",
+            text: "Needing only approximate location, not necessarily precise GPS coordinates",
+          },
+          {
+            id: "c",
+            text: "Collecting precise GPS coordinates is always required regardless of the feature's actual needs",
+          },
+          {
+            id: "d",
+            text: "Weather apps should collect the maximum possible data \"just in case\" it becomes useful",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section's example illustrates data minimization concretely — using only the level of location precision genuinely needed for the feature, rather than defaulting to the most precise data available.",
+      },
+      {
+        id: "q20",
+        prompt: "When does the section recommend considering data minimization during a feature's development?",
+        options: [
+          {
+            id: "a",
+            text: "Only after a data breach has already occurred",
+          },
+          {
+            id: "b",
+            text: "During a feature's initial design, asking \"do we actually need this specific data point,\" rather than treating data protection purely as a downstream technical concern applied after a data collection decision has already been made",
+          },
+          {
+            id: "c",
+            text: "Data minimization should only be considered during the final App Store submission process",
+          },
+          {
+            id: "d",
+            text: "Data minimization is irrelevant to feature design and only applies to legal documentation",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly recommends deliberate consideration of data minimization at the initial design stage, rather than treating it as an afterthought applied only after data has already been collected.",
+      },
+    ],
+  },
+  {
+    id: "observability-and-analytics-quiz",
+    title: "Observability and Analytics",
+    description: "20 questions covering event taxonomy design, type-safe analytics events, batching, crash reporting and symbolication, crash-free session rate, hang rate monitoring, MetricKit ingestion, distributed tracing, feature flags, kill switches, A/B testing logging, and flag cleanup.",
+    relatedArticleSlug: "observability-and-analytics",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Why does designing an event taxonomy upfront matter, according to 80.1?",
+        options: [
+          {
+            id: "a",
+            text: "Event naming has no actual effect on data usability later",
+          },
+          {
+            id: "b",
+            text: "An analyst or product manager answering a real business question depends on events being named and structured consistently enough to reliably query and join, and retrofitting consistency onto years of ad hoc events is considerably more painful than establishing good conventions early",
+          },
+          {
+            id: "c",
+            text: "Event taxonomy only matters for apps with fewer than 10 total events",
+          },
+          {
+            id: "d",
+            text: "Inconsistent event naming is always resolved automatically by analytics platforms",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes that consistent, deliberate naming conventions established early pay off considerably compared to the difficulty of retrofitting consistency onto inconsistently-named historical data.",
+      },
+      {
+        id: "q2",
+        prompt: "What broader curriculum theme does type-safe analytics event modeling connect to, according to 80.2?",
+        options: [
+          {
+            id: "a",
+            text: "It has no relationship to any other pattern discussed elsewhere in the curriculum",
+          },
+          {
+            id: "b",
+            text: "The recurring \"convert a string-based, runtime-only-discoverable pattern into a compile-time-checked one\" theme, also seen in generated asset catalog symbols (72.7) and Core ML's generated interfaces (59.2)",
+          },
+          {
+            id: "c",
+            text: "Type-safe analytics events are unrelated to compile-time checking of any kind",
+          },
+          {
+            id: "d",
+            text: "This pattern only applies to networking code, not analytics",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects type-safe event modeling to the same recurring theme of converting error-prone string-based lookups into compile-time-checked Swift constructs seen elsewhere in the curriculum.",
+      },
+      {
+        id: "q3",
+        prompt: "What problem does type-safe event modeling (an enum per event type) solve compared to loosely-typed dictionaries?",
+        options: [
+          {
+            id: "a",
+            text: "It has no advantage over dictionary-based event tracking",
+          },
+          {
+            id: "b",
+            text: "A typo in an event name or a missing required property becomes an immediate compile error rather than a silent analytics data quality problem discovered weeks later",
+          },
+          {
+            id: "c",
+            text: "Type-safe modeling makes events slower to process at runtime",
+          },
+          {
+            id: "d",
+            text: "Enums cannot actually carry associated data like event properties",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The compiler catches structural mistakes immediately, unlike loosely-typed dictionary-based events where typos or missing properties fail silently and are only discovered later through data quality investigation.",
+      },
+      {
+        id: "q4",
+        prompt: "What two benefits does batching analytics events provide, according to 80.3?",
+        options: [
+          {
+            id: "a",
+            text: "Faster app launch time and reduced binary size",
+          },
+          {
+            id: "b",
+            text: "Reduced network overhead (fewer, larger requests rather than many small ones) and reduced battery/energy impact, connecting to the network radio energy cost discussed in section 69.18",
+          },
+          {
+            id: "c",
+            text: "Batching only affects data accuracy, not efficiency",
+          },
+          {
+            id: "d",
+            text: "Batching eliminates the need for any local event persistence",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies both network efficiency and battery impact as genuine benefits of batching, directly connecting to the energy impact material from section 69.18.",
+      },
+      {
+        id: "q5",
+        prompt: "Why does offline event queueing matter for analytics completeness?",
+        options: [
+          {
+            id: "a",
+            text: "Offline queueing has no actual effect on data completeness",
+          },
+          {
+            id: "b",
+            text: "Persisting events locally until they can actually be delivered ensures analytics data isn't simply lost when a user's device lacks connectivity at the moment an event occurs",
+          },
+          {
+            id: "c",
+            text: "Events generated while offline are automatically discarded regardless of queueing",
+          },
+          {
+            id: "d",
+            text: "Offline queueing only matters for crash reports, not general analytics events",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Without offline queueing, events generated during connectivity gaps would be lost entirely, undermining the completeness and accuracy of collected analytics data.",
+      },
+      {
+        id: "q6",
+        prompt: "Why does a crash reporting service provide \"essentially no actionable diagnostic value\" without correctly configured, matching dSYM upload?",
+        options: [
+          {
+            id: "a",
+            text: "Crash reporting services don't actually require dSYMs at all",
+          },
+          {
+            id: "b",
+            text: "Without dSYMs matching the exact crashed build, crash reports remain raw, unreadable memory addresses rather than symbolicated, actionable stack traces — directly reflecting the strict dSYM-matching requirement from section 68.22",
+          },
+          {
+            id: "c",
+            text: "dSYM matching only affects crash report timestamps, not readability",
+          },
+          {
+            id: "d",
+            text: "Crash reports are always readable regardless of dSYM availability",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section reinforces the section 68.22 symbolication requirement, emphasizing that mismatched or missing dSYMs render crash reports essentially useless for diagnosis.",
+      },
+      {
+        id: "q7",
+        prompt: "What does Organizer's crash signature grouping accomplish?",
+        options: [
+          {
+            id: "a",
+            text: "It presents every individual crash instance as a separate, undifferentiated problem",
+          },
+          {
+            id: "b",
+            text: "It clusters crashes sharing the same underlying signature (likely the same root cause) together as one aggregated issue, letting developers prioritize fixes based on genuine aggregate impact",
+          },
+          {
+            id: "c",
+            text: "Crash signature grouping only works for crashes affecting fewer than 10 users",
+          },
+          {
+            id: "d",
+            text: "Signature grouping replaces the need for symbolication entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Rather than an overwhelming flood of individual crash reports, signature grouping aggregates similar crashes together, enabling prioritization based on how many distinct users are actually affected by each specific issue.",
+      },
+      {
+        id: "q8",
+        prompt: "What value does establishing crash-free session rate as an explicit SLO provide, according to 80.6?",
+        options: [
+          {
+            id: "a",
+            text: "It has no practical value beyond a vague, informal aspiration",
+          },
+          {
+            id: "b",
+            text: "A specific, numeric threshold gives a team a clear, objective signal for when a release's stability has genuinely regressed and requires investigation, rather than relying on subjective impressions",
+          },
+          {
+            id: "c",
+            text: "Crash-free session rate cannot actually be measured or tracked over time",
+          },
+          {
+            id: "d",
+            text: "SLOs are only relevant for backend services, never mobile apps",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames an explicit SLO as providing objective, measurable discipline, directly paralleling the performance regression budget discipline discussed in section 69.19.",
+      },
+      {
+        id: "q9",
+        prompt: "Why is hang rate monitoring described as covering a genuine blind spot that crash-free session rate alone would miss?",
+        options: [
+          {
+            id: "a",
+            text: "Hangs and crashes are functionally identical and always detected by the same mechanism",
+          },
+          {
+            id: "b",
+            text: "A severely unresponsive app that never technically crashes can still represent a genuinely serious quality problem, yet a hang produces no traditional crash report at all, meaning crash-free rate alone provides no visibility into hangs",
+          },
+          {
+            id: "c",
+            text: "Hang rate monitoring is redundant with crash-free session rate and provides no additional information",
+          },
+          {
+            id: "d",
+            text: "Hangs only occur in apps that don't use `MetricKit`",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because hangs don't produce traditional crash reports, a team monitoring only crash-free session rate could have a complete blind spot around serious hang-related quality issues, which MetricKit's hang rate reporting specifically surfaces.",
+      },
+      {
+        id: "q10",
+        prompt: "When is ingesting `MetricKit` data into a team's own observability stack (via `MXMetricManagerSubscriber`) appropriate, according to 80.8?",
+        options: [
+          {
+            id: "a",
+            text: "Never; Organizer's built-in views are always sufficient for every team's needs",
+          },
+          {
+            id: "b",
+            text: "When Organizer's built-in presentation isn't sufficient — for example, needing custom alerting thresholds or correlation with backend service metrics for full-stack observability",
+          },
+          {
+            id: "c",
+            text: "`MXMetricManagerSubscriber` can only be used for crash reporting, not performance metrics",
+          },
+          {
+            id: "d",
+            text: "MetricKit data cannot actually be forwarded to any custom backend",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Direct ingestion via `MXMetricManagerSubscriber` is appropriate specifically when a team needs capabilities beyond Organizer's built-in views, like custom alerting or cross-system correlation.",
+      },
+      {
+        id: "q11",
+        prompt: "What genuine observability gap does distributed tracing address, according to 80.9?",
+        options: [
+          {
+            id: "a",
+            text: "Distributed tracing has no relationship to diagnosing performance issues",
+          },
+          {
+            id: "b",
+            text: "Without a shared trace identifier connecting client-side and backend-side monitoring, diagnosing why a specific request was slow requires manually correlating timestamps across entirely separate logging systems; a propagated trace ID lets one coherent trace follow the entire request path",
+          },
+          {
+            id: "c",
+            text: "Distributed tracing only works for requests that never touch a backend service",
+          },
+          {
+            id: "d",
+            text: "Trace IDs are generated exclusively by the backend, never the client app",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Distributed tracing solves the disconnection between separate app-side and backend-side monitoring systems by propagating a shared identifier, unifying diagnosis across the entire request path.",
+      },
+      {
+        id: "q12",
+        prompt: "What genuine decoupling do feature flags provide, according to 80.10?",
+        options: [
+          {
+            id: "a",
+            text: "Feature flags eliminate the need for any code deployment at all",
+          },
+          {
+            id: "b",
+            text: "A decoupling between deploying code (getting a feature into a shipped app binary) and releasing it (making it active/visible), letting activation happen remotely and independently of the App Store's own release and review timeline",
+          },
+          {
+            id: "c",
+            text: "Feature flags require an App Store release for every single toggle change",
+          },
+          {
+            id: "d",
+            text: "Feature flags only work for features that have already been fully rolled out",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section highlights this deploy/release decoupling as feature flags' core value — code can be shipped while flagged off, then activated remotely without waiting for App Review.",
+      },
+      {
+        id: "q13",
+        prompt: "How does a kill switch relate to phased release (section 78.11), according to 80.11?",
+        options: [
+          {
+            id: "a",
+            text: "Kill switches and phased release are unrelated, redundant mechanisms",
+          },
+          {
+            id: "b",
+            text: "While phased release limits a bad release's initial blast radius gradually, a kill switch provides an even faster, more immediate mitigation once a problem is discovered, instantly disabling a feature for all users without waiting for a paused rollout's already-affected users to age out",
+          },
+          {
+            id: "c",
+            text: "Kill switches replace the need for phased release entirely in every scenario",
+          },
+          {
+            id: "d",
+            text: "Phased release is faster-acting than a kill switch in every case",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames kill switches as a complementary, faster-acting safety mechanism specifically for a feature already discovered to be broken, distinct from phased release's gradual, blast-radius-limiting approach.",
+      },
+      {
+        id: "q14",
+        prompt: "Why does a kill switch not require waiting for an emergency App Store review cycle?",
+        options: [
+          {
+            id: "a",
+            text: "Kill switches actually do require a full App Store review to activate",
+          },
+          {
+            id: "b",
+            text: "A kill switch is a remotely-controllable flag, letting a problematic feature be instantly disabled for all users without needing a new app binary submission and review",
+          },
+          {
+            id: "c",
+            text: "Emergency App Store reviews are always instantaneous, making this distinction irrelevant",
+          },
+          {
+            id: "d",
+            text: "Kill switches can only be activated by Apple, not by the app's own development team",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Because kill switches operate through remote configuration rather than requiring a new app binary, they can take effect immediately without any App Store submission or review wait.",
+      },
+      {
+        id: "q15",
+        prompt: "What is the key distinction between assignment logging and exposure logging in A/B testing, according to 80.12?",
+        options: [
+          {
+            id: "a",
+            text: "They are identical concepts recorded at the same moment for every user",
+          },
+          {
+            id: "b",
+            text: "Assignment logging records which experimental variant a user was assigned to, while exposure logging records when a user actually experienced/saw that variant's effect — these two events don't always coincide",
+          },
+          {
+            id: "c",
+            text: "Exposure logging always occurs before assignment logging",
+          },
+          {
+            id: "d",
+            text: "Only assignment logging is necessary; exposure logging provides no additional value",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes these are genuinely distinct events that can occur at different times (or not both occur at all for a given user), making conflating them a source of experimental error.",
+      },
+      {
+        id: "q16",
+        prompt: "What statistical problem occurs if an experiment's results are based purely on assignment rather than genuine exposure?",
+        options: [
+          {
+            id: "a",
+            text: "No problem occurs; assignment and exposure produce identical statistical results",
+          },
+          {
+            id: "b",
+            text: "A user assigned to a treatment variant but who never actually reached the screen where that variant applies would incorrectly dilute the experiment's measured effect with users never truly exposed to the tested variant",
+          },
+          {
+            id: "c",
+            text: "This only matters for experiments running longer than six months",
+          },
+          {
+            id: "d",
+            text: "Assignment-based counting always overstates an experiment's true effect, never understates it",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Counting assigned-but-never-exposed users toward experimental results dilutes the measured effect with users who never actually experienced the variant, undermining the statistical validity of the experiment's conclusions.",
+      },
+      {
+        id: "q17",
+        prompt: "What connects feature flag cleanup discipline (80.13) to the dead code concerns raised for Periphery in section 75.4?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful connection between these two topics",
+          },
+          {
+            id: "b",
+            text: "Both concern accumulated, unnecessary complexity — a stale feature flag that's effectively always true/false represents unnecessary conditional complexity, similar to genuinely unused code that Periphery detects, both requiring deliberate cleanup",
+          },
+          {
+            id: "c",
+            text: "Periphery can automatically detect and remove stale feature flags without any additional tooling",
+          },
+          {
+            id: "d",
+            text: "Feature flag debt only affects binary size, unrelated to code complexity",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects these two concerns — both represent forms of accumulated complexity (stale flags, genuinely unused code) that require deliberate, ongoing cleanup discipline rather than one-time effort.",
+      },
+      {
+        id: "q18",
+        prompt: "Why is a feature flag that's \"effectively always true\" for six months still considered a problem worth addressing?",
+        options: [
+          {
+            id: "a",
+            text: "It has no actual negative effect on the codebase",
+          },
+          {
+            id: "b",
+            text: "It still represents unnecessary, accumulated conditional complexity in the codebase that a periodic, deliberate flag audit could simplify away",
+          },
+          {
+            id: "c",
+            text: "Feature flags automatically expire and remove themselves after a fixed time period",
+          },
+          {
+            id: "d",
+            text: "This scenario only applies to flags controlling UI elements, never business logic",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Even though the flag's outcome has become predictable, the conditional check itself remains as unnecessary complexity in the code until deliberately removed through cleanup discipline.",
+      },
+      {
+        id: "q19",
+        prompt: "What is the recommended approach to feature flag cleanup, according to 80.13?",
+        options: [
+          {
+            id: "a",
+            text: "Feature flags should never be removed once added, regardless of their current relevance",
+          },
+          {
+            id: "b",
+            text: "A periodic, deliberate flag audit removing flags whose rollout has fully concluded or whose associated experiment has already reached its conclusion",
+          },
+          {
+            id: "c",
+            text: "Flag cleanup should only happen once, immediately after initial implementation",
+          },
+          {
+            id: "d",
+            text: "Feature flags require no maintenance and clean themselves up automatically",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section recommends treating flag cleanup as an ongoing maintenance practice via periodic audits, rather than a one-time setup concern or something requiring no attention at all.",
+      },
+      {
+        id: "q20",
+        prompt: "What overarching theme connects event taxonomy design (80.1), type-safe events (80.2), and feature flag cleanup discipline (80.13)?",
+        options: [
+          {
+            id: "a",
+            text: "These topics are entirely unrelated with no shared theme",
+          },
+          {
+            id: "b",
+            text: "Each addresses the importance of deliberate, upfront and ongoing discipline (consistent design, compile-time safety, active maintenance) in observability/analytics infrastructure, rather than allowing ad hoc, inconsistent, or accumulating complexity to degrade the system's usefulness over time",
+          },
+          {
+            id: "c",
+            text: "All three topics exclusively concern crash reporting, nothing else",
+          },
+          {
+            id: "d",
+            text: "These are unrelated tooling choices with no bearing on data quality or maintainability",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "Across these subtopics, the recurring theme is deliberate discipline — whether in initial design (taxonomy), implementation safety (type-safety), or ongoing maintenance (flag cleanup) — preventing analytics and feature infrastructure from degrading into an unreliable or overly complex state over time.",
+      },
+    ],
+  },
+  {
+    id: "swift-outside-ios-quiz",
+    title: "Swift Outside iOS",
+    description: "20 questions covering server-side Swift with Vapor and Hummingbird, SwiftNIO event loops, sharing model code, Swift on Linux, the static Linux SDK, Swift for WebAssembly, Embedded Swift, swift-log/metrics/service-lifecycle, and cross-platform UI trade-offs.",
+    relatedArticleSlug: "swift-outside-ios",
+    questions: [
+      {
+        id: "q1",
+        prompt: "Why does a Vapor route handler typically avoid relying on persistent, app-lifetime shared mutable state?",
+        options: [
+          {
+            id: "a",
+            text: "Vapor route handlers cannot access any shared state under any circumstances",
+          },
+          {
+            id: "b",
+            text: "Each request is a fresh, isolated unit of work processed concurrently with many others, unlike an iOS app's `AppDelegate` or `App` struct which persists for the whole process lifetime",
+          },
+          {
+            id: "c",
+            text: "Vapor deliberately disables all instance properties in route handlers",
+          },
+          {
+            id: "d",
+            text: "Persistent state is only disallowed in Hummingbird, not Vapor",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames the per-request, concurrently-processed nature of server route handlers as the central mental shift from app development, where lifetime-scoped singletons and caches are the norm.",
+      },
+      {
+        id: "q2",
+        prompt: "What familiar pattern from earlier sections do Vapor's `async throws` route closures directly reuse?",
+        options: [
+          {
+            id: "a",
+            text: "Completion-handler-based networking exclusive to server code",
+          },
+          {
+            id: "b",
+            text: "The same structured concurrency (async/await) and typed error-throwing model from sections 17–18 and section 9",
+          },
+          {
+            id: "c",
+            text: "A Vapor-specific concurrency model with no relationship to Swift's language-level concurrency",
+          },
+          {
+            id: "d",
+            text: "GCD-based dispatch queues exclusively",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly notes that route handlers use the same async/await and throwing-error conventions already covered for structured concurrency and error handling.",
+      },
+      {
+        id: "q3",
+        prompt: "How does Vapor middleware relate to concepts from section 40's advanced networking material?",
+        options: [
+          {
+            id: "a",
+            text: "Middleware and networking interceptors are entirely unrelated concepts",
+          },
+          {
+            id: "b",
+            text: "Middleware wraps cross-cutting concerns like authentication around a route boundary, echoing the same \"wrap behavior around a boundary without touching business logic\" pattern seen in URLSession interceptors",
+          },
+          {
+            id: "c",
+            text: "Middleware in Vapor replaces the need for any routing system",
+          },
+          {
+            id: "d",
+            text: "Middleware can only be used for database connection pooling",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel between Vapor's middleware and the interceptor pattern from advanced networking, both isolating cross-cutting concerns from core logic.",
+      },
+      {
+        id: "q4",
+        prompt: "How does Fluent's `@Parent`/`@Children` relationship modeling compare to SwiftData, according to 81.2?",
+        options: [
+          {
+            id: "a",
+            text: "Fluent has no meaningful relationship modeling capability at all",
+          },
+          {
+            id: "b",
+            text: "Fluent's relationship property wrappers map directly onto the same conceptual relationships expressed by SwiftData's `@Relationship` or Core Data's managed object relationships, despite querying a real server database rather than on-device storage",
+          },
+          {
+            id: "c",
+            text: "Fluent relationships only work with a single, hardcoded database engine",
+          },
+          {
+            id: "d",
+            text: "SwiftData and Fluent share no conceptual similarity whatsoever",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws this direct parallel, noting that the vocabulary of declarative relationships transfers even though the underlying storage (real Postgres/MySQL vs. on-device SQLite) differs substantially.",
+      },
+      {
+        id: "q5",
+        prompt: "What is the genuine trade-off between Vapor and Hummingbird, according to 81.3?",
+        options: [
+          {
+            id: "a",
+            text: "Hummingbird is strictly worse than Vapor in every respect",
+          },
+          {
+            id: "b",
+            text: "Vapor offers a complete, opinionated stack (Fluent, Leaf, broad ecosystem) while Hummingbird keeps a smaller, more composable core with fewer built-in opinions and tighter control over binary dependencies",
+          },
+          {
+            id: "c",
+            text: "Vapor cannot be used to build a REST API at all",
+          },
+          {
+            id: "d",
+            text: "Hummingbird requires an entirely different, incompatible version of Swift",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a genuine batteries-included-versus-minimal-core trade-off, not a strict quality hierarchy between the two frameworks.",
+      },
+      {
+        id: "q6",
+        prompt: "Why must code running on a SwiftNIO event loop avoid long, synchronous blocking work?",
+        options: [
+          {
+            id: "a",
+            text: "Event loops automatically spawn a new thread whenever blocked, so blocking has no cost",
+          },
+          {
+            id: "b",
+            text: "An event loop is a single thread cooperatively serving many connections, so blocking it starves every other connection sharing that same loop — mirroring the \"never block the main thread\" discipline from UI development",
+          },
+          {
+            id: "c",
+            text: "SwiftNIO has no concept of blocking or non-blocking work",
+          },
+          {
+            id: "d",
+            text: "Blocking an event loop only affects the specific connection that caused the block",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws a direct analogy between blocking a SwiftNIO event loop (starving all connections on that loop) and blocking the main thread in UI development (freezing rendering for the whole app).",
+      },
+      {
+        id: "q7",
+        prompt: "How does modern Vapor/Hummingbird code relate to SwiftNIO's original `EventLoopFuture`-based API, according to 81.4?",
+        options: [
+          {
+            id: "a",
+            text: "Modern code is written entirely in terms of `EventLoopFuture` and promises, with no async/await",
+          },
+          {
+            id: "b",
+            text: "Swift's concurrency runtime bridges async/await on the surface to SwiftNIO's underlying event loops, so most modern code no longer writes `EventLoopFuture` code directly even though the event-loop model still applies underneath",
+          },
+          {
+            id: "c",
+            text: "SwiftNIO has been fully removed from modern Vapor and Hummingbird",
+          },
+          {
+            id: "d",
+            text: "EventLoopFuture and async/await are entirely incompatible and cannot coexist in one project",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explains that async/await now sits atop SwiftNIO's event loop machinery, with the future/promise API mostly hidden from everyday route-handling code.",
+      },
+      {
+        id: "q8",
+        prompt: "What concrete problem does sharing a Swift model package between an app and a server target solve, per 81.5?",
+        options: [
+          {
+            id: "a",
+            text: "It eliminates the need for any networking code entirely",
+          },
+          {
+            id: "b",
+            text: "It prevents a category of bugs where the client's understanding of a JSON shape silently drifts from the server's, since both targets import the exact same Codable type definitions",
+          },
+          {
+            id: "c",
+            text: "Shared model packages are only useful for UI code, not data models",
+          },
+          {
+            id: "d",
+            text: "Model sharing requires both the client and server to run on identical operating systems",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies exact JSON-shape drift between client and server as the specific bug category eliminated by importing shared, platform-agnostic Codable types.",
+      },
+      {
+        id: "q9",
+        prompt: "How does the constraint on a shared model package's dependencies connect to section 48's modularization material?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful connection between the two sections",
+          },
+          {
+            id: "b",
+            text: "The shared package must avoid UIKit and Vapor-specific imports to compile cleanly for both iOS and Linux targets, directly extending section 48's modularization discipline of minimizing a module's platform-specific dependencies",
+          },
+          {
+            id: "c",
+            text: "Section 48 only discussed modularization for single-platform apps, making it irrelevant here",
+          },
+          {
+            id: "d",
+            text: "Shared packages are required to depend on both UIKit and Vapor simultaneously",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly frames the dependency discipline required for a genuinely cross-target shared package as a direct extension of the modularization principles from section 48.",
+      },
+      {
+        id: "q10",
+        prompt: "What is the practical lesson regarding Foundation on Linux, according to 81.6?",
+        options: [
+          {
+            id: "a",
+            text: "Foundation is byte-for-byte identical on Linux and Apple platforms with zero differences",
+          },
+          {
+            id: "b",
+            text: "Foundation should never be used at all in any Linux-targeted Swift code",
+          },
+          {
+            id: "c",
+            text: "Specific APIs — particularly around dates, locales, and file attributes — can still differ subtly, so the practical approach is testing the specific APIs your shared code uses on both platforms rather than assuming full parity",
+          },
+          {
+            id: "d",
+            text: "Foundation differences are purely theoretical and never actually manifest in real code",
+          },
+        ],
+        correctOptionId: "c",
+        explanation: "The section is explicit that despite significant narrowing of the gap (including via Swift 6's pure-Swift Foundation rewrite), real differences persist and should be verified rather than assumed away.",
+      },
+      {
+        id: "q11",
+        prompt: "How does the `#if os(Linux)` conditional compilation pattern in 81.6 relate to section 33's multiplatform SwiftUI material?",
+        options: [
+          {
+            id: "a",
+            text: "The two sections use entirely unrelated compilation mechanisms",
+          },
+          {
+            id: "b",
+            text: "Both use the same conditional-compilation tool (`#if os(...)`) to guard platform differences — UI-layer differences between iPhone and Mac in section 33, and standard-library/Foundation-layer differences between Apple platforms and Linux here",
+          },
+          {
+            id: "c",
+            text: "Conditional compilation is only valid for UI code, not standard library code",
+          },
+          {
+            id: "d",
+            text: "Section 33 never used any conditional compilation techniques",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly identifies this as the same underlying tool applied to a different layer of platform variation — UI conventions there, Foundation/stdlib behavior here.",
+      },
+      {
+        id: "q12",
+        prompt: "What deployment problem does the static Linux SDK (81.7) directly solve?",
+        options: [
+          {
+            id: "a",
+            text: "It eliminates the need to write any server-side Swift code",
+          },
+          {
+            id: "b",
+            text: "The historical friction of needing to build on the exact same Linux distribution/version as the deployment target, or ship a full Swift runtime alongside the binary, by producing a fully statically linked binary with the runtime baked in",
+          },
+          {
+            id: "c",
+            text: "Static linking only matters for iOS apps, never for server deployments",
+          },
+          {
+            id: "d",
+            text: "The static Linux SDK is used exclusively for compiling to WebAssembly",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames the static SDK as removing the runtime-version-matching requirement between build and deployment environments, a real and previously significant source of friction.",
+      },
+      {
+        id: "q13",
+        prompt: "How does the static Linux SDK's trade-off connect to section 72's build system material, according to 81.7?",
+        options: [
+          {
+            id: "a",
+            text: "There is no meaningful relationship between the two",
+          },
+          {
+            id: "b",
+            text: "It's described as the server-side analog of static linking trade-offs from section 72 — trading a larger binary for fewer runtime dependencies, just applied to an entire Linux deployment environment rather than a single app sandbox",
+          },
+          {
+            id: "c",
+            text: "Section 72 never discussed static versus dynamic linking at all",
+          },
+          {
+            id: "d",
+            text: "The static Linux SDK makes binaries smaller in every case with no trade-off whatsoever",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly draws this parallel, noting the same larger-binary-for-fewer-dependencies trade-off appears at both the app level (section 72) and the deployment-environment level (81.7).",
+      },
+      {
+        id: "q14",
+        prompt: "What is an honest characterization of Swift-to-WebAssembly's current maturity, according to 81.8?",
+        options: [
+          {
+            id: "a",
+            text: "It is fully mature and a drop-in replacement for JavaScript in every context",
+          },
+          {
+            id: "b",
+            text: "The toolchain support, debugging experience, and binary size are considerably rougher than native iOS or server toolchains, making it a deliberate bet on an actively-developing target rather than a mature, drop-in option",
+          },
+          {
+            id: "c",
+            text: "WebAssembly support for Swift does not exist in any form",
+          },
+          {
+            id: "d",
+            text: "WebAssembly is only usable for compiling C code, never Swift",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit and even-handed about the maturity gap, framing adoption today as a deliberate bet rather than a safe, fully-baked choice.",
+      },
+      {
+        id: "q15",
+        prompt: "Why does Embedded Swift disable features like full runtime reflection and heap-allocated existentials?",
+        options: [
+          {
+            id: "a",
+            text: "These features were removed arbitrarily with no underlying technical reason",
+          },
+          {
+            id: "b",
+            text: "Full generics and existentials in ordinary Swift rely on runtime metadata and dynamic dispatch machinery that assumes a heap and capable OS — resources unavailable on microcontrollers with kilobytes of RAM",
+          },
+          {
+            id: "c",
+            text: "Embedded Swift disables these features only for licensing reasons",
+          },
+          {
+            id: "d",
+            text: "These features are disabled only on Linux, not on embedded targets",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explains that each restriction maps to a concrete resource constraint on microcontroller hardware, not an arbitrary limitation.",
+      },
+      {
+        id: "q16",
+        prompt: "How does Embedded Swift's approach to generics (monomorphization) relate to section 15's low-level Swift material?",
+        options: [
+          {
+            id: "a",
+            text: "There is no relationship between the two sections",
+          },
+          {
+            id: "b",
+            text: "It represents the same static-cost-at-compile-time-versus-dynamic-cost-at-runtime trade-off from section 15, pushed to its logical extreme because embedded hardware has almost no room for any runtime cost at all",
+          },
+          {
+            id: "c",
+            text: "Section 15 exclusively covered generics on Linux servers, unrelated to embedded contexts",
+          },
+          {
+            id: "d",
+            text: "Monomorphization is a runtime dispatch technique, not a compile-time one",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly frames Embedded Swift's fully-specialized generics as an extreme application of the static-versus-dynamic-cost trade-off already introduced in section 15.",
+      },
+      {
+        id: "q17",
+        prompt: "What is the shared design philosophy behind `swift-log`, `swift-metrics`, and similar packages, according to 81.10?",
+        options: [
+          {
+            id: "a",
+            text: "Each package bundles a single, fixed backend implementation with no ability to swap it out",
+          },
+          {
+            id: "b",
+            text: "They define stable, API-only interfaces (like `Logger` and `Counter`) separate from any specific backend, so a backend implementation can be swapped at the composition root without touching call sites — mirroring URLSession's protocol-oriented design and os.Logger's structured logging model",
+          },
+          {
+            id: "c",
+            text: "These packages exist solely to disable logging in production builds",
+          },
+          {
+            id: "d",
+            text: "swift-log and swift-metrics require the same backend to be used across all projects industry-wide",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws an explicit parallel between this API/backend separation and earlier protocol-oriented patterns like URLSession (section 39) and os.Logger (section 68.19).",
+      },
+      {
+        id: "q18",
+        prompt: "What problem does `swift-service-lifecycle` solve that has no direct iOS equivalent, per 81.10?",
+        options: [
+          {
+            id: "a",
+            text: "It solves UI rendering coordination, which iOS apps also need",
+          },
+          {
+            id: "b",
+            text: "Coordinated startup ordering and graceful shutdown across multiple long-running services in one process — a genuinely different problem since an iOS app's process lifecycle is managed entirely by the OS rather than orchestrated by app code",
+          },
+          {
+            id: "c",
+            text: "It solves memory management, identical to ARC on iOS",
+          },
+          {
+            id: "d",
+            text: "It replaces the need for structured concurrency entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly notes this as a genuinely different problem domain, since iOS apps never need to orchestrate their own process-level startup/shutdown sequencing the way a multi-service backend process does.",
+      },
+      {
+        id: "q19",
+        prompt: "According to 81.11, what is a concrete example of a shared-UI-framework approach for reaching non-Apple platforms?",
+        options: [
+          {
+            id: "a",
+            text: "SwiftUI running natively and without any interop layer directly on Android",
+          },
+          {
+            id: "b",
+            text: "Skip, which compiles SwiftUI-like syntax to native Android views through a Kotlin interop layer, letting a mostly-shared Swift codebase target Android with native rendering",
+          },
+          {
+            id: "c",
+            text: "UIKit, which has an official Android port",
+          },
+          {
+            id: "d",
+            text: "There are no existing tools attempting to share UI code between Apple platforms and Android",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section names Skip specifically as a real (if young) tool in this space, contrasted honestly against its limitations (not every SwiftUI API has an equivalent, and the toolchain is still maturing).",
+      },
+      {
+        id: "q20",
+        prompt: "What conservative, widely-used alternative does 81.11 describe to a single shared UI framework across all platforms?",
+        options: [
+          {
+            id: "a",
+            text: "Rewriting the entire application from scratch for each platform, including all business logic",
+          },
+          {
+            id: "b",
+            text: "Sharing the model layer, networking, and business logic as a Swift package while building genuinely separate, platform-native UI layers for each platform, accepting UI duplication in exchange for full per-platform idiomatic support",
+          },
+          {
+            id: "c",
+            text: "Using only WebAssembly for every platform's UI, including iOS",
+          },
+          {
+            id: "d",
+            text: "Avoiding any code sharing whatsoever between platforms",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as a legitimate, common trade-off — sharing only the non-UI logic while keeping each platform's UI fully native — and notes the right choice depends on team size and how native the UI must feel on each platform.",
+      },
+    ],
+  },
+  {
+    id: "engineering-craft-quiz",
+    title: "Engineering Craft",
+    description: "20 questions covering design docs, architecture decision records, code review judgment, estimation, tech debt, mobile incident response, rollback vs. hotfix, blameless postmortems, mentoring, interview loops, portfolios, staying current, and technical writing.",
+    relatedArticleSlug: "engineering-craft",
+    questions: [
+      {
+        id: "q1",
+        prompt: "What separates a genuinely useful technical design doc from a rubber-stamp formality, according to 82.1?",
+        options: [
+          {
+            id: "a",
+            text: "Using the longest possible document length",
+          },
+          {
+            id: "b",
+            text: "Honest, comparative treatment of alternatives, such that a reader could disagree with the conclusion from the document alone without a hallway conversation",
+          },
+          {
+            id: "c",
+            text: "Presenting exactly one option with no alternatives discussed",
+          },
+          {
+            id: "d",
+            text: "Avoiding any mention of constraints or deadlines",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames genuine, honest alternative-weighing — not performing due diligence after the fact — as the key trait separating a useful design doc from a formality.",
+      },
+      {
+        id: "q2",
+        prompt: "How does the design doc discipline in 82.1 connect to section 46's architecture patterns material?",
+        options: [
+          {
+            id: "a",
+            text: "There is no connection between the two sections",
+          },
+          {
+            id: "b",
+            text: "A design doc proposing an architectural choice should apply the same honest, comparative trade-off treatment that section 46 gave to MVVM, MVC, and TCA-style patterns, rather than presenting a single \"correct\" answer",
+          },
+          {
+            id: "c",
+            text: "Section 46 concluded there is exactly one correct architecture for all apps",
+          },
+          {
+            id: "d",
+            text: "Design docs are unrelated to architectural decisions entirely",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly ties the honest-alternatives discipline in design docs back to section 46's comparative treatment of architecture patterns.",
+      },
+      {
+        id: "q3",
+        prompt: "What is the defining characteristic of an architecture decision record (ADR), according to 82.2?",
+        options: [
+          {
+            id: "a",
+            text: "It is continuously edited and rewritten as circumstances change",
+          },
+          {
+            id: "b",
+            text: "It is a lightweight, permanent record of a settled decision, written at the time it's made and only superseded (never edited) by a new ADR if the decision changes",
+          },
+          {
+            id: "c",
+            text: "ADRs replace the need for any design doc discussion beforehand",
+          },
+          {
+            id: "d",
+            text: "ADRs are informal chat messages with no fixed structure",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section emphasizes permanence and dating as the core value of an ADR — a record left untouched so future readers understand the reasoning behind a past decision.",
+      },
+      {
+        id: "q4",
+        prompt: "How does an ADR's purpose relate to the commit message discipline from section 74, per 82.2?",
+        options: [
+          {
+            id: "a",
+            text: "The two have no meaningful relationship",
+          },
+          {
+            id: "b",
+            text: "Both share the instinct of making prior reasoning legible to a future reader — a commit message explains why a specific change was made, and an ADR does the same at the scale of an architectural decision",
+          },
+          {
+            id: "c",
+            text: "ADRs replace commit messages entirely",
+          },
+          {
+            id: "d",
+            text: "Section 74 argued against ever explaining reasoning in commits",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section draws this explicit parallel between commit message discipline and ADR permanence, both aimed at preserving the \"why\" for future readers.",
+      },
+      {
+        id: "q5",
+        prompt: "What is the key skill in code review described in 82.3?",
+        options: [
+          {
+            id: "a",
+            text: "Blocking on every single comment regardless of severity",
+          },
+          {
+            id: "b",
+            text: "Explicitly signaling whether a comment is a blocking correctness/security/convention issue versus a non-blocking stylistic preference, rather than leaving the author to guess",
+          },
+          {
+            id: "c",
+            text: "Never leaving any non-blocking comments under any circumstances",
+          },
+          {
+            id: "d",
+            text: "Only senior engineers are permitted to leave blocking comments",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies explicit severity-signaling as the practical skill that prevents review friction and erosion of trust.",
+      },
+      {
+        id: "q6",
+        prompt: "How does 82.3 connect code review practice to section 76's CI/CD and merge queue material?",
+        options: [
+          {
+            id: "a",
+            text: "The two topics are entirely unrelated",
+          },
+          {
+            id: "b",
+            text: "Automated tooling (linters, formatters, tests) should serve as the arbiter of objectively-checkable concerns, freeing human review time for genuinely subjective judgment calls like architecture fit and correctness under edge cases",
+          },
+          {
+            id: "c",
+            text: "Section 76 argued that CI should replace human code review entirely",
+          },
+          {
+            id: "d",
+            text: "Merge queues eliminate the need for any review severity signaling",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly connects treating automated tooling as the arbiter of checkable concerns to freeing human reviewers to focus on subjective judgment.",
+      },
+      {
+        id: "q7",
+        prompt: "What is the recommended response to a genuine \"unknown unknown\" during estimation, according to 82.4?",
+        options: [
+          {
+            id: "a",
+            text: "Provide a confident-sounding estimate anyway to keep planning on schedule",
+          },
+          {
+            id: "b",
+            text: "Scope a small, explicitly-defined investigation task (a \"spike\") whose deliverable is knowledge rather than a shipped feature, after which the remaining work can actually be estimated",
+          },
+          {
+            id: "c",
+            text: "Skip estimating that piece of work entirely and never revisit it",
+          },
+          {
+            id: "d",
+            text: "Assume the unknown unknown will resolve itself without any dedicated task",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section specifically recommends a scoped spike task to convert unknown unknowns into known-scope work before attempting a real estimate.",
+      },
+      {
+        id: "q8",
+        prompt: "According to 82.4, what is the most common cause of estimates that turn out to be substantially wrong?",
+        options: [
+          {
+            id: "a",
+            text: "Developers are inherently bad at estimating time regardless of task clarity",
+          },
+          {
+            id: "b",
+            text: "Treating a genuine unknown unknown as if it were a well-defined, known-scope task, rather than recognizing it needs investigation first",
+          },
+          {
+            id: "c",
+            text: "Estimates are always accurate as long as they're written down",
+          },
+          {
+            id: "d",
+            text: "Breaking large epics into smaller pieces makes estimates less accurate",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies mistaking an unknown unknown for a well-scoped task — not estimation itself — as the primary driver of significantly wrong estimates.",
+      },
+      {
+        id: "q9",
+        prompt: "What practical discipline does 82.5 recommend for managing technical debt?",
+        options: [
+          {
+            id: "a",
+            text: "Avoiding technical debt entirely under all circumstances",
+          },
+          {
+            id: "b",
+            text: "Treating debt like actual debt — naming it explicitly when incurred, ideally in an ADR, and periodically making its ongoing cost visible to whoever prioritizes work",
+          },
+          {
+            id: "c",
+            text: "Never discussing technical debt with non-engineering stakeholders",
+          },
+          {
+            id: "d",
+            text: "Technical debt should only be addressed once it causes a complete system failure",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames debt as a legitimate trade-off as long as it's tracked and its cost is made visible, rather than something to avoid outright or ignore.",
+      },
+      {
+        id: "q10",
+        prompt: "How does 82.5 recommend translating tech debt into terms a non-engineering stakeholder can act on?",
+        options: [
+          {
+            id: "a",
+            text: "Using only abstract terms like \"code quality concerns\"",
+          },
+          {
+            id: "b",
+            text: "Expressing the cost in concrete, measurable terms — such as the number of production incidents caused and the estimated time to fix — rather than a vague engineering complaint",
+          },
+          {
+            id: "c",
+            text: "Avoiding any quantification of tech debt's impact",
+          },
+          {
+            id: "d",
+            text: "Tech debt should never be raised with stakeholders under any circumstances",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section gives a concrete example translating a networking layer's debt into specific incident counts and a time estimate, mirroring the performance-budget framing from section 69.19.",
+      },
+      {
+        id: "q11",
+        prompt: "What makes mobile incident response meaningfully different from server incident response, according to 82.6?",
+        options: [
+          {
+            id: "a",
+            text: "Mobile incidents are never actually serious enough to require a response",
+          },
+          {
+            id: "b",
+            text: "A shipped client binary usually cannot be instantly rolled back the way a server deployment can be reverted, requiring different tools like remote feature flags and server-side mitigations",
+          },
+          {
+            id: "c",
+            text: "Mobile apps have no crash reporting or observability tooling available",
+          },
+          {
+            id: "d",
+            text: "Server incidents are always resolved faster than mobile incidents in every case",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies the inability to instantly revert a shipped binary as the crucial difference, requiring feature flags and server-side levers as alternative tools.",
+      },
+      {
+        id: "q12",
+        prompt: "How does phased release (from section 78.11) support the incident response process described in 82.6?",
+        options: [
+          {
+            id: "a",
+            text: "Phased release has no relationship to incident response",
+          },
+          {
+            id: "b",
+            text: "By design, phased release limits exposure before a full rollout completes, which aids in assessing actual severity and affected user percentage during an incident",
+          },
+          {
+            id: "c",
+            text: "Phased release guarantees an incident will never occur",
+          },
+          {
+            id: "d",
+            text: "Phased release is only relevant to App Store review timing, not incident assessment",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly notes that phased release's gradual rollout aids severity assessment during incident response, since it limits exposure before full release.",
+      },
+      {
+        id: "q13",
+        prompt: "According to 82.7, why does a full \"rollback\" in the mobile context usually mean halting a phased rollout rather than truly reverting a release?",
+        options: [
+          {
+            id: "a",
+            text: "Apple allows instant un-releasing of any previously downloaded build",
+          },
+          {
+            id: "b",
+            text: "Apple doesn't support un-releasing a build users have already downloaded, so halting further rollout limits additional exposure without retroactively fixing already-updated devices",
+          },
+          {
+            id: "c",
+            text: "Rollbacks are technically impossible in any form for mobile apps",
+          },
+          {
+            id: "d",
+            text: "Halting a rollout has no effect on how many additional users are affected",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section is explicit that halting further rollout is the closest available action to a \"rollback,\" since already-downloaded builds cannot be retroactively un-released.",
+      },
+      {
+        id: "q14",
+        prompt: "What is the central judgment call described in 82.7 when choosing between rollback, hotfix, and server-side mitigation?",
+        options: [
+          {
+            id: "a",
+            text: "Always choosing the hotfix path regardless of timing",
+          },
+          {
+            id: "b",
+            text: "Choosing the fastest path that actually addresses the severity of what's happening, rather than defaulting to one option regardless of the situation",
+          },
+          {
+            id: "c",
+            text: "Server-side mitigation should never be used for genuinely severe bugs",
+          },
+          {
+            id: "d",
+            text: "The three options are functionally identical in speed and scope",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section frames this as matching the severity of the incident to the fastest available remediation path that can actually address it, rather than a one-size-fits-all default.",
+      },
+      {
+        id: "q15",
+        prompt: "Why is blamelessness essential to an effective postmortem process, according to 82.8?",
+        options: [
+          {
+            id: "a",
+            text: "Blamelessness is purely a morale-boosting gesture with no effect on the information gathered",
+          },
+          {
+            id: "b",
+            text: "An engineer who fears individual blame has incentive to omit details or downplay their role, so blamelessness is what produces the honest, complete timeline needed to identify the actual systemic gap",
+          },
+          {
+            id: "c",
+            text: "Blameless postmortems are required by law for all software incidents",
+          },
+          {
+            id: "d",
+            text: "Assigning individual blame produces more accurate timelines than a blameless approach",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section argues blamelessness is functionally necessary — not just a soft gesture — because it removes the incentive to hide details that would otherwise obscure the true systemic cause.",
+      },
+      {
+        id: "q16",
+        prompt: "In the postmortem example in 82.8, what was the actual systemic root cause of the push notification failure?",
+        options: [
+          {
+            id: "a",
+            text: "An individual engineer's careless mistake during deployment",
+          },
+          {
+            id: "b",
+            text: "Certificate expiration was untracked in the deployment checklist and no automated expiration alert existed, contrasting with the code signing lifecycle discussion in section 77.7",
+          },
+          {
+            id: "c",
+            text: "A completely unrelated server outage caused the failure",
+          },
+          {
+            id: "d",
+            text: "The postmortem concluded no actionable root cause could be identified",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The example postmortem identifies the missing automated certificate-expiration alerting and checklist gap as the systemic root cause, not any individual's fault.",
+      },
+      {
+        id: "q17",
+        prompt: "What mechanism does 82.9 identify as most effective for transferring engineering judgment to a junior developer?",
+        options: [
+          {
+            id: "a",
+            text: "Simply handing over the direct answer as quickly as possible",
+          },
+          {
+            id: "b",
+            text: "Asking questions that make the junior developer articulate their own reasoning, surfacing gaps in that reasoning without directly handing over the answer",
+          },
+          {
+            id: "c",
+            text: "Avoiding any discussion of reasoning and focusing only on final code correctness",
+          },
+          {
+            id: "d",
+            text: "Judgment cannot be taught or transferred through mentoring in any way",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section identifies question-asking that surfaces a mentee's own reasoning gaps as more effective than direct instruction for transferring judgment.",
+      },
+      {
+        id: "q18",
+        prompt: "Why does 82.10 caution against a purely algorithmic-puzzle-based interview loop for a senior iOS role?",
+        options: [
+          {
+            id: "a",
+            text: "Algorithmic puzzles are illegal to use in technical interviews",
+          },
+          {
+            id: "b",
+            text: "Such puzzles correlate weakly with the day-to-day skills of navigating a large existing codebase, working through ambiguous requirements, and making pragmatic architecture trade-offs",
+          },
+          {
+            id: "c",
+            text: "Algorithmic puzzles are the single best predictor of on-the-job success for any engineering role",
+          },
+          {
+            id: "d",
+            text: "Section 82.10 recommends using only algorithmic puzzles for all interview loops",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly names weak correlation with real job skills as the reason to avoid over-relying on abstract algorithmic puzzles for a role focused on applied iOS engineering.",
+      },
+      {
+        id: "q19",
+        prompt: "According to 82.12, what distinguishes a portfolio project that generates callbacks from one that doesn't?",
+        options: [
+          {
+            id: "a",
+            text: "The sheer number of tutorial-following projects included",
+          },
+          {
+            id: "b",
+            text: "Depth on a small number of substantial projects with documented reasoning (e.g., explaining why SwiftData was chosen over Core Data) rather than breadth across many shallow, undistinguished projects",
+          },
+          {
+            id: "c",
+            text: "Portfolios should never include any written explanation of decisions made",
+          },
+          {
+            id: "d",
+            text: "Only projects using the newest possible APIs generate callbacks",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section contrasts a single project with genuine documented decision-making against ten shallow tutorial clones, favoring depth and visible reasoning.",
+      },
+      {
+        id: "q20",
+        prompt: "What is the recommended approach to staying current with Swift Evolution and WWDC content, according to 82.13?",
+        options: [
+          {
+            id: "a",
+            text: "Reading every single Evolution proposal and watching every WWDC session in full",
+          },
+          {
+            id: "b",
+            text: "Triage based on relevance to your actual work, going deep only on changes that matter to what you build while maintaining lighter situational awareness of everything else",
+          },
+          {
+            id: "c",
+            text: "Ignoring all official sources and relying solely on secondhand summaries",
+          },
+          {
+            id: "d",
+            text: "Staying current is unnecessary once initial Swift proficiency is achieved",
+          },
+        ],
+        correctOptionId: "b",
+        explanation: "The section explicitly recommends triage over exhaustive consumption, focusing deep attention only on changes relevant to one's actual work.",
+      },
+    ],
+  },
 ];
 
 export function getAllQuizzes(): Quiz[] {
