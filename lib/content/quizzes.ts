@@ -7621,11 +7621,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`if`/`else` branches unconditionally share identity automatically, so no special handling is ever needed at all" },
         ],
         correctOptionId: "b",
-        explanation: "Because each branch of `_ConditionalContent` is considered a separate identity, switching between them is an insertion/removal event rather than an in-place property change — exactly the scenario `.transition()` (section 29.6) is designed to animate, since implicit/explicit animation alone only handles property changes on persisting views.",
+        explanation: "Because each branch of `_ConditionalContent` is considered a separate identity, switching between them is an insertion/removal event rather than an in-place property change — exactly the scenario `.transition()` is designed to animate, since implicit/explicit animation alone only handles property changes on persisting views.",
       },
       {
         id: "q3",
-        prompt: "What is the primary real cost of using `AnyView`, according to the discussion in 31.3?",
+        prompt: "What is the primary real cost of using `AnyView`?",
         options: [
           { id: "a", text: "It unconditionally crashes at runtime the very instant `AnyView` is ever used, under any case, in every case, without exception" },
           { id: "b", text: "It unconditionally prevents a view from ever being animated again, under any circumstance at all, regardless of context" },
@@ -7757,7 +7757,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q14",
-        prompt: "What is a \"body invalidation storm,\" as described in 31.12?",
+        prompt: "What is a \"body invalidation storm\"?",
         options: [
           { id: "a", text: "A crash unconditionally caused by too many nested `VStack` containers within a single hierarchy" },
           { id: "b", text: "A view's `body` re-evaluates far more often than the visible UI actually changes, usually from over-broad state" },
@@ -7769,7 +7769,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q15",
-        prompt: "According to 31.12, why does isolating each row's model into its own independently-observed `@Observable` object help reduce invalidation storms, compared to reading from one shared parent-owned collection?",
+        prompt: "Why does isolating each row's model into its own independently-observed `@Observable` object help reduce invalidation storms, compared to reading from one shared parent-owned collection?",
         options: [
           { id: "a", text: "`@Observable` objects are structurally unable to ever be shared between views, under any case" },
           { id: "b", text: "Isolating models unconditionally has genuinely no effect on invalidation frequency, in any context, in every case" },
@@ -7781,7 +7781,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q16",
-        prompt: "How does `@Observable`'s property-level tracking already improve on older `ObservableObject`-based invalidation behavior, as referenced in 31.12?",
+        prompt: "How does `@Observable`'s property-level tracking already improve on older `ObservableObject`-based invalidation behavior?",
         options: [
           { id: "a", text: "`@Observable` unconditionally has genuinely no meaningful difference from `ObservableObject`, at all, in every case" },
           { id: "b", text: "`@Observable` unconditionally disables all view updates by default, regardless of configuration, without exception" },
@@ -7789,7 +7789,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Tracks access at the property level, rather than treating any change as invalidating every observing view" },
         ],
         correctOptionId: "d",
-        explanation: "`ObservableObject`'s `@Published` typically invalidates every observing view on any published change, regardless of which specific property that view actually reads. `@Observable` (from section 25) instead tracks fine-grained property-level access, so a view only re-renders when a property it actually reads changes — a meaningful improvement, though full row-level isolation goes further still.",
+        explanation: "`ObservableObject`'s `@Published` typically invalidates every observing view on any published change, regardless of which specific property that view actually reads. `@Observable` instead tracks fine-grained property-level access, so a view only re-renders when a property it actually reads changes — a meaningful improvement, though full row-level isolation goes further still.",
       },
       {
         id: "q17",
@@ -7805,7 +7805,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "Why is the SwiftUI Performance instrument described as \"closing the loop\" on the diagnostic techniques discussed earlier in the section?",
+        prompt: "Why is the SwiftUI Performance instrument described as \"closing the loop\" on other diagnostic techniques, like narrowing state scope or applying `.equatable()`?",
         options: [
           { id: "a", text: "It unconditionally has genuinely no relationship whatsoever to any of the other techniques discussed in the section" },
           { id: "b", text: "It lets you empirically confirm whether a fix actually reduced invalidation frequency in practice" },
@@ -7817,7 +7817,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "In the `AdaptiveHeightContainerView` example (31.6), what completes the round trip from a child's measured size back to influencing the parent's behavior?",
+        prompt: "In a pattern where a child reports its measured height upward via `.preference(key:value:)` (from a `GeometryReader`), what completes the round trip back to influencing the parent's behavior?",
         options: [
           { id: "a", text: "A `@Binding<CGFloat>` unconditionally passed directly into the child, bypassing the preference system, in every case" },
           { id: "b", text: "The child unconditionally directly modifies the parent's own `@State` property, bypassing preferences" },
@@ -7873,15 +7873,15 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q3",
-        prompt: "What is the relationship between `.glassEffect()` and the `.glass`/`.glassProminent` button styles from section 28.12?",
+        prompt: "What is the relationship between `.glassEffect()` and the `.glass`/`.glassProminent` button styles?",
         options: [
           { id: "a", text: "They're unconditionally and entirely unrelated APIs, sharing no underlying mechanism or connection, in every case" },
           { id: "b", text: "`.glassProminent` unconditionally disables `.glassEffect()` entirely, across the whole app, always" },
-          { id: "c", text: "`.glassEffect()` is the core modifier, and the direct building block behind the button styles from 28.12" },
+          { id: "c", text: "`.glassEffect()` is the core modifier, and the direct building block behind those button styles" },
           { id: "d", text: "`.glassEffect()` is structurally restricted to being usable only on `Button`, and never on any other view type" },
         ],
         correctOptionId: "c",
-        explanation: "`.glassEffect()` is the general-purpose modifier for applying glass material to any view; the button-specific styles from 28.12 are built on top of this same underlying glass material system, pre-tuned for the button use case.",
+        explanation: "`.glassEffect()` is the general-purpose modifier for applying glass material to any view; the button-specific glass styles are built on top of this same underlying glass material system, pre-tuned for the button use case.",
       },
       {
         id: "q4",
@@ -7897,15 +7897,15 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q5",
-        prompt: "What does `.glassEffectID(_:in:)` enable, and what earlier concept from section 29 does it closely parallel?",
+        prompt: "What does `.glassEffectID(_:in:)` enable, and what other SwiftUI mechanism does it closely parallel?",
         options: [
           { id: "a", text: "Smooth morphing transitions when shape/size/position changes, closely paralleling `matchedGeometryEffect`" },
           { id: "b", text: "It unconditionally enables only static, non-animated glass surfaces; it parallels `.stroke()` instead" },
-          { id: "c", text: "It unconditionally has genuinely no relationship to any concept covered previously in the course" },
-          { id: "d", text: "It parallels `.trim(from:to:)` from section 30.4, sharing no relationship with anything else" },
+          { id: "c", text: "It unconditionally has genuinely no relationship to any other SwiftUI mechanism whatsoever" },
+          { id: "d", text: "It parallels `.trim(from:to:)`, sharing no relationship with anything else" },
         ],
         correctOptionId: "a",
-        explanation: "Like `matchedGeometryEffect` (29.8–29.9), `.glassEffectID()` uses a shared `@Namespace` plus a matching identity to tell SwiftUI that two differently-shaped elements across a state change represent \"the same\" logical surface — enabling a smooth morph rather than an abrupt swap, but specifically for glass material rather than general shapes.",
+        explanation: "Like `matchedGeometryEffect`, `.glassEffectID()` uses a shared `@Namespace` plus a matching identity to tell SwiftUI that two differently-shaped elements across a state change represent \"the same\" logical surface — enabling a smooth morph rather than an abrupt swap, but specifically for glass material rather than general shapes.",
       },
       {
         id: "q6",
@@ -7929,13 +7929,13 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "The glass chrome unconditionally becomes fully opaque whenever any content scrolls beneath it" },
         ],
         correctOptionId: "c",
-        explanation: "The scroll edge effect progressively blurs/fades content as it passes beneath glass chrome rather than clipping it sharply, reinforcing the layered, translucent relationship between the chrome and the scrolling content beneath it — conceptually related to, but distinct from, `.scrollEdgeEffectStyle()` (26.19).",
+        explanation: "The scroll edge effect progressively blurs/fades content as it passes beneath glass chrome rather than clipping it sharply, reinforcing the layered, translucent relationship between the chrome and the scrolling content beneath it — conceptually related to, but distinct from, `.scrollEdgeEffectStyle()`.",
       },
       {
         id: "q8",
         prompt: "What problem does `ConcentricRectangle` solve when nesting a smaller rounded shape inside a larger one?",
         options: [
-          { id: "c", text: "It unconditionally and completely removes the need for `.overlay()` to exist anywhere in SwiftUI, entirely" },
+          { id: "a", text: "It unconditionally and completely removes the need for `.overlay()` to exist anywhere in SwiftUI, entirely" },
           { id: "b", text: "It's structurally restricted to working only with `Circle`, never usable with rectangles at all, in every case" },
           { id: "c", text: "It unconditionally removes the need for `.overlay()` to exist anywhere in SwiftUI, entirely, without exception" },
           { id: "d", text: "It automatically computes a corner radius proportionally matched to the container's own corner radius" },
@@ -7945,7 +7945,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q9",
-        prompt: "According to the guidance in 32.8, why might applying `.glassEffect()` to a large block of primary reading content (like a long article paragraph) be a poor choice?",
+        prompt: "Why might applying `.glassEffect()` to a large block of primary reading content (like a long article paragraph) be a poor choice?",
         options: [
           { id: "a", text: "Text on glass can suffer variable, sometimes poor contrast depending on what's showing through underneath" },
           { id: "b", text: "`.glassEffect()` is structurally unable to ever technically be applied to `Text` views, at all" },
@@ -7965,13 +7965,13 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "It unconditionally has genuinely no relationship to glass material usage anywhere in the app" },
         ],
         correctOptionId: "b",
-        explanation: "Similar in spirit to `accessibilityReduceMotion` (29.15) informing animation decisions, this environment value lets glass-using views detect a stated accessibility preference and fall back to a more opaque, higher-contrast appearance for users who need it.",
+        explanation: "Similar in spirit to `accessibilityReduceMotion` informing animation decisions, this environment value lets glass-using views detect a stated accessibility preference and fall back to a more opaque, higher-contrast appearance for users who need it.",
       },
       {
         id: "q11",
         prompt: "What does the `variableValue:` parameter on `Image(systemName:variableValue:)` control?",
         options: [
-          { id: "b", text: "Unconditionally, whether the symbol is animated or rendered statically, entirely independent of any fill value" },
+          { id: "a", text: "Unconditionally, whether the symbol is animated or rendered statically, entirely independent of any fill value" },
           { id: "b", text: "Unconditionally, whether the symbol is animated or rendered statically, independent of any fill value, in every case" },
           { id: "c", text: "How much of a symbol's variable-color-capable layers appear filled versus dimmed, like signal strength" },
           { id: "d", text: "The unconditional, fixed file size of the underlying symbol asset, unrelated to fill proportion" },
@@ -7981,15 +7981,15 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q12",
-        prompt: "What does `.symbolEffect(.drawOn, isActive:)` do, and what section 30 concept does it echo?",
+        prompt: "What does `.symbolEffect(.drawOn, isActive:)` do, and what other SwiftUI concept does it echo?",
         options: [
           { id: "a", text: "It unconditionally deletes the symbol outright; it's unconditionally unrelated to any prior concept, in every case" },
           { id: "b", text: "It unconditionally converts the symbol into a fully-fledged `Canvas` drawing, bypassing the symbol system" },
           { id: "c", text: "It's structurally restricted to working only on custom symbols, and never on any system-provided symbol at all" },
-          { id: "d", text: "It progressively traces a symbol's strokes as if being drawn, echoing `.trim(from:to:)` from section 30.4" },
+          { id: "d", text: "It progressively traces a symbol's strokes as if being drawn, echoing `.trim(from:to:)` on a `Path`" },
         ],
         correctOptionId: "d",
-        explanation: "`.drawOn` produces a progressive stroke-tracing animation conceptually similar to animating `.trim(from:to:)` on a `Path` (30.4), but it's a built-in symbol effect requiring no custom `Animatable`/`GeometryEffect` work to achieve.",
+        explanation: "`.drawOn` produces a progressive stroke-tracing animation conceptually similar to animating `.trim(from:to:)` on a `Path`, but it's a built-in symbol effect requiring no custom `Animatable`/`GeometryEffect` work to achieve.",
       },
       {
         id: "q13",
@@ -8009,11 +8009,11 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It's unconditionally restricted to ever rendering as only a single fixed size and weight" },
           { id: "b", text: "It can be referenced by name and participates in the same scaling, weight adjustment, and symbol effects" },
-          { id: "d", text: "Custom symbols unconditionally require an entirely separate rendering API from built-in symbols, in every case" },
+          { id: "c", text: "Custom symbols unconditionally require an entirely separate rendering API from built-in symbols, in every case" },
           { id: "d", text: "Custom symbols unconditionally require an entirely separate rendering API from built-in symbols" },
         ],
         correctOptionId: "b",
-        explanation: "A properly annotated custom symbol (with paths assigned to appropriate layers for multi-weight and optional variable-color support) integrates seamlessly with the same symbol infrastructure as built-in symbols, including `.font()`-based scaling/weight and the symbol effects covered in 32.11.",
+        explanation: "A properly annotated custom symbol (with paths assigned to appropriate layers for multi-weight and optional variable-color support) integrates seamlessly with the same symbol infrastructure as built-in symbols, including `.font()`-based scaling/weight and the built-in symbol effects.",
       },
       {
         id: "q15",
@@ -8041,7 +8041,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q17",
-        prompt: "What is the primary purpose of a design token system, as described in 32.14?",
+        prompt: "What is the primary purpose of a design token system?",
         options: [
           { id: "a", text: "To centralize a project's core visual constants into a single, strongly-typed source of truth for the app" },
           { id: "b", text: "Unconditionally, to replace `@State` entirely for managing arbitrary view data across an app" },
@@ -8053,7 +8053,36 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "In the `DesignTokens` example, why are values organized as `enum`-namespaced static constants rather than simply as global variables?",
+        prompt: "Given the code below, why are values organized as `enum`-namespaced static constants rather than simply as global variables?",
+        codeExample: `enum DesignTokens {
+    enum Spacing {
+        static let xs: CGFloat = 4
+        static let sm: CGFloat = 8
+        static let md: CGFloat = 16
+        static let lg: CGFloat = 24
+        static let xl: CGFloat = 32
+    }
+
+    enum CornerRadius {
+        static let control: CGFloat = 12
+        static let card: CGFloat = 20
+        static let sheet: CGFloat = 28
+    }
+
+    enum ColorToken {
+        static let accent = Color("BrandAccent")
+        static let surface = Color("SurfaceBackground")
+    }
+}
+
+struct TokenUsageView: View {
+    var body: some View {
+        Text("Themed Card")
+            .padding(DesignTokens.Spacing.md)
+            .background(DesignTokens.ColorToken.surface)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.card))
+    }
+}`,
         options: [
           { id: "a", text: "`enum` namespacing unconditionally has genuinely no real benefit over plain global variables here, in all situations" },
           { id: "b", text: "Namespacing groups related tokens logically and prevents accidental instantiation, since `enum` has no cases" },
@@ -8065,7 +8094,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "Why does the section recommend reserving glass material for chrome, floating controls, and short glanceable labels rather than using it universally?",
+        prompt: "Why is it recommended to reserve glass material for chrome, floating controls, and short glanceable labels rather than using it universally?",
         options: [
           { id: "a", text: "Glass material is unconditionally deprecated and should never be used anywhere, under any case" },
           { id: "b", text: "Glass material unconditionally can only technically be applied to circular shapes, no other shape, in every case" },
@@ -8073,11 +8102,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "There's unconditionally no specific recommendation whatsoever; glass usage is unconditionally entirely unrestricted" },
         ],
         correctOptionId: "c",
-        explanation: "The legibility risk from variable contrast (32.8, 32.9) scales with how much reading/parsing a user needs to do — brief, glanceable UI elements and controls tolerate this variability far better than dense paragraphs or data tables, hence the guidance to reserve glass for the former.",
+        explanation: "The legibility risk from variable contrast scales with how much reading/parsing a user needs to do — brief, glanceable UI elements and controls tolerate this variability far better than dense paragraphs or data tables, hence the guidance to reserve glass for the former.",
       },
       {
         id: "q20",
-        prompt: "What is the conceptual thread connecting `.glassEffectID()` (32.4), `matchedGeometryEffect` (29.8–29.9), and `.navigationTransition(.zoom())` (27.20)?",
+        prompt: "What is the conceptual thread connecting `.glassEffectID()`, `matchedGeometryEffect`, and `.navigationTransition(.zoom())`?",
         options: [
           { id: "a", text: "They're unconditionally unrelated APIs that happen to appear together in the very same course, only, in every case" },
           { id: "b", text: "They can unconditionally only ever be used together with `Text` views, no other view type at all, without exception" },
@@ -8109,7 +8138,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q2",
-        prompt: "What underlying mechanism does `NavigationSplitView`'s automatic single-column-vs-multi-column adaptation (from section 27.5) rely on?",
+        prompt: "What underlying mechanism does `NavigationSplitView`'s automatic single-column-vs-multi-column adaptation rely on?",
         options: [
           { id: "a", text: "A hardcoded, unconditionally maintained list of every specific supported device model, checked at runtime, always" },
           { id: "b", text: "The same size-class system — `.compact` gets single-column, while `.regular` gets multi-column presentation" },
@@ -8117,7 +8146,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A dedicated, entirely unrelated API that's unconditionally exclusive only to `NavigationSplitView`" },
         ],
         correctOptionId: "b",
-        explanation: "`NavigationSplitView`'s adaptive behavior is a direct application of the same size-class mechanism covered in 33.1 — it responds to whether the current context is `.compact` or `.regular`, exactly like any other size-class-aware custom layout would.",
+        explanation: "`NavigationSplitView`'s adaptive behavior is a direct application of the same size-class mechanism — it responds to whether the current context is `.compact` or `.regular`, exactly like any other size-class-aware custom layout would.",
       },
       {
         id: "q3",
@@ -8135,7 +8164,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q4",
         prompt: "What is the key difference between `WindowGroup` and `Window` as macOS scene types?",
         options: [
-          { id: "c", text: "`WindowGroup` is unconditionally restricted to iOS only; `Window` is unconditionally restricted to macOS only, always" },
+          { id: "a", text: "`WindowGroup` is unconditionally restricted to iOS only; `Window` is unconditionally restricted to macOS only, always" },
           { id: "b", text: "`Window` unconditionally supports multiple simultaneous instances; `WindowGroup` only supports one, without exception" },
           { id: "c", text: "`WindowGroup` is unconditionally restricted to iOS only; `Window` is restricted to macOS only, always, in every case" },
           { id: "d", text: "`WindowGroup` supports multiple windows of the same type; `Window` declares a single unique window instance" },
@@ -8189,7 +8218,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`WindowGroup(id:for:)`, which accepts a value type and receives it as a binding in its content closure" },
         ],
         correctOptionId: "d",
-        explanation: "`openWindow(id:value:)` is designed to work with a matching `WindowGroup(id:for:)` scene that declares the value type it expects — tapping an item programmatically opens a window scoped to that specific value's identity, mirroring value-based navigation (27.2) but at the window level.",
+        explanation: "`openWindow(id:value:)` is designed to work with a matching `WindowGroup(id:for:)` scene that declares the value type it expects — tapping an item programmatically opens a window scoped to that specific value's identity, mirroring value-based navigation but at the window level.",
       },
       {
         id: "q9",
@@ -8213,7 +8242,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`.digitalCrownRotation()` unconditionally implies focusability, with no extra modifier needed at all, regardless of context" },
         ],
         correctOptionId: "b",
-        explanation: "Similar in spirit to how `@FocusState` directs keyboard input to a specific field (28.15), the Digital Crown's rotation needs a specific focused target to direct its input toward — `.focusable()` is what makes a view eligible to receive that directed input.",
+        explanation: "Similar in spirit to how `@FocusState` directs keyboard input to a specific field, the Digital Crown's rotation needs a specific focused target to direct its input toward — `.focusable()` is what makes a view eligible to receive that directed input.",
       },
       {
         id: "q11",
@@ -8241,7 +8270,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q13",
-        prompt: "What role does `@FocusState` play in the tvOS focus example, and how does this relate to its use in section 28.15?",
+        prompt: "What role does `@FocusState` play on tvOS, and how does this relate to its use for tracking keyboard focus in a form?",
         options: [
           { id: "a", text: "It tracks which element currently holds focus, the same mechanism used for keyboard focus in forms" },
           { id: "b", text: "It has a completely different underlying purpose on tvOS than on any other Apple platform" },
@@ -8249,7 +8278,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "It's unconditionally only ever used specifically for accessibility labels on tvOS, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "`@FocusState` is the same general-purpose focus-tracking mechanism across platforms — on tvOS it tracks which element the focus engine has currently selected via remote navigation, just as it tracked which text field held keyboard focus in the forms context of 28.15.",
+        explanation: "`@FocusState` is the same general-purpose focus-tracking mechanism across platforms — on tvOS it tracks which element the focus engine has currently selected via remote navigation, just as it tracks which text field holds keyboard focus in a form.",
       },
       {
         id: "q14",
@@ -8265,7 +8294,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q15",
-        prompt: "In the recommended clean multiplatform architecture (33.11), where should business logic and data models like `TaskItem` and `TaskStore` typically live?",
+        prompt: "In a clean multiplatform architecture, where should business logic and data models like `TaskItem` and `TaskStore` typically live?",
         options: [
           { id: "a", text: "Duplicated separately and unconditionally maintained within each individual platform-specific target" },
           { id: "b", text: "Written once, but unconditionally requiring `#if os()` wrapping around every line, regardless of relevance" },
@@ -8277,7 +8306,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q16",
-        prompt: "According to 33.11, where should platform-specific UI differences ideally be concentrated?",
+        prompt: "Where should platform-specific UI differences ideally be concentrated?",
         options: [
           { id: "a", text: "Unconditionally scattered broadly throughout the codebase via many small `#if os()` blocks" },
           { id: "b", text: "Unconditionally placed inside the data model layer itself, directly alongside the core business logic" },
@@ -8289,15 +8318,32 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q17",
-        prompt: "In the `TaskRowView` example, what determines whether the watchOS-specific or general branch of the view's body executes?",
+        prompt: "Given the code below, what determines whether the watchOS-specific or general branch of the view's body executes?",
+        codeExample: `struct TaskRowView: View {
+    let task: TaskItem
+    let onToggle: () -> Void
+
+    var body: some View {
+        #if os(watchOS)
+        Text(task.title).font(.caption)
+            .onTapGesture(perform: onToggle)
+        #else
+        HStack {
+            Image(systemName: task.isComplete ? "checkmark.circle.fill" : "circle")
+            Text(task.title)
+        }
+        .onTapGesture(perform: onToggle)
+        #endif
+    }
+}`,
         options: [
           { id: "a", text: "The `#if os(watchOS)` compile-time conditional, resolving to include only the appropriate branch in each build" },
-          { id: "d", text: "A `PreferenceKey` reported upward by a parent view, unrelated to any compile-time conditional at all" },
+          { id: "b", text: "A `PreferenceKey` reported upward by a parent view, unrelated to any compile-time conditional at all" },
           { id: "c", text: "An `@Environment` value that's unconditionally read fresh at runtime, on every single `body` evaluation" },
           { id: "d", text: "A `PreferenceKey` unconditionally reported upward by a parent view, unrelated to any compile-time conditional" },
         ],
         correctOptionId: "a",
-        explanation: "The `#if os(watchOS)` / `#else` structure is a compile-time branch — only one branch is actually compiled into any given platform's build, consistent with how `#if os()` conditionals work generally (as covered in 33.10), rather than being decided dynamically at runtime.",
+        explanation: "The `#if os(watchOS)` / `#else` structure is a compile-time branch — only one branch is actually compiled into any given platform's build, consistent with how `#if os()` conditionals work generally, rather than being decided dynamically at runtime.",
       },
       {
         id: "q18",
@@ -8309,7 +8355,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`openWindow` is unconditionally unable to ever pass any data to the newly opened window, at all" },
         ],
         correctOptionId: "b",
-        explanation: "The pattern mirrors section 27.2's value-based navigation almost exactly, but scoped to whole windows instead of destinations within one navigation stack — a plain value (like a `Document.ID`) determines what content a newly-opened window should display, resolved via the `WindowGroup(id:for:)` closure.",
+        explanation: "The pattern mirrors value-based navigation almost exactly, but scoped to whole windows instead of destinations within one navigation stack — a plain value (like a `Document.ID`) determines what content a newly-opened window should display, resolved via the `WindowGroup(id:for:)` closure.",
       },
       {
         id: "q19",
@@ -8325,7 +8371,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q20",
-        prompt: "Why does the section suggest that watchOS complications and other widget contexts (like iOS home screen widgets) can share much of their timeline-provider and entry-view logic?",
+        prompt: "Why can watchOS complications and other widget contexts (like iOS home screen widgets) share much of their timeline-provider and entry-view logic?",
         options: [
           { id: "a", text: "They unconditionally cannot share any logic whatsoever; each platform requires a separate implementation, regardless of context" },
           { id: "b", text: "Widgets and complications are unconditionally the exact same API, with no distinction at all between them, without exception" },
@@ -8348,7 +8394,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What does the `DocumentGroup` scene type provide automatically that would otherwise require substantial manual implementation?",
         options: [
           { id: "a", text: "The standard system document lifecycle — New, Open, the document browser, recent documents, and autosave" },
-          { id: "d", text: "Unconditionally, push notification registration exclusively, unrelated to files or documents at all" },
+          { id: "b", text: "Unconditionally, push notification registration exclusively, unrelated to files or documents at all" },
           { id: "c", text: "Unconditionally, network request handling exclusively, entirely unrelated to files or documents" },
           { id: "d", text: "Unconditionally, push notification registration exclusively, entirely unrelated to files or documents" },
         ],
@@ -8396,7 +8442,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "Why does SwiftUI's normal state-diffing machinery apply naturally to a `FileDocument`-based model?",
         options: [
           { id: "a", text: "Because it's a `struct`, each edit produces a new value, letting the framework efficiently detect what changed" },
-          { id: "d", text: "Diffing only ever applies to `ReferenceFileDocument`, and unconditionally never to `FileDocument`" },
+          { id: "b", text: "Diffing only ever applies to `ReferenceFileDocument`, and unconditionally never to `FileDocument`" },
           { id: "c", text: "`FileDocument` unconditionally requires fully manual diffing code to be written by hand for every property" },
           { id: "d", text: "Diffing unconditionally only ever applies to `ReferenceFileDocument`, never to `FileDocument`" },
         ],
@@ -8479,7 +8525,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q12",
         prompt: "What real-world capability does correctly declaring a custom `UTType` (in both Swift and Info.plist) enable?",
         options: [
-          { id: "c", text: "Unconditionally, encrypted storage of the document by default, with no relationship to file type declarations at all" },
+          { id: "a", text: "Unconditionally, encrypted storage of the document by default, with no relationship to file type declarations at all" },
           { id: "b", text: "Unconditionally, automatic App Store approval, entirely unrelated to file type declarations, without exception" },
           { id: "c", text: "Unconditionally, encrypted storage of the document by default, unrelated to file type declarations, in every case" },
           { id: "d", text: "Double-clicking a file with the custom extension correctly launches the specific app that owns that type" },
@@ -8489,10 +8535,10 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q13",
-        prompt: "Why might a document type declare `.commaSeparatedText` as readable but not writable, as shown in the multi-format example?",
+        prompt: "In a document type that declares `readableContentTypes { [.myAppFormat, .plainText, .commaSeparatedText] }` and `writableContentTypes { [.myAppFormat, .plainText] }`, why might `.commaSeparatedText` be readable but not writable?",
         options: [
           { id: "a", text: "It supports broad import compatibility while keeping export focused on formats the app can serialize fully" },
-          { id: "d", text: "`.commaSeparatedText` is unconditionally unable to be read by any app whatsoever, under any case" },
+          { id: "b", text: "The operating system unconditionally prevents any app from ever writing `.commaSeparatedText` files, regardless of configuration" },
           { id: "c", text: "`writableContentTypes` unconditionally does not exist as a concept anywhere within the framework" },
           { id: "d", text: "`.commaSeparatedText` is unconditionally unable to be read by any app whatsoever, under any case" },
         ],
@@ -8505,7 +8551,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "Unconditionally, only the user's currently selected app theme, with no relationship to file handling" },
           { id: "b", text: "Which specific format is being read from or written to, letting the document branch its logic accordingly" },
-          { id: "d", text: "Unconditionally, a direct reference back to the app's own `DocumentGroup` scene declaration, with no format data" },
+          { id: "c", text: "Unconditionally, a direct reference back to the app's own `DocumentGroup` scene declaration, with no format data" },
           { id: "d", text: "Unconditionally, a direct reference back to the app's own `DocumentGroup` scene, with no format data" },
         ],
         correctOptionId: "b",
@@ -8593,7 +8639,7 @@ public struct StringifyMacro: ExpressionMacro {
     questions: [
       {
         id: "q1",
-        prompt: "According to the section, why does UIKit remain relevant even in a SwiftUI-first development environment?",
+        prompt: "Why does UIKit remain relevant even in a SwiftUI-first development environment?",
         options: [
           { id: "a", text: "SwiftUI cannot render any UI without UIKit running underneath, since every SwiftUI view compiles down to a `UIView` instance" },
           { id: "b", text: "UIKit is required for all App Store submissions regardless of framework, per Apple's review guidelines" },
@@ -8601,7 +8647,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Most codebases are UIKit-based, control is often easier there, and SwiftUI apps often bridge via representables" },
         ],
         correctOptionId: "d",
-        explanation: "The section lists concrete, practical reasons: legacy codebase prevalence, certain capabilities still more directly available in UIKit, and the routine need for `UIViewRepresentable`/`UIViewControllerRepresentable` interop bridges — not any claim that UIKit is mandatory at the OS level for all rendering.",
+        explanation: "There are concrete, practical reasons: legacy codebase prevalence, certain capabilities still more directly available in UIKit, and the routine need for `UIViewRepresentable`/`UIViewControllerRepresentable` interop bridges — not any claim that UIKit is mandatory at the OS level for all rendering.",
       },
       {
         id: "q2",
@@ -8725,7 +8771,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q12",
-        prompt: "How does the responder chain conceptually compare to SwiftUI's `@FocusState`, as discussed in the section?",
+        prompt: "How does the responder chain conceptually compare to SwiftUI's `@FocusState`?",
         options: [
           { id: "a", text: "They are entirely unrelated with no conceptual overlap, since one predates SwiftUI entirely" },
           { id: "b", text: "`@FocusState` is simply a renamed version of the responder chain with identical implementation" },
@@ -8849,11 +8895,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A linear equation: `item1.attribute1 = multiplier × item2.attribute2 + constant`" },
         ],
         correctOptionId: "d",
-        explanation: "Every constraint fundamentally expresses a linear relationship between two views' geometric attributes — this equation-based foundation is the conceptual key to understanding priorities, conflicts, and ambiguity throughout the rest of the section.",
+        explanation: "Every constraint fundamentally expresses a linear relationship between two views' geometric attributes — this equation-based foundation is the conceptual key to understanding priorities, conflicts, and ambiguity in Auto Layout generally.",
       },
       {
         id: "q2",
-        prompt: "How does Auto Layout's approach to solving layout fundamentally differ from SwiftUI's `sizeThatFits`/`placeSubviews` negotiation (section 31.8–31.9)?",
+        prompt: "How does Auto Layout's approach to solving layout fundamentally differ from SwiftUI's `sizeThatFits`/`placeSubviews` negotiation?",
         options: [
           { id: "a", text: "Auto Layout solves a whole system of simultaneous equations across the entire constrained hierarchy at once, rather than SwiftUI's top-down \"propose a size, get back a size\" negotiation between parent and child" },
           { id: "b", text: "They are functionally identical, just with different method names" },
@@ -8961,7 +9007,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q11",
-        prompt: "How does `UIStackView`'s `distribution` property relate to concepts covered earlier in the SwiftUI material?",
+        prompt: "How does `UIStackView`'s `distribution` property relate to concepts from SwiftUI's `HStack`/`VStack`?",
         options: [
           { id: "a", text: "It has no relationship to any SwiftUI concept, being a purely UIKit-only idea" },
           { id: "b", text: "It parallels how SwiftUI's `Spacer()` controls space in `HStack`/`VStack`" },
@@ -9045,7 +9091,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "How does `systemLayoutSizeFitting` conceptually parallel `sizeThatFits` from SwiftUI's `Layout` protocol (section 31.8)?",
+        prompt: "How does `systemLayoutSizeFitting` conceptually parallel `sizeThatFits` from SwiftUI's `Layout` protocol?",
         options: [
           { id: "a", text: "Both are mechanisms for asking a piece of UI \"given this much space, what size do you actually need,\" just implemented through different underlying systems (Auto Layout's constraint solver vs. SwiftUI's proposal-based negotiation)" },
           { id: "b", text: "They are entirely unrelated mechanisms" },
@@ -9057,7 +9103,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "What role does `systemLayoutSizeFitting` play in self-sizing table view cells, as previewed for section 37.3?",
+        prompt: "What role does `systemLayoutSizeFitting` play in self-sizing table view cells?",
         options: [
           { id: "a", text: "It has no relationship to self-sizing cells or their height computation at all" },
           { id: "b", text: "It computes a cell's height for a width by running Auto Layout's own solver" },
@@ -9077,7 +9123,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Equations only matter for width/height constraints, not position constraints" },
         ],
         correctOptionId: "c",
-        explanation: "Since Auto Layout genuinely solves a system of equations, the standard mathematical outcomes apply directly — too many equations (over-determined) produces conflict, too few (under-determined) produces ambiguity, and exactly the right number produces a single well-defined solution, which is precisely the framing the section uses to explain these behaviors.",
+        explanation: "Since Auto Layout genuinely solves a system of equations, the standard mathematical outcomes apply directly — too many equations (over-determined) produces conflict, too few (under-determined) produces ambiguity, and exactly the right number produces a single well-defined solution.",
       },
     ],
   },
@@ -9097,7 +9143,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`UITableViewDelegate` provides data; `UITableViewDataSource` handles interaction instead" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly splits responsibilities: `UITableViewDataSource` supplies row counts and cell content (`numberOfRowsInSection`, `cellForRowAt`), while `UITableViewDelegate` handles things like selection (`didSelectRowAt`) and visual customization — keeping the table view itself generic while these two protocols supply the specifics.",
+        explanation: "The responsibilities are explicitly split: `UITableViewDataSource` supplies row counts and cell content (`numberOfRowsInSection`, `cellForRowAt`), while `UITableViewDelegate` handles things like selection (`didSelectRowAt`) and visual customization — keeping the table view itself generic while these two protocols supply the specifics.",
       },
       {
         id: "q2",
@@ -9253,7 +9299,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Only `moveRow` requires data synchronization; insert and delete do not" },
         ],
         correctOptionId: "b",
-        explanation: "The section stresses that the backing data (the array items are stored in) and the table's internal indexing must remain consistent — if you animate a deletion without actually removing the corresponding item from your data array (or vice versa), the table's internal state becomes corrupted, typically causing a crash or incorrect display on the next update.",
+        explanation: "The backing data (the array items are stored in) and the table's internal indexing must remain consistent — if you animate a deletion without actually removing the corresponding item from your data array (or vice versa), the table's internal state becomes corrupted, typically causing a crash or incorrect display on the next update.",
       },
       {
         id: "q15",
@@ -9281,7 +9327,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q17",
-        prompt: "How are supplementary views (like a section header) registered and provided, according to the section?",
+        prompt: "How are supplementary views (like a section header) registered and provided?",
         options: [
           { id: "a", text: "Registered via `register(_:forSupplementaryViewOfKind:withReuseIdentifier:)` and provided via the data source method `viewForSupplementaryElementOfKind`, checking the `kind` parameter to distinguish header vs. footer" },
           { id: "b", text: "They cannot be reused and must be manually created and destroyed each time" },
@@ -9305,7 +9351,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "Why is `WaterfallLayout`'s custom layout considered \"purely geometric,\" as described in the section?",
+        prompt: "Why is `WaterfallLayout`'s custom layout considered \"purely geometric\"?",
         options: [
           { id: "a", text: "Because it directly manages cell content, like triggering image loading itself" },
           { id: "b", text: "Because it can only ever be used with one specific, hardcoded cell class" },
@@ -9381,7 +9427,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Representables are actually classes already under the hood, so this isn't a real constraint" },
         ],
         correctOptionId: "c",
-        explanation: "SwiftUI re-creates representable struct values on each update, so a struct instance has no stable identity over time — a UIKit delegate relationship (35.7) requires a persistent reference-type object, which is exactly the role the `Coordinator` fills instead.",
+        explanation: "SwiftUI re-creates representable struct values on each update, so a struct instance has no stable identity over time — a UIKit delegate relationship requires a persistent reference-type object, which is exactly the role the `Coordinator` fills instead.",
       },
       {
         id: "q5",
@@ -9397,7 +9443,34 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q6",
-        prompt: "In the `ScannerContainerView` example, how does the `Coordinator` get data from a UIKit delegate callback back into SwiftUI state?",
+        prompt: "Given the code below, how does the `Coordinator` get data from a UIKit delegate callback back into SwiftUI state?",
+        codeExample: `struct ScannerContainerView: UIViewControllerRepresentable {
+    @Binding var scannedText: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
+        let scanner = VNDocumentCameraViewController()
+        scanner.delegate = context.coordinator
+        return scanner
+    }
+
+    func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {}
+
+    class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
+        var parent: ScannerContainerView
+
+        init(_ parent: ScannerContainerView) {
+            self.parent = parent
+        }
+
+        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+            parent.scannedText = extractText(from: scan)
+        }
+    }
+}`,
         options: [
           { id: "a", text: "It holds a reference back to its parent representable and writes into a `@Binding` (like `scannedText`) from within the delegate callback method" },
           { id: "b", text: "It cannot; UIKit delegate callbacks are entirely isolated from SwiftUI state" },
@@ -9441,7 +9514,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A `UIViewController` subclass wrapping SwiftUI content, which must go through the exact same containment sequence (`addChild`, add its view, `didMove(toParent:)`) as any other child view controller" },
         ],
         correctOptionId: "d",
-        explanation: "Since `UIHostingController` is itself just a `UIViewController` subclass under the hood, embedding one as a child follows the identical view controller containment protocol described in section 35.12 — `addChild`, adding the hosting controller's `view`, and calling `didMove(toParent:)` last.",
+        explanation: "Since `UIHostingController` is itself just a `UIViewController` subclass under the hood, embedding one as a child follows the identical view controller containment protocol as any other — `addChild`, adding the hosting controller's `view`, and calling `didMove(toParent:)` last.",
       },
       {
         id: "q10",
@@ -9457,7 +9530,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q11",
-        prompt: "Why does sizing a `UIViewRepresentable`'s wrapped view correctly within SwiftUI require attention, according to the section?",
+        prompt: "Why does sizing a `UIViewRepresentable`'s wrapped view correctly within SwiftUI require attention?",
         options: [
           { id: "a", text: "SwiftUI automatically ignores all sizing information from wrapped UIKit views" },
           { id: "b", text: "Because UIKit's frame-based layout and SwiftUI's proposal-based layout negotiation are fundamentally different systems, the wrapped view must report its size to SwiftUI via mechanisms like intrinsic content size and content hugging/compression resistance" },
@@ -9465,7 +9538,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Sizing only matters for `UIViewControllerRepresentable`, never `UIViewRepresentable`" },
         ],
         correctOptionId: "b",
-        explanation: "Since the two frameworks solve layout in genuinely different ways (35.3, 36.1), a wrapped UIKit view needs to communicate its sizing needs through properties SwiftUI's layout system actually understands — intrinsic content size and hugging/compression resistance priorities (36.5) — for SwiftUI to size it sensibly within a stack or container.",
+        explanation: "Since the two frameworks solve layout in genuinely different ways, a wrapped UIKit view needs to communicate its sizing needs through properties SwiftUI's layout system actually understands — intrinsic content size and hugging/compression resistance priorities — for SwiftUI to size it sensibly within a stack or container.",
       },
       {
         id: "q12",
@@ -9477,7 +9550,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Only through Interface Builder's size inspector, and never programmatically" },
         ],
         correctOptionId: "c",
-        explanation: "Just as `systemLayoutSizeFitting` (36.9) lets UIKit code ask a constraint-based view subtree for its ideal size, `UIHostingController` exposes an analogous `sizeThatFits(in:)`-based mechanism so UIKit code can size a container appropriately around hosted SwiftUI content that doesn't have an explicit fixed frame.",
+        explanation: "Just as `systemLayoutSizeFitting` lets UIKit code ask a constraint-based view subtree for its ideal size, `UIHostingController` exposes an analogous `sizeThatFits(in:)`-based mechanism so UIKit code can size a container appropriately around hosted SwiftUI content that doesn't have an explicit fixed frame.",
       },
       {
         id: "q13",
@@ -9501,11 +9574,44 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Manually embedding a `UIHostingController` in a cell is not technically possible" },
         ],
         correctOptionId: "a",
-        explanation: "Since cells are reused repeatedly (37.2), manually managing a `UIHostingController`'s containment lifecycle within each recycled cell would be significant, error-prone boilerplate — `UIHostingConfiguration` handles this automatically, letting cells stay ordinary, reusable `UITableViewCell`/`UICollectionViewCell` instances.",
+        explanation: "Since cells are reused repeatedly, manually managing a `UIHostingController`'s containment lifecycle within each recycled cell would be significant, error-prone boilerplate — `UIHostingConfiguration` handles this automatically, letting cells stay ordinary, reusable `UITableViewCell`/`UICollectionViewCell` instances.",
       },
       {
         id: "q15",
-        prompt: "In the `LegacySliderView` example, how is two-way data flow achieved between the UIKit `UISlider` and the SwiftUI `@Binding`?",
+        prompt: "Given the code below, how is two-way data flow achieved between the UIKit `UISlider` and the SwiftUI `@Binding`?",
+        codeExample: `struct LegacySliderView: UIViewRepresentable {
+    @Binding var value: Double
+    var onEditingChanged: (Bool) -> Void = { _ in }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(value: $value, onEditingChanged: onEditingChanged)
+    }
+
+    func makeUIView(context: Context) -> UISlider {
+        let slider = UISlider()
+        slider.addTarget(context.coordinator, action: #selector(Coordinator.valueChanged), for: .valueChanged)
+        slider.addTarget(context.coordinator, action: #selector(Coordinator.editingEnded), for: [.touchUpInside, .touchUpOutside])
+        return slider
+    }
+
+    func updateUIView(_ uiView: UISlider, context: Context) {
+        uiView.value = Float(value)
+    }
+
+    class Coordinator: NSObject {
+        var value: Binding<Double>
+        var onEditingChanged: (Bool) -> Void
+
+        init(value: Binding<Double>, onEditingChanged: @escaping (Bool) -> Void) {
+            self.value = value
+            self.onEditingChanged = onEditingChanged
+        }
+
+        @objc func valueChanged(_ sender: UISlider) {
+            value.wrappedValue = Double(sender.value)
+        }
+    }
+}`,
         options: [
           { id: "a", text: "SwiftUI automatically observes any UIKit control without any wiring code needed" },
           { id: "b", text: "The Coordinator wires target-action to write into the `@Binding`'s value" },
@@ -9513,11 +9619,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "The slider's value is read only once, at `makeUIView` time, and never updates again" },
         ],
         correctOptionId: "b",
-        explanation: "The `Coordinator`'s `@objc valueChanged` method (triggered via target-action, 35.8) writes the slider's current value into `value.wrappedValue`, replicating the two-way data flow a native SwiftUI `Slider(value:)` would provide, just bridged manually through UIKit's control-event mechanism.",
+        explanation: "The `Coordinator`'s `@objc valueChanged` method (triggered via target-action) writes the slider's current value into `value.wrappedValue`, replicating the two-way data flow a native SwiftUI `Slider(value:)` would provide, just bridged manually through UIKit's control-event mechanism.",
       },
       {
         id: "q16",
-        prompt: "Beyond target-action, what other mechanism does the section mention for bridging richer reactive data flow across the interop boundary?",
+        prompt: "Beyond target-action, what other mechanism can bridge richer reactive data flow across the interop boundary?",
         options: [
           { id: "a", text: "Only `UserDefaults` polling on a fixed timer, checked periodically" },
           { id: "b", text: "XML-based configuration files exchanged directly between the two frameworks" },
@@ -9525,7 +9631,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "There is no mechanism beyond target-action; Combine can't be used here at all" },
         ],
         correctOptionId: "c",
-        explanation: "The section notes this pattern generalizes beyond a single delegate callback — a `Coordinator` can hold Combine subscriptions to a UIKit object's publishers (or `NotificationCenter` publishers), forwarding updates into `@Published` properties or bindings for richer, ongoing reactive data flow.",
+        explanation: "This pattern generalizes beyond a single delegate callback — a `Coordinator` can hold Combine subscriptions to a UIKit object's publishers (or `NotificationCenter` publishers), forwarding updates into `@Published` properties or bindings for richer, ongoing reactive data flow.",
       },
       {
         id: "q17",
@@ -9553,7 +9659,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "What kind of resource does the section identify as specifically requiring `dismantleUIView`-based cleanup, rather than relying on ordinary Swift deinitialization?",
+        prompt: "What kind of resource specifically requires `dismantleUIView`-based cleanup, rather than relying on ordinary Swift deinitialization?",
         options: [
           { id: "a", text: "Simple stored properties like `String` or `Int`, since they always need manual cleanup" },
           { id: "b", text: "A resource like an active `CADisplayLink`, which retains its target and keeps firing until explicitly invalidated — ordinary deallocation alone won't stop it" },
@@ -9565,7 +9671,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q20",
-        prompt: "Taken together, what is the overall purpose of the interop mechanisms covered in this section (`UIViewRepresentable`, `Coordinator`, `UIHostingController`, `UIHostingConfiguration`)?",
+        prompt: "Taken together, what is the overall purpose of these interop mechanisms — `UIViewRepresentable`, `Coordinator`, `UIHostingController`, `UIHostingConfiguration`?",
         options: [
           { id: "a", text: "To eventually replace UIKit entirely, with these APIs serving only as a temporary migration aid" },
           { id: "b", text: "To allow SwiftUI code to be compiled directly into Objective-C, bypassing UIKit" },
@@ -9573,7 +9679,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "To provide a way to disable SwiftUI's declarative update mechanism when embedding UIKit content" },
         ],
         correctOptionId: "c",
-        explanation: "Across the section, each mechanism addresses a distinct piece of the same underlying problem — bridging two structurally different UI frameworks in both directions, covering construction and sync (`makeUIView`/`updateUIView`), persistent object identity (`Coordinator`), hosting one inside the other (`UIHostingController`, `UIHostingConfiguration`), and the supporting concerns of context access, sizing, and lifecycle cleanup that make that bridging robust.",
+        explanation: "Each mechanism addresses a distinct piece of the same underlying problem — bridging two structurally different UI frameworks in both directions, covering construction and sync (`makeUIView`/`updateUIView`), persistent object identity (`Coordinator`), hosting one inside the other (`UIHostingController`, `UIHostingConfiguration`), and the supporting concerns of context access, sizing, and lifecycle cleanup that make that bridging robust.",
       },
     ],
   },
@@ -9657,7 +9763,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q7",
-        prompt: "How does sending a JSON request body relate to `Codable` material covered earlier in the curriculum?",
+        prompt: "How does sending a JSON request body relate to Swift's `Codable` protocol?",
         options: [
           { id: "a", text: "It requires an entirely separate, networking-specific serialization mechanism" },
           { id: "b", text: "`Codable` cannot be used for network requests, only for local file persistence" },
@@ -9725,11 +9831,45 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "An enum guarantees exactly one state at a time, ruling out contradictory combos" },
         ],
         correctOptionId: "d",
-        explanation: "This directly echoes the enum-modeling principle from earlier Swift material (section 6) — with independent flags like `isLoading`, `hasError`, and `data: User?`, nonsensical combinations (e.g., `isLoading == true` and `hasError == true` simultaneously) are possible; a single enum eliminates this class of bug by construction.",
+        explanation: "This directly echoes the general enum-modeling principle from Swift — with independent flags like `isLoading`, `hasError`, and `data: User?`, nonsensical combinations (e.g., `isLoading == true` and `hasError == true` simultaneously) are possible; a single enum eliminates this class of bug by construction.",
       },
       {
         id: "q13",
-        prompt: "In the `UserProfileView` example, what triggers the async fetch and drives the `LoadState` state machine?",
+        prompt: "Given the code below, what triggers the async fetch and drives the `LoadState` state machine?",
+        codeExample: `enum LoadState<Value> {
+    case loading
+    case empty
+    case error(Error)
+    case loaded(Value)
+}
+
+struct UserProfileView: View {
+    @State private var state: LoadState<User> = .loading
+
+    var body: some View {
+        Group {
+            switch state {
+            case .loading:
+                ProgressView()
+            case .empty:
+                ContentUnavailableView("No Data", systemImage: "tray")
+            case .error(let error):
+                ContentUnavailableView("Something Went Wrong", systemImage: "exclamationmark.triangle", description: Text(error.localizedDescription))
+            case .loaded(let user):
+                Text(user.name)
+            }
+        }
+        .task {
+            do {
+                state = .loading
+                let user = try await fetchUser(id: 42)
+                state = .loaded(user)
+            } catch {
+                state = .error(error)
+            }
+        }
+    }
+}`,
         options: [
           { id: "a", text: "`.task { }`, the natural place to trigger the fetch as the view appears" },
           { id: "b", text: "A `Button` tap is required first, before any fetch can occur at all" },
@@ -9737,7 +9877,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "`onAppear` combined with a completion handler, never `async`/`await` at all" },
         ],
         correctOptionId: "a",
-        explanation: "`.task { }` (from Part 2's concurrency material) is used to kick off the asynchronous fetch tied to the view's lifecycle, updating `state` through `.loading`, and then either `.loaded` or `.error` depending on the outcome.",
+        explanation: "`.task { }` is used to kick off the asynchronous fetch tied to the view's lifecycle, updating `state` through `.loading`, and then either `.loaded` or `.error` depending on the outcome.",
       },
       {
         id: "q14",
@@ -9789,7 +9929,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q18",
-        prompt: "According to 39.13, why can't client-side obfuscation techniques (Base64 encoding, XOR \"encryption,\" string splitting) actually protect an API key baked into an app's binary?",
+        prompt: "Why can't client-side obfuscation techniques (Base64 encoding, XOR \"encryption,\" string splitting) actually protect an API key baked into an app's binary?",
         options: [
           { id: "a", text: "Obfuscation techniques always work perfectly, so this concern is overstated" },
           { id: "b", text: "A value baked into a shipped binary is available to anyone with the app" },
@@ -9801,7 +9941,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q19",
-        prompt: "What is the recommended architectural approach for handling genuinely sensitive secrets (like payment provider secret keys) in a mobile app, according to 39.13?",
+        prompt: "What is the recommended architectural approach for handling genuinely sensitive secrets (like payment provider secret keys) in a mobile app?",
         options: [
           { id: "a", text: "Encrypt the secret with a strong algorithm and ship the encryption key alongside it in the binary" },
           { id: "b", text: "Store the secret in `UserDefaults` with `isProtected` set to true" },
@@ -9809,11 +9949,11 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "Split the secret across multiple string literals so no single string looks suspicious" },
         ],
         correctOptionId: "c",
-        explanation: "The robust fix isn't a cleverer obfuscation technique (which fundamentally can't work, per the previous question) — it's architectural: keep the actual secret entirely server-side, with the client only authenticating to your own backend (via the bearer-token pattern from 39.6), which then makes the sensitive third-party call on the client's behalf.",
+        explanation: "The robust fix isn't a cleverer obfuscation technique (which fundamentally can't work, per the previous question) — it's architectural: keep the actual secret entirely server-side, with the client only authenticating to your own backend via a bearer-token pattern, which then makes the sensitive third-party call on the client's behalf.",
       },
       {
         id: "q20",
-        prompt: "What distinction does 39.13 draw between what's acceptable to ship client-side versus what must stay server-side?",
+        prompt: "What distinction determines what's acceptable to ship client-side versus what must stay server-side?",
         options: [
           { id: "a", text: "Nothing should ever be shipped client-side, including any API keys" },
           { id: "b", text: "Only secrets used for analytics are safe to embed in the client" },
@@ -9821,7 +9961,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A rate-limited, scoped public API key may be acceptable to ship client-side, while genuinely sensitive secrets (like admin-level or payment provider secret keys) must stay server-side" },
         ],
         correctOptionId: "d",
-        explanation: "The section draws a practical, judgment-based distinction — a public, appropriately scoped and rate-limited API key (designed to be exposed) is a reasonable thing to ship client-side, whereas broader, more powerful secrets that could cause real harm if extracted must be kept exclusively on a backend the attacker cannot inspect.",
+        explanation: "It's a practical, judgment-based distinction — a public, appropriately scoped and rate-limited API key (designed to be exposed) is a reasonable thing to ship client-side, whereas broader, more powerful secrets that could cause real harm if extracted must be kept exclusively on a backend the attacker cannot inspect.",
       },
     ],
   },
@@ -9989,7 +10129,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q14",
-        prompt: "How does `URLSessionWebSocketTask`'s connection model differ from the request/response pattern used throughout the rest of the section?",
+        prompt: "How does `URLSessionWebSocketTask`'s connection model differ from the typical request/response pattern of `URLSession`?",
         options: [
           { id: "a", text: "A WebSocket stays open, letting either side send messages anytime" },
           { id: "b", text: "It is identical to a standard request/response HTTP call in every way" },
