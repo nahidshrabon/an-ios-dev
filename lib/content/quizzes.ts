@@ -1629,7 +1629,26 @@ export const quizzes: Quiz[] = [
       },
       {
         id: "q12",
-        prompt: "In the `Greeter`/`FriendlyGreeter` example, why does `abstracted.farewell()` (where `abstracted: Greeter`) print the protocol extension's default text instead of `FriendlyGreeter`'s own `farewell()`?",
+        prompt: "Given the code below, why does `abstracted.farewell()` (where `abstracted: Greeter`) print the protocol extension's default text instead of `FriendlyGreeter`'s own `farewell()`?",
+        codeExample: `protocol Greeter {
+    func greet() -> String   // a requirement
+}
+
+extension Greeter {
+    func greet() -> String { "Default greeting" }   // default implementation, still a requirement
+    func farewell() -> String { "Default farewell" }   // NOT a requirement — extension-only method
+}
+
+struct FriendlyGreeter: Greeter {
+    func greet() -> String { "Hi there!" }        // overrides the requirement
+    func farewell() -> String { "See you soon!" } // does NOT override — this is a separate, unrelated method
+}
+
+let concrete = FriendlyGreeter()
+let abstracted: Greeter = FriendlyGreeter()
+
+print(concrete.farewell())   // "See you soon!"   — static type is FriendlyGreeter, uses its own method
+print(abstracted.farewell()) // "Default farewell" — static type is Greeter, uses the protocol extension's version!`,
         options: [
           { id: "a", text: "`FriendlyGreeter`'s own `farewell()` was simply never called anywhere" },
           { id: "b", text: "Because `abstracted` and `concrete` happen to be different objects" },
@@ -2193,7 +2212,7 @@ export const quizzes: Quiz[] = [
           { id: "d", text: "They're completely unrelated language features with no meaningful comparison" },
         ],
         correctOptionId: "a",
-        explanation: "Both `try!` and force-unwrap `!` make an unconditional assertion to the compiler — \"this will succeed\" / \"this is non-nil\" — and both crash immediately and unrecoverably if that assertion proves false at runtime. The lesson guidance treats them with the same level of caution, reserving both for genuinely guaranteed cases.",
+        explanation: "Both `try!` and force-unwrap `!` make an unconditional assertion to the compiler — \"this will succeed\" / \"this is non-nil\" — and both crash immediately and unrecoverably if that assertion proves false at runtime. Both are treated with the same level of caution, reserving them for genuinely guaranteed cases.",
       },
       {
         id: "q18",
@@ -2253,7 +2272,30 @@ export const quizzes: Quiz[] = [
       },
       {
         id: "q2",
-        prompt: "In the `Person`/`Apartment` retain cycle example, why does neither object's `deinit` ever run, even after setting both local variables to `nil`?",
+        prompt: "Given the code below, why does neither object's `deinit` ever run, even after setting both local variables to `nil`?",
+        codeExample: `class Person {
+    let name: String
+    var apartment: Apartment?
+    init(name: String) { self.name = name }
+    deinit { print("\\(name) is being deallocated") }
+}
+
+class Apartment {
+    let unit: String
+    var tenant: Person?
+    init(unit: String) { self.unit = unit }
+    deinit { print("Apartment \\(unit) is being deallocated") }
+}
+
+var john: Person? = Person(name: "John")
+var unit4A: Apartment? = Apartment(unit: "4A")
+
+john?.apartment = unit4A
+unit4A?.tenant = john   // now John and the apartment strongly reference each other
+
+john = nil
+unit4A = nil
+// Neither deinit ever prints! Both objects leak, kept alive by each other's strong reference.`,
         options: [
           { id: "a", text: "Structs are fundamentally unable to ever be deallocated once created" },
           { id: "b", text: "They hold strong references to each other, keeping both alive indefinitely" },
@@ -13653,23 +13695,23 @@ export const quizzes: Quiz[] = [
         prompt: "What is the key difference between a consumable and a non-consumable in-app purchase?",
         options: [
           { id: "a", text: "There is no functional difference between them" },
-          { id: "b", text: "A consumable is used up and can be purchased repeatedly, with the app/server tracking the balance, while a non-consumable is purchased once and owned forever, with a persistent, restorable entitlement" },
+          { id: "b", text: "Consumables always cost more than non-consumables" },
           { id: "c", text: "Non-consumables can only be purchased once ever across all users" },
-          { id: "d", text: "Consumables always cost more than non-consumables" },
+          { id: "d", text: "A consumable is used up and can be purchased repeatedly, with the app/server tracking the balance, while a non-consumable is purchased once and owned forever, with a persistent, restorable entitlement" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Consumables represent a repeatable purchase whose \"entitlement\" is really a balance tracked by the app or server, while non-consumables grant a permanent, restorable entitlement — a meaningful design distinction with different bookkeeping responsibilities.",
       },
       {
         id: "q2",
         prompt: "What does `Product.products(for:)` replace from the older StoreKit API?",
         options: [
-          { id: "a", text: "`SKPaymentQueue`" },
-          { id: "b", text: "`SKProductsRequest` and its delegate-based callback pattern, replaced with a single async call" },
+          { id: "a", text: "`SKProductsRequest`'s delegate-based callback, replaced with a single async call" },
+          { id: "b", text: "`SKPaymentQueue`" },
           { id: "c", text: "`AppStore.sync()`" },
           { id: "d", text: "`Transaction.updates`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "StoreKit 2 modernizes product fetching by replacing the delegate-based `SKProductsRequestDelegate` pattern with a simple `async` function call, consistent with the broader shift toward async/await throughout the framework.",
       },
       {
@@ -13677,7 +13719,7 @@ export const quizzes: Quiz[] = [
         prompt: "What does the `.pending` case of `Product.PurchaseResult` represent?",
         options: [
           { id: "a", text: "An error that should always be treated as a failed purchase" },
-          { id: "b", text: "A purchase, like an Ask to Buy request, that requires further approval and may complete successfully later, asynchronously" },
+          { id: "b", text: "A purchase, like Ask to Buy, that requires further approval and may resolve later" },
           { id: "c", text: "A purchase that has already been fully completed" },
           { id: "d", text: "A network timeout that should be retried immediately" },
         ],
@@ -13689,11 +13731,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why is `Transaction.updates` typically observed via a long-lived, detached task starting at app launch?",
         options: [
           { id: "a", text: "It only needs to run once per app installation" },
-          { id: "b", text: "Transactions can complete outside the immediate purchase flow — on another device, after a delay, or via subscription renewal — so continuous, early observation is needed to reliably catch them" },
-          { id: "c", text: "StoreKit requires exactly one call to `Transaction.updates` per session" },
+          { id: "b", text: "StoreKit requires exactly one call to `Transaction.updates` per session" },
+          { id: "c", text: "Transactions can complete outside the immediate purchase flow — on another device, after a delay, or via subscription renewal — so continuous, early observation is needed to reliably catch them" },
           { id: "d", text: "It has no relationship to when purchases actually occur" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because transactions can resolve asynchronously and outside the direct purchase flow, a long-lived listener starting as early as possible is necessary to keep local entitlement state correctly synchronized.",
       },
       {
@@ -13701,23 +13743,23 @@ export const quizzes: Quiz[] = [
         prompt: "What does `.unverified` mean when unwrapping a `VerificationResult`?",
         options: [
           { id: "a", text: "The transaction is guaranteed authentic and should always be trusted" },
-          { id: "b", text: "Apple's on-device cryptographic verification failed to confirm the transaction's authenticity, and it should generally not be trusted to grant an entitlement" },
+          { id: "b", text: "`.unverified` is not a real case; only `.verified` exists" },
           { id: "c", text: "The transaction is still pending verification and will resolve later" },
-          { id: "d", text: "`.unverified` is not a real case; only `.verified` exists" },
+          { id: "d", text: "On-device cryptographic verification failed; the transaction shouldn't be trusted" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`.unverified` signals that the cryptographic check failed, meaning the app should not treat the transaction as authentic — silently ignoring this and granting the entitlement anyway would defeat the purpose of verification.",
       },
       {
         id: "q6",
         prompt: "What is `SubscriptionStoreView` specifically built for?",
         options: [
-          { id: "a", text: "Displaying a single, arbitrary non-consumable product" },
-          { id: "b", text: "Presenting all of a subscription group's tiers together with system-standard pricing and legal text formatting" },
+          { id: "a", text: "Presenting a subscription group's tiers with system-standard pricing formatting" },
+          { id: "b", text: "Displaying a single, arbitrary non-consumable product" },
           { id: "c", text: "Replacing `Product.purchase()` entirely" },
           { id: "d", text: "Server-side receipt validation" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`SubscriptionStoreView` is designed around subscription groups, automatically presenting all tiers within a group together, while the simpler `ProductView` handles single-product presentation.",
       },
       {
@@ -13725,7 +13767,7 @@ export const quizzes: Quiz[] = [
         prompt: "Why can a user only be subscribed to one level within a subscription group at a time?",
         options: [
           { id: "a", text: "This is an arbitrary technical limitation with no business rationale" },
-          { id: "b", text: "Subscription groups model mutually exclusive tiers (like Basic/Premium), reflecting how subscription businesses are typically structured, with StoreKit automatically handling upgrade/downgrade/crossgrade transitions" },
+          { id: "b", text: "Subscription groups model mutually exclusive tiers, with StoreKit handling transitions" },
           { id: "c", text: "Users can actually subscribe to multiple levels simultaneously" },
           { id: "d", text: "Subscription groups only support a single tier by definition" },
         ],
@@ -13737,11 +13779,11 @@ export const quizzes: Quiz[] = [
         prompt: "What distinguishes a win-back offer from an introductory offer?",
         options: [
           { id: "a", text: "They are identical mechanisms with different names" },
-          { id: "b", text: "An introductory offer targets new subscribers to lower the barrier to a first subscription, while a win-back offer specifically targets subscribers who have already churned, to encourage their return" },
-          { id: "c", text: "Win-back offers can only be used for consumable products" },
+          { id: "b", text: "Win-back offers can only be used for consumable products" },
+          { id: "c", text: "An introductory offer targets new subscribers; a win-back offer targets churned ones" },
           { id: "d", text: "Introductory offers require server-side cryptographic signing, while win-back offers do not" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Each offer type targets a different point in the subscriber lifecycle — acquisition versus reacquisition — reflecting that retention and win-back require different incentive structures than initial acquisition.",
       },
       {
@@ -13749,23 +13791,23 @@ export const quizzes: Quiz[] = [
         prompt: "What problem does App Store Server Notifications V2 solve that client-side `Transaction.updates` observation cannot?",
         options: [
           { id: "a", text: "It provides a faster way to fetch product prices" },
-          { id: "b", text: "It gives a backend server an independent, reliable channel for subscription state, since a user could uninstall the app or have the app closed when a subscription renews or lapses" },
+          { id: "b", text: "It is only used for consumable product tracking" },
           { id: "c", text: "It replaces the need for any client-side purchase code" },
-          { id: "d", text: "It is only used for consumable product tracking" },
+          { id: "d", text: "It gives a backend server an independent, reliable channel for subscription state, since a user could uninstall the app or have the app closed when a subscription renews or lapses" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because a subscription can renew or lapse without the app ever running to observe `Transaction.updates`, Server Notifications V2 gives the backend an independent, signed channel to stay synchronized regardless of client activity.",
       },
       {
         id: "q10",
         prompt: "Why might an app perform server-side receipt/transaction validation in addition to client-side `VerificationResult` checking?",
         options: [
-          { id: "a", text: "Client-side verification is unnecessary once server-side validation exists" },
-          { id: "b", text: "For sensitive operations like server-tracked entitlements, independently confirming a transaction's authenticity server-side closes the security gap of trusting only client-reported purchase state" },
+          { id: "a", text: "Independently confirming a transaction server-side closes the client-trust security gap" },
+          { id: "b", text: "Client-side verification is unnecessary once server-side validation exists" },
           { id: "c", text: "Server-side validation is required only for non-consumable products" },
           { id: "d", text: "There is no meaningful security benefit to server-side validation" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Trusting only what the client reports is a meaningful security gap for server-tracked value; server-side validation independently confirms authenticity against Apple's signed data before granting anything.",
       },
       {
@@ -13773,7 +13815,7 @@ export const quizzes: Quiz[] = [
         prompt: "When is `AppStore.sync()` typically used?",
         options: [
           { id: "a", text: "On every app launch automatically with no user action" },
-          { id: "b", text: "As part of an explicit \"Restore Purchases\" button, re-syncing transaction history for cases like a new device or reinstall" },
+          { id: "b", text: "As part of an explicit \"Restore Purchases\" button, for a new device or reinstall" },
           { id: "c", text: "Only for consumable product purchases" },
           { id: "d", text: "To submit a refund request" },
         ],
@@ -13785,11 +13827,11 @@ export const quizzes: Quiz[] = [
         prompt: "What role does consumption request data play in a refund decision?",
         options: [
           { id: "a", text: "It guarantees the refund will be approved" },
-          { id: "b", text: "It lets an app signal relevant context, like how much of a consumable balance remains unused, which Apple's refund evaluation can factor in, though the final decision remains Apple's" },
-          { id: "c", text: "It automatically processes the refund without any Apple involvement" },
+          { id: "b", text: "It automatically processes the refund without any Apple involvement" },
+          { id: "c", text: "It lets an app signal relevant context, like how much of a consumable balance remains unused, which Apple's refund evaluation can factor in, though the final decision remains Apple's" },
           { id: "d", text: "It has no relationship to refunds at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Consumption data provides context Apple's refund evaluation can consider, but the ultimate refund decision stays entirely under Apple's control, reflecting the platform-managed nature of App Store purchases.",
       },
       {
@@ -13797,23 +13839,23 @@ export const quizzes: Quiz[] = [
         prompt: "What is the primary advantage of testing purchases with a `.storekit` configuration file?",
         options: [
           { id: "a", text: "It requires an active App Store Connect setup and network connectivity" },
-          { id: "b", text: "It decouples day-to-day purchase flow development from App Store Connect setup and propagation delays, enabling fully local testing in the simulator" },
+          { id: "b", text: "It replaces the need for sandbox testing entirely" },
           { id: "c", text: "It can only be used for testing subscription renewal timing, not purchases" },
-          { id: "d", text: "It replaces the need for sandbox testing entirely" },
+          { id: "d", text: "It decouples day-to-day purchase flow development from App Store Connect setup and propagation delays, enabling fully local testing in the simulator" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "A `.storekit` file lets a developer freely experiment with product configurations locally, with zero real App Store Connect dependency, reserving sandbox testing for later-stage, more realistic validation.",
       },
       {
         id: "q14",
         prompt: "What makes sandbox testing's accelerated renewal cycles particularly valuable?",
         options: [
-          { id: "a", text: "They make purchases permanently free during testing" },
-          { id: "b", text: "They let renewal, expiration, and billing-retry logic be exercised within a practical testing timeframe, since a \"monthly\" subscription might renew every few minutes in sandbox" },
+          { id: "a", text: "They let renewal, expiration, and billing-retry logic be exercised within a practical testing timeframe, since a \"monthly\" subscription might renew every few minutes in sandbox" },
+          { id: "b", text: "They make purchases permanently free during testing" },
           { id: "c", text: "They eliminate the need to test cancellation flows" },
           { id: "d", text: "They only apply to non-consumable products" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Waiting real-world subscription durations to test renewal behavior would be impractical; sandbox's accelerated cycles make it feasible to validate renewal and expiration logic in a reasonable testing timeframe.",
       },
       {
@@ -13833,11 +13875,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why is granting an entitlement before verification succeeds considered a security gap rather than just a minor bug?",
         options: [
           { id: "a", text: "It has no real consequence and is purely a style issue" },
-          { id: "b", text: "It bypasses the cryptographic check meant to confirm a transaction's authenticity, potentially granting value for a tampered or spoofed transaction" },
-          { id: "c", text: "Verification only matters for consumable products, not entitlements" },
+          { id: "b", text: "Verification only matters for consumable products, not entitlements" },
+          { id: "c", text: "It bypasses the cryptographic check meant to confirm a transaction's authenticity, potentially granting value for a tampered or spoofed transaction" },
           { id: "d", text: "Entitlements cannot be granted before verification technically completes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Skipping verification before granting an entitlement defeats the purpose of `VerificationResult`'s authenticity check entirely, opening the door to fraudulent or spoofed transactions being trusted.",
       },
       {
@@ -13845,23 +13887,23 @@ export const quizzes: Quiz[] = [
         prompt: "What does testing only the \"happy path\" fail to validate in a purchase implementation?",
         options: [
           { id: "a", text: "Nothing meaningful; the happy path is sufficient for correctness" },
-          { id: "b", text: "Behavior under cancellation, network failure, refunds, and other edge cases that real users will actually encounter" },
+          { id: "b", text: "Whether the app compiles successfully" },
           { id: "c", text: "Whether the product price displays correctly" },
-          { id: "d", text: "Whether the app compiles successfully" },
+          { id: "d", text: "Behavior under cancellation, network failure, refunds, and other edge cases that real users will actually encounter" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "A purchase implementation's real-world correctness depends on handling failure and edge-case paths (cancellation, network issues, refunds), not just a single successful purchase scenario.",
       },
       {
         id: "q18",
         prompt: "Why do promotional offers require server-side cryptographic signing, unlike introductory offers?",
         options: [
-          { id: "a", text: "Promotional offers are configured entirely statically in App Store Connect, like introductory offers" },
-          { id: "b", text: "Promotional offers represent a discount the app itself requests dynamically, requiring a signature to prove the app is authorized to grant it" },
+          { id: "a", text: "Promotional offers represent a discount the app itself requests dynamically, requiring a signature to prove the app is authorized to grant it" },
+          { id: "b", text: "Promotional offers are configured entirely statically in App Store Connect, like introductory offers" },
           { id: "c", text: "Signing is required for all offer types equally, with no distinction" },
           { id: "d", text: "Promotional offers don't actually require any special handling" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Unlike a statically configured introductory offer, a promotional offer is requested dynamically by the app, so a server-generated cryptographic signature is required to authorize and validate that specific discount grant.",
       },
       {
@@ -13881,11 +13923,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why is not listening to `Transaction.updates` early enough at app launch listed as a common purchase bug?",
         options: [
           { id: "a", text: "It has no real consequence since purchases are always initiated within the app itself" },
-          { id: "b", text: "Doing so risks missing pending purchases that resolve shortly after launch, such as an Ask to Buy approval that completed while the app wasn't actively listening" },
-          { id: "c", text: "`Transaction.updates` only needs to be observed after a purchase button is tapped" },
+          { id: "b", text: "`Transaction.updates` only needs to be observed after a purchase button is tapped" },
+          { id: "c", text: "Doing so risks missing pending purchases that resolve shortly after launch, such as an Ask to Buy approval that completed while the app wasn't actively listening" },
           { id: "d", text: "This only affects consumable products, not other purchase types" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Since transactions can resolve asynchronously and independently of any in-app purchase flow, starting the `Transaction.updates` listener late risks missing updates that occurred before observation began.",
       },
     ],
@@ -13901,23 +13943,23 @@ export const quizzes: Quiz[] = [
         prompt: "Why can't an app determine whether a user denied HealthKit *read* authorization for a specific data type?",
         options: [
           { id: "a", text: "This is a bug that Apple plans to fix in a future release" },
-          { id: "b", text: "It's a deliberate privacy design choice — apps must handle receiving no data gracefully rather than relying on an explicit denial signal" },
+          { id: "b", text: "HealthKit does not support granular read/write authorization at all" },
           { id: "c", text: "Read authorization denial is always reported explicitly via an error" },
-          { id: "d", text: "HealthKit does not support granular read/write authorization at all" },
+          { id: "d", text: "It's a deliberate privacy design choice — apps must handle receiving no data gracefully rather than relying on an explicit denial signal" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "HealthKit deliberately withholds explicit denial signals for read authorization for privacy reasons, requiring apps to design their UI around simply receiving no data rather than distinguishing \"denied\" from \"no data available.\"",
       },
       {
         id: "q2",
         prompt: "Why does `HKWorkoutBuilder` use a begin/add/end collection lifecycle instead of writing a single retrospective sample?",
         options: [
-          { id: "a", text: "Because HealthKit does not support single retrospective data points at all" },
-          { id: "b", text: "Because a workout's samples (heart rate, distance) are added incrementally as the activity progresses, unlike a single instantaneous measurement such as a body weight entry" },
+          { id: "a", text: "Because a workout's samples (heart rate, distance) are added incrementally as the activity progresses, unlike a single instantaneous measurement such as a body weight entry" },
+          { id: "b", text: "Because HealthKit does not support single retrospective data points at all" },
           { id: "c", text: "Because Apple requires all HealthKit writes to use a builder pattern" },
           { id: "d", text: "Because workouts cannot include heart rate data" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Workouts are extended, evolving activities where samples become available progressively over time, which is why `HKWorkoutBuilder`'s incremental lifecycle differs fundamentally from writing one retrospective data point.",
       },
       {
@@ -13937,11 +13979,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why does the Contacts framework require specifying explicit \"keys to fetch\" rather than returning full contact records by default?",
         options: [
           { id: "a", text: "It's an arbitrary API design decision with no real benefit" },
-          { id: "b", text: "It's a performance and privacy design choice — avoiding the overhead of loading a full record (photo, notes, etc.) and limiting incidental exposure to unneeded contact data" },
-          { id: "c", text: "Keys to fetch are required only for phone numbers, not names" },
+          { id: "b", text: "Keys to fetch are required only for phone numbers, not names" },
+          { id: "c", text: "It's a performance and privacy design choice — avoiding the overhead of loading a full record (photo, notes, etc.) and limiting incidental exposure to unneeded contact data" },
           { id: "d", text: "Full contact records are always returned regardless of the keys specified" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Requiring explicit keys avoids unnecessary overhead when only specific fields are needed and limits an app's exposure to contact data it has no genuine need to access.",
       },
       {
@@ -13949,23 +13991,23 @@ export const quizzes: Quiz[] = [
         prompt: "What real trade-off does `deviceMotionUpdateInterval` represent in Core Motion?",
         options: [
           { id: "a", text: "There is no trade-off; higher rates are always strictly better with no cost" },
-          { id: "b", text: "A higher sampling rate provides smoother, more responsive data but consumes meaningfully more battery and CPU than a lower rate appropriate for less time-sensitive use cases" },
+          { id: "b", text: "Lower rates always provide better data accuracy" },
           { id: "c", text: "The interval only affects gyroscope data, not accelerometer data" },
-          { id: "d", text: "Lower rates always provide better data accuracy" },
+          { id: "d", text: "A higher sampling rate provides smoother, more responsive data but consumes meaningfully more battery and CPU than a lower rate appropriate for less time-sensitive use cases" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Sampling rate is a genuine trade-off between responsiveness (appropriate for something like real-time game controls) and battery/CPU cost (favoring a lower rate for something like periodic activity classification).",
       },
       {
         id: "q6",
         prompt: "Why does the Core Bluetooth central role example scan filtered by a specific service UUID rather than scanning for all nearby devices?",
         options: [
-          { id: "a", text: "Filtering by service UUID is required by Apple and cannot be disabled" },
-          { id: "b", text: "It's a performance best practice and often a practical necessity, reducing unnecessary discovery callbacks and avoiding irrelevant devices in busy real-world BLE environments" },
+          { id: "a", text: "It's a performance best practice and often a practical necessity, reducing unnecessary discovery callbacks and avoiding irrelevant devices in busy real-world BLE environments" },
+          { id: "b", text: "Filtering by service UUID is required by Apple and cannot be disabled" },
           { id: "c", text: "Unfiltered scanning is technically impossible in Core Bluetooth" },
           { id: "d", text: "Service UUID filtering only works for peripheral role apps, not central role apps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Filtered scanning reduces battery drain and callback overhead, and is often necessary given how many unrelated BLE devices can be advertising nearby in real-world environments.",
       },
       {
@@ -13985,11 +14027,11 @@ export const quizzes: Quiz[] = [
         prompt: "What privacy-preserving design does `AccessorySetupKit` share with `PHPickerViewController` (section 55.1)?",
         options: [
           { id: "a", text: "Neither framework has any privacy-related design considerations" },
-          { id: "b", text: "A system-owned picker handles discovery/pairing itself, and the app only learns about the specific accessory the user actually selected, avoiding the need for broad standing permission" },
-          { id: "c", text: "Both frameworks require full Bluetooth scanning permission regardless of use case" },
+          { id: "b", text: "Both frameworks require full Bluetooth scanning permission regardless of use case" },
+          { id: "c", text: "A system-owned picker handles discovery/pairing itself, and the app only learns about the specific accessory the user actually selected, avoiding the need for broad standing permission" },
           { id: "d", text: "They share no meaningful design similarities" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Like `PHPickerViewController`'s privacy-preserving photo selection, `AccessorySetupKit`'s system picker limits what the app learns to just the specific accessory selected, avoiding a broad, standing Bluetooth permission requirement.",
       },
       {
@@ -13997,23 +14039,23 @@ export const quizzes: Quiz[] = [
         prompt: "Why does NFC scanning always present a visible system sheet during a scan, rather than allowing silent background reads?",
         options: [
           { id: "a", text: "It's a technical limitation of NFC hardware with no design intent behind it" },
-          { id: "b", text: "It's a deliberate design choice ensuring the user is always aware their device is actively scanning, consistent with how other sensitive data access (camera, microphone) is surfaced through visible system UI" },
+          { id: "b", text: "The system sheet is only shown for writable tags, not read-only tags" },
           { id: "c", text: "Silent NFC scanning is actually supported, just rarely used" },
-          { id: "d", text: "The system sheet is only shown for writable tags, not read-only tags" },
+          { id: "d", text: "It's a deliberate design choice ensuring the user is always aware their device is actively scanning, consistent with how other sensitive data access (camera, microphone) is surfaced through visible system UI" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Requiring a visible scanning sheet is a deliberate platform pattern for sensitive or unusual data access, ensuring the user is never unknowingly having their device scan for and read physical tags.",
       },
       {
         id: "q10",
         prompt: "Why is Apple Pay's design considered more secure than an app implementing its own card-entry payment form?",
         options: [
-          { id: "a", text: "Apple Pay transactions are never actually encrypted" },
-          { id: "b", text: "The app never directly handles the user's actual card number — the payment sheet generates an encrypted, single-use token, so a compromised app could never leak raw card data it never had access to" },
+          { id: "a", text: "The app never directly handles the user's actual card number — the payment sheet generates an encrypted, single-use token, so a compromised app could never leak raw card data it never had access to" },
+          { id: "b", text: "Apple Pay transactions are never actually encrypted" },
           { id: "c", text: "Apple Pay does not require any payment processor at all" },
           { id: "d", text: "Card-entry forms are technically impossible to implement securely on iOS" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Apple Pay's core security property is that the app only ever sees an encrypted, single-use payment token rather than the actual card number, meaningfully limiting what a compromised app could expose.",
       },
       {
@@ -14033,11 +14075,11 @@ export const quizzes: Quiz[] = [
         prompt: "Why are CarPlay apps built from a constrained set of system-provided templates rather than custom UI?",
         options: [
           { id: "a", text: "CarPlay hardware cannot render custom graphics" },
-          { id: "b", text: "It's a deliberate driving-safety measure — a freeform, potentially inconsistent or distracting custom UI would be genuinely dangerous in a driving context, so all apps use the same limited, system-rendered templates" },
-          { id: "c", text: "Template-based UI is simply easier for developers, with no safety rationale" },
+          { id: "b", text: "Template-based UI is simply easier for developers, with no safety rationale" },
+          { id: "c", text: "It's a deliberate driving-safety measure — a freeform, potentially inconsistent or distracting custom UI would be genuinely dangerous in a driving context, so all apps use the same limited, system-rendered templates" },
           { id: "d", text: "Only list templates are available; other template types don't exist" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The template-only constraint exists specifically for driving safety, ensuring a consistent, non-distracting interface across all CarPlay apps regardless of vendor.",
       },
       {
@@ -14045,23 +14087,23 @@ export const quizzes: Quiz[] = [
         prompt: "What is notable about how `FamilyActivitySelection` represents chosen apps in the Screen Time APIs?",
         options: [
           { id: "a", text: "It exposes the exact bundle identifiers of selected apps to the controlling app" },
-          { id: "b", text: "It represents selected apps/categories as opaque, anonymized tokens, so the parental-control app applying restrictions never actually learns the specific identity of the restricted apps" },
+          { id: "b", text: "It provides no way to select specific apps, only broad categories" },
           { id: "c", text: "It requires the controlling app to already know every app installed on the restricted device" },
-          { id: "d", text: "It provides no way to select specific apps, only broad categories" },
+          { id: "d", text: "It represents selected apps/categories as opaque, anonymized tokens, so the parental-control app applying restrictions never actually learns the specific identity of the restricted apps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This is a deliberate privacy balance — the anonymized token model lets a parental-control app apply restrictions without learning which specific apps are installed on the restricted user's device.",
       },
       {
         id: "q14",
         prompt: "What does conforming a custom type to `Transferable` provide, as described in 57.14?",
         options: [
-          { id: "a", text: "Only drag-and-drop support, with copy/paste and sharing requiring separate, unrelated implementations" },
-          { id: "b", text: "Drag-and-drop, copy/paste, and `ShareLink` support essentially for free from one shared `transferRepresentation`, reducing boilerplate compared to implementing each pattern separately" },
+          { id: "a", text: "Drag-and-drop, copy/paste, and `ShareLink` support essentially for free from one shared `transferRepresentation`, reducing boilerplate compared to implementing each pattern separately" },
+          { id: "b", text: "Only drag-and-drop support, with copy/paste and sharing requiring separate, unrelated implementations" },
           { id: "c", text: "Automatic HealthKit data synchronization" },
           { id: "d", text: "Automatic Bluetooth peripheral advertising" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "A single `Transferable` conformance and `transferRepresentation` unifies support across drag-and-drop, copy/paste, and sharing, avoiding the need for separate serialization logic for each interaction pattern.",
       },
       {
@@ -14081,11 +14123,11 @@ export const quizzes: Quiz[] = [
         prompt: "What infrastructure does the Translation framework's on-device capability relate to, according to the section?",
         options: [
           { id: "a", text: "It is entirely unrelated to any other on-device AI capability" },
-          { id: "b", text: "It leverages the same on-device language model infrastructure that also underlies Foundation Models, covered in section 58" },
-          { id: "c", text: "It depends on Core Bluetooth for its underlying processing" },
+          { id: "b", text: "It depends on Core Bluetooth for its underlying processing" },
+          { id: "c", text: "It leverages the same on-device language model infrastructure that also underlies Foundation Models, covered in section 58" },
           { id: "d", text: "It requires HealthKit authorization to function" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section explicitly connects Translation's on-device capability to the broader on-device language model infrastructure also used by the Foundation Models framework covered next.",
       },
       {
@@ -14093,23 +14135,23 @@ export const quizzes: Quiz[] = [
         prompt: "What threat does App Attest specifically help defend against?",
         options: [
           { id: "a", text: "Physical theft of the device" },
-          { id: "b", text: "A tampered or reverse-engineered client impersonating legitimate app traffic to abuse a server API — a category of threat difficult to counter with purely software-based checks" },
+          { id: "b", text: "Users sharing their Apple ID password with others" },
           { id: "c", text: "Network-level man-in-the-middle attacks on HTTPS traffic" },
-          { id: "d", text: "Users sharing their Apple ID password with others" },
+          { id: "d", text: "A tampered or reverse-engineered client impersonating legitimate app traffic to abuse a server API — a category of threat difficult to counter with purely software-based checks" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "App Attest provides hardware-rooted proof that requests come from a genuine, unmodified app on genuine Apple hardware, defending against tampered clients and automated abuse in a way purely software-based integrity checks cannot match.",
       },
       {
         id: "q18",
         prompt: "Why is a hardware-backed attestation considered a stronger guarantee than an API key embedded in the app binary?",
         options: [
-          { id: "a", text: "API keys embedded in a binary cannot be extracted or misused, making them equally strong" },
-          { id: "b", text: "A hardware-rooted attestation ties the proof to genuine, unmodified Apple hardware and software, whereas an embedded API key can potentially be extracted from the app and reused by an attacker" },
+          { id: "a", text: "A hardware-rooted attestation ties the proof to genuine, unmodified Apple hardware and software, whereas an embedded API key can potentially be extracted from the app and reused by an attacker" },
+          { id: "b", text: "API keys embedded in a binary cannot be extracted or misused, making them equally strong" },
           { id: "c", text: "Hardware attestation and embedded API keys provide identical security guarantees" },
           { id: "d", text: "Embedded API keys are always more secure since they don't require server-side verification" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "An embedded API key is a static secret that could potentially be extracted and reused elsewhere, while hardware-rooted attestation ties proof of authenticity to the actual device and software running the request, a meaningfully stronger guarantee.",
       },
       {
@@ -14129,11 +14171,11 @@ export const quizzes: Quiz[] = [
         prompt: "Which pairing of framework and its core access-control mechanism is correctly matched?",
         options: [
           { id: "a", text: "EventKit — anonymized activity tokens" },
-          { id: "b", text: "HealthKit — per-data-type, per-direction (read/write) authorization granularity" },
-          { id: "c", text: "Core NFC — silent, background scanning with no user-visible indication" },
+          { id: "b", text: "Core NFC — silent, background scanning with no user-visible indication" },
+          { id: "c", text: "HealthKit — per-data-type, per-direction (read/write) authorization granularity" },
           { id: "d", text: "CarPlay — full custom UI rendering with no template constraints" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "HealthKit's defining access-control characteristic is its fine-grained, per-type and per-direction authorization model, distinct from the anonymized-token model used by Screen Time APIs (57.13) or NFC's always-visible scanning sheet (57.9).",
       },
     ],
@@ -14148,48 +14190,24 @@ export const quizzes: Quiz[] = [
         id: "q1",
         prompt: "What is the defining characteristic of the Foundation Models framework's on-device LLM, compared to cloud-based APIs?",
         options: [
-          {
-            id: "a",
-            text: "It requires a persistent network connection for every request",
-          },
-          {
-            id: "b",
-            text: "It runs entirely on-device, providing private processing, zero marginal per-request cost, and offline availability, at the trade-off of smaller model capability",
-          },
-          {
-            id: "c",
-            text: "It charges per-token billing identical to cloud APIs",
-          },
-          {
-            id: "d",
-            text: "It is functionally identical to cloud models with no capability trade-offs",
-          },
+          { id: "a", text: "It requires a persistent network connection for every request" },
+          { id: "b", text: "It is functionally identical to cloud models with no capability trade-offs" },
+          { id: "c", text: "It charges per-token billing identical to cloud APIs" },
+          { id: "d", text: "It runs entirely on-device, providing private processing, zero marginal per-request cost, and offline availability, at the trade-off of smaller model capability" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Running entirely on-device means genuinely private processing, no per-token cost, and offline availability, but comes with the trade-off of a smaller, less broadly capable model compared to large cloud-hosted alternatives.",
       },
       {
         id: "q2",
         prompt: "Why must an app explicitly check `SystemLanguageModel.default.availability` rather than assuming the model is always present?",
         options: [
-          {
-            id: "a",
-            text: "Availability is purely a network connectivity question, just like a cloud API",
-          },
-          {
-            id: "b",
-            text: "Availability depends on several distinct conditions — hardware eligibility, a user-controlled system setting, and download completion state — any of which could make the model unavailable",
-          },
-          {
-            id: "c",
-            text: "The model is always available on every device running any iOS version",
-          },
-          {
-            id: "d",
-            text: "Availability checks are optional and have no practical purpose",
-          },
+          { id: "a", text: "Availability depends on several distinct conditions — hardware eligibility, a user-controlled system setting, and download completion state — any of which could make the model unavailable" },
+          { id: "b", text: "Availability is purely a network connectivity question, just like a cloud API" },
+          { id: "c", text: "The model is always available on every device running any iOS version" },
+          { id: "d", text: "Availability checks are optional and have no practical purpose" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Unlike a cloud API's simple connectivity question, on-device availability depends on hardware eligibility, whether the feature is enabled in Settings, and download state, all of which a well-designed app should check and handle explicitly.",
       },
       {
@@ -14220,72 +14238,36 @@ export const quizzes: Quiz[] = [
         id: "q4",
         prompt: "What is the key distinction between instructions and prompts in `LanguageModelSession`?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical and interchangeable",
-          },
-          {
-            id: "b",
-            text: "Instructions are a persistent, trusted behavioral framing set once at session creation, while prompts are the actual per-turn user input, a distinction with security relevance for untrusted content",
-          },
-          {
-            id: "c",
-            text: "Prompts are set once at session creation, while instructions are sent per turn",
-          },
-          {
-            id: "d",
-            text: "Instructions can only contain a single word",
-          },
+          { id: "a", text: "They are functionally identical and interchangeable" },
+          { id: "b", text: "Prompts are set once at session creation, while instructions are sent per turn" },
+          { id: "c", text: "Instructions are a persistent, trusted behavioral framing set once at session creation, while prompts are the actual per-turn user input, a distinction with security relevance for untrusted content" },
+          { id: "d", text: "Instructions can only contain a single word" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Instructions establish stable, trusted behavioral rules independent of user input, while prompts carry the specific per-turn content — a separation that also matters for prompt injection defense (58.18), since prompts may contain untrusted content.",
       },
       {
         id: "q5",
         prompt: "What happens when a session's accumulated context exceeds the model's context window?",
         options: [
-          {
-            id: "a",
-            text: "The framework silently truncates older content with no error",
-          },
-          {
-            id: "b",
-            text: "It produces an explicit error (`exceededContextWindowSize`) requiring the app to handle it, such as by starting a fresh session with summarized prior context",
-          },
-          {
-            id: "c",
-            text: "The session automatically expands its context window indefinitely",
-          },
-          {
-            id: "d",
-            text: "The app crashes with no recoverable error",
-          },
+          { id: "a", text: "The framework silently truncates older content with no error" },
+          { id: "b", text: "The app crashes with no recoverable error" },
+          { id: "c", text: "The session automatically expands its context window indefinitely" },
+          { id: "d", text: "It produces an explicit error (`exceededContextWindowSize`) requiring the app to handle it, such as by starting a fresh session with summarized prior context" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Exceeding the context window produces an error rather than silent truncation, requiring explicit handling — commonly, starting a fresh session carrying forward a summary of essential prior context.",
       },
       {
         id: "q6",
         prompt: "Why is streaming particularly important for on-device generation's user experience?",
         options: [
-          {
-            id: "a",
-            text: "Streaming makes the underlying generation itself faster",
-          },
-          {
-            id: "b",
-            text: "Even fast on-device inference takes perceptible time for longer responses, so showing text progressively keeps the interface feeling responsive rather than frozen until the full response completes",
-          },
-          {
-            id: "c",
-            text: "Streaming is required by the framework and cannot be disabled",
-          },
-          {
-            id: "d",
-            text: "Streaming only matters for multimodal prompts, not text",
-          },
+          { id: "a", text: "Even fast on-device inference takes perceptible time for longer responses, so showing text progressively keeps the interface feeling responsive rather than frozen until the full response completes" },
+          { id: "b", text: "Streaming makes the underlying generation itself faster" },
+          { id: "c", text: "Streaming is required by the framework and cannot be disabled" },
+          { id: "d", text: "Streaming only matters for multimodal prompts, not text" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Streaming addresses perceived responsiveness — displaying text as it's generated avoids a blank, frozen UI state during the time generation actually takes, similar to the benefit of streaming in other async contexts.",
       },
       {
@@ -14316,72 +14298,36 @@ export const quizzes: Quiz[] = [
         id: "q8",
         prompt: "How does `@Guide`'s `.anyOf([...])` constraint behave, according to the section?",
         options: [
-          {
-            id: "a",
-            text: "It is purely documentation with no effect on actual generation",
-          },
-          {
-            id: "b",
-            text: "It genuinely constrains what the model can produce for that field during generation itself, not as post-hoc validation, similar in spirit to how `AppEnum` constrains App Intents parameters",
-          },
-          {
-            id: "c",
-            text: "It only applies after the model has already generated a value, filtering the result",
-          },
-          {
-            id: "d",
-            text: "It can only be used with numeric properties, not strings",
-          },
+          { id: "a", text: "It is purely documentation with no effect on actual generation" },
+          { id: "b", text: "It only applies after the model has already generated a value, filtering the result" },
+          { id: "c", text: "It genuinely constrains what the model can produce for that field during generation itself, not as post-hoc validation, similar in spirit to how `AppEnum` constrains App Intents parameters" },
+          { id: "d", text: "It can only be used with numeric properties, not strings" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`@Guide` constraints operate during generation, genuinely shaping what the model can produce for a given field, drawing a direct parallel to `AppEnum`'s constraint of App Intents parameters to a fixed set of values.",
       },
       {
         id: "q9",
         prompt: "What does `PartiallyGenerated` represent when streaming a `@Generable` type's output?",
         options: [
-          {
-            id: "a",
-            text: "A fully complete instance of the type, identical to the final result",
-          },
-          {
-            id: "b",
-            text: "An incremental version of the type where properties may be `nil` or incomplete until the model has generated enough content to populate them, enabling progressive field-by-field rendering",
-          },
-          {
-            id: "c",
-            text: "An error state indicating generation failed",
-          },
-          {
-            id: "d",
-            text: "A separate type unrelated to the original `@Generable` type",
-          },
+          { id: "a", text: "A fully complete instance of the type, identical to the final result" },
+          { id: "b", text: "A separate type unrelated to the original `@Generable` type" },
+          { id: "c", text: "An error state indicating generation failed" },
+          { id: "d", text: "An incremental version of the type where properties may be `nil` or incomplete until the model has generated enough content to populate them, enabling progressive field-by-field rendering" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`PartiallyGenerated` combines streaming's responsiveness with guided generation's structure, letting a UI render fields like a name as soon as available while other fields are still being generated.",
       },
       {
         id: "q10",
         prompt: "Who decides when a tool call is needed within the `Tool` protocol's design?",
         options: [
-          {
-            id: "a",
-            text: "The app must manually trigger every tool call itself",
-          },
-          {
-            id: "b",
-            text: "The language model itself decides when a tool call is needed during generation, reasoning about whether it requires external information to properly answer a prompt",
-          },
-          {
-            id: "c",
-            text: "Tool calls happen on a fixed schedule regardless of prompt content",
-          },
-          {
-            id: "d",
-            text: "Tool calls can only be triggered by explicit user button taps",
-          },
+          { id: "a", text: "The language model itself decides when a tool call is needed during generation, reasoning about whether it requires external information to properly answer a prompt" },
+          { id: "b", text: "The app must manually trigger every tool call itself" },
+          { id: "c", text: "Tool calls happen on a fixed schedule regardless of prompt content" },
+          { id: "d", text: "Tool calls can only be triggered by explicit user button taps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The model reasons about whether it needs external information and decides when to invoke a tool, with the framework handling the actual invocation and feeding the result back into generation.",
       },
       {
@@ -14412,72 +14358,36 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "What new capability does iOS 27's multimodal prompting add to `LanguageModelSession`?",
         options: [
-          {
-            id: "a",
-            text: "The ability to accept image input alongside text, letting the model reason jointly about visual and textual content",
-          },
-          {
-            id: "b",
-            text: "The ability to run entirely on cloud servers instead of on-device",
-          },
-          {
-            id: "c",
-            text: "The removal of the context window limit entirely",
-          },
-          {
-            id: "d",
-            text: "Automatic translation of prompts into other languages",
-          },
+          { id: "a", text: "The removal of the context window limit entirely" },
+          { id: "b", text: "The ability to run entirely on cloud servers instead of on-device" },
+          { id: "c", text: "The ability to accept image input alongside text, letting the model reason jointly about visual and textual content" },
+          { id: "d", text: "Automatic translation of prompts into other languages" },
         ],
-        correctOptionId: "a",
+        correctOptionId: "c",
         explanation: "Multimodal prompting extends prompts to include image content (via `ImageContent`), enabling use cases like describing photos or extracting structured data from a captured image alongside a text question.",
       },
       {
         id: "q13",
         prompt: "How do Vision framework tools exposed to the model (58.13) differ from direct multimodal image input (58.12)?",
         options: [
-          {
-            id: "a",
-            text: "They are identical mechanisms with different names",
-          },
-          {
-            id: "b",
-            text: "Vision tools let the model request specific, structured visual analysis (like OCR) as part of its reasoning process, as opposed to holistically describing an image via direct multimodal input",
-          },
-          {
-            id: "c",
-            text: "Vision tools can only be used with text prompts, never images",
-          },
-          {
-            id: "d",
-            text: "Direct multimodal input requires more code than Vision tools",
-          },
+          { id: "a", text: "They are identical mechanisms with different names" },
+          { id: "b", text: "Direct multimodal input requires more code than Vision tools" },
+          { id: "c", text: "Vision tools can only be used with text prompts, never images" },
+          { id: "d", text: "Vision tools let the model request specific, structured visual analysis (like OCR) as part of its reasoning process, as opposed to holistically describing an image via direct multimodal input" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Vision-backed tools complement multimodal input by letting the model invoke structured, specific visual analysis when a task calls for it, rather than relying solely on holistic image description.",
       },
       {
         id: "q14",
         prompt: "What does the `LanguageModel` protocol abstraction enable?",
         options: [
-          {
-            id: "a",
-            text: "It requires every app to implement its own language model from scratch",
-          },
-          {
-            id: "b",
-            text: "It abstracts over different underlying model backends, letting app code written against the protocol interchangeably target different models (like the on-device model or cloud-routed models) without structural changes",
-          },
-          {
-            id: "c",
-            text: "It only works with `SystemLanguageModel` and no other backend",
-          },
-          {
-            id: "d",
-            text: "It eliminates the need for the `Tool` protocol entirely",
-          },
+          { id: "a", text: "It abstracts over different underlying model backends, letting app code written against the protocol interchangeably target different models (like the on-device model or cloud-routed models) without structural changes" },
+          { id: "b", text: "It requires every app to implement its own language model from scratch" },
+          { id: "c", text: "It only works with `SystemLanguageModel` and no other backend" },
+          { id: "d", text: "It eliminates the need for the `Tool` protocol entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because app code targets the protocol rather than `SystemLanguageModel` directly, swapping the underlying model backend becomes a configuration concern rather than requiring separate parallel implementations.",
       },
       {
@@ -14508,72 +14418,36 @@ export const quizzes: Quiz[] = [
         id: "q16",
         prompt: "Why might an app pre-warm a `LanguageModelSession` ahead of when it's actually needed?",
         options: [
-          {
-            id: "a",
-            text: "Pre-warming has no effect on performance",
-          },
-          {
-            id: "b",
-            text: "On-device inference has real, non-trivial latency, so pre-warming ahead of actual need can reduce perceived latency for the user's first real prompt, echoing latency-budgeting concerns from background tasks and widget reloads",
-          },
-          {
-            id: "c",
-            text: "Pre-warming is required before any session can be created at all",
-          },
-          {
-            id: "d",
-            text: "Pre-warming disables guardrails for faster generation",
-          },
+          { id: "a", text: "Pre-warming has no effect on performance" },
+          { id: "b", text: "Pre-warming is required before any session can be created at all" },
+          { id: "c", text: "On-device inference has real, non-trivial latency, so pre-warming ahead of actual need can reduce perceived latency for the user's first real prompt, echoing latency-budgeting concerns from background tasks and widget reloads" },
+          { id: "d", text: "Pre-warming disables guardrails for faster generation" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because generation latency is a real, non-trivial cost, pre-warming a session in advance is a practical technique for reducing the perceived delay experienced at the moment of actual use, similar to other latency-budgeting concerns elsewhere in the platform.",
       },
       {
         id: "q17",
         prompt: "Why must apps handle the guardrail refusal case explicitly, according to 58.17?",
         options: [
-          {
-            id: "a",
-            text: "Guardrails never actually trigger in practice",
-          },
-          {
-            id: "b",
-            text: "The model's built-in guardrails can produce a refusal for harmful or policy-violating content, independent of the app's own instructions, and apps should handle this gracefully rather than treating it as an unexpected error",
-          },
-          {
-            id: "c",
-            text: "Guardrails can be fully disabled by the app's own instructions",
-          },
-          {
-            id: "d",
-            text: "Refusals only occur for multimodal prompts, never text-only prompts",
-          },
+          { id: "a", text: "Guardrails never actually trigger in practice" },
+          { id: "b", text: "Refusals only occur for multimodal prompts, never text-only prompts" },
+          { id: "c", text: "Guardrails can be fully disabled by the app's own instructions" },
+          { id: "d", text: "The model's built-in guardrails can produce a refusal for harmful or policy-violating content, independent of the app's own instructions, and apps should handle this gracefully rather than treating it as an unexpected error" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Guardrails are a safety layer independent of app instructions — even carefully crafted instructions can't override built-in refusal behavior — so well-built apps handle this path with an appropriate user-facing message.",
       },
       {
         id: "q18",
         prompt: "What is prompt injection, as described in 58.18?",
         options: [
-          {
-            id: "a",
-            text: "A technique for improving model response speed",
-          },
-          {
-            id: "b",
-            text: "A vulnerability where untrusted external content (like scraped web text) embedded in a prompt could contain adversarial instructions attempting to override the app's own behavioral framing",
-          },
-          {
-            id: "c",
-            text: "A required step for using the `Tool` protocol",
-          },
-          {
-            id: "d",
-            text: "A method for expanding the context window",
-          },
+          { id: "a", text: "A vulnerability where untrusted external content (like scraped web text) embedded in a prompt could contain adversarial instructions attempting to override the app's own behavioral framing" },
+          { id: "b", text: "A technique for improving model response speed" },
+          { id: "c", text: "A required step for using the `Tool` protocol" },
+          { id: "d", text: "A method for expanding the context window" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Prompt injection is a security concern arising when untrusted content is incorporated into a prompt, potentially containing instructions designed to hijack the model's behavior away from the app's intended framing.",
       },
       {
@@ -14604,24 +14478,12 @@ export const quizzes: Quiz[] = [
         id: "q20",
         prompt: "What makes LoRA-style adapter fine-tuning (58.19) more efficient than full model fine-tuning?",
         options: [
-          {
-            id: "a",
-            text: "It requires retraining the entire model's weights from scratch",
-          },
-          {
-            id: "b",
-            text: "It trains only a small number of additional, low-rank parameters layered on top of the frozen base model, rather than updating the entire model's weights",
-          },
-          {
-            id: "c",
-            text: "It eliminates the need for any training data at all",
-          },
-          {
-            id: "d",
-            text: "It only works with cloud-hosted models, not the on-device model",
-          },
+          { id: "a", text: "It requires retraining the entire model's weights from scratch" },
+          { id: "b", text: "It eliminates the need for any training data at all" },
+          { id: "c", text: "It trains only a small number of additional, low-rank parameters layered on top of the frozen base model, rather than updating the entire model's weights" },
+          { id: "d", text: "It only works with cloud-hosted models, not the on-device model" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "LoRA adaptation's efficiency comes from training a small set of additional parameters on top of a frozen base model, making domain specialization practical without the computational cost of full fine-tuning.",
       },
     ],
@@ -14636,48 +14498,24 @@ export const quizzes: Quiz[] = [
         id: "q1",
         prompt: "How does Core ML's purpose differ from Foundation Models' purpose?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical frameworks with different names",
-          },
-          {
-            id: "b",
-            text: "Core ML is the framework of choice for custom, often narrower-task models, while Foundation Models provides a single, general-purpose, pre-built language model requiring no training",
-          },
-          {
-            id: "c",
-            text: "Foundation Models requires training data while Core ML does not",
-          },
-          {
-            id: "d",
-            text: "Core ML only works with images, while Foundation Models only works with text",
-          },
+          { id: "a", text: "They are functionally identical frameworks with different names" },
+          { id: "b", text: "Core ML only works with images, while Foundation Models only works with text" },
+          { id: "c", text: "Foundation Models requires training data while Core ML does not" },
+          { id: "d", text: "Core ML is the framework of choice for custom, often narrower-task models, while Foundation Models provides a single, general-purpose, pre-built language model requiring no training" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Core ML is suited to genuinely custom tasks needing a bespoke, often narrowly-trained model, while Foundation Models provides a ready-to-use, general-purpose LLM with no training required.",
       },
       {
         id: "q2",
         prompt: "What does Xcode automatically generate when a `.mlpackage` file is added to a project?",
         options: [
-          {
-            id: "a",
-            text: "Nothing; models must be manually parsed as raw tensors",
-          },
-          {
-            id: "b",
-            text: "A strongly-typed Swift interface class matching the model's inputs and outputs, enabling type-safe usage rather than manual tensor manipulation",
-          },
-          {
-            id: "c",
-            text: "A Python script for running the model",
-          },
-          {
-            id: "d",
-            text: "A separate app target dedicated to the model",
-          },
+          { id: "a", text: "A strongly-typed Swift interface class matching the model's inputs and outputs, enabling type-safe usage rather than manual tensor manipulation" },
+          { id: "b", text: "Nothing; models must be manually parsed as raw tensors" },
+          { id: "c", text: "A Python script for running the model" },
+          { id: "d", text: "A separate app target dedicated to the model" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Xcode's automatic code generation produces a properly typed Swift class matching the model's defined schema, making model integration feel like calling any other strongly-typed Swift API.",
       },
       {
@@ -14708,72 +14546,36 @@ export const quizzes: Quiz[] = [
         id: "q4",
         prompt: "What is the purpose of `coremltools`?",
         options: [
-          {
-            id: "a",
-            text: "It runs Core ML models on-device for inference",
-          },
-          {
-            id: "b",
-            text: "It converts models trained in other frameworks (like PyTorch or TensorFlow) into Core ML's `.mlmodel`/`.mlpackage` format, as an offline step before Xcode integration",
-          },
-          {
-            id: "c",
-            text: "It replaces the need for Xcode's automatic Swift class generation",
-          },
-          {
-            id: "d",
-            text: "It is used exclusively for quantization, not format conversion",
-          },
+          { id: "a", text: "It runs Core ML models on-device for inference" },
+          { id: "b", text: "It replaces the need for Xcode's automatic Swift class generation" },
+          { id: "c", text: "It converts models trained in other frameworks (like PyTorch or TensorFlow) into Core ML's `.mlmodel`/`.mlpackage` format, as an offline step before Xcode integration" },
+          { id: "d", text: "It is used exclusively for quantization, not format conversion" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because most published ML models are trained in PyTorch or TensorFlow, `coremltools` provides the necessary offline conversion step that translates architecture and weights into Core ML's native format.",
       },
       {
         id: "q5",
         prompt: "What trade-off do quantization and palettization introduce?",
         options: [
-          {
-            id: "a",
-            text: "They have no downside; maximum compression should always be applied",
-          },
-          {
-            id: "b",
-            text: "They substantially shrink model size and can improve inference speed, generally at some cost to prediction accuracy, requiring the right compression level to be determined by measuring actual accuracy impact",
-          },
-          {
-            id: "c",
-            text: "They only affect inference speed, never model file size",
-          },
-          {
-            id: "d",
-            text: "They are only applicable to models trained with Create ML",
-          },
+          { id: "a", text: "They have no downside; maximum compression should always be applied" },
+          { id: "b", text: "They are only applicable to models trained with Create ML" },
+          { id: "c", text: "They only affect inference speed, never model file size" },
+          { id: "d", text: "They substantially shrink model size and can improve inference speed, generally at some cost to prediction accuracy, requiring the right compression level to be determined by measuring actual accuracy impact" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These compression techniques trade file size and speed benefits against potential accuracy degradation — the section emphasizes measuring the actual impact against the specific task's tolerance rather than applying maximum compression by default.",
       },
       {
         id: "q6",
         prompt: "What does setting `MLModelConfiguration.computeUnits` to `.all` do?",
         options: [
-          {
-            id: "a",
-            text: "It forces every operation to run exclusively on the CPU",
-          },
-          {
-            id: "b",
-            text: "It lets Core ML automatically choose the most efficient available compute unit (CPU, GPU, or Neural Engine) per operation, which is generally the right choice for most apps",
-          },
-          {
-            id: "c",
-            text: "It disables the Neural Engine entirely",
-          },
-          {
-            id: "d",
-            text: "It has no effect on how the model actually executes",
-          },
+          { id: "a", text: "It lets Core ML automatically choose the most efficient available compute unit (CPU, GPU, or Neural Engine) per operation, which is generally the right choice for most apps" },
+          { id: "b", text: "It forces every operation to run exclusively on the CPU" },
+          { id: "c", text: "It disables the Neural Engine entirely" },
+          { id: "d", text: "It has no effect on how the model actually executes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`.all` (the default) allows Core ML's own scheduling to select the fastest available hardware per operation, generally outperforming a manually restricted configuration in most cases.",
       },
       {
@@ -14804,72 +14606,36 @@ export const quizzes: Quiz[] = [
         id: "q8",
         prompt: "What does Xcode's Core ML performance report reveal that the `.all` compute units configuration alone does not?",
         options: [
-          {
-            id: "a",
-            text: "The model's training data source",
-          },
-          {
-            id: "b",
-            text: "*Actual* per-operation compute unit assignment and latency on a target device, surfacing cases where operations unexpectedly fall back to CPU or GPU instead of the Neural Engine",
-          },
-          {
-            id: "c",
-            text: "The exact accuracy percentage of the model on a validation set",
-          },
-          {
-            id: "d",
-            text: "Whether the model file is signed correctly",
-          },
+          { id: "a", text: "The model's training data source" },
+          { id: "b", text: "The exact accuracy percentage of the model on a validation set" },
+          { id: "c", text: "*Actual* per-operation compute unit assignment and latency on a target device, surfacing cases where operations unexpectedly fall back to CPU or GPU instead of the Neural Engine" },
+          { id: "d", text: "Whether the model file is signed correctly" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The performance report shows what actually executed on which compute unit, revealing unexpected fallbacks (e.g., an operation unsupported by the Neural Engine silently running on CPU/GPU) before the model ships.",
       },
       {
         id: "q9",
         prompt: "What efficiency problem does a stateful Core ML model address?",
         options: [
-          {
-            id: "a",
-            text: "Stateful models eliminate the need for any input data",
-          },
-          {
-            id: "b",
-            text: "Without statefulness, each prediction call would need to recompute shared context from scratch; a stateful model carries forward relevant internal computation across successive calls",
-          },
-          {
-            id: "c",
-            text: "Stateful models only matter for image classification tasks",
-          },
-          {
-            id: "d",
-            text: "Stateful models remove the need for `MLModelConfiguration`",
-          },
+          { id: "a", text: "Stateful models eliminate the need for any input data" },
+          { id: "b", text: "Stateful models remove the need for `MLModelConfiguration`" },
+          { id: "c", text: "Stateful models only matter for image classification tasks" },
+          { id: "d", text: "Without statefulness, each prediction call would need to recompute shared context from scratch; a stateful model carries forward relevant internal computation across successive calls" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Particularly for transformer-based sequential models, statefulness avoids redundant recomputation of shared context across calls, directly analogous to the efficiency benefit of session-based conversational continuity in Foundation Models.",
       },
       {
         id: "q10",
         prompt: "How does a stateful Core ML model's efficiency benefit relate to `LanguageModelSession` from section 58.3?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful relationship between the two",
-          },
-          {
-            id: "b",
-            text: "Both maintain context/state across successive calls to avoid recomputing shared information each time, though implemented at Core ML's lower, more general level versus Foundation Models' session abstraction",
-          },
-          {
-            id: "c",
-            text: "`LanguageModelSession` uses Core ML internally with no distinction between them",
-          },
-          {
-            id: "d",
-            text: "Stateful models are exclusively used within `LanguageModelSession`",
-          },
+          { id: "a", text: "Both maintain context/state across successive calls to avoid recomputing shared information each time, though implemented at Core ML's lower, more general level versus Foundation Models' session abstraction" },
+          { id: "b", text: "There is no meaningful relationship between the two" },
+          { id: "c", text: "`LanguageModelSession` uses Core ML internally with no distinction between them" },
+          { id: "d", text: "Stateful models are exclusively used within `LanguageModelSession`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section draws a direct analogy — both stateful Core ML models and `LanguageModelSession` avoid redundant recomputation by carrying forward context across calls, just at different levels of the stack.",
       },
       {
@@ -14900,72 +14666,36 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "Where does the iOS 27 Core AI framework sit relative to Foundation Models and raw Core ML?",
         options: [
-          {
-            id: "a",
-            text: "It replaces both frameworks entirely",
-          },
-          {
-            id: "b",
-            text: "It fills a middle ground — providing more specialized custom local model capability than Foundation Models' general-purpose LLM, with tighter platform integration than assembling a fully custom Core ML pipeline from scratch",
-          },
-          {
-            id: "c",
-            text: "It is identical in scope to Foundation Models",
-          },
-          {
-            id: "d",
-            text: "It is only usable for model conversion, not inference",
-          },
+          { id: "a", text: "It replaces both frameworks entirely" },
+          { id: "b", text: "It is identical in scope to Foundation Models" },
+          { id: "c", text: "It fills a middle ground — providing more specialized custom local model capability than Foundation Models' general-purpose LLM, with tighter platform integration than assembling a fully custom Core ML pipeline from scratch" },
+          { id: "d", text: "It is only usable for model conversion, not inference" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Core AI is positioned between Foundation Models' general-purpose, ready-to-use LLM and Core ML's maximum-flexibility, higher-implementation-responsibility approach, aimed at teams needing custom models without building all supporting infrastructure themselves.",
       },
       {
         id: "q13",
         prompt: "What is MLX primarily used for, as distinguished from Core ML?",
         options: [
-          {
-            id: "a",
-            text: "MLX and Core ML serve identical purposes with no meaningful distinction",
-          },
-          {
-            id: "b",
-            text: "MLX is more commonly used for research, experimentation, and training workloads leveraging Apple silicon's unified memory architecture, while Core ML is the production-oriented, app-integration-focused framework",
-          },
-          {
-            id: "c",
-            text: "MLX is exclusively used for deploying models within production iOS apps",
-          },
-          {
-            id: "d",
-            text: "MLX cannot run on Apple silicon at all",
-          },
+          { id: "a", text: "MLX and Core ML serve identical purposes with no meaningful distinction" },
+          { id: "b", text: "MLX cannot run on Apple silicon at all" },
+          { id: "c", text: "MLX is exclusively used for deploying models within production iOS apps" },
+          { id: "d", text: "MLX is more commonly used for research, experimentation, and training workloads leveraging Apple silicon's unified memory architecture, while Core ML is the production-oriented, app-integration-focused framework" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "MLX targets research and training workflows that benefit from Apple silicon's memory architecture, while Core ML focuses on production deployment with strongly-typed Swift interfaces and Xcode integration.",
       },
       {
         id: "q14",
         prompt: "What is a typical workflow relationship between MLX and Core ML, according to the section?",
         options: [
-          {
-            id: "a",
-            text: "They can never be used together in the same project",
-          },
-          {
-            id: "b",
-            text: "Models developed or trained using MLX during research/prototyping could then be converted or exported for actual production app integration via Core ML",
-          },
-          {
-            id: "c",
-            text: "Core ML must always be used before MLX in any workflow",
-          },
-          {
-            id: "d",
-            text: "MLX replaces the need for `coremltools` entirely",
-          },
+          { id: "a", text: "Models developed or trained using MLX during research/prototyping could then be converted or exported for actual production app integration via Core ML" },
+          { id: "b", text: "They can never be used together in the same project" },
+          { id: "c", text: "Core ML must always be used before MLX in any workflow" },
+          { id: "d", text: "MLX replaces the need for `coremltools` entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section describes MLX as suited to research/training phases, with resulting models potentially deployed via Core ML for production app integration — a complementary rather than competing relationship.",
       },
       {
@@ -14996,72 +14726,36 @@ export const quizzes: Quiz[] = [
         id: "q16",
         prompt: "What must happen before a PyTorch-trained model can be used within an Xcode project via the generated Swift interface described in 59.2?",
         options: [
-          {
-            id: "a",
-            text: "Nothing; PyTorch models can be added directly to Xcode with no conversion",
-          },
-          {
-            id: "b",
-            text: "The model must first be converted to Core ML's `.mlmodel`/`.mlpackage` format using `coremltools`, as a separate offline step",
-          },
-          {
-            id: "c",
-            text: "The model must be retrained entirely using Create ML",
-          },
-          {
-            id: "d",
-            text: "The model must be converted to MLX format first",
-          },
+          { id: "a", text: "Nothing; PyTorch models can be added directly to Xcode with no conversion" },
+          { id: "b", text: "The model must be retrained entirely using Create ML" },
+          { id: "c", text: "The model must first be converted to Core ML's `.mlmodel`/`.mlpackage` format using `coremltools`, as a separate offline step" },
+          { id: "d", text: "The model must be converted to MLX format first" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`coremltools` conversion is a necessary offline bridge step — translating a PyTorch (or TensorFlow) model's architecture and weights into Core ML's native format before it can be added to an Xcode project and used via the generated interface.",
       },
       {
         id: "q17",
         prompt: "What is the general default recommendation for `computeUnits`, and why?",
         options: [
-          {
-            id: "a",
-            text: "`.cpuOnly`, because it is always fastest",
-          },
-          {
-            id: "b",
-            text: "`.all`, because it lets Core ML intelligently select the fastest available hardware per operation, which is appropriate for most apps",
-          },
-          {
-            id: "c",
-            text: "`.gpuOnly`, because the Neural Engine is deprecated",
-          },
-          {
-            id: "d",
-            text: "There is no default recommendation; every app must choose based on trial and error",
-          },
+          { id: "a", text: "`.cpuOnly`, because it is always fastest" },
+          { id: "b", text: "There is no default recommendation; every app must choose based on trial and error" },
+          { id: "c", text: "`.gpuOnly`, because the Neural Engine is deprecated" },
+          { id: "d", text: "`.all`, because it lets Core ML intelligently select the fastest available hardware per operation, which is appropriate for most apps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section recommends `.all` as the generally correct default, since Core ML's own scheduling can select the most efficient compute unit per operation more effectively than manual restriction in most cases.",
       },
       {
         id: "q18",
         prompt: "What kind of model architecture particularly benefits from Core ML's stateful model support?",
         options: [
-          {
-            id: "a",
-            text: "Simple linear regression models",
-          },
-          {
-            id: "b",
-            text: "Transformer-based models processing sequential input, where avoiding recomputation of shared context across calls provides genuine efficiency gains",
-          },
-          {
-            id: "c",
-            text: "Models that only ever receive a single, isolated prediction call",
-          },
-          {
-            id: "d",
-            text: "Only image classification models",
-          },
+          { id: "a", text: "Transformer-based models processing sequential input, where avoiding recomputation of shared context across calls provides genuine efficiency gains" },
+          { id: "b", text: "Simple linear regression models" },
+          { id: "c", text: "Models that only ever receive a single, isolated prediction call" },
+          { id: "d", text: "Only image classification models" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section specifically calls out transformer-based sequential inference as the case where statefulness addresses a genuine efficiency gap, since such models benefit most from carrying forward computation across calls.",
       },
       {
@@ -15092,24 +14786,12 @@ export const quizzes: Quiz[] = [
         id: "q20",
         prompt: "Which statement correctly summarizes the relationship between the frameworks covered across sections 58 and 59?",
         options: [
-          {
-            id: "a",
-            text: "Foundation Models, Core ML, Core AI, and MLX are entirely redundant with one another",
-          },
-          {
-            id: "b",
-            text: "Each framework occupies a different point on a spectrum from general-purpose and ready-to-use (Foundation Models) to fully custom and flexible (Core ML), with Core AI as a middle ground and MLX oriented toward research/training rather than production deployment",
-          },
-          {
-            id: "c",
-            text: "Only Core ML can be used in production apps; the others are experimental only",
-          },
-          {
-            id: "d",
-            text: "MLX and Core ML are the same framework under different names",
-          },
+          { id: "a", text: "Foundation Models, Core ML, Core AI, and MLX are entirely redundant with one another" },
+          { id: "b", text: "Only Core ML can be used in production apps; the others are experimental only" },
+          { id: "c", text: "Each framework occupies a different point on a spectrum from general-purpose and ready-to-use (Foundation Models) to fully custom and flexible (Core ML), with Core AI as a middle ground and MLX oriented toward research/training rather than production deployment" },
+          { id: "d", text: "MLX and Core ML are the same framework under different names" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section positions these frameworks along a spectrum of generality versus customization and implementation responsibility, from Foundation Models' ready-to-use general LLM through Core AI's middle ground to Core ML's full flexibility, with MLX serving a distinct research/training role.",
       },
     ],
@@ -15124,144 +14806,72 @@ export const quizzes: Quiz[] = [
         id: "q1",
         prompt: "What pattern does Vision's modern Swift API use for processing an image against one or more requests?",
         options: [
-          {
-            id: "a",
-            text: "A delegate-based callback pattern with no async support",
-          },
-          {
-            id: "b",
-            text: "An `ImageRequestHandler` processes an image against request types via `async`/`await`, replacing the older completion-handler-based pattern",
-          },
-          {
-            id: "c",
-            text: "A synchronous, blocking-only API with no request/handler separation",
-          },
-          {
-            id: "d",
-            text: "Vision has no unified pattern; each request type uses a completely different API",
-          },
+          { id: "a", text: "A delegate-based callback pattern with no async support" },
+          { id: "b", text: "Vision has no unified pattern; each request type uses a completely different API" },
+          { id: "c", text: "A synchronous, blocking-only API with no request/handler separation" },
+          { id: "d", text: "An `ImageRequestHandler` processes an image against request types via `async`/`await`, replacing the older completion-handler-based pattern" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The modern Vision API consolidates around a consistent, async-native request/handler pattern, simplifying what previously required `VNImageRequestHandler`/`VNRequest` completion-handler boilerplate.",
       },
       {
         id: "q2",
         prompt: "Why does `RecognizeTextRequest` return `topCandidates` rather than a single definitive string per recognized text region?",
         options: [
-          {
-            id: "a",
-            text: "Vision never actually recognizes text with any confidence measure",
-          },
-          {
-            id: "b",
-            text: "OCR is inherently probabilistic — multiple candidate interpretations can exist for recognized text, ranked by confidence, and an app dealing with ambiguous images might inspect several candidates before committing to one",
-          },
-          {
-            id: "c",
-            text: "`topCandidates` is deprecated and should not be used",
-          },
-          {
-            id: "d",
-            text: "Only barcode detection returns multiple candidates, not text recognition",
-          },
+          { id: "a", text: "OCR is inherently probabilistic — multiple candidate interpretations can exist for recognized text, ranked by confidence, and an app dealing with ambiguous images might inspect several candidates before committing to one" },
+          { id: "b", text: "Vision never actually recognizes text with any confidence measure" },
+          { id: "c", text: "`topCandidates` is deprecated and should not be used" },
+          { id: "d", text: "Only barcode detection returns multiple candidates, not text recognition" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because OCR involves genuine uncertainty, especially with blurry or low-quality source images, Vision exposes ranked candidate interpretations rather than forcing a single, potentially incorrect definitive answer.",
       },
       {
         id: "q3",
         prompt: "What common pairing enables a live, real-time barcode scanning experience, according to 60.3?",
         options: [
-          {
-            id: "a",
-            text: "`DetectBarcodesRequest` paired with `AVCaptureVideoDataOutput`'s continuous frame stream, feeding each incoming frame into the barcode detection request",
-          },
-          {
-            id: "b",
-            text: "`DetectBarcodesRequest` used only on manually captured still photos",
-          },
-          {
-            id: "c",
-            text: "`DetectFaceRectanglesRequest` combined with barcode detection",
-          },
-          {
-            id: "d",
-            text: "Barcode detection cannot be used with live camera frames at all",
-          },
+          { id: "a", text: "`DetectBarcodesRequest` used only on manually captured still photos" },
+          { id: "b", text: "`DetectBarcodesRequest` paired with `AVCaptureVideoDataOutput`'s continuous frame stream, feeding each incoming frame into the barcode detection request" },
+          { id: "c", text: "`DetectFaceRectanglesRequest` combined with barcode detection" },
+          { id: "d", text: "Barcode detection cannot be used with live camera frames at all" },
         ],
-        correctOptionId: "a",
+        correctOptionId: "b",
         explanation: "Feeding each frame from `AVCaptureVideoDataOutput`'s continuous stream (section 55.7) into a Vision barcode request is what enables real-time scanning, rather than requiring a manually captured still photo.",
       },
       {
         id: "q4",
         prompt: "What is the granularity trade-off between face rectangle detection and face landmark/body pose detection?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful trade-off; both provide identical information",
-          },
-          {
-            id: "b",
-            text: "Bounding box detection alone is sufficient and faster for simpler use cases like counting faces, while landmark/pose detection is necessary for more sophisticated use cases like filters aligned to facial features or analyzing exercise form",
-          },
-          {
-            id: "c",
-            text: "Landmark detection is always faster than simple rectangle detection",
-          },
-          {
-            id: "d",
-            text: "Body pose detection cannot return joint positions, only bounding boxes",
-          },
+          { id: "a", text: "There is no meaningful trade-off; both provide identical information" },
+          { id: "b", text: "Landmark detection is always faster than simple rectangle detection" },
+          { id: "c", text: "Bounding box detection alone is sufficient and faster for simpler use cases like counting faces, while landmark/pose detection is necessary for more sophisticated use cases like filters aligned to facial features or analyzing exercise form" },
+          { id: "d", text: "Body pose detection cannot return joint positions, only bounding boxes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Simple rectangle detection suffices for coarse tasks like counting faces, while more detailed landmark or pose detection is needed when specific feature or joint positions are actually required, at correspondingly greater cost.",
       },
       {
         id: "q5",
         prompt: "What does `GenerateImageFeaturePrintRequest` produce, and what is it used for?",
         options: [
-          {
-            id: "a",
-            text: "A cropped version of the input image with no numeric output",
-          },
-          {
-            id: "b",
-            text: "A compact, numeric embedding representing an image's visual content, enabling similarity search and near-duplicate detection via distance comparison between feature prints",
-          },
-          {
-            id: "c",
-            text: "A textual description of the image's contents",
-          },
-          {
-            id: "d",
-            text: "A list of detected barcodes within the image",
-          },
+          { id: "a", text: "A cropped version of the input image with no numeric output" },
+          { id: "b", text: "A list of detected barcodes within the image" },
+          { id: "c", text: "A textual description of the image's contents" },
+          { id: "d", text: "A compact, numeric embedding representing an image's visual content, enabling similarity search and near-duplicate detection via distance comparison between feature prints" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Feature prints reduce an image's visual content to a compact vector representation designed so visual similarity corresponds to small computed distances, enabling similarity search without comparing raw pixels directly.",
       },
       {
         id: "q6",
         prompt: "How does image feature print similarity (60.5) conceptually relate to `NLEmbedding` (60.9)?",
         options: [
-          {
-            id: "a",
-            text: "They are unrelated techniques with no shared design principle",
-          },
-          {
-            id: "b",
-            text: "Both reduce complex, high-dimensional content (visual or textual) to a compact numeric vector representation designed so semantic/visual similarity translates into small distances between representations",
-          },
-          {
-            id: "c",
-            text: "`NLEmbedding` only works on images, not text",
-          },
-          {
-            id: "d",
-            text: "Feature prints require training a custom model, while `NLEmbedding` does not",
-          },
+          { id: "a", text: "Both reduce complex, high-dimensional content (visual or textual) to a compact numeric vector representation designed so semantic/visual similarity translates into small distances between representations" },
+          { id: "b", text: "They are unrelated techniques with no shared design principle" },
+          { id: "c", text: "`NLEmbedding` only works on images, not text" },
+          { id: "d", text: "Feature prints require training a custom model, while `NLEmbedding` does not" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Both techniques share the same underlying design principle — reducing complex content to compact vectors where similarity corresponds to small distances — just applied to different content types (images versus text).",
       },
       {
@@ -15292,72 +14902,36 @@ export const quizzes: Quiz[] = [
         id: "q8",
         prompt: "What does `SpeechAnalyzer`/`SpeechTranscriber` replace, and what privacy benefit does it share with other frameworks in this Part?",
         options: [
-          {
-            id: "a",
-            text: "It replaces Vision's text recognition; it has no particular privacy benefit",
-          },
-          {
-            id: "b",
-            text: "It modernizes and replaces the older `SFSpeechRecognizer` API, and by running transcription on-device, it shares the same privacy/offline-availability benefit as on-device translation and Foundation Models",
-          },
-          {
-            id: "c",
-            text: "It replaces ShazamKit's song recognition capability",
-          },
-          {
-            id: "d",
-            text: "It requires uploading audio to a cloud service, unlike older APIs",
-          },
+          { id: "a", text: "It replaces Vision's text recognition; it has no particular privacy benefit" },
+          { id: "b", text: "It replaces ShazamKit's song recognition capability" },
+          { id: "c", text: "It modernizes and replaces the older `SFSpeechRecognizer` API, and by running transcription on-device, it shares the same privacy/offline-availability benefit as on-device translation and Foundation Models" },
+          { id: "d", text: "It requires uploading audio to a cloud service, unlike older APIs" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "`SpeechAnalyzer` is a modernized, more flexible replacement for `SFSpeechRecognizer`, and its on-device operation provides the same privacy and offline benefits discussed for Translation (57.15) and Foundation Models (58.1).",
       },
       {
         id: "q9",
         prompt: "Why is `NLTokenizer`'s language-aware text splitting more robust than naive whitespace-based splitting?",
         options: [
-          {
-            id: "a",
-            text: "Whitespace-based splitting is always sufficient for every language and use case",
-          },
-          {
-            id: "b",
-            text: "Many languages don't use whitespace to separate words at all, and even for those that do, correctly handling punctuation, contractions, and sentence boundaries requires genuine linguistic awareness",
-          },
-          {
-            id: "c",
-            text: "`NLTokenizer` is slower than whitespace splitting with no accuracy benefit",
-          },
-          {
-            id: "d",
-            text: "Language-aware splitting only matters for tagging, not tokenization",
-          },
+          { id: "a", text: "Whitespace-based splitting is always sufficient for every language and use case" },
+          { id: "b", text: "Language-aware splitting only matters for tagging, not tokenization" },
+          { id: "c", text: "`NLTokenizer` is slower than whitespace splitting with no accuracy benefit" },
+          { id: "d", text: "Many languages don't use whitespace to separate words at all, and even for those that do, correctly handling punctuation, contractions, and sentence boundaries requires genuine linguistic awareness" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Naive whitespace splitting fails entirely for languages without whitespace-delimited words, and even in languages that do use whitespace, proper handling of punctuation and sentence boundaries requires more sophisticated, language-aware logic.",
       },
       {
         id: "q10",
         prompt: "What does `NLTagger` with the `.lexicalClass` scheme provide?",
         options: [
-          {
-            id: "a",
-            text: "Image classification labels",
-          },
-          {
-            id: "b",
-            text: "Linguistic tags like part of speech assigned to tokens within text",
-          },
-          {
-            id: "c",
-            text: "Audio sound classification results",
-          },
-          {
-            id: "d",
-            text: "Barcode payload decoding",
-          },
+          { id: "a", text: "Linguistic tags like part of speech assigned to tokens within text" },
+          { id: "b", text: "Image classification labels" },
+          { id: "c", text: "Audio sound classification results" },
+          { id: "d", text: "Barcode payload decoding" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`NLTagger` assigns linguistic tags — such as part of speech, named entities, or language identification — to tokens within a body of text, depending on the configured tag scheme.",
       },
       {
@@ -15388,72 +14962,36 @@ export const quizzes: Quiz[] = [
         id: "q12",
         prompt: "What use case is specifically mentioned as benefiting from Sound Analysis's general sound classification?",
         options: [
-          {
-            id: "a",
-            text: "Identifying a specific song playing in the background",
-          },
-          {
-            id: "b",
-            text: "Accessibility features, such as alerting a deaf user to important environmental sounds like a smoke alarm or doorbell",
-          },
-          {
-            id: "c",
-            text: "Translating spoken audio into another language",
-          },
-          {
-            id: "d",
-            text: "Detecting barcodes within an audio waveform visualization",
-          },
+          { id: "a", text: "Identifying a specific song playing in the background" },
+          { id: "b", text: "Translating spoken audio into another language" },
+          { id: "c", text: "Accessibility features, such as alerting a deaf user to important environmental sounds like a smoke alarm or doorbell" },
+          { id: "d", text: "Detecting barcodes within an audio waveform visualization" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section highlights accessibility as a key use case — general sound category classification can alert users to important environmental sounds they might not otherwise perceive.",
       },
       {
         id: "q13",
         prompt: "How does Image Playground's generation approach compare to integrating a third-party image generation API directly?",
         options: [
-          {
-            id: "a",
-            text: "It requires exactly the same integration effort as a custom third-party API",
-          },
-          {
-            id: "b",
-            text: "It runs through Apple's on-device (or hybrid) generative pipeline via a standardized system UI sheet, providing a consistent, system-standard experience without requiring direct third-party API integration",
-          },
-          {
-            id: "c",
-            text: "Image Playground cannot generate images from text descriptions, only from existing photos",
-          },
-          {
-            id: "d",
-            text: "It has no relationship to any system-provided UI pattern",
-          },
+          { id: "a", text: "It requires exactly the same integration effort as a custom third-party API" },
+          { id: "b", text: "It has no relationship to any system-provided UI pattern" },
+          { id: "c", text: "Image Playground cannot generate images from text descriptions, only from existing photos" },
+          { id: "d", text: "It runs through Apple's on-device (or hybrid) generative pipeline via a standardized system UI sheet, providing a consistent, system-standard experience without requiring direct third-party API integration" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Image Playground provides generation through a standard system sheet, giving a consistent experience across apps without each app needing to integrate and manage its own third-party generative image API.",
       },
       {
         id: "q14",
         prompt: "What design similarity does the section draw between Image Playground's system UI and `SubscriptionStoreView` (section 56.6)?",
         options: [
-          {
-            id: "a",
-            text: "Both require identical purchase flows",
-          },
-          {
-            id: "b",
-            text: "Both provide a consistent, system-standard UI experience rather than requiring each app to build fully custom presentation from scratch",
-          },
-          {
-            id: "c",
-            text: "Both are exclusively used for audio processing",
-          },
-          {
-            id: "d",
-            text: "There is no meaningful similarity drawn between them",
-          },
+          { id: "a", text: "Both provide a consistent, system-standard UI experience rather than requiring each app to build fully custom presentation from scratch" },
+          { id: "b", text: "Both require identical purchase flows" },
+          { id: "c", text: "Both are exclusively used for audio processing" },
+          { id: "d", text: "There is no meaningful similarity drawn between them" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section explicitly parallels Image Playground's standardized generation UI with `SubscriptionStoreView`'s standardized purchase UI — both reduce the custom UI burden on individual apps in favor of a consistent system-provided experience.",
       },
       {
@@ -15484,72 +15022,36 @@ export const quizzes: Quiz[] = [
         id: "q16",
         prompt: "Why might an app inspect multiple OCR candidates or confidence scores rather than always using just the top candidate?",
         options: [
-          {
-            id: "a",
-            text: "Vision requires inspecting all candidates for every request by default",
-          },
-          {
-            id: "b",
-            text: "For genuinely ambiguous or low-quality source images, like a blurry photographed receipt, considering multiple candidates or confidence scores can help avoid committing to an incorrect single interpretation",
-          },
-          {
-            id: "c",
-            text: "Confidence scores are not actually provided by `RecognizeTextRequest`",
-          },
-          {
-            id: "d",
-            text: "Multiple candidates are only relevant for barcode detection, not text recognition",
-          },
+          { id: "a", text: "Vision requires inspecting all candidates for every request by default" },
+          { id: "b", text: "Confidence scores are not actually provided by `RecognizeTextRequest`" },
+          { id: "c", text: "For genuinely ambiguous or low-quality source images, like a blurry photographed receipt, considering multiple candidates or confidence scores can help avoid committing to an incorrect single interpretation" },
+          { id: "d", text: "Multiple candidates are only relevant for barcode detection, not text recognition" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because OCR accuracy can degrade with poor image quality, an app handling genuinely ambiguous source material may benefit from considering more than just the single top-ranked candidate.",
       },
       {
         id: "q17",
         prompt: "What does `NLEmbedding.neighbors(for:maximumCount:)` enable in the word similarity example?",
         options: [
-          {
-            id: "a",
-            text: "Detecting barcodes near a given word in an image",
-          },
-          {
-            id: "b",
-            text: "Finding semantically related words by returning nearby vectors in the embedding space, useful for \"find related content\" style features",
-          },
-          {
-            id: "c",
-            text: "Translating the given word into another language",
-          },
-          {
-            id: "d",
-            text: "Classifying the sentiment of the given word",
-          },
+          { id: "a", text: "Detecting barcodes near a given word in an image" },
+          { id: "b", text: "Classifying the sentiment of the given word" },
+          { id: "c", text: "Translating the given word into another language" },
+          { id: "d", text: "Finding semantically related words by returning nearby vectors in the embedding space, useful for \"find related content\" style features" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`neighbors(for:maximumCount:)` returns semantically similar words based on vector proximity in the embedding space, enabling similarity-based features without training a custom embedding model.",
       },
       {
         id: "q18",
         prompt: "What does `DetectFaceLandmarksRequest` provide beyond what `DetectFaceRectanglesRequest` alone provides?",
         options: [
-          {
-            id: "a",
-            text: "Nothing additional; they return identical data",
-          },
-          {
-            id: "b",
-            text: "Individual facial feature points (landmarks) in addition to a bounding box, necessary for more sophisticated use cases like applying filters aligned to specific facial features",
-          },
-          {
-            id: "c",
-            text: "Full body joint positions instead of facial data",
-          },
-          {
-            id: "d",
-            text: "Barcode payload data associated with detected faces",
-          },
+          { id: "a", text: "Individual facial feature points (landmarks) in addition to a bounding box, necessary for more sophisticated use cases like applying filters aligned to specific facial features" },
+          { id: "b", text: "Nothing additional; they return identical data" },
+          { id: "c", text: "Full body joint positions instead of facial data" },
+          { id: "d", text: "Barcode payload data associated with detected faces" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "While rectangle detection provides only a bounding box, landmark detection provides more granular facial feature point data, needed for applications requiring precise facial feature alignment.",
       },
       {
@@ -15580,24 +15082,12 @@ export const quizzes: Quiz[] = [
         id: "q20",
         prompt: "Which statement accurately distinguishes the purposes of Vision's feature print similarity, Natural Language's embeddings, and Sound Analysis's classification?",
         options: [
-          {
-            id: "a",
-            text: "All three perform the exact same function on different data types with no distinction",
-          },
-          {
-            id: "b",
-            text: "Feature prints and embeddings both enable similarity search via compact vector representations (for images and text respectively), while Sound Analysis instead classifies audio into discrete general sound categories rather than computing similarity distances",
-          },
-          {
-            id: "c",
-            text: "Sound Analysis also produces vector embeddings for similarity search, identical to the other two",
-          },
-          {
-            id: "d",
-            text: "None of these three techniques involve any form of numeric representation",
-          },
+          { id: "a", text: "All three perform the exact same function on different data types with no distinction" },
+          { id: "b", text: "Sound Analysis also produces vector embeddings for similarity search, identical to the other two" },
+          { id: "c", text: "Feature prints and embeddings both enable similarity search via compact vector representations (for images and text respectively), while Sound Analysis instead classifies audio into discrete general sound categories rather than computing similarity distances" },
+          { id: "d", text: "None of these three techniques involve any form of numeric representation" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Feature prints and `NLEmbedding` share a similarity-via-vector-distance design for images and text respectively, while Sound Analysis instead performs discrete classification into named sound categories, a functionally different approach.",
       },
     ],

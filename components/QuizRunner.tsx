@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { GradedAnswer, Quiz } from "@/lib/content/types";
 import { ChevronLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
+import { QuizCodeBlock } from "@/components/QuizCodeBlock";
 
 export function QuizRunner({
   quiz,
@@ -105,6 +106,9 @@ export function QuizRunner({
                 <p className="font-article mt-2 font-medium">
                   {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
                 </p>
+                {question.codeExample && (
+                  <QuizCodeBlock code={question.codeExample} />
+                )}
                 <ul className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
@@ -182,6 +186,9 @@ export function QuizRunner({
               <p className="font-article font-medium">
                 {i + 1}. <InlineMarkdown>{question.prompt}</InlineMarkdown>
               </p>
+              {question.codeExample && (
+                <QuizCodeBlock code={question.codeExample} />
+              )}
               {previous && (
                 <p className="mt-1.5 text-sm text-amber-700 dark:text-amber-400">
                   {previousOptionText

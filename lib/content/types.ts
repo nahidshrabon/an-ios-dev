@@ -17,6 +17,8 @@ export interface QuizOption {
 export interface QuizQuestion {
   id: string;
   prompt: string;
+  /** Optional Swift snippet the question refers to, rendered as a code block below the prompt. */
+  codeExample?: string;
   options: QuizOption[];
   correctOptionId: string;
   /** Shown only after the quiz is submitted, never while answering. */
