@@ -212,6 +212,18 @@ export function QuizRunner({
                           [question.id]: option.id,
                         }))
                       }
+                      onClick={() => {
+                        // A click on an already-selected radio doesn't fire
+                        // onChange (the browser sees no state change), so
+                        // toggling off has to be handled here instead.
+                        if (answers[question.id] === option.id) {
+                          setAnswers((prev) => {
+                            const next = { ...prev };
+                            delete next[question.id];
+                            return next;
+                          });
+                        }
+                      }}
                     />
                     <span>
                       <InlineMarkdown>{option.text}</InlineMarkdown>
