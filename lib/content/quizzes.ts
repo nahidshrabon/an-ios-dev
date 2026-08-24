@@ -2587,7 +2587,7 @@ unit4A = nil
           { id: "d", text: "It makes the type permanently unable to conform to any protocol whatsoever, at all" },
         ],
         correctOptionId: "a",
-        explanation: "Because the accessed \"properties\" aren't actually declared, the compiler can't catch a misspelled member name at compile time the way it would for an ordinary property — errors surface only at runtime (e.g. as a `nil` lookup), which is why the lesson recommends using this feature sparingly.",
+        explanation: "Because the accessed \"properties\" aren't actually declared, the compiler can't catch a misspelled member name at compile time the way it would for an ordinary property — errors surface only at runtime (e.g. as a `nil` lookup), which is why this feature is best used sparingly.",
       },
       {
         id: "q6",
@@ -2839,7 +2839,7 @@ unit4A = nil
       },
       {
         id: "q6",
-        prompt: "What is SwiftUI's `@ViewBuilder`, in relation to the general result-builder mechanism described earlier in this section?",
+        prompt: "What is SwiftUI's `@ViewBuilder`, in relation to the general `@resultBuilder` mechanism?",
         options: [
           { id: "a", text: "A macro that expands directly into raw SwiftUI view source code" },
           { id: "b", text: "A concrete result builder, built on the same `@resultBuilder` mechanism" },
@@ -2847,7 +2847,7 @@ unit4A = nil
           { id: "d", text: "A completely separate compiler feature that exists only for SwiftUI's own use" },
         ],
         correctOptionId: "b",
-        explanation: "`@ViewBuilder` is not a special, separate SwiftUI-only feature — it's built entirely on top of the general `@resultBuilder` mechanism covered earlier, with `View`-specific combining logic (often via internal tuple-view wrapper types) instead of the simple string concatenation used in the section's minimal examples.",
+        explanation: "`@ViewBuilder` is not a special, separate SwiftUI-only feature — it's built entirely on top of the general `@resultBuilder` mechanism, with `View`-specific combining logic (often via internal tuple-view wrapper types) instead of simple string concatenation.",
       },
       {
         id: "q7",
@@ -2887,7 +2887,37 @@ unit4A = nil
       },
       {
         id: "q10",
-        prompt: "In the `Logged<Value>` example, what does `counter.$count` actually access?",
+        prompt: "Given the code below, what does `counter.$count` actually access?",
+        codeExample: `@propertyWrapper
+struct Logged<Value> {
+    private var value: Value
+    private let name: String
+
+    init(wrappedValue: Value, _ name: String) {
+        self.value = wrappedValue
+        self.name = name
+    }
+
+    var wrappedValue: Value {
+        get { value }
+        set {
+            print("\\(name) changed from \\(value) to \\(newValue)")
+            value = newValue
+        }
+    }
+
+    var projectedValue: String {
+        "Wrapper watching: \\(name)"
+    }
+}
+
+struct Counter {
+    @Logged("count") var count: Int = 0
+}
+
+var counter = Counter()
+counter.count = 5              // "count changed from 0 to 5"
+print(counter.$count)           // "Wrapper watching: count" — accessed via the $ prefix`,
         options: [
           { id: "a", text: "`counter.count` directly, since `$count` is a purely stylistic alias" },
           { id: "b", text: "`_count.projectedValue`, the same way `count` routes to `_count.wrappedValue`" },
@@ -2943,7 +2973,7 @@ unit4A = nil
           { id: "d", text: "Swift doesn't actually support this feature — attempting it is a compile error" },
         ],
         correctOptionId: "b",
-        explanation: "Composition works (as shown with `@Capitalized @Trimmed`), but the lesson explicitly notes that reasoning about and debugging stacked wrappers becomes difficult quickly, which is why most practical Swift code sticks to a single wrapper per property, reserving composition for narrow, well-understood cases.",
+        explanation: "Composition works (stacking wrappers like `@Capitalized @Trimmed` applies each in turn), but reasoning about and debugging stacked wrappers becomes difficult quickly, which is why most practical Swift code sticks to a single wrapper per property, reserving composition for narrow, well-understood cases.",
       },
       {
         id: "q15",
@@ -2959,7 +2989,7 @@ unit4A = nil
       },
       {
         id: "q16",
-        prompt: "Why does a result builder need a separate `buildArray` method (not mentioned as part of the minimal example, but referenced as a general capability)?",
+        prompt: "Why does a result builder need a separate `buildArray` method, beyond `buildBlock`?",
         options: [
           { id: "a", text: "To support optional bindings such as `if let` inside the builder's block" },
           { id: "b", text: "It doesn't actually exist as a real result-builder method in Swift" },
@@ -3107,7 +3137,7 @@ unit4A = nil
           { id: "d", text: "They're exactly the same underlying feature, just given two different names" },
         ],
         correctOptionId: "c",
-        explanation: "An accessor macro (like the conceptual `@Clamped` example) attaches directly to an existing property and adds accessor logic (`get`/`set`) to it in place — achieving similar clamping behavior to the section 12 property wrapper example, but generating logic directly on the original property rather than introducing a separate wrapper struct.",
+        explanation: "An accessor macro (like a conceptual `@Clamped`) attaches directly to an existing property and adds accessor logic (`get`/`set`) to it in place — achieving similar clamping behavior to a property wrapper, but generating logic directly on the original property rather than introducing a separate wrapper struct.",
       },
       {
         id: "q8",
@@ -3196,7 +3226,7 @@ unit4A = nil
       },
       {
         id: "q15",
-        prompt: "According to the lesson's guidance, when should you prefer a protocol extension or property wrapper over writing a custom macro?",
+        prompt: "When should you prefer a protocol extension or property wrapper over writing a custom macro?",
         options: [
           { id: "a", text: "Always — macros should genuinely never be used under any circumstances" },
           { id: "b", text: "Property wrappers and protocol extensions should always be fully replaced by macros" },
@@ -3204,7 +3234,7 @@ unit4A = nil
           { id: "d", text: "Only when specifically targeting older Swift versions that lack macro support" },
         ],
         correctOptionId: "c",
-        explanation: "The lesson's practical guidance is to reach for a macro specifically when you need compile-time source inspection/generation that protocols and property wrappers genuinely can't achieve (like capturing literal source text, or generating cross-cutting tracking machinery) — not as a default replacement for simpler, established mechanisms.",
+        explanation: "The practical guidance is to reach for a macro specifically when you need compile-time source inspection/generation that protocols and property wrappers genuinely can't achieve (like capturing literal source text, or generating cross-cutting tracking machinery) — not as a default replacement for simpler, established mechanisms.",
       },
       {
         id: "q16",
@@ -3232,7 +3262,29 @@ unit4A = nil
       },
       {
         id: "q18",
-        prompt: "In the `StringifyMacro` implementation example, what does the `expansion(of:in:)` method receive and return?",
+        prompt: "Given the code below, what does the `expansion(of:in:)` method receive and return?",
+        codeExample: `// Declaration (in the main library target, what consumers import):
+@freestanding(expression)
+public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(
+    module: "MyMacrosImplementation",
+    type: "StringifyMacro"
+)
+
+// Implementation (in a separate compiler-plugin target):
+import SwiftSyntax
+import SwiftSyntaxMacros
+
+public struct StringifyMacro: ExpressionMacro {
+    public static func expansion(
+        of node: some FreestandingMacroExpansionSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> ExprSyntax {
+        guard let argument = node.arguments.first?.expression else {
+            fatalError("compiler bug: the macro does not have any arguments")
+        }
+        return "(\\(argument), \\(literal: argument.description))"
+    }
+}`,
         options: [
           { id: "a", text: "It receives nothing at all as its input parameter, and simply returns `Void`" },
           { id: "b", text: "It receives the usage's syntax node and returns the generated `ExprSyntax`" },
@@ -3252,7 +3304,7 @@ unit4A = nil
           { id: "d", text: "Because macros are only ever capable of producing completely empty output" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly frames this as a key mental-model correction: macros work with SwiftSyntax's structured representation of source code (typed nodes for expressions, declarations, and so on, with trivia tracked separately), not by doing naive string find-and-replace on raw source text.",
+        explanation: "This is a key mental-model correction: macros work with SwiftSyntax's structured representation of source code (typed nodes for expressions, declarations, and so on, with trivia tracked separately), not by doing naive string find-and-replace on raw source text.",
       },
       {
         id: "q20",
@@ -3324,7 +3376,7 @@ unit4A = nil
       },
       {
         id: "q5",
-        prompt: "What is the practical payoff of implementing a custom `Collection` conformance (as with `FixedStack` in the lesson) by satisfying just four requirements?",
+        prompt: "What is the practical payoff of implementing a custom `Collection` conformance (as with a custom `FixedStack` type) by satisfying just four requirements?",
         options: [
           { id: "a", text: "Dozens of operations — `map`, `filter`, `reduce` — become available for free" },
           { id: "b", text: "Nothing at all — you'd still have to hand-implement `map`, `filter`, `reduce`" },
@@ -3500,7 +3552,7 @@ unit4A = nil
           { id: "d", text: "Every instance of shared mutable state in an app, as the automatic default choice" },
         ],
         correctOptionId: "c",
-        explanation: "The lesson is explicit that `Mutex`/`Atomic` are low-level, performance-oriented tools most relevant for library authors or code with actual measured contention — everyday app-level concurrency should generally prefer actors (covered in Part 2), reserving these lower-level primitives for narrower, justified cases.",
+        explanation: "`Mutex`/`Atomic` are low-level, performance-oriented tools most relevant for library authors or code with actual measured contention — everyday app-level concurrency should generally prefer actors, reserving these lower-level primitives for narrower, justified cases.",
       },
       {
         id: "q20",
@@ -3712,7 +3764,7 @@ unit4A = nil
           { id: "d", text: "Rarely — expert-level tools for optimizing hot paths or bridging to non-Swift code" },
         ],
         correctOptionId: "d",
-        explanation: "The lesson explicitly frames this entire section as expert-level material \"rarely needed in typical app code\" — most developers will only reach for these tools when optimizing specific hot paths or building interop shims, not as part of everyday application logic.",
+        explanation: "This is expert-level material, rarely needed in typical app code — most developers will only reach for these tools when optimizing specific hot paths or building interop shims, not as part of everyday application logic.",
       },
       {
         id: "q17",
@@ -3840,7 +3892,7 @@ unit4A = nil
           { id: "d", text: "It's mandatory only for command-line tools, and never for full apps" },
         ],
         correctOptionId: "b",
-        explanation: "The lesson explicitly notes that Swift 6 mode is opt-in per module — using a Swift 6-capable compiler doesn't force existing Swift 5-mode code to suddenly start enforcing the stricter checks, allowing deliberate, controlled migration.",
+        explanation: "Swift 6 mode is opt-in per module — using a Swift 6-capable compiler doesn't force existing Swift 5-mode code to suddenly start enforcing the stricter checks, allowing deliberate, controlled migration.",
       },
       {
         id: "q7",
@@ -3856,7 +3908,7 @@ unit4A = nil
       },
       {
         id: "q8",
-        prompt: "What real problem do package traits solve, according to the lesson?",
+        prompt: "What real problem do package traits solve?",
         options: [
           { id: "a", text: "They allow a package to fully bypass Swift's normal access control system entirely" },
           { id: "b", text: "They make every package compile measurably faster, in every single case" },
@@ -3972,11 +4024,11 @@ unit4A = nil
           { id: "d", text: "Swift 6.0" },
         ],
         correctOptionId: "a",
-        explanation: "Package traits, along with refined `nonisolated` ergonomics, are specifically attributed to Swift 6.1 in the lesson.",
+        explanation: "Package traits, along with refined `nonisolated` ergonomics, were introduced in Swift 6.1.",
       },
       {
         id: "q18",
-        prompt: "Broadly, what is the common thread connecting Swift 6.0 through 6.4 as covered in this section?",
+        prompt: "Broadly, what is the common thread connecting Swift 6.0 through 6.4?",
         options: [
           { id: "a", text: "Each release focuses specifically on deprecating older Objective-C APIs one by one, entirely" },
           { id: "b", text: "Concurrency has been the biggest focus — strict checking, then more ergonomic adoption" },
@@ -3984,7 +4036,7 @@ unit4A = nil
           { id: "d", text: "Each release exclusively and only adds brand-new SwiftUI view types entirely" },
         ],
         correctOptionId: "b",
-        explanation: "The section's introduction explicitly frames concurrency as Swift's biggest focus across these recent releases — 6.0 established strict enforcement, and 6.1 through 6.4 largely worked to make that stricter model more practical, ergonomic, and precise to actually adopt in real codebases.",
+        explanation: "Concurrency has been Swift's biggest focus across these recent releases — 6.0 established strict enforcement, and 6.1 through 6.4 largely worked to make that stricter model more practical, ergonomic, and precise to actually adopt in real codebases.",
       },
       {
         id: "q19",
@@ -4000,7 +4052,7 @@ unit4A = nil
       },
       {
         id: "q20",
-        prompt: "According to the lesson, what is generally the most reliable way to understand *why* a specific Swift language feature was designed the way it was, rather than some other plausible way?",
+        prompt: "What is generally the most reliable way to understand *why* a specific Swift language feature was designed the way it was, rather than some other plausible way?",
         options: [
           { id: "a", text: "Asking about it on random internet forums unrelated to Swift Evolution" },
           { id: "b", text: "Guessing based purely on the feature's final, shipped syntax alone" },
@@ -4212,7 +4264,7 @@ unit4A = nil
       },
       {
         id: "q17",
-        prompt: "What is the lesson's guidance on when to use `Task.detached` in typical app code?",
+        prompt: "When should `Task.detached` be used in typical app code?",
         options: [
           { id: "a", text: "Rarely the right choice — hard to reason about; prefer plain `Task { }` in most cases" },
           { id: "b", text: "It's mandatorily required when calling an `async` function from sync context" },
@@ -4256,7 +4308,7 @@ unit4A = nil
           { id: "d", text: "Wrapping the call in `Task { }`, using `try await` inside `do`/`catch`" },
         ],
         correctOptionId: "d",
-        explanation: "Since a SwiftUI button action closure is synchronous, `Task { }` is needed to bridge into an asynchronous context; inside that task, an `async throws` function would be called with `try await`, wrapped in `do`/`catch` to handle any thrown errors — combining exactly the tools covered across this section.",
+        explanation: "Since a SwiftUI button action closure is synchronous, `Task { }` is needed to bridge into an asynchronous context; inside that task, an `async throws` function would be called with `try await`, wrapped in `do`/`catch` to handle any thrown errors.",
       },
     ],
   },
@@ -4504,7 +4556,7 @@ unit4A = nil
           { id: "d", text: "`withTaskCancellationHandler` wrapping `withCheckedThrowingContinuation`" },
         ],
         correctOptionId: "d",
-        explanation: "This combination directly mirrors the example in the lesson: `withCheckedThrowingContinuation` bridges the legacy completion-handler API into a single `await`-able call, while wrapping that in `withTaskCancellationHandler` provides an `onCancel` hook to propagate Swift Concurrency's cancellation into the legacy API's own cancellation mechanism, since the legacy API has no native awareness of Swift Concurrency's cooperative cancellation otherwise.",
+        explanation: "`withCheckedThrowingContinuation` bridges the legacy completion-handler API into a single `await`-able call, while wrapping that in `withTaskCancellationHandler` provides an `onCancel` hook to propagate Swift Concurrency's cancellation into the legacy API's own cancellation mechanism, since the legacy API has no native awareness of Swift Concurrency's cooperative cancellation otherwise.",
       },
     ],
   },
@@ -4564,7 +4616,16 @@ unit4A = nil
       },
       {
         id: "q5",
-        prompt: "In the `BankAccount` reentrancy example, why can two concurrent `withdraw(100)` calls potentially overdraw the account, despite `balance` being actor-isolated?",
+        prompt: "Given the code below, why can two concurrent `withdraw(100)` calls potentially overdraw the account, despite `balance` being actor-isolated?",
+        codeExample: `actor BankAccount {
+    var balance = 100
+
+    func withdraw(_ amount: Int) async {
+        guard balance >= amount else { return }
+        await Task.sleep(for: .seconds(1))   // suspension point — actor is free to interleave other work here!
+        balance -= amount   // by the time we resume, balance might have changed due to another call
+    }
+}`,
         options: [
           { id: "a", text: "Reentrancy lets both guard checks pass before either call subtracts from `balance`" },
           { id: "b", text: "Because `balance` was declared using `let` instead of `var` this time" },
@@ -4744,7 +4805,7 @@ unit4A = nil
       },
       {
         id: "q20",
-        prompt: "Which best summarizes the overall progression from `@MainActor` inference (19.6) through `nonisolated(nonsending)`, `@concurrent`, and `defaultIsolation` (19.11–19.13)?",
+        prompt: "Which best summarizes the overall progression from `@MainActor` inference through `nonisolated(nonsending)`, `@concurrent`, and `defaultIsolation`?",
         options: [
           { id: "a", text: "They're all deprecated features that are actively being removed from the language" },
           { id: "b", text: "Each feature is completely unrelated, addressing a separate area with no common thread" },
@@ -4904,7 +4965,7 @@ unit4A = nil
           { id: "d", text: "Making `X` conform to `Sendable` if safe, or using `sending` for a one-time transfer" },
         ],
         correctOptionId: "d",
-        explanation: "This is one of the handful of common, recurring error patterns the lesson highlights — the typical, correct fix is either genuine `Sendable` conformance (if the type is truly safe to share) or a `sending` parameter (if it's a one-time hand-off), not simply silencing or ignoring the error.",
+        explanation: "This is one of the handful of common, recurring error patterns in Swift 6 concurrency — the typical, correct fix is either genuine `Sendable` conformance (if the type is truly safe to share) or a `sending` parameter (if it's a one-time hand-off), not simply silencing or ignoring the error.",
       },
       {
         id: "q13",
@@ -4928,7 +4989,7 @@ unit4A = nil
           { id: "d", text: "Migration must always happen within a single afternoon, avoiding inconsistent states" },
         ],
         correctOptionId: "b",
-        explanation: "Since Swift 6 mode is opt-in per module, the lesson recommends a deliberate, incremental sequence — starting with modules that have the fewest dependencies (leaf modules) and working toward modules with more dependents, so each migrated module's newly-enforced boundaries are already settled by the time dependent modules migrate.",
+        explanation: "Since Swift 6 mode is opt-in per module, the recommended approach is a deliberate, incremental sequence — starting with modules that have the fewest dependencies (leaf modules) and working toward modules with more dependents, so each migrated module's newly-enforced boundaries are already settled by the time dependent modules migrate.",
       },
       {
         id: "q15",
@@ -4980,7 +5041,7 @@ unit4A = nil
       },
       {
         id: "q19",
-        prompt: "What is the unifying theme across the common Swift 6 concurrency error patterns discussed in this section?",
+        prompt: "What is the unifying theme across the common Swift 6 concurrency error patterns?",
         options: [
           { id: "a", text: "They only ever occur specifically in test code, never in production application code" },
           { id: "b", text: "They're all simply resolved by adding more `print` statements for debugging" },
@@ -4988,11 +5049,11 @@ unit4A = nil
           { id: "d", text: "They're mostly just compiler bugs that should simply be ignored or suppressed outright" },
         ],
         correctOptionId: "c",
-        explanation: "The lesson is explicit that these errors represent genuine data races the compiler has correctly identified — previously invisible or only weakly flagged under Swift 5 mode — and the appropriate response is real code restructuring using the tools covered in this section, not suppressing or working around the error superficially.",
+        explanation: "These errors represent genuine data races the compiler has correctly identified — previously invisible or only weakly flagged under Swift 5 mode — and the appropriate response is real code restructuring, not suppressing or working around the error superficially.",
       },
       {
         id: "q20",
-        prompt: "How does `sending` relate conceptually to the `consuming` ownership modifier from section 11.8?",
+        prompt: "How does `sending` relate conceptually to the `consuming` ownership modifier?",
         options: [
           { id: "a", text: "`sending` is simply a deprecated predecessor mechanism that came before `consuming`" },
           { id: "b", text: "They're entirely unrelated features drawn from completely separate areas of the language" },
