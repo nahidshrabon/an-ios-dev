@@ -63,7 +63,7 @@ export default async function BookmarksPage() {
                       href={`/articles/${slug}#${b.heading_slug}`}
                       className="flex items-center justify-between gap-3 rounded-lg border border-blue-200/50 bg-white/70 px-3 py-2 text-sm transition-colors hover:bg-blue-100/60 dark:border-blue-400/10 dark:bg-white/5 dark:hover:bg-blue-400/15"
                     >
-                      <span className="font-heading min-w-0 flex-1 truncate">
+                      <span className="font-heading min-w-0 flex-1">
                         {b.heading_title}
                       </span>
                       <ChevronRightIcon className="size-4 shrink-0 text-zinc-500" />

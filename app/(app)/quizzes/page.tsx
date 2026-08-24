@@ -217,7 +217,7 @@ export default async function QuizzesPage() {
                           className="flex min-w-0 flex-1 items-center gap-3"
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="font-heading block truncate text-sm">
+                            <span className="font-heading block text-sm">
                               {section.number}. {section.title}
                               {best && (
                                 <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />

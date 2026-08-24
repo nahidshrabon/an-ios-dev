@@ -220,7 +220,7 @@ export function RoadmapChecklist({
                           }`}
                         >
                           <span className="min-w-0 flex-1 text-sm">
-                            <span className="font-heading block truncate">
+                            <span className="font-heading block">
                               {sec.number}. {sec.title}
                               {done && (
                                 <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
