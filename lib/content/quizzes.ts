@@ -13780,7 +13780,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What does the `.pending` case of `Product.PurchaseResult` represent?",
         options: [
           { id: "a", text: "An error that should always be treated as a failed purchase" },
-          { id: "b", text: "A purchase, like Ask to Buy, that requires further approval and may resolve later" },
+          { id: "b", text: "A purchase, like Ask to Buy, that requires further approval and may resolve" },
           { id: "c", text: "A purchase that has already been fully completed" },
           { id: "d", text: "A network timeout that should be retried immediately" },
         ],
@@ -13806,7 +13806,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "The transaction is guaranteed authentic and should always be trusted" },
           { id: "b", text: "`.unverified` is not a real case; only `.verified` exists" },
           { id: "c", text: "The transaction is still pending verification and will resolve later" },
-          { id: "d", text: "On-device cryptographic verification failed; the transaction shouldn't be trusted" },
+          { id: "d", text: "On-device verification failed; don't trust the transaction" },
         ],
         correctOptionId: "d",
         explanation: "`.unverified` signals that the cryptographic check failed, meaning the app should not treat the transaction as authentic — silently ignoring this and granting the entitlement anyway would defeat the purpose of verification.",
@@ -13815,7 +13815,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q6",
         prompt: "What is `SubscriptionStoreView` specifically built for?",
         options: [
-          { id: "a", text: "Presenting a subscription group's tiers with system-standard pricing formatting" },
+          { id: "a", text: "Presenting a subscription group's tiers together" },
           { id: "b", text: "Displaying a single, arbitrary non-consumable product" },
           { id: "c", text: "Replacing `Product.purchase()` entirely" },
           { id: "d", text: "Server-side receipt validation" },
@@ -13828,7 +13828,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "Why can a user only be subscribed to one level within a subscription group at a time?",
         options: [
           { id: "a", text: "This is an arbitrary technical limitation with no business rationale" },
-          { id: "b", text: "Subscription groups model mutually exclusive tiers, with StoreKit handling transitions" },
+          { id: "b", text: "Subscription groups model mutually exclusive tiers automatically" },
           { id: "c", text: "Users can actually subscribe to multiple levels simultaneously" },
           { id: "d", text: "Subscription groups only support a single tier by definition" },
         ],
@@ -13863,7 +13863,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q10",
         prompt: "Why might an app perform server-side receipt/transaction validation in addition to client-side `VerificationResult` checking?",
         options: [
-          { id: "a", text: "Independently confirming a transaction server-side closes the client-trust security gap" },
+          { id: "a", text: "Confirming a transaction server-side closes the client-trust gap" },
           { id: "b", text: "Client-side verification is unnecessary once server-side validation exists" },
           { id: "c", text: "Server-side validation is required only for non-consumable products" },
           { id: "d", text: "There is no meaningful security benefit to server-side validation" },
@@ -13876,7 +13876,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "When is `AppStore.sync()` typically used?",
         options: [
           { id: "a", text: "On every app launch automatically with no user action" },
-          { id: "b", text: "As part of an explicit \"Restore Purchases\" button, for a new device or reinstall" },
+          { id: "b", text: "As part of an explicit \"Restore Purchases\" button" },
           { id: "c", text: "Only for consumable product purchases" },
           { id: "d", text: "To submit a refund request" },
         ],
@@ -13889,7 +13889,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It guarantees the refund will be approved" },
           { id: "b", text: "It automatically processes the refund without any Apple involvement" },
-          { id: "c", text: "It lets an app signal relevant context, like how much of a consumable balance remains unused, which Apple's refund evaluation can factor in, though the final decision remains Apple's" },
+          { id: "c", text: "Lets an app signal context, though the decision remains Apple's" },
           { id: "d", text: "It has no relationship to refunds at all" },
         ],
         correctOptionId: "c",
@@ -13902,7 +13902,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "It requires an active App Store Connect setup and network connectivity" },
           { id: "b", text: "It replaces the need for sandbox testing entirely" },
           { id: "c", text: "It can only be used for testing subscription renewal timing, not purchases" },
-          { id: "d", text: "It decouples day-to-day purchase flow development from App Store Connect setup and propagation delays, enabling fully local testing in the simulator" },
+          { id: "d", text: "Decouples purchase-flow development from App Store Connect setup" },
         ],
         correctOptionId: "d",
         explanation: "A `.storekit` file lets a developer freely experiment with product configurations locally, with zero real App Store Connect dependency, reserving sandbox testing for later-stage, more realistic validation.",
@@ -13911,7 +13911,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q14",
         prompt: "What makes sandbox testing's accelerated renewal cycles particularly valuable?",
         options: [
-          { id: "a", text: "They let renewal, expiration, and billing-retry logic be exercised within a practical testing timeframe, since a \"monthly\" subscription might renew every few minutes in sandbox" },
+          { id: "a", text: "They let renewal logic be tested quickly" },
           { id: "b", text: "They make purchases permanently free during testing" },
           { id: "c", text: "They eliminate the need to test cancellation flows" },
           { id: "d", text: "They only apply to non-consumable products" },
@@ -13924,7 +13924,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What common purchase bug results from not calling `transaction.finish()`?",
         options: [
           { id: "a", text: "The app will crash immediately" },
-          { id: "b", text: "StoreKit will keep re-delivering the transaction, since finishing signals that the app has fully processed it" },
+          { id: "b", text: "StoreKit keeps re-delivering it until finished" },
           { id: "c", text: "The purchase will be automatically refunded" },
           { id: "d", text: "Nothing; `finish()` has no functional effect" },
         ],
@@ -13937,7 +13937,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It has no real consequence and is purely a style issue" },
           { id: "b", text: "Verification only matters for consumable products, not entitlements" },
-          { id: "c", text: "It bypasses the cryptographic check meant to confirm a transaction's authenticity, potentially granting value for a tampered or spoofed transaction" },
+          { id: "c", text: "Bypasses the cryptographic check meant to confirm authenticity" },
           { id: "d", text: "Entitlements cannot be granted before verification technically completes" },
         ],
         correctOptionId: "c",
@@ -13950,7 +13950,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "Nothing meaningful; the happy path is sufficient for correctness" },
           { id: "b", text: "Whether the app compiles successfully" },
           { id: "c", text: "Whether the product price displays correctly" },
-          { id: "d", text: "Behavior under cancellation, network failure, refunds, and other edge cases that real users will actually encounter" },
+          { id: "d", text: "Behavior under cancellation, network failure, and refunds" },
         ],
         correctOptionId: "d",
         explanation: "A purchase implementation's real-world correctness depends on handling failure and edge-case paths (cancellation, network issues, refunds), not just a single successful purchase scenario.",
@@ -13959,7 +13959,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q18",
         prompt: "Why do promotional offers require server-side cryptographic signing, unlike introductory offers?",
         options: [
-          { id: "a", text: "Promotional offers represent a discount the app itself requests dynamically, requiring a signature to prove the app is authorized to grant it" },
+          { id: "a", text: "A promotional offer is requested dynamically, needing a signature to authorize it" },
           { id: "b", text: "Promotional offers are configured entirely statically in App Store Connect, like introductory offers" },
           { id: "c", text: "Signing is required for all offer types equally, with no distinction" },
           { id: "d", text: "Promotional offers don't actually require any special handling" },
@@ -13972,7 +13972,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What is the relationship between the AsyncSequence pattern used by `Transaction.updates` and material from earlier in the curriculum?",
         options: [
           { id: "a", text: "`Transaction.updates` predates and is unrelated to AsyncSequence concepts" },
-          { id: "b", text: "`Transaction.updates` is itself an AsyncSequence, applying the AsyncSequence fundamentals covered in section 21 to continuous transaction observation" },
+          { id: "b", text: "`Transaction.updates` is itself an `AsyncSequence`" },
           { id: "c", text: "AsyncSequence cannot be used for anything related to StoreKit" },
           { id: "d", text: "`Transaction.updates` is a synchronous, blocking API" },
         ],
@@ -13985,7 +13985,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It has no real consequence since purchases are always initiated within the app itself" },
           { id: "b", text: "`Transaction.updates` only needs to be observed after a purchase button is tapped" },
-          { id: "c", text: "Doing so risks missing pending purchases that resolve shortly after launch, such as an Ask to Buy approval that completed while the app wasn't actively listening" },
+          { id: "c", text: "Risks missing pending purchases that resolve shortly after launch, like Ask to Buy" },
           { id: "d", text: "This only affects consumable products, not other purchase types" },
         ],
         correctOptionId: "c",
@@ -14015,7 +14015,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q2",
         prompt: "Why does `HKWorkoutBuilder` use a begin/add/end collection lifecycle instead of writing a single retrospective sample?",
         options: [
-          { id: "a", text: "Because a workout's samples (heart rate, distance) are added incrementally as the activity progresses, unlike a single instantaneous measurement such as a body weight entry" },
+          { id: "a", text: "A workout's samples are added incrementally, unlike one instant measurement" },
           { id: "b", text: "Because HealthKit does not support single retrospective data points at all" },
           { id: "c", text: "Because Apple requires all HealthKit writes to use a builder pattern" },
           { id: "d", text: "Because workouts cannot include heart rate data" },
@@ -14028,7 +14028,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What is the benefit of EventKit's write-only calendar access, as opposed to full access?",
         options: [
           { id: "a", text: "Write-only access is functionally identical to full access" },
-          { id: "b", text: "An app that only needs to add events (like an \"add to calendar\" button) can create entries without ever being able to read the user's existing, potentially sensitive calendar contents" },
+          { id: "b", text: "An app that only adds events never reads existing ones" },
           { id: "c", text: "Write-only access allows reading events but not creating them" },
           { id: "d", text: "EventKit does not distinguish between access levels" },
         ],
@@ -14041,7 +14041,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It's an arbitrary API design decision with no real benefit" },
           { id: "b", text: "Keys to fetch are required only for phone numbers, not names" },
-          { id: "c", text: "It's a performance and privacy design choice — avoiding the overhead of loading a full record (photo, notes, etc.) and limiting incidental exposure to unneeded contact data" },
+          { id: "c", text: "A performance and privacy choice — avoiding overhead and exposure" },
           { id: "d", text: "Full contact records are always returned regardless of the keys specified" },
         ],
         correctOptionId: "c",
@@ -14054,7 +14054,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "There is no trade-off; higher rates are always strictly better with no cost" },
           { id: "b", text: "Lower rates always provide better data accuracy" },
           { id: "c", text: "The interval only affects gyroscope data, not accelerometer data" },
-          { id: "d", text: "A higher sampling rate provides smoother, more responsive data but consumes meaningfully more battery and CPU than a lower rate appropriate for less time-sensitive use cases" },
+          { id: "d", text: "A higher rate gives smoother data but costs more battery and CPU" },
         ],
         correctOptionId: "d",
         explanation: "Sampling rate is a genuine trade-off between responsiveness (appropriate for something like real-time game controls) and battery/CPU cost (favoring a lower rate for something like periodic activity classification).",
@@ -14063,7 +14063,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q6",
         prompt: "Why does the Core Bluetooth central role example scan filtered by a specific service UUID rather than scanning for all nearby devices?",
         options: [
-          { id: "a", text: "It's a performance best practice and often a practical necessity, reducing unnecessary discovery callbacks and avoiding irrelevant devices in busy real-world BLE environments" },
+          { id: "a", text: "A performance best practice, reducing callbacks and avoiding irrelevant devices" },
           { id: "b", text: "Filtering by service UUID is required by Apple and cannot be disabled" },
           { id: "c", text: "Unfiltered scanning is technically impossible in Core Bluetooth" },
           { id: "d", text: "Service UUID filtering only works for peripheral role apps, not central role apps" },
@@ -14076,7 +14076,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "How does the Core Bluetooth peripheral role differ from the central role?",
         options: [
           { id: "a", text: "They are functionally identical with different naming" },
-          { id: "b", text: "The peripheral role inverts the usual direction — instead of connecting to other devices, the app itself advertises services via `CBPeripheralManager`, becoming discoverable and connectable by other central devices" },
+          { id: "b", text: "The app itself advertises services via `CBPeripheralManager`" },
           { id: "c", text: "The peripheral role can only be used to scan for other devices, not advertise" },
           { id: "d", text: "Peripheral role apps cannot expose any characteristics" },
         ],
@@ -14089,7 +14089,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "Neither framework has any privacy-related design considerations" },
           { id: "b", text: "Both frameworks require full Bluetooth scanning permission regardless of use case" },
-          { id: "c", text: "A system-owned picker handles discovery/pairing itself, and the app only learns about the specific accessory the user actually selected, avoiding the need for broad standing permission" },
+          { id: "c", text: "A system picker handles discovery; the app only learns what was selected" },
           { id: "d", text: "They share no meaningful design similarities" },
         ],
         correctOptionId: "c",
@@ -14102,7 +14102,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "It's a technical limitation of NFC hardware with no design intent behind it" },
           { id: "b", text: "The system sheet is only shown for writable tags, not read-only tags" },
           { id: "c", text: "Silent NFC scanning is actually supported, just rarely used" },
-          { id: "d", text: "It's a deliberate design choice ensuring the user is always aware their device is actively scanning, consistent with how other sensitive data access (camera, microphone) is surfaced through visible system UI" },
+          { id: "d", text: "Ensures the user is always aware their device is actively scanning" },
         ],
         correctOptionId: "d",
         explanation: "Requiring a visible scanning sheet is a deliberate platform pattern for sensitive or unusual data access, ensuring the user is never unknowingly having their device scan for and read physical tags.",
@@ -14124,7 +14124,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What enables a Wallet boarding pass to automatically surface on the Lock Screen when a user arrives at the airport?",
         options: [
           { id: "a", text: "The pass polls the user's location continuously from within the issuing app" },
-          { id: "b", text: "Relevant-location (and relevant-time) metadata embedded in the pass definition, which Wallet uses to proactively surface the pass contextually" },
+          { id: "b", text: "Relevant-location metadata in the pass, used to surface it contextually" },
           { id: "c", text: "This behavior requires the issuing app to be running in the foreground" },
           { id: "d", text: "Wallet passes cannot respond to location at all" },
         ],
@@ -14137,7 +14137,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "CarPlay hardware cannot render custom graphics" },
           { id: "b", text: "Template-based UI is simply easier for developers, with no safety rationale" },
-          { id: "c", text: "It's a deliberate driving-safety measure — a freeform, potentially inconsistent or distracting custom UI would be genuinely dangerous in a driving context, so all apps use the same limited, system-rendered templates" },
+          { id: "c", text: "A deliberate driving-safety measure against distracting custom UI" },
           { id: "d", text: "Only list templates are available; other template types don't exist" },
         ],
         correctOptionId: "c",
@@ -14150,7 +14150,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "It exposes the exact bundle identifiers of selected apps to the controlling app" },
           { id: "b", text: "It provides no way to select specific apps, only broad categories" },
           { id: "c", text: "It requires the controlling app to already know every app installed on the restricted device" },
-          { id: "d", text: "It represents selected apps/categories as opaque, anonymized tokens, so the parental-control app applying restrictions never actually learns the specific identity of the restricted apps" },
+          { id: "d", text: "Represents selected apps as opaque, anonymized tokens the controlling app never learns" },
         ],
         correctOptionId: "d",
         explanation: "This is a deliberate privacy balance — the anonymized token model lets a parental-control app apply restrictions without learning which specific apps are installed on the restricted user's device.",
@@ -14159,7 +14159,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q14",
         prompt: "What does conforming a custom type to `Transferable` provide, as described in 57.14?",
         options: [
-          { id: "a", text: "Drag-and-drop, copy/paste, and `ShareLink` support essentially for free from one shared `transferRepresentation`, reducing boilerplate compared to implementing each pattern separately" },
+          { id: "a", text: "Drag-and-drop, copy/paste, and `ShareLink` support from one shared representation" },
           { id: "b", text: "Only drag-and-drop support, with copy/paste and sharing requiring separate, unrelated implementations" },
           { id: "c", text: "Automatic HealthKit data synchronization" },
           { id: "d", text: "Automatic Bluetooth peripheral advertising" },
@@ -14172,7 +14172,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "Why is on-device translation via the Translation framework noted as a meaningful privacy advantage?",
         options: [
           { id: "a", text: "On-device translation is actually slower and less accurate than cloud-based alternatives" },
-          { id: "b", text: "The user's text never needs to leave the device to a third-party translation service, which matters for translating potentially sensitive user content" },
+          { id: "b", text: "The user's text never leaves the device to a third-party translation service" },
           { id: "c", text: "The Translation framework requires an active network connection regardless" },
           { id: "d", text: "There is no privacy difference between on-device and cloud-based translation" },
         ],
@@ -14185,7 +14185,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It is entirely unrelated to any other on-device AI capability" },
           { id: "b", text: "It depends on Core Bluetooth for its underlying processing" },
-          { id: "c", text: "It leverages the same on-device language model infrastructure that also underlies Foundation Models, covered in section 58" },
+          { id: "c", text: "Leverages the same infrastructure as Foundation Models" },
           { id: "d", text: "It requires HealthKit authorization to function" },
         ],
         correctOptionId: "c",
@@ -14207,7 +14207,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q18",
         prompt: "Why is a hardware-backed attestation considered a stronger guarantee than an API key embedded in the app binary?",
         options: [
-          { id: "a", text: "A hardware-rooted attestation ties the proof to genuine, unmodified Apple hardware and software, whereas an embedded API key can potentially be extracted from the app and reused by an attacker" },
+          { id: "a", text: "Ties proof to genuine Apple hardware, whereas an embedded key can be extracted" },
           { id: "b", text: "API keys embedded in a binary cannot be extracted or misused, making them equally strong" },
           { id: "c", text: "Hardware attestation and embedded API keys provide identical security guarantees" },
           { id: "d", text: "Embedded API keys are always more secure since they don't require server-side verification" },
@@ -14220,7 +14220,7 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What is the CarPlay template model's trade-off, as described in the section?",
         options: [
           { id: "a", text: "Templates provide unlimited customization at the cost of performance" },
-          { id: "b", text: "Templates trade customization for guaranteed consistency and driving safety, since CarPlay deliberately doesn't allow the freeform custom UI a regular iOS app can build" },
+          { id: "b", text: "Trades customization for guaranteed consistency and driving safety" },
           { id: "c", text: "There is no trade-off; templates provide strictly more capability than custom UI" },
           { id: "d", text: "Templates are only a temporary limitation that all apps will eventually bypass" },
         ],
@@ -14233,7 +14233,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "EventKit — anonymized activity tokens" },
           { id: "b", text: "Core NFC — silent, background scanning with no user-visible indication" },
-          { id: "c", text: "HealthKit — per-data-type, per-direction (read/write) authorization granularity" },
+          { id: "c", text: "HealthKit — per-data-type, per-direction authorization granularity" },
           { id: "d", text: "CarPlay — full custom UI rendering with no template constraints" },
         ],
         correctOptionId: "c",
@@ -14263,7 +14263,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q2",
         prompt: "Why must an app explicitly check `SystemLanguageModel.default.availability` rather than assuming the model is always present?",
         options: [
-          { id: "a", text: "Availability depends on several distinct conditions — hardware eligibility, a user-controlled system setting, and download completion state — any of which could make the model unavailable" },
+          { id: "a", text: "Depends on hardware eligibility, a system setting, and download state" },
           { id: "b", text: "Availability is purely a network connectivity question, just like a cloud API" },
           { id: "c", text: "The model is always available on every device running any iOS version" },
           { id: "d", text: "Availability checks are optional and have no practical purpose" },
@@ -14281,7 +14281,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "Each `respond(to:)` call within the same session has access to accumulated conversation history, letting follow-up prompts naturally reference earlier turns without manually resending context",
+            text: "Each call has access to the session's accumulated history",
           },
           {
             id: "c",
@@ -14314,7 +14314,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "The framework silently truncates older content with no error" },
           { id: "b", text: "The app crashes with no recoverable error" },
           { id: "c", text: "The session automatically expands its context window indefinitely" },
-          { id: "d", text: "It produces an explicit error (`exceededContextWindowSize`) requiring the app to handle it, such as by starting a fresh session with summarized prior context" },
+          { id: "d", text: "Produces an explicit error requiring the app to handle it" },
         ],
         correctOptionId: "d",
         explanation: "Exceeding the context window produces an error rather than silent truncation, requiring explicit handling — commonly, starting a fresh session carrying forward a summary of essential prior context.",
@@ -14323,7 +14323,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q6",
         prompt: "Why is streaming particularly important for on-device generation's user experience?",
         options: [
-          { id: "a", text: "Even fast on-device inference takes perceptible time for longer responses, so showing text progressively keeps the interface feeling responsive rather than frozen until the full response completes" },
+          { id: "a", text: "Showing text progressively feels more responsive than waiting" },
           { id: "b", text: "Streaming makes the underlying generation itself faster" },
           { id: "c", text: "Streaming is required by the framework and cannot be disabled" },
           { id: "d", text: "Streaming only matters for multimodal prompts, not text" },
@@ -14341,7 +14341,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "`@Generable` constrains the model's actual generation process to conform to the type's structure, eliminating the class of bugs where free-form output almost, but not quite, matches the expected format",
+            text: "Constrains the model's generation to conform to the type's structure",
           },
           {
             id: "c",
@@ -14361,7 +14361,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It is purely documentation with no effect on actual generation" },
           { id: "b", text: "It only applies after the model has already generated a value, filtering the result" },
-          { id: "c", text: "It genuinely constrains what the model can produce for that field during generation itself, not as post-hoc validation, similar in spirit to how `AppEnum` constrains App Intents parameters" },
+          { id: "c", text: "Genuinely constrains what the model can produce during generation, not post-hoc" },
           { id: "d", text: "It can only be used with numeric properties, not strings" },
         ],
         correctOptionId: "c",
@@ -14374,7 +14374,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "A fully complete instance of the type, identical to the final result" },
           { id: "b", text: "A separate type unrelated to the original `@Generable` type" },
           { id: "c", text: "An error state indicating generation failed" },
-          { id: "d", text: "An incremental version of the type where properties may be `nil` or incomplete until the model has generated enough content to populate them, enabling progressive field-by-field rendering" },
+          { id: "d", text: "An incremental version with properties nil until generated" },
         ],
         correctOptionId: "d",
         explanation: "`PartiallyGenerated` combines streaming's responsiveness with guided generation's structure, letting a UI render fields like a name as soon as available while other fields are still being generated.",
@@ -14383,7 +14383,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q10",
         prompt: "Who decides when a tool call is needed within the `Tool` protocol's design?",
         options: [
-          { id: "a", text: "The language model itself decides when a tool call is needed during generation, reasoning about whether it requires external information to properly answer a prompt" },
+          { id: "a", text: "The model itself decides when a tool call is needed" },
           { id: "b", text: "The app must manually trigger every tool call itself" },
           { id: "c", text: "Tool calls happen on a fixed schedule regardless of prompt content" },
           { id: "d", text: "Tool calls can only be triggered by explicit user button taps" },
@@ -14401,7 +14401,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "The session can invoke multiple tools across several steps automatically within one `respond(to:)` call, with the model reasoning iteratively about what additional information it still needs",
+            text: "The session can invoke multiple tools across steps automatically in one call",
           },
           {
             id: "c",
@@ -14421,7 +14421,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "The removal of the context window limit entirely" },
           { id: "b", text: "The ability to run entirely on cloud servers instead of on-device" },
-          { id: "c", text: "The ability to accept image input alongside text, letting the model reason jointly about visual and textual content" },
+          { id: "c", text: "Accepting image input alongside text, reasoning about both" },
           { id: "d", text: "Automatic translation of prompts into other languages" },
         ],
         correctOptionId: "c",
@@ -14434,7 +14434,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "They are identical mechanisms with different names" },
           { id: "b", text: "Direct multimodal input requires more code than Vision tools" },
           { id: "c", text: "Vision tools can only be used with text prompts, never images" },
-          { id: "d", text: "Vision tools let the model request specific, structured visual analysis (like OCR) as part of its reasoning process, as opposed to holistically describing an image via direct multimodal input" },
+          { id: "d", text: "Vision tools let the model request visual analysis directly" },
         ],
         correctOptionId: "d",
         explanation: "Vision-backed tools complement multimodal input by letting the model invoke structured, specific visual analysis when a task calls for it, rather than relying solely on holistic image description.",
@@ -14443,7 +14443,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q14",
         prompt: "What does the `LanguageModel` protocol abstraction enable?",
         options: [
-          { id: "a", text: "It abstracts over different underlying model backends, letting app code written against the protocol interchangeably target different models (like the on-device model or cloud-routed models) without structural changes" },
+          { id: "a", text: "Abstracts over different model backends interchangeably" },
           { id: "b", text: "It requires every app to implement its own language model from scratch" },
           { id: "c", text: "It only works with `SystemLanguageModel` and no other backend" },
           { id: "d", text: "It eliminates the need for the `Tool` protocol entirely" },
@@ -14461,7 +14461,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "Routing can occur when a task's complexity genuinely exceeds what the smaller on-device model can handle well, while simpler tasks continue using the on-device model by default for speed, privacy, and offline availability",
+            text: "Routing occurs when task complexity exceeds the on-device model; simple tasks stay local",
           },
           {
             id: "c",
@@ -14481,7 +14481,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "Pre-warming has no effect on performance" },
           { id: "b", text: "Pre-warming is required before any session can be created at all" },
-          { id: "c", text: "On-device inference has real, non-trivial latency, so pre-warming ahead of actual need can reduce perceived latency for the user's first real prompt, echoing latency-budgeting concerns from background tasks and widget reloads" },
+          { id: "c", text: "Pre-warming ahead of need can reduce perceived latency" },
           { id: "d", text: "Pre-warming disables guardrails for faster generation" },
         ],
         correctOptionId: "c",
@@ -14503,7 +14503,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q18",
         prompt: "What is prompt injection, as described in 58.18?",
         options: [
-          { id: "a", text: "A vulnerability where untrusted external content (like scraped web text) embedded in a prompt could contain adversarial instructions attempting to override the app's own behavioral framing" },
+          { id: "a", text: "Untrusted content that overrides the app's own framing" },
           { id: "b", text: "A technique for improving model response speed" },
           { id: "c", text: "A required step for using the `Tool` protocol" },
           { id: "d", text: "A method for expanding the context window" },
@@ -14521,7 +14521,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "By clearly demarcating untrusted content as data to analyze within the prompt (never the instructions) and explicitly telling the model not to follow instructions contained within that content",
+            text: "Demarcating untrusted content as data, telling the model not to follow instructions in it",
           },
           {
             id: "c",
@@ -14541,7 +14541,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It requires retraining the entire model's weights from scratch" },
           { id: "b", text: "It eliminates the need for any training data at all" },
-          { id: "c", text: "It trains only a small number of additional, low-rank parameters layered on top of the frozen base model, rather than updating the entire model's weights" },
+          { id: "c", text: "Trains only a small set of low-rank parameters on the frozen model" },
           { id: "d", text: "It only works with cloud-hosted models, not the on-device model" },
         ],
         correctOptionId: "c",
@@ -14571,7 +14571,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q2",
         prompt: "What does Xcode automatically generate when a `.mlpackage` file is added to a project?",
         options: [
-          { id: "a", text: "A strongly-typed Swift interface class matching the model's inputs and outputs, enabling type-safe usage rather than manual tensor manipulation" },
+          { id: "a", text: "A strongly-typed Swift class matching the model's inputs/outputs" },
           { id: "b", text: "Nothing; models must be manually parsed as raw tensors" },
           { id: "c", text: "A Python script for running the model" },
           { id: "d", text: "A separate app target dedicated to the model" },
@@ -14589,7 +14589,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "It runs synchronously and can take meaningful time for larger models, so running it off the main thread avoids blocking the UI, consistent with general UI responsiveness principles",
+            text: "It runs synchronously and can take real time, so it shouldn't block the UI",
           },
           {
             id: "c",
@@ -14609,7 +14609,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It runs Core ML models on-device for inference" },
           { id: "b", text: "It replaces the need for Xcode's automatic Swift class generation" },
-          { id: "c", text: "It converts models trained in other frameworks (like PyTorch or TensorFlow) into Core ML's `.mlmodel`/`.mlpackage` format, as an offline step before Xcode integration" },
+          { id: "c", text: "Converts models trained elsewhere into Core ML's format, offline" },
           { id: "d", text: "It is used exclusively for quantization, not format conversion" },
         ],
         correctOptionId: "c",
@@ -14631,7 +14631,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q6",
         prompt: "What does setting `MLModelConfiguration.computeUnits` to `.all` do?",
         options: [
-          { id: "a", text: "It lets Core ML automatically choose the most efficient available compute unit (CPU, GPU, or Neural Engine) per operation, which is generally the right choice for most apps" },
+          { id: "a", text: "Lets Core ML automatically choose the best compute unit" },
           { id: "b", text: "It forces every operation to run exclusively on the CPU" },
           { id: "c", text: "It disables the Neural Engine entirely" },
           { id: "d", text: "It has no effect on how the model actually executes" },
@@ -14649,7 +14649,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "For specific debugging or consistency needs, like ensuring identical numeric results across runs, since GPU/Neural Engine execution can introduce minor floating-point differences",
+            text: "For debugging, since GPU execution introduces tiny differences",
           },
           {
             id: "c",
@@ -14669,7 +14669,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "The model's training data source" },
           { id: "b", text: "The exact accuracy percentage of the model on a validation set" },
-          { id: "c", text: "*Actual* per-operation compute unit assignment and latency on a target device, surfacing cases where operations unexpectedly fall back to CPU or GPU instead of the Neural Engine" },
+          { id: "c", text: "Actual per-operation compute assignment and unexpected fallbacks" },
           { id: "d", text: "Whether the model file is signed correctly" },
         ],
         correctOptionId: "c",
@@ -14682,7 +14682,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "Stateful models eliminate the need for any input data" },
           { id: "b", text: "Stateful models remove the need for `MLModelConfiguration`" },
           { id: "c", text: "Stateful models only matter for image classification tasks" },
-          { id: "d", text: "Without statefulness, each prediction call would need to recompute shared context from scratch; a stateful model carries forward relevant internal computation across successive calls" },
+          { id: "d", text: "A stateful model carries forward computation across calls" },
         ],
         correctOptionId: "d",
         explanation: "Particularly for transformer-based sequential models, statefulness avoids redundant recomputation of shared context across calls, directly analogous to the efficiency benefit of session-based conversational continuity in Foundation Models.",
@@ -14691,7 +14691,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q10",
         prompt: "How does a stateful Core ML model's efficiency benefit relate to `LanguageModelSession` from section 58.3?",
         options: [
-          { id: "a", text: "Both maintain context/state across successive calls to avoid recomputing shared information each time, though implemented at Core ML's lower, more general level versus Foundation Models' session abstraction" },
+          { id: "a", text: "Both maintain state across calls to avoid recomputing shared info, at different levels" },
           { id: "b", text: "There is no meaningful relationship between the two" },
           { id: "c", text: "`LanguageModelSession` uses Core ML internally with no distinction between them" },
           { id: "d", text: "Stateful models are exclusively used within `LanguageModelSession`" },
@@ -14709,7 +14709,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "A model can personalize itself to a specific user's data entirely locally, without that potentially sensitive personal data ever needing to be transmitted to an external training service",
+            text: "A model can personalize to a user's data entirely locally",
           },
           {
             id: "c",
@@ -14729,7 +14729,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It replaces both frameworks entirely" },
           { id: "b", text: "It is identical in scope to Foundation Models" },
-          { id: "c", text: "It fills a middle ground — providing more specialized custom local model capability than Foundation Models' general-purpose LLM, with tighter platform integration than assembling a fully custom Core ML pipeline from scratch" },
+          { id: "c", text: "A middle ground between the other two frameworks" },
           { id: "d", text: "It is only usable for model conversion, not inference" },
         ],
         correctOptionId: "c",
@@ -14742,7 +14742,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "MLX and Core ML serve identical purposes with no meaningful distinction" },
           { id: "b", text: "MLX cannot run on Apple silicon at all" },
           { id: "c", text: "MLX is exclusively used for deploying models within production iOS apps" },
-          { id: "d", text: "MLX is more commonly used for research, experimentation, and training workloads leveraging Apple silicon's unified memory architecture, while Core ML is the production-oriented, app-integration-focused framework" },
+          { id: "d", text: "MLX targets research and training; Core ML targets production" },
         ],
         correctOptionId: "d",
         explanation: "MLX targets research and training workflows that benefit from Apple silicon's memory architecture, while Core ML focuses on production deployment with strongly-typed Swift interfaces and Xcode integration.",
@@ -14751,7 +14751,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q14",
         prompt: "What is a typical workflow relationship between MLX and Core ML, according to the section?",
         options: [
-          { id: "a", text: "Models developed or trained using MLX during research/prototyping could then be converted or exported for actual production app integration via Core ML" },
+          { id: "a", text: "Models trained with MLX get converted via Core ML" },
           { id: "b", text: "They can never be used together in the same project" },
           { id: "c", text: "Core ML must always be used before MLX in any workflow" },
           { id: "d", text: "MLX replaces the need for `coremltools` entirely" },
@@ -14769,7 +14769,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "The choice depends on whether an app's needs are genuinely custom and narrow (favoring Core ML) versus general-purpose and ready-to-use with no training required (favoring Foundation Models)",
+            text: "Depends on whether needs are custom-narrow or general-purpose",
           },
           {
             id: "c",
@@ -14789,7 +14789,7 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "Nothing; PyTorch models can be added directly to Xcode with no conversion" },
           { id: "b", text: "The model must be retrained entirely using Create ML" },
-          { id: "c", text: "The model must first be converted to Core ML's `.mlmodel`/`.mlpackage` format using `coremltools`, as a separate offline step" },
+          { id: "c", text: "Must first be converted to Core ML's format using `coremltools`, offline" },
           { id: "d", text: "The model must be converted to MLX format first" },
         ],
         correctOptionId: "c",
@@ -14802,7 +14802,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "a", text: "`.cpuOnly`, because it is always fastest" },
           { id: "b", text: "There is no default recommendation; every app must choose based on trial and error" },
           { id: "c", text: "`.gpuOnly`, because the Neural Engine is deprecated" },
-          { id: "d", text: "`.all`, because it lets Core ML intelligently select the fastest available hardware per operation, which is appropriate for most apps" },
+          { id: "d", text: "`.all`, since Core ML can pick the fastest available hardware per operation" },
         ],
         correctOptionId: "d",
         explanation: "The section recommends `.all` as the generally correct default, since Core ML's own scheduling can select the most efficient compute unit per operation more effectively than manual restriction in most cases.",
@@ -14811,7 +14811,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q18",
         prompt: "What kind of model architecture particularly benefits from Core ML's stateful model support?",
         options: [
-          { id: "a", text: "Transformer-based models processing sequential input, where avoiding recomputation of shared context across calls provides genuine efficiency gains" },
+          { id: "a", text: "Transformer-based models processing sequential input" },
           { id: "b", text: "Simple linear regression models" },
           { id: "c", text: "Models that only ever receive a single, isolated prediction call" },
           { id: "d", text: "Only image classification models" },
@@ -14829,7 +14829,7 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "Because more aggressive compression can meaningfully degrade prediction quality, and the appropriate compression level depends on the target task's specific tolerance for error",
+            text: "Aggressive compression can degrade quality, needing measurement",
           },
           {
             id: "c",
@@ -14868,9 +14868,9 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "What pattern does Vision's modern Swift API use for processing an image against one or more requests?",
         options: [
           { id: "a", text: "A delegate-based callback pattern with no async support" },
-          { id: "b", text: "Vision has no unified pattern; each request type uses a completely different API" },
+          { id: "b", text: "Vision has no unified pattern; each request type needs a wholly separate, unrelated API surface" },
           { id: "c", text: "A synchronous, blocking-only API with no request/handler separation" },
-          { id: "d", text: "An `ImageRequestHandler` processes an image against request types via `async`/`await`, replacing the older completion-handler-based pattern" },
+          { id: "d", text: "An `ImageRequestHandler` runs requests via `async`/`await`, not completion handlers" },
         ],
         correctOptionId: "d",
         explanation: "The modern Vision API consolidates around a consistent, async-native request/handler pattern, simplifying what previously required `VNImageRequestHandler`/`VNRequest` completion-handler boilerplate.",
@@ -14879,10 +14879,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q2",
         prompt: "Why does `RecognizeTextRequest` return `topCandidates` rather than a single definitive string per recognized text region?",
         options: [
-          { id: "a", text: "OCR is inherently probabilistic — multiple candidate interpretations can exist for recognized text, ranked by confidence, and an app dealing with ambiguous images might inspect several candidates before committing to one" },
-          { id: "b", text: "Vision never actually recognizes text with any confidence measure" },
-          { id: "c", text: "`topCandidates` is deprecated and should not be used" },
-          { id: "d", text: "Only barcode detection returns multiple candidates, not text recognition" },
+          { id: "a", text: "OCR is inherently probabilistic — multiple ranked candidates can exist for ambiguous text" },
+          { id: "b", text: "Vision never actually recognizes text with any confidence measure at all, ever" },
+          { id: "c", text: "`topCandidates` is fully deprecated in the newest OS release and should never be used" },
+          { id: "d", text: "Only barcode detection returns multiple ranked candidates, not text recognition requests" },
         ],
         correctOptionId: "a",
         explanation: "Because OCR involves genuine uncertainty, especially with blurry or low-quality source images, Vision exposes ranked candidate interpretations rather than forcing a single, potentially incorrect definitive answer.",
@@ -14891,8 +14891,8 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q3",
         prompt: "What common pairing enables a live, real-time barcode scanning experience, according to 60.3?",
         options: [
-          { id: "a", text: "`DetectBarcodesRequest` used only on manually captured still photos" },
-          { id: "b", text: "`DetectBarcodesRequest` paired with `AVCaptureVideoDataOutput`'s continuous frame stream, feeding each incoming frame into the barcode detection request" },
+          { id: "a", text: "`DetectBarcodesRequest` used only on a single, manually captured still photo, never live frames" },
+          { id: "b", text: "`DetectBarcodesRequest` fed from `AVCaptureVideoDataOutput`'s continuous frame stream" },
           { id: "c", text: "`DetectFaceRectanglesRequest` combined with barcode detection" },
           { id: "d", text: "Barcode detection cannot be used with live camera frames at all" },
         ],
@@ -14903,10 +14903,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q4",
         prompt: "What is the granularity trade-off between face rectangle detection and face landmark/body pose detection?",
         options: [
-          { id: "a", text: "There is no meaningful trade-off; both provide identical information" },
-          { id: "b", text: "Landmark detection is always faster than simple rectangle detection" },
-          { id: "c", text: "Bounding box detection alone is sufficient and faster for simpler use cases like counting faces, while landmark/pose detection is necessary for more sophisticated use cases like filters aligned to facial features or analyzing exercise form" },
-          { id: "d", text: "Body pose detection cannot return joint positions, only bounding boxes" },
+          { id: "a", text: "There is no meaningful trade-off whatsoever; both provide completely identical information always" },
+          { id: "b", text: "Landmark detection is always significantly faster than simple rectangle detection somehow" },
+          { id: "c", text: "Boxes suffice for counting faces; landmarks/pose add precision for filters or exercise form" },
+          { id: "d", text: "Body pose detection can only return simple bounding boxes, never precise joint positions" },
         ],
         correctOptionId: "c",
         explanation: "Simple rectangle detection suffices for coarse tasks like counting faces, while more detailed landmark or pose detection is needed when specific feature or joint positions are actually required, at correspondingly greater cost.",
@@ -14915,10 +14915,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q5",
         prompt: "What does `GenerateImageFeaturePrintRequest` produce, and what is it used for?",
         options: [
-          { id: "a", text: "A cropped version of the input image with no numeric output" },
+          { id: "a", text: "A cropped, resized version of the input image with no numeric output at all" },
           { id: "b", text: "A list of detected barcodes within the image" },
           { id: "c", text: "A textual description of the image's contents" },
-          { id: "d", text: "A compact, numeric embedding representing an image's visual content, enabling similarity search and near-duplicate detection via distance comparison between feature prints" },
+          { id: "d", text: "A compact numeric embedding of an image, enabling similarity search via distance" },
         ],
         correctOptionId: "d",
         explanation: "Feature prints reduce an image's visual content to a compact vector representation designed so visual similarity corresponds to small computed distances, enabling similarity search without comparing raw pixels directly.",
@@ -14927,7 +14927,7 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q6",
         prompt: "How does image feature print similarity (60.5) conceptually relate to `NLEmbedding` (60.9)?",
         options: [
-          { id: "a", text: "Both reduce complex, high-dimensional content (visual or textual) to a compact numeric vector representation designed so semantic/visual similarity translates into small distances between representations" },
+          { id: "a", text: "Both reduce content to a compact vector so similarity maps to small distances" },
           { id: "b", text: "They are unrelated techniques with no shared design principle" },
           { id: "c", text: "`NLEmbedding` only works on images, not text" },
           { id: "d", text: "Feature prints require training a custom model, while `NLEmbedding` does not" },
@@ -14941,11 +14941,11 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           {
             id: "a",
-            text: "Automatic text extraction with no further processing needed",
+            text: "Automatic text extraction requiring no further processing of any kind whatsoever",
           },
           {
             id: "b",
-            text: "A perspective-correction transform that can warp a photographed, angled document into a clean, rectangular, top-down view — a better result than simple cropping",
+            text: "A perspective-correction transform warping an angled photo into a clean top-down view",
           },
           {
             id: "c",
@@ -14963,10 +14963,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q8",
         prompt: "What does `SpeechAnalyzer`/`SpeechTranscriber` replace, and what privacy benefit does it share with other frameworks in this Part?",
         options: [
-          { id: "a", text: "It replaces Vision's text recognition; it has no particular privacy benefit" },
+          { id: "a", text: "It replaces Vision's text recognition capability entirely; it has no particular privacy benefit whatsoever" },
           { id: "b", text: "It replaces ShazamKit's song recognition capability" },
-          { id: "c", text: "It modernizes and replaces the older `SFSpeechRecognizer` API, and by running transcription on-device, it shares the same privacy/offline-availability benefit as on-device translation and Foundation Models" },
-          { id: "d", text: "It requires uploading audio to a cloud service, unlike older APIs" },
+          { id: "c", text: "It modernizes `SFSpeechRecognizer`; on-device transcription shares Translation's privacy benefit" },
+          { id: "d", text: "It requires uploading all captured audio to a remote cloud service for processing, unlike the older on-device APIs" },
         ],
         correctOptionId: "c",
         explanation: "`SpeechAnalyzer` is a modernized, more flexible replacement for `SFSpeechRecognizer`, and its on-device operation provides the same privacy and offline benefits discussed for Translation (57.15) and Foundation Models (58.1).",
@@ -14975,10 +14975,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q9",
         prompt: "Why is `NLTokenizer`'s language-aware text splitting more robust than naive whitespace-based splitting?",
         options: [
-          { id: "a", text: "Whitespace-based splitting is always sufficient for every language and use case" },
-          { id: "b", text: "Language-aware splitting only matters for tagging, not tokenization" },
-          { id: "c", text: "`NLTokenizer` is slower than whitespace splitting with no accuracy benefit" },
-          { id: "d", text: "Many languages don't use whitespace to separate words at all, and even for those that do, correctly handling punctuation, contractions, and sentence boundaries requires genuine linguistic awareness" },
+          { id: "a", text: "Whitespace-based splitting is always sufficient for every language and every use case imaginable" },
+          { id: "b", text: "Language-aware splitting only actually matters for downstream tagging, never for the tokenization step itself" },
+          { id: "c", text: "`NLTokenizer` is measurably slower than simple whitespace splitting, with no meaningful accuracy benefit at all" },
+          { id: "d", text: "Many languages skip whitespace entirely, and even those that use it need real linguistic handling" },
         ],
         correctOptionId: "d",
         explanation: "Naive whitespace splitting fails entirely for languages without whitespace-delimited words, and even in languages that do use whitespace, proper handling of punctuation and sentence boundaries requires more sophisticated, language-aware logic.",
@@ -14987,9 +14987,9 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q10",
         prompt: "What does `NLTagger` with the `.lexicalClass` scheme provide?",
         options: [
-          { id: "a", text: "Linguistic tags like part of speech assigned to tokens within text" },
+          { id: "a", text: "Linguistic tags like part of speech" },
           { id: "b", text: "Image classification labels" },
-          { id: "c", text: "Audio sound classification results" },
+          { id: "c", text: "Audio sound classification results from a completely different framework" },
           { id: "d", text: "Barcode payload decoding" },
         ],
         correctOptionId: "a",
@@ -15005,11 +15005,11 @@ public struct StringifyMacro: ExpressionMacro {
           },
           {
             id: "b",
-            text: "Sound Analysis answers \"what kind of sound is this\" using a general classification taxonomy (a dog barking, glass breaking), while ShazamKit answers the narrower question of \"what specific song is this,\" matched against a catalog of audio fingerprints",
+            text: "Sound Analysis answers \"what kind of sound,\" while ShazamKit answers \"what specific song\"",
           },
           {
             id: "c",
-            text: "ShazamKit classifies general sound categories, while Sound Analysis matches specific songs",
+            text: "ShazamKit classifies general sound categories, while Sound Analysis instead matches specific songs directly",
           },
           {
             id: "d",
@@ -15025,8 +15025,8 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "Identifying a specific song playing in the background" },
           { id: "b", text: "Translating spoken audio into another language" },
-          { id: "c", text: "Accessibility features, such as alerting a deaf user to important environmental sounds like a smoke alarm or doorbell" },
-          { id: "d", text: "Detecting barcodes within an audio waveform visualization" },
+          { id: "c", text: "Accessibility — alerting a deaf user to sounds like alarms" },
+          { id: "d", text: "Detecting barcodes hidden within an audio waveform visualization display" },
         ],
         correctOptionId: "c",
         explanation: "The section highlights accessibility as a key use case — general sound category classification can alert users to important environmental sounds they might not otherwise perceive.",
@@ -15037,8 +15037,8 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           { id: "a", text: "It requires exactly the same integration effort as a custom third-party API" },
           { id: "b", text: "It has no relationship to any system-provided UI pattern" },
-          { id: "c", text: "Image Playground cannot generate images from text descriptions, only from existing photos" },
-          { id: "d", text: "It runs through Apple's on-device (or hybrid) generative pipeline via a standardized system UI sheet, providing a consistent, system-standard experience without requiring direct third-party API integration" },
+          { id: "c", text: "Image Playground cannot generate any images from text descriptions, only from existing photos" },
+          { id: "d", text: "It runs Apple's on-device pipeline via a standard system sheet, no third-party API needed" },
         ],
         correctOptionId: "d",
         explanation: "Image Playground provides generation through a standard system sheet, giving a consistent experience across apps without each app needing to integrate and manage its own third-party generative image API.",
@@ -15047,10 +15047,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q14",
         prompt: "What design similarity does the section draw between Image Playground's system UI and `SubscriptionStoreView` (section 56.6)?",
         options: [
-          { id: "a", text: "Both provide a consistent, system-standard UI experience rather than requiring each app to build fully custom presentation from scratch" },
+          { id: "a", text: "Both provide a consistent, system-standard UI, not a fully custom presentation" },
           { id: "b", text: "Both require identical purchase flows" },
           { id: "c", text: "Both are exclusively used for audio processing" },
-          { id: "d", text: "There is no meaningful similarity drawn between them" },
+          { id: "d", text: "There is no meaningful similarity drawn between these two entirely separate UI patterns" },
         ],
         correctOptionId: "a",
         explanation: "The section explicitly parallels Image Playground's standardized generation UI with `SubscriptionStoreView`'s standardized purchase UI — both reduce the custom UI burden on individual apps in favor of a consistent system-provided experience.",
@@ -15061,19 +15061,19 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           {
             id: "a",
-            text: "The `LanguageModel` protocol abstraction",
+            text: "The `LanguageModel` protocol abstraction used for defining custom session behavior",
           },
           {
             id: "b",
-            text: "A Vision-backed `Tool` conformer exposed to the model, such as the `TextRecognitionTool` example, which performs OCR as part of the model's reasoning process",
+            text: "A Vision-backed `Tool`, like `TextRecognitionTool`, performing OCR within reasoning",
           },
           {
             id: "c",
-            text: "`@Generable` structured output",
+            text: "`@Generable` structured output used for enforcing strict schema-conformant model responses",
           },
           {
             id: "d",
-            text: "Session pre-warming",
+            text: "Session pre-warming, used to reduce first-token latency before generation actually begins",
           },
         ],
         correctOptionId: "b",
@@ -15083,10 +15083,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q16",
         prompt: "Why might an app inspect multiple OCR candidates or confidence scores rather than always using just the top candidate?",
         options: [
-          { id: "a", text: "Vision requires inspecting all candidates for every request by default" },
-          { id: "b", text: "Confidence scores are not actually provided by `RecognizeTextRequest`" },
-          { id: "c", text: "For genuinely ambiguous or low-quality source images, like a blurry photographed receipt, considering multiple candidates or confidence scores can help avoid committing to an incorrect single interpretation" },
-          { id: "d", text: "Multiple candidates are only relevant for barcode detection, not text recognition" },
+          { id: "a", text: "Vision requires inspecting all candidates for every single request type by default, always" },
+          { id: "b", text: "Confidence scores are not actually provided by `RecognizeTextRequest` under any circumstances" },
+          { id: "c", text: "For ambiguous images, like a blurry receipt, multiple candidates avoid a wrong interpretation" },
+          { id: "d", text: "Multiple candidates are only ever relevant for barcode detection, never text recognition" },
         ],
         correctOptionId: "c",
         explanation: "Because OCR accuracy can degrade with poor image quality, an app handling genuinely ambiguous source material may benefit from considering more than just the single top-ranked candidate.",
@@ -15095,10 +15095,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q17",
         prompt: "What does `NLEmbedding.neighbors(for:maximumCount:)` enable in the word similarity example?",
         options: [
-          { id: "a", text: "Detecting barcodes near a given word in an image" },
+          { id: "a", text: "Detecting barcodes located near a given word within a photographed image" },
           { id: "b", text: "Classifying the sentiment of the given word" },
           { id: "c", text: "Translating the given word into another language" },
-          { id: "d", text: "Finding semantically related words by returning nearby vectors in the embedding space, useful for \"find related content\" style features" },
+          { id: "d", text: "Finding semantically related words via nearby embedding-space vectors" },
         ],
         correctOptionId: "d",
         explanation: "`neighbors(for:maximumCount:)` returns semantically similar words based on vector proximity in the embedding space, enabling similarity-based features without training a custom embedding model.",
@@ -15107,10 +15107,10 @@ public struct StringifyMacro: ExpressionMacro {
         id: "q18",
         prompt: "What does `DetectFaceLandmarksRequest` provide beyond what `DetectFaceRectanglesRequest` alone provides?",
         options: [
-          { id: "a", text: "Individual facial feature points (landmarks) in addition to a bounding box, necessary for more sophisticated use cases like applying filters aligned to specific facial features" },
+          { id: "a", text: "Individual landmark points beyond the box, needed for feature-aligned filters" },
           { id: "b", text: "Nothing additional; they return identical data" },
           { id: "c", text: "Full body joint positions instead of facial data" },
-          { id: "d", text: "Barcode payload data associated with detected faces" },
+          { id: "d", text: "Barcode payload data somehow associated with each detected face region" },
         ],
         correctOptionId: "a",
         explanation: "While rectangle detection provides only a bounding box, landmark detection provides more granular facial feature point data, needed for applications requiring precise facial feature alignment.",
@@ -15121,11 +15121,11 @@ public struct StringifyMacro: ExpressionMacro {
         options: [
           {
             id: "a",
-            text: "A pattern unique to Vision with no parallel elsewhere in the curriculum",
+            text: "A pattern unique to Vision, with no parallel anywhere else in this entire curriculum",
           },
           {
             id: "b",
-            text: "The broader shift toward async/await seen throughout the platform, also reflected in StoreKit's product fetching (56.2) and PhotoKit's continuation-wrapped calls (55.2)",
+            text: "The platform-wide shift to async/await, also seen in StoreKit and PhotoKit's calls",
           },
           {
             id: "c",
@@ -15144,8 +15144,8 @@ public struct StringifyMacro: ExpressionMacro {
         prompt: "Which statement accurately distinguishes the purposes of Vision's feature print similarity, Natural Language's embeddings, and Sound Analysis's classification?",
         options: [
           { id: "a", text: "All three perform the exact same function on different data types with no distinction" },
-          { id: "b", text: "Sound Analysis also produces vector embeddings for similarity search, identical to the other two" },
-          { id: "c", text: "Feature prints and embeddings both enable similarity search via compact vector representations (for images and text respectively), while Sound Analysis instead classifies audio into discrete general sound categories rather than computing similarity distances" },
+          { id: "b", text: "Sound Analysis also produces vector embeddings identical to feature prints and `NLEmbedding` for similarity" },
+          { id: "c", text: "Feature prints and embeddings both search via vectors; Sound Analysis classifies into discrete categories" },
           { id: "d", text: "None of these three techniques involve any form of numeric representation" },
         ],
         correctOptionId: "c",
