@@ -18443,48 +18443,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "How does automatic extraction into a String Catalog improve on the older, separate `.strings`-file-per-language workflow?",
         options: [
-          {
-            id: "a",
-            text: "It requires more manual maintenance than the older approach",
-          },
-          {
-            id: "b",
-            text: "Xcode scans source code directly and keeps the String Catalog synchronized with actual usage, surfacing new strings needing translation and flagging strings whose source has changed, reducing bookkeeping burden",
-          },
-          {
-            id: "c",
-            text: "String Catalogs cannot detect when source strings have changed",
-          },
-          {
-            id: "d",
-            text: "Automatic extraction only works for English-language strings",
-          },
+          { id: "a", text: "It requires significantly more manual maintenance than the older approach ever did" },
+          { id: "b", text: "Automatic extraction only ever works for English-language strings specifically, nothing else" },
+          { id: "c", text: "String Catalogs categorically cannot detect when source strings have changed at all" },
+          { id: "d", text: "Xcode scans source code directly and keeps the Catalog synchronized with usage, surfacing new or changed strings" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Rather than manually maintaining parallel per-language files that can drift out of sync, Xcode's automatic extraction keeps the String Catalog synchronized with actual source code usage.",
       },
       {
         id: "q2",
         prompt: "Why do developer-provided comments matter for strings like \"Close\" in a String Catalog?",
         options: [
-          {
-            id: "a",
-            text: "Comments are purely optional metadata with no effect on translation quality",
-          },
-          {
-            id: "b",
-            text: "A short string like \"Close\" is genuinely ambiguous out of context (verb vs. adjective), and a translator working from an isolated string list has no way to disambiguate without the developer's comment",
-          },
-          {
-            id: "c",
-            text: "Comments are only needed for strings longer than 20 characters",
-          },
-          {
-            id: "d",
-            text: "Translators never need any additional context beyond the string itself",
-          },
+          { id: "a", text: "A short string like \"Close\" is genuinely ambiguous out of context, and a translator has no way to disambiguate" },
+          { id: "b", text: "Comments are purely optional metadata with absolutely no effect on translation quality whatsoever" },
+          { id: "c", text: "Comments are only ever needed for strings longer than 20 characters specifically" },
+          { id: "d", text: "Translators never ever need any additional context beyond the string itself, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Comments provide disambiguating context a translator couldn't otherwise infer from an isolated, out-of-context string, making them a high-leverage investment for genuinely ambiguous strings.",
       },
       {
@@ -18493,19 +18469,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "All languages use the same singular/plural distinction as English",
+            text: "All languages use exactly the same singular/plural distinction that English does",
           },
           {
             id: "b",
-            text: "Languages like Arabic or Polish require several distinct grammatical plural categories depending on exact count (zero, one, few, many, other), unlike English's simple singular/plural distinction",
+            text: "Languages like Arabic or Polish require several distinct plural categories, unlike English's simple two-category system",
           },
           {
             id: "c",
-            text: "Pluralization is not actually supported by String Catalogs",
+            text: "Pluralization is not actually supported by String Catalogs whatsoever, under any circumstances",
           },
           {
             id: "d",
-            text: "Only English requires plural handling; other languages use a single fixed form",
+            text: "Only English requires plural handling; every other language uses a single fixed form",
           },
         ],
         correctOptionId: "b",
@@ -18515,72 +18491,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "What genuine limitation of treating localization purely as language translation do device and width variations address?",
         options: [
-          {
-            id: "a",
-            text: "They have no real purpose beyond visual polish",
-          },
-          {
-            id: "b",
-            text: "The right wording for a UI element can depend on available space just as much as on language (e.g., \"Delete\" vs. \"Del\" in a compact-width context), and variations let this be handled through the same structured mechanism as language translation",
-          },
-          {
-            id: "c",
-            text: "Device variations only apply to watchOS, never other platforms",
-          },
-          {
-            id: "d",
-            text: "Width variations replace the need for pluralization rules entirely",
-          },
+          { id: "a", text: "They have absolutely no real purpose whatsoever beyond mere visual polish" },
+          { id: "b", text: "Device variations only ever apply to watchOS specifically, never other platforms at all" },
+          { id: "c", text: "The right wording can depend on available space just as much as language, handled through the same structured mechanism" },
+          { id: "d", text: "Width variations completely replace the need for pluralization rules entirely across the board" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Device and width variations acknowledge that appropriate wording depends on context beyond just language, letting space-driven wording differences be handled structurally rather than through ad hoc code.",
       },
       {
         id: "q5",
         prompt: "Why is Markdown-embedded localization in `AttributedString` an improvement over concatenating separately-localized string fragments?",
         options: [
-          {
-            id: "a",
-            text: "Concatenation always produces grammatically correct results in every language",
-          },
-          {
-            id: "b",
-            text: "Concatenating fragments around fixed formatting can produce grammatically incorrect results in languages with different word order, while Markdown-embedded localization lets the entire sentence be translated as one coherent, naturally-ordered unit",
-          },
-          {
-            id: "c",
-            text: "`AttributedString` cannot actually contain any formatting information",
-          },
-          {
-            id: "d",
-            text: "Markdown formatting is not supported within localized strings at all",
-          },
+          { id: "a", text: "Concatenation always and invariably produces grammatically correct results in every single language" },
+          { id: "b", text: "Markdown formatting is categorically not supported within localized strings at all, ever" },
+          { id: "c", text: "`AttributedString` categorically cannot actually contain any formatting information whatsoever" },
+          { id: "d", text: "Concatenating fragments can produce grammatically incorrect results in languages with different word order" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Translating a whole sentence with embedded Markdown as one unit lets a translator naturally reorder words per their language's grammar while still preserving intended formatting like bold or links.",
       },
       {
         id: "q6",
         prompt: "What genuine correctness concern (not just cosmetic) does `FormatStyle`'s number/currency formatting address?",
         options: [
-          {
-            id: "a",
-            text: "`FormatStyle` has no effect on how numbers are actually displayed",
-          },
-          {
-            id: "b",
-            text: "The decimal/grouping separator swap between locales (comma vs. period serving opposite roles) can cause a price to be genuinely misread as a different numeric value if handled incorrectly",
-          },
-          {
-            id: "c",
-            text: "Currency formatting only affects font choice, not actual numeric interpretation",
-          },
-          {
-            id: "d",
-            text: "This concern only applies to cryptocurrency values, not standard currencies",
-          },
+          { id: "a", text: "The decimal/grouping separator swap between locales can cause a price to be misread as a different value" },
+          { id: "b", text: "`FormatStyle` has absolutely no effect whatsoever on how numbers are actually displayed" },
+          { id: "c", text: "Currency formatting only ever affects font choice specifically, not actual numeric interpretation" },
+          { id: "d", text: "This particular concern only ever applies to cryptocurrency values specifically, not standard currencies at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "An incorrect separator convention isn't merely stylistic — it can cause a number to be misread as an entirely different value, making correct, automatic locale-aware formatting a genuine correctness matter.",
       },
       {
@@ -18589,19 +18529,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Unicode codepoint comparison is always correct regardless of language",
+            text: "Unicode codepoint comparison is always and entirely correct regardless of language whatsoever",
           },
           {
             id: "b",
-            text: "Accented characters, different alphabetical traditions, and locale-specific collation rules (like German umlaut sorting) all require locale-aware comparison to match what a user of that locale would consider correctly sorted",
+            text: "Accented characters and locale rules require locale-aware comparison to match user expectations",
           },
           {
             id: "c",
-            text: "Sorting is identical across all languages and locales",
+            text: "Sorting is entirely and completely identical across all languages and locales in every case",
           },
           {
             id: "d",
-            text: "`localizedStandardCompare` produces less accurate results than raw codepoint comparison",
+            text: "`localizedStandardCompare` produces meaningfully less accurate results than raw codepoint comparison somehow, oddly",
           },
         ],
         correctOptionId: "b",
@@ -18611,72 +18551,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "Why does consistently using leading/trailing (rather than left/right) in SwiftUI layout code matter for RTL support?",
         options: [
-          {
-            id: "a",
-            text: "Leading/trailing and left/right behave identically in SwiftUI",
-          },
-          {
-            id: "b",
-            text: "Leading/trailing are direction-relative concepts SwiftUI automatically flips for RTL locales, while left/right would require manually detecting RTL and conditionally swapping positioning throughout the codebase",
-          },
-          {
-            id: "c",
-            text: "RTL support requires abandoning SwiftUI's layout system entirely",
-          },
-          {
-            id: "d",
-            text: "Left/right positioning automatically adapts to RTL without any special handling",
-          },
+          { id: "a", text: "Leading/trailing and left/right behave entirely and completely identically within SwiftUI" },
+          { id: "b", text: "RTL support strictly requires abandoning SwiftUI's entire layout system altogether" },
+          { id: "c", text: "Leading/trailing are direction-relative and flipped by SwiftUI for RTL, unlike left/right" },
+          { id: "d", text: "Left/right positioning automatically and fully adapts to RTL without any special handling whatsoever, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Using direction-aware primitives lets SwiftUI handle RTL mirroring automatically, avoiding the considerably more error-prone approach of manually detecting layout direction and conditionally swapping literal left/right positioning.",
       },
       {
         id: "q9",
         prompt: "Why shouldn't a company logo image be flipped for RTL locales, while a \"forward\" arrow should?",
         options: [
-          {
-            id: "a",
-            text: "Neither image type should ever be flipped under any circumstances",
-          },
-          {
-            id: "b",
-            text: "Directional imagery like arrows conveys meaning through direction and should flip to preserve that meaning under RTL, while non-directional imagery like a logo has no directional meaning to preserve and would look wrong if mirrored",
-          },
-          {
-            id: "c",
-            text: "Logos are always automatically excluded from RTL mirroring by the system",
-          },
-          {
-            id: "d",
-            text: "Only text content can be mirrored for RTL; images are never affected",
-          },
+          { id: "a", text: "Neither image type should ever be flipped under any circumstances whatsoever, ever" },
+          { id: "b", text: "Only ever text content can be mirrored for RTL; images are never affected at all" },
+          { id: "c", text: "Logos are always and automatically excluded from RTL mirroring by the system entirely" },
+          { id: "d", text: "Directional imagery like arrows conveys meaning through direction and should flip, while a logo has no such meaning" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This is a genuine per-image design judgment — directional meaning (like \"forward\" progress) should be preserved via mirroring, while non-directional imagery like logos has no such meaning to preserve and would look nonsensical if flipped.",
       },
       {
         id: "q10",
         prompt: "What problem can occur if an app hardcodes Gregorian-specific date logic?",
         options: [
-          {
-            id: "a",
-            text: "Gregorian-specific logic works correctly for every user regardless of locale",
-          },
-          {
-            id: "b",
-            text: "It can produce genuinely incorrect or confusing results for users whose actual calendar preference (Islamic, Hebrew, Buddhist, Japanese era-based) differs from the Gregorian assumption",
-          },
-          {
-            id: "c",
-            text: "Non-Gregorian calendars are not actually supported by any Apple framework",
-          },
-          {
-            id: "d",
-            text: "This only affects apps distributed outside the United States",
-          },
+          { id: "a", text: "It can produce genuinely incorrect results for users whose actual calendar preference differs from the Gregorian assumption" },
+          { id: "b", text: "Gregorian-specific logic works entirely and correctly for every single user regardless of locale" },
+          { id: "c", text: "Non-Gregorian calendars are categorically not actually supported by any Apple framework whatsoever" },
+          { id: "d", text: "This particular issue only ever affects apps distributed outside the United States specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Properly using `Calendar` and locale-aware formatting respects users' actual calendar preferences, rather than silently imposing a Western-centric Gregorian assumption on every user.",
       },
       {
@@ -18685,19 +18589,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "DST transitions occur constantly throughout the year, making them easy to test",
+            text: "DST transitions occur constantly and continuously throughout the year, making them genuinely easy to test",
           },
           {
             id: "b",
-            text: "They only manifest during specific, narrow windows when a transition actually occurs (twice a year in DST-observing regions), meaning code can work correctly for 363 days while still containing a genuine bug",
+            text: "They only manifest during narrow windows when a transition occurs, so code can work for 363 days while still buggy",
           },
           {
             id: "c",
-            text: "DST transitions have been completely eliminated on modern iOS devices",
+            text: "DST transitions have been entirely and completely eliminated on all modern iOS devices",
           },
           {
             id: "d",
-            text: "DST bugs only affect apps that don't use `Calendar` at all",
+            text: "DST bugs only ever affect apps that don't use `Calendar` at all, under any circumstances",
           },
         ],
         correctOptionId: "b",
@@ -18707,72 +18611,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "What does the naive approach of treating a time zone as a fixed offset (e.g., subtracting a fixed number of hours) fail to account for?",
         options: [
-          {
-            id: "a",
-            text: "Nothing; fixed-offset math is always correct for time zone handling",
-          },
-          {
-            id: "b",
-            text: "DST transitions, which create genuinely ambiguous (occurring twice) or nonexistent (skipped) hours that fixed-offset arithmetic doesn't correctly handle",
-          },
-          {
-            id: "c",
-            text: "Fixed-offset math only fails for non-Gregorian calendars, not DST",
-          },
-          {
-            id: "d",
-            text: "Time zones never actually have variable offsets",
-          },
+          { id: "a", text: "Nothing whatsoever; fixed-offset math is always and entirely correct for time zone handling" },
+          { id: "b", text: "Fixed-offset math only ever fails for non-Gregorian calendars specifically, never for DST at all" },
+          { id: "c", text: "DST transitions, which create ambiguous or nonexistent hours that fixed-offset math doesn't handle correctly" },
+          { id: "d", text: "Time zones categorically never actually have any variable offsets whatsoever, under any circumstances at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "A time zone's offset isn't actually fixed year-round in DST-observing regions, so naive fixed-offset math breaks specifically during transition windows, unlike proper `Calendar`/`TimeZone`-aware date arithmetic.",
       },
       {
         id: "q13",
         prompt: "What is the genuine value of pseudolocalization testing, according to 71.13?",
         options: [
-          {
-            id: "a",
-            text: "It provides final, ready-to-ship translations for every supported language",
-          },
-          {
-            id: "b",
-            text: "It catches localization-readiness problems (like layout breaking under longer text) before real translations even exist, since layouts that break under pseudolocalized text would likely also break under real, similarly-lengthened translations",
-          },
-          {
-            id: "c",
-            text: "Pseudolocalization can only be used after all real translations are already complete",
-          },
-          {
-            id: "d",
-            text: "It has no relationship to actual translation length or layout behavior",
-          },
+          { id: "a", text: "It provides entirely final, fully ready-to-ship translations for every single supported language" },
+          { id: "b", text: "It has absolutely no relationship whatsoever to actual translation length or layout behavior" },
+          { id: "c", text: "Pseudolocalization can only ever be used after all real translations are already fully complete" },
+          { id: "d", text: "It catches localization-readiness problems, like layout breaking under longer text, before real translations even exist" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Pseudolocalization deliberately expands string length and alters characters to surface layout/hardcoding issues early, well before real translation work is complete or even commissioned.",
       },
       {
         id: "q14",
         prompt: "What does pseudolocalization typically do to strings to surface bugs?",
         options: [
-          {
-            id: "a",
-            text: "It translates strings into a randomly selected real language",
-          },
-          {
-            id: "b",
-            text: "It deliberately expands string length (since translations are often longer than English) and replaces characters with accented look-alikes, without requiring translation into an actual target language",
-          },
-          {
-            id: "c",
-            text: "It removes all text from the UI entirely",
-          },
-          {
-            id: "d",
-            text: "It converts all strings to uppercase only",
-          },
+          { id: "a", text: "It deliberately expands string length and replaces characters with accented look-alikes, without needing real translation" },
+          { id: "b", text: "It translates strings entirely into a randomly selected real language somehow" },
+          { id: "c", text: "It removes absolutely all text from the UI entirely, with no exceptions" },
+          { id: "d", text: "It converts all strings entirely and exclusively to uppercase only, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section describes pseudolocalization as artificially lengthening strings and substituting accented characters specifically to surface truncation, wrapping, and hardcoded-string issues without needing real translations.",
       },
       {
@@ -18781,19 +18649,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "They are actually the same thing, managed through the same Xcode interface",
+            text: "They are actually and genuinely the same thing, managed through the exact same Xcode interface",
           },
           {
             id: "b",
-            text: "App Store Connect separately supports localizing the store listing itself (name, subtitle, description, keywords, screenshots) per market, distinct from and in addition to in-app string localization",
+            text: "App Store Connect separately supports localizing the store listing per market, distinct from in-app localization",
           },
           {
             id: "c",
-            text: "App Store metadata cannot be localized under any circumstances",
+            text: "App Store metadata categorically cannot be localized under any circumstances whatsoever, ever",
           },
           {
             id: "d",
-            text: "In-app localization automatically localizes the App Store listing as well",
+            text: "In-app localization automatically and fully localizes the App Store listing as well, entirely",
           },
         ],
         correctOptionId: "b",
@@ -18803,72 +18671,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "Why can even a perfectly localized in-app experience underperform in a given market, according to 71.14?",
         options: [
-          {
-            id: "a",
-            text: "In-app localization quality has no relationship to App Store performance",
-          },
-          {
-            id: "b",
-            text: "An app's discoverability and conversion rate depend heavily on whether the store listing itself is properly localized — a perfectly localized in-app experience can't help if the untranslated store listing fails to convince someone to download it in the first place",
-          },
-          {
-            id: "c",
-            text: "App Store algorithms ignore metadata localization entirely",
-          },
-          {
-            id: "d",
-            text: "Store listings are automatically translated regardless of developer action",
-          },
+          { id: "a", text: "In-app localization quality has absolutely no relationship whatsoever to App Store performance" },
+          { id: "b", text: "App Store algorithms entirely and completely ignore metadata localization altogether" },
+          { id: "c", text: "Discoverability and conversion depend heavily on the store listing being properly localized" },
+          { id: "d", text: "Store listings are entirely and automatically translated regardless of any developer action whatsoever, always" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section highlights that store listing localization directly affects discoverability and conversion, meaning in-app localization quality alone doesn't guarantee good market performance if the listing itself remains untranslated.",
       },
       {
         id: "q17",
         prompt: "What state do AI-drafted translations receive within the String Catalog, according to 71.15?",
         options: [
-          {
-            id: "a",
-            text: "They are automatically marked as fully \"translated\" and final, requiring no review",
-          },
-          {
-            id: "b",
-            text: "The same \"needs review\" state that any other unreviewed translation would carry, integrating AI assistance into the existing review workflow rather than bypassing it",
-          },
-          {
-            id: "c",
-            text: "AI-drafted translations receive no state metadata at all",
-          },
-          {
-            id: "d",
-            text: "They automatically overwrite any existing human-reviewed translations",
-          },
+          { id: "a", text: "They are entirely and automatically marked as fully \"translated\" and final, requiring absolutely no review" },
+          { id: "b", text: "They automatically and completely overwrite any existing human-reviewed translations entirely" },
+          { id: "c", text: "AI-drafted translations receive absolutely no state metadata whatsoever, under any circumstances" },
+          { id: "d", text: "The same \"needs review\" state any other unreviewed translation carries, integrating AI into the existing review workflow" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Placing AI-drafted translations in the same \"needs review\" state as any other unreviewed translation ensures they go through the existing review workflow rather than shipping unreviewed.",
       },
       {
         id: "q18",
         prompt: "What is the genuine value AI-assisted localization provides, according to 71.15 and the earlier discussion in section 61.5?",
         options: [
-          {
-            id: "a",
-            text: "It fully replaces the need for any human translator review",
-          },
-          {
-            id: "b",
-            text: "It accelerates the first draft of translation work, while the human review step remains essential before any translation, AI-drafted or otherwise, actually ships",
-          },
-          {
-            id: "c",
-            text: "AI-assisted localization can only be used for pluralization rules, not general translation",
-          },
-          {
-            id: "d",
-            text: "It eliminates the need for translation states and comments entirely",
-          },
+          { id: "a", text: "It accelerates the first draft of translation work, while human review remains essential before any translation ships" },
+          { id: "b", text: "It entirely and completely replaces the need for absolutely any human translator review" },
+          { id: "c", text: "AI-assisted localization can only ever be used for pluralization rules specifically, not general translation" },
+          { id: "d", text: "It entirely eliminates the need for translation states and comments altogether, completely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Both sections consistently frame AI-assisted localization as accelerating the first draft, not eliminating the human review discipline that remains necessary before shipping any translation.",
       },
       {
@@ -18877,19 +18709,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Both approaches require identical manual, locale-specific format string knowledge",
+            text: "Both approaches strictly require entirely identical, manual, locale-specific format string knowledge",
           },
           {
             id: "b",
-            text: "`Date.FormatStyle` automatically adapts component order, separators, and calendar conventions to the current locale without the developer needing to manually encode locale-specific formatting knowledge",
+            text: "`Date.FormatStyle` automatically adapts formatting to the current locale without manual, locale-specific encoding",
           },
           {
             id: "c",
-            text: "`Date.FormatStyle` only works for the U.S. locale and requires manual configuration for all others",
+            text: "`Date.FormatStyle` only ever works for the U.S. locale specifically, requiring manual configuration for all others",
           },
           {
             id: "d",
-            text: "`DateFormatter` produces more accurate results than `FormatStyle` in every case",
+            text: "`DateFormatter` produces meaningfully more accurate results than `FormatStyle` in absolutely every single case",
           },
         ],
         correctOptionId: "b",
@@ -18899,24 +18731,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "What broader theme connects String Catalog comments (71.2), pseudolocalization (71.13), and App Store metadata localization (71.14)?",
         options: [
-          {
-            id: "a",
-            text: "They are entirely unrelated aspects of shipping a localized app",
-          },
-          {
-            id: "b",
-            text: "Each addresses a distinct but genuinely important dimension of localization quality — translator context, early bug detection, and store discoverability — that goes beyond simply translating in-app string text",
-          },
-          {
-            id: "c",
-            text: "All three exclusively concern date and number formatting",
-          },
-          {
-            id: "d",
-            text: "These three topics only matter for RTL languages specifically",
-          },
+          { id: "a", text: "They are entirely and completely unrelated aspects of shipping a genuinely localized app" },
+          { id: "b", text: "All three exclusively and only concern date and number formatting specifically, nothing else" },
+          { id: "c", text: "Each addresses a distinct dimension of quality — translator context, early bug detection, and store discoverability" },
+          { id: "d", text: "These three particular topics only ever matter for RTL languages specifically, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "These topics each highlight that genuinely thorough localization extends beyond simple text translation — providing translator context, catching layout issues early, and ensuring the store listing itself is properly localized are all necessary, complementary dimensions of quality localization.",
       },
     ],
@@ -18931,48 +18751,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "Why is \"Open Quickly\" (Cmd+Shift+O) described as disproportionately valuable in a larger codebase?",
         options: [
-          {
-            id: "a",
-            text: "It only works in small projects with few files",
-          },
-          {
-            id: "b",
-            text: "Fuzzy-searching directly to a known file or symbol by name is consistently faster than manually traversing a deeply nested project navigator, and this compounds across many daily navigation actions",
-          },
-          {
-            id: "c",
-            text: "It replaces the need for \"Jump to Definition\" entirely",
-          },
-          {
-            id: "d",
-            text: "It only searches file names, never symbol names",
-          },
+          { id: "a", text: "It only ever works in small projects with genuinely few files, nothing else" },
+          { id: "b", text: "It only ever searches file names specifically, never symbol names at all" },
+          { id: "c", text: "It completely replaces the need for \"Jump to Definition\" entirely across the board" },
+          { id: "d", text: "Fuzzy-searching directly to a known file or symbol is consistently faster than traversing a deeply nested navigator" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section frames these shortcuts as a compounding productivity investment, with \"Open Quickly\" being especially valuable as project size and navigational complexity grow.",
       },
       {
         id: "q2",
         prompt: "What is the relationship between a target, a scheme, and a configuration?",
         options: [
-          {
-            id: "a",
-            text: "They are three interchangeable terms for the same concept",
-          },
-          {
-            id: "b",
-            text: "A target defines a distinct build product, a scheme defines what happens when you build/run/test/profile/archive (which targets, which configuration), and a configuration defines the build settings applied for a given purpose",
-          },
-          {
-            id: "c",
-            text: "A configuration always determines which target gets built, with schemes being irrelevant",
-          },
-          {
-            id: "d",
-            text: "Schemes and targets are identical; only configurations differ",
-          },
+          { id: "a", text: "A target defines a build product, a scheme defines what happens on build/run, and a configuration defines applied settings" },
+          { id: "b", text: "They are entirely and completely interchangeable terms for the exact same concept" },
+          { id: "c", text: "A configuration always and entirely determines which target gets built, with schemes being irrelevant" },
+          { id: "d", text: "Schemes and targets are entirely identical; only configurations genuinely differ between them" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Understanding this three-layer relationship clarifies common Xcode confusion, such as needing to select a specific extension's own scheme (not just its target) to debug it correctly.",
       },
       {
@@ -18981,19 +18777,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Widget extensions don't have their own schemes at all",
+            text: "Widget extensions genuinely don't have their own separate schemes at all, ever",
           },
           {
             id: "b",
-            text: "A scheme is what actually determines which target gets built and run when you press Run, so debugging the extension's own separate process requires selecting its specific scheme",
+            text: "A scheme determines which target gets built and run, so debugging an extension requires selecting its own scheme",
           },
           {
             id: "c",
-            text: "The main app's scheme automatically debugs all extensions simultaneously",
+            text: "The main app's scheme automatically and fully debugs all extensions simultaneously, entirely",
           },
           {
             id: "d",
-            text: "Extensions cannot be debugged through Xcode's scheme system at all",
+            text: "Extensions categorically cannot be debugged through Xcode's scheme system at all, ever",
           },
         ],
         correctOptionId: "b",
@@ -19003,72 +18799,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "What does omitting `$(inherited)` at a target-level build setting do when a project-level setting already exists for that same key?",
         options: [
-          {
-            id: "a",
-            text: "It automatically appends the target-level value to the project-level value",
-          },
-          {
-            id: "b",
-            text: "It silently replaces the project-level setting entirely, rather than adding to it, which can produce confusing missing-flag behavior",
-          },
-          {
-            id: "c",
-            text: "It causes a build error requiring immediate resolution",
-          },
-          {
-            id: "d",
-            text: "`$(inherited)` has no effect on build setting resolution",
-          },
+          { id: "a", text: "It automatically and fully appends the target-level value to the project-level value entirely" },
+          { id: "b", text: "It categorically causes a build error requiring immediate resolution, always" },
+          { id: "c", text: "It silently replaces the project-level setting rather than adding to it, causing confusing missing-flag behavior" },
+          { id: "d", text: "`$(inherited)` has absolutely no effect whatsoever on build setting resolution at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Without `$(inherited)`, a target-level setting overrides rather than extends a broader-level setting, which can silently and confusingly drop a project-level flag at the target level.",
       },
       {
         id: "q5",
         prompt: "Why do `.xcconfig` files provide a genuine advantage over configuring build settings purely through Xcode's GUI in team, version-controlled contexts?",
         options: [
-          {
-            id: "a",
-            text: "`.xcconfig` files cannot be used in team environments at all",
-          },
-          {
-            id: "b",
-            text: "A GUI-driven change produces a diff within the sprawling, difficult-to-review `.pbxproj` file, while the same change in a `.xcconfig` file produces a small, clean, genuinely reviewable text diff",
-          },
-          {
-            id: "c",
-            text: "`.xcconfig` files require no version control at all",
-          },
-          {
-            id: "d",
-            text: "GUI-configured settings are always more reliable than `.xcconfig`-configured settings",
-          },
+          { id: "a", text: "`.xcconfig` files categorically cannot be used in team environments at all, ever" },
+          { id: "b", text: "GUI-configured settings are always and invariably more reliable than `.xcconfig`-configured settings" },
+          { id: "c", text: "`.xcconfig` files strictly require absolutely no version control at all, ever" },
+          { id: "d", text: "A GUI change produces a diff in the sprawling `.pbxproj` file, while `.xcconfig` produces a small, clean diff" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section highlights the meaningfully better diff/review experience `.xcconfig` files provide compared to the considerably less human-readable `.pbxproj` format, benefiting team code review workflows.",
       },
       {
         id: "q6",
         prompt: "What is a Run Script build phase used for, according to 72.5?",
         options: [
-          {
-            id: "a",
-            text: "Only for compiling Swift source files",
-          },
-          {
-            id: "b",
-            text: "Letting a developer insert arbitrary shell script execution at a specific point in the build sequence, such as running SwiftLint or generating code",
-          },
-          {
-            id: "c",
-            text: "Run Script phases can only execute after an app has already shipped",
-          },
-          {
-            id: "d",
-            text: "They replace the need for targets and schemes entirely",
-          },
+          { id: "a", text: "Letting a developer insert arbitrary shell script execution at a specific point in the build sequence" },
+          { id: "b", text: "Only ever for compiling Swift source files specifically, nothing else at all" },
+          { id: "c", text: "Run Script phases can only ever execute after an app has already fully shipped" },
+          { id: "d", text: "They completely replace the need for targets and schemes entirely across the board" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Run Script phases let custom tooling (like a linter) participate automatically and consistently as part of every build, rather than requiring a developer to remember to run it as a separate manual step.",
       },
       {
@@ -19077,19 +18837,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "None; Run Script phases have no performance implications",
+            text: "None whatsoever; Run Script phases have absolutely no performance implications at all",
           },
           {
             id: "b",
-            text: "Keeping script phases fast, since a slow script phase directly adds to every developer's build time, connecting to the slow-build diagnosis concerns discussed in 72.11",
+            text: "Keeping script phases fast, since a slow script phase directly adds to every developer's build time",
           },
           {
             id: "c",
-            text: "Run Script phases must always run before source compilation, with no other placement option",
+            text: "Run Script phases must always and invariably run before source compilation, with no other placement option",
           },
           {
             id: "d",
-            text: "Scripts can only be written in Swift, never shell script",
+            text: "Scripts can only ever be written in Swift specifically, never in shell script at all",
           },
         ],
         correctOptionId: "b",
@@ -19099,72 +18859,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "What practical problem does configuring distinct Debug/Release bundle identifiers and display names via `Info.plist` per configuration solve?",
         options: [
-          {
-            id: "a",
-            text: "It has no practical purpose beyond cosmetic differentiation",
-          },
-          {
-            id: "b",
-            text: "It lets a developer install and run both a Debug build and the actual Release/TestFlight build side by side on the same physical device for direct comparison, rather than one overwriting the other",
-          },
-          {
-            id: "c",
-            text: "This configuration is required for App Store submission and serves no other purpose",
-          },
-          {
-            id: "d",
-            text: "It automatically merges Debug and Release builds into a single installation",
-          },
+          { id: "a", text: "It has absolutely no practical purpose whatsoever beyond mere cosmetic differentiation" },
+          { id: "b", text: "This particular configuration is strictly required for App Store submission and serves no other purpose" },
+          { id: "c", text: "It lets a developer install both a Debug and Release build side by side on one device for comparison" },
+          { id: "d", text: "It automatically and fully merges Debug and Release builds into a single installation entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Distinct bundle identifiers let both build configurations coexist as separate installations on one device, enabling direct side-by-side comparison rather than one installation overwriting the other.",
       },
       {
         id: "q9",
         prompt: "What class of bug does using generated asset catalog symbols (like `.profileIcon`) eliminate compared to string-based lookup?",
         options: [
-          {
-            id: "a",
-            text: "All runtime crashes, regardless of cause",
-          },
-          {
-            id: "b",
-            text: "The class of bug where a misspelled string-based asset name (`UIImage(named: \"profileIcon\")`) silently fails at runtime with no compile-time warning, since a typo in a generated symbol is instead a compile error",
-          },
-          {
-            id: "c",
-            text: "Generated symbols have no effect on typo-related bugs",
-          },
-          {
-            id: "d",
-            text: "This only applies to color assets, never images",
-          },
+          { id: "a", text: "All runtime crashes whatsoever, regardless of underlying cause, entirely" },
+          { id: "b", text: "This particular technique only ever applies to color assets specifically, never to images at all" },
+          { id: "c", text: "Generated symbols have absolutely no effect whatsoever on typo-related bugs at all" },
+          { id: "d", text: "A misspelled string-based asset name silently fails at runtime, while a typo in a generated symbol is a compile error" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Converting string-based, runtime-only-discoverable lookups into compile-time-checked Swift symbols eliminates an entire category of silently-failing typo bugs, a pattern the section notes recurs elsewhere (like Core ML's generated interfaces).",
       },
       {
         id: "q10",
         prompt: "Why can code behave subtly differently between Debug and Release builds, according to 72.8?",
         options: [
-          {
-            id: "a",
-            text: "Debug and Release builds always produce byte-for-byte identical compiled output",
-          },
-          {
-            id: "b",
-            text: "Certain bugs, particularly around undefined behavior or Debug-only assertion checks, can manifest only under Release's optimization level and not under Debug's, making Release-configuration testing genuinely necessary before shipping",
-          },
-          {
-            id: "c",
-            text: "Release builds are identical to Debug builds except for the app icon",
-          },
-          {
-            id: "d",
-            text: "This difference only affects UI appearance, never actual code behavior",
-          },
+          { id: "a", text: "Certain bugs around undefined behavior or Debug-only assertions can manifest only under Release's optimization level" },
+          { id: "b", text: "Debug and Release builds always and invariably produce byte-for-byte identical compiled output" },
+          { id: "c", text: "Release builds are entirely identical to Debug builds except for the app icon alone" },
+          { id: "d", text: "This particular difference only ever affects UI appearance specifically, never actual code behavior" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because Debug and Release differ substantially in optimization level and assertion handling, some bugs are only exposed under Release's configuration, making it insufficient to test solely under Debug throughout development.",
       },
       {
@@ -19173,19 +18897,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "There is no meaningful difference in debugging experience between the two",
+            text: "There is absolutely no meaningful difference whatsoever in debugging experience between the two",
           },
           {
             id: "b",
-            text: "Aggressive optimization can reorder, inline, or eliminate code in ways that make variable inspection report confusingly optimized-away or seemingly incorrect values, unlike `-Onone`'s direct source-to-code correspondence",
+            text: "Aggressive optimization can reorder or eliminate code, making variable inspection report confusingly incorrect values",
           },
           {
             id: "c",
-            text: "`-O` builds cannot be debugged under any circumstances",
+            text: "`-O` builds categorically cannot be debugged under any circumstances whatsoever, ever",
           },
           {
             id: "d",
-            text: "`-Onone` always produces faster runtime performance than `-O`",
+            text: "`-Onone` always and invariably produces meaningfully faster runtime performance than `-O`",
           },
         ],
         correctOptionId: "b",
@@ -19195,72 +18919,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "What does the graduated `SWIFT_STRICT_CONCURRENCY` setting model (minimal → targeted → complete) enable?",
         options: [
-          {
-            id: "a",
-            text: "It requires every project to adopt complete Swift 6 concurrency checking immediately",
-          },
-          {
-            id: "b",
-            text: "Incremental adoption of stricter concurrency checking, letting a team address genuine concurrency issues at a manageable pace rather than being blocked until every issue across a codebase is resolved at once",
-          },
-          {
-            id: "c",
-            text: "This setting has no relationship to Swift's concurrency model",
-          },
-          {
-            id: "d",
-            text: "Only new projects can use any level other than \"complete\"",
-          },
+          { id: "a", text: "It strictly requires every single project to adopt complete Swift 6 concurrency checking immediately" },
+          { id: "b", text: "This particular setting has absolutely no relationship whatsoever to Swift's concurrency model" },
+          { id: "c", text: "Incremental adoption of stricter concurrency checking, letting a team address issues at a manageable pace" },
+          { id: "d", text: "Only ever brand new projects can use any level other than \"complete\" specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The graduated levels mirror the incremental migration philosophy also seen in XCTest-to-Swift-Testing migration (section 65.17), letting teams adopt stricter checking progressively rather than all at once.",
       },
       {
         id: "q13",
         prompt: "What principle from section 69.1 does 72.11's approach to diagnosing slow builds directly connect to?",
         options: [
-          {
-            id: "a",
-            text: "Binary size reduction techniques",
-          },
-          {
-            id: "b",
-            text: "The measure-before-optimizing discipline, applied here specifically to build performance rather than runtime performance",
-          },
-          {
-            id: "c",
-            text: "The Accessibility Inspector's automated audit capability",
-          },
-          {
-            id: "d",
-            text: "Property-based testing's random input generation",
-          },
+          { id: "a", text: "Binary size reduction techniques specifically, nothing else at all" },
+          { id: "b", text: "Property-based testing's random input generation technique entirely, nothing else" },
+          { id: "c", text: "The Accessibility Inspector's automated audit capability specifically, nothing else at all" },
+          { id: "d", text: "The measure-before-optimizing discipline, applied here to build performance rather than runtime performance" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section explicitly draws this connection — vague complaints like \"the build feels slow\" benefit from actual measurement of where build time is spent before attempting a fix, just as with runtime performance.",
       },
       {
         id: "q14",
         prompt: "What common cause of slow Swift compilation does `-warn-long-function-bodies` specifically help identify?",
         options: [
-          {
-            id: "a",
-            text: "Overly long file names",
-          },
-          {
-            id: "b",
-            text: "Complex type inference (particularly around SwiftUI view builders or complex generic/overload-heavy expressions) that the compiler struggles to resolve efficiently within individual function bodies",
-          },
-          {
-            id: "c",
-            text: "Excessive use of comments within source files",
-          },
-          {
-            id: "d",
-            text: "Slow network connectivity during dependency resolution",
-          },
+          { id: "a", text: "Complex type inference, particularly around SwiftUI view builders or overload-heavy expressions" },
+          { id: "b", text: "Overly long file names specifically, nothing else whatsoever" },
+          { id: "c", text: "Excessive use of comments within source files entirely, nothing else" },
+          { id: "d", text: "Slow network connectivity specifically during dependency resolution, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This flag surfaces specific function bodies whose type-checking exceeds a time threshold, commonly caused by complex, deeply chained expressions with heavy type inference demands.",
       },
       {
@@ -19269,19 +18957,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Rewriting the entire project in Objective-C",
+            text: "Rewriting the entire project completely and entirely in Objective-C instead",
           },
           {
             id: "b",
-            text: "Breaking an overly complex, deeply chained expression into separate statements with explicit type annotations, reducing the type inference ambiguity the compiler must resolve at once",
+            text: "Breaking an overly complex, deeply chained expression into separate statements with explicit type annotations",
           },
           {
             id: "c",
-            text: "Disabling type checking entirely for that file",
+            text: "Disabling type checking entirely and completely for that specific file altogether",
           },
           {
             id: "d",
-            text: "Increasing the compiler's optimization level",
+            text: "Increasing the compiler's optimization level specifically, nothing else at all",
           },
         ],
         correctOptionId: "b",
@@ -19291,72 +18979,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "What is the core trade-off between Whole Module Optimization (WMO) and incremental compilation?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful trade-off; one is strictly better in every scenario",
-          },
-          {
-            id: "b",
-            text: "WMO enables more aggressive cross-file optimization at the cost of needing to recompile the whole module on any single file's change, while incremental compilation lets unchanged files' compiled output be reused, favoring faster iteration",
-          },
-          {
-            id: "c",
-            text: "Incremental compilation always produces faster runtime performance than WMO",
-          },
-          {
-            id: "d",
-            text: "WMO is used by default in Debug, while incremental compilation is used by default in Release",
-          },
+          { id: "a", text: "There is absolutely no meaningful trade-off whatsoever; one is strictly better in every scenario" },
+          { id: "b", text: "Incremental compilation always and invariably produces meaningfully faster runtime performance than WMO" },
+          { id: "c", text: "WMO enables aggressive cross-file optimization at the cost of recompiling on any change" },
+          { id: "d", text: "WMO is used by default in Debug, while incremental compilation is used by default in Release, oddly" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This trade-off directly explains why Debug defaults to incremental (single-file) compilation for fast iteration, while Release defaults to whole-module compilation for deeper optimization appropriate for a shipped build.",
       },
       {
         id: "q17",
         prompt: "How do explicit modules relate to `Package.resolved` from section 73.2, according to 72.14?",
         options: [
-          {
-            id: "a",
-            text: "They are entirely unrelated build system concepts",
-          },
-          {
-            id: "b",
-            text: "Both reflect a broader pattern toward explicitness in dependency resolution — `Package.resolved` makes package dependency versions explicit and reproducible, while explicit modules make the compiler's internal module dependency resolution explicit and precomputed",
-          },
-          {
-            id: "c",
-            text: "Explicit modules replace the need for `Package.resolved` entirely",
-          },
-          {
-            id: "d",
-            text: "`Package.resolved` is generated automatically from explicit module data",
-          },
+          { id: "a", text: "They are entirely and completely unrelated build system concepts whatsoever" },
+          { id: "b", text: "`Package.resolved` is entirely and automatically generated from explicit module data alone" },
+          { id: "c", text: "Explicit modules completely replace the need for `Package.resolved` entirely across the board" },
+          { id: "d", text: "Both reflect a broader pattern toward explicitness in dependency resolution, applied to packages and modules respectively" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section draws a direct parallel between these two mechanisms, both moving from implicit, on-demand resolution toward explicit, precomputed dependency information for improved reliability and parallelism.",
       },
       {
         id: "q18",
         prompt: "What genuine value does `#Playground` provide compared to running an entire app to test a small piece of logic?",
         options: [
-          {
-            id: "a",
-            text: "`#Playground` requires a full app launch, identical to running the app normally",
-          },
-          {
-            id: "b",
-            text: "It provides fast, low-ceremony execution of a code snippet directly within a source file, meaningfully faster than waiting through full app launch time just to verify a small algorithm's behavior",
-          },
-          {
-            id: "c",
-            text: "`#Playground` can only be used for UI-related code, never algorithms",
-          },
-          {
-            id: "d",
-            text: "It permanently replaces the need for any unit testing",
-          },
+          { id: "a", text: "It provides fast, low-ceremony execution of a code snippet directly within a source file" },
+          { id: "b", text: "`#Playground` strictly requires a full app launch, entirely identical to running the app normally" },
+          { id: "c", text: "`#Playground` can only ever be used for UI-related code specifically, never for algorithms" },
+          { id: "d", text: "It permanently and completely replaces the need for any unit testing whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`#Playground` is positioned as a practical tool for quick \"let me just check this works\" verification, faster than a full app run and not requiring the ceremony of a permanent unit test.",
       },
       {
@@ -19365,19 +19017,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Only syntax error messages for missing semicolons",
+            text: "Only ever syntax error messages specifically for missing semicolons, nothing else",
           },
           {
             id: "b",
-            text: "Complex type inference failures and strict concurrency violations, which have historically been among Swift's more notoriously difficult-to-interpret compiler diagnostics",
+            text: "Complex type inference failures and strict concurrency violations, historically difficult to interpret",
           },
           {
             id: "c",
-            text: "Only warnings related to deprecated API usage",
+            text: "Only ever warnings related to deprecated API usage specifically, nothing else at all",
           },
           {
             id: "d",
-            text: "Diagnostics improvements only affect Objective-C code, not Swift",
+            text: "Diagnostics improvements only ever affect Objective-C code specifically, never Swift at all, ever",
           },
         ],
         correctOptionId: "b",
@@ -19387,24 +19039,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "Why does the section describe improved diagnostic clarity as having \"genuinely compounding value\" across a codebase's development lifecycle?",
         options: [
-          {
-            id: "a",
-            text: "Diagnostic improvements only matter once, at initial project setup",
-          },
-          {
-            id: "b",
-            text: "A clearer, more specific error message directly reduces the time a developer spends diagnosing what went wrong, and this benefit recurs every time a developer encounters a compiler error throughout ongoing development",
-          },
-          {
-            id: "c",
-            text: "Diagnostic clarity has no measurable effect on developer productivity",
-          },
-          {
-            id: "d",
-            text: "Compounding value only applies to build time, not error diagnosis time",
-          },
+          { id: "a", text: "Diagnostic improvements only ever matter a single time, at initial project setup exclusively" },
+          { id: "b", text: "Diagnostic clarity has absolutely no measurable effect whatsoever on developer productivity at all" },
+          { id: "c", text: "A clearer error message directly reduces diagnosis time, recurring every compiler error" },
+          { id: "d", text: "Compounding value only ever applies to build time specifically, not error diagnosis time at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because clearer diagnostics reduce diagnosis time on every individual occurrence, and compiler errors occur repeatedly throughout a project's lifecycle, this time savings compounds meaningfully over the course of ongoing development.",
       },
     ],
@@ -19419,48 +19059,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "How does SPM's integration model contrast with CocoaPods, according to 73.1?",
         options: [
-          {
-            id: "a",
-            text: "Both require an identical separate installation step and generated workspace",
-          },
-          {
-            id: "b",
-            text: "SPM dependency resolution and integration is simply part of Xcode's own normal build process, with no separate installation step, generated workspace file, or Ruby toolchain dependency required",
-          },
-          {
-            id: "c",
-            text: "SPM requires a Ruby toolchain, while CocoaPods does not",
-          },
-          {
-            id: "d",
-            text: "CocoaPods is natively integrated into Xcode's build process, while SPM is not",
-          },
+          { id: "a", text: "Both strictly require an entirely identical separate installation step and generated workspace" },
+          { id: "b", text: "CocoaPods is genuinely and natively integrated into Xcode's build process, while SPM is not" },
+          { id: "c", text: "SPM strictly requires a Ruby toolchain specifically, while CocoaPods categorically does not" },
+          { id: "d", text: "SPM dependency resolution is just part of Xcode's normal build process" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "SPM's native integration avoids the separate-tool model CocoaPods requires (a `pod install` step, a generated `.xcworkspace`, a Ruby dependency), instead using the same `Package.swift` manifest format as building packages themselves.",
       },
       {
         id: "q2",
         prompt: "What does `Package.resolved` ensure, and why does this matter?",
         options: [
-          {
-            id: "a",
-            text: "It ensures every build always fetches the absolute latest available version",
-          },
-          {
-            id: "b",
-            text: "It records the exact specific versions actually resolved and used, ensuring reproducible builds across different machines and CI runs rather than potentially resolving to different compatible versions at different times",
-          },
-          {
-            id: "c",
-            text: "`Package.resolved` has no effect on build reproducibility",
-          },
-          {
-            id: "d",
-            text: "It only applies to binary target dependencies, not regular source packages",
-          },
+          { id: "a", text: "It records the exact versions actually resolved, ensuring reproducible builds across machines and CI runs" },
+          { id: "b", text: "It strictly ensures every single build always fetches the absolute latest available version" },
+          { id: "c", text: "`Package.resolved` has absolutely no effect whatsoever on build reproducibility at all" },
+          { id: "d", text: "It only ever applies to binary target dependencies specifically, not regular source packages" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Without `Package.resolved`'s exact-version pinning, two different resolutions of the same flexible version requirement at different points in time could produce different actual versions, causing inconsistency across environments.",
       },
       {
@@ -19469,19 +19085,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "No, it should never be committed under any circumstances",
+            text: "No, it should categorically never be committed under any circumstances whatsoever",
           },
           {
             id: "b",
-            text: "Yes, generally — without it, different developers or CI resolving the same flexible version requirement at different times could resolve to different actual versions, producing inconsistency",
+            text: "Yes, generally — without it, different developers or CI could resolve to different actual versions over time",
           },
           {
             id: "c",
-            text: "`Package.resolved` is automatically excluded from git by SPM and cannot be committed",
+            text: "`Package.resolved` is entirely and automatically excluded from git by SPM and categorically cannot be committed",
           },
           {
             id: "d",
-            text: "It only matters for packages with binary targets",
+            text: "It only ever matters specifically for packages with binary targets, nothing else",
           },
         ],
         correctOptionId: "b",
@@ -19491,72 +19107,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "Why is creating an internal Swift package for a single app's own modularization considered legitimate, per 73.3?",
         options: [
-          {
-            id: "a",
-            text: "Internal packages provide no real benefit over simple folder organization",
-          },
-          {
-            id: "b",
-            text: "A local Swift package enforces genuinely clean module boundaries and explicit public API surfaces in a way folder organization within one large app target cannot enforce nearly as strictly, since folders provide no compiler-enforced separation",
-          },
-          {
-            id: "c",
-            text: "Internal packages can only be used for code meant for public, external distribution",
-          },
-          {
-            id: "d",
-            text: "Creating internal packages is discouraged and considered an anti-pattern",
-          },
+          { id: "a", text: "Internal packages provide absolutely no real benefit whatsoever over simple folder organization" },
+          { id: "b", text: "Internal packages can only ever be used for code meant for public, external distribution specifically" },
+          { id: "c", text: "A local Swift package enforces clean module boundaries that folder organization cannot, lacking compiler-enforced separation" },
+          { id: "d", text: "Creating internal packages is entirely discouraged and considered a genuine anti-pattern altogether" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section connects this directly to section 48's modularization principles — package boundaries provide genuine, compiler-enforced separation that simple folder organization within a single target cannot replicate.",
       },
       {
         id: "q5",
         prompt: "What is the key distinction between targets and products in `Package.swift`?",
         options: [
-          {
-            id: "a",
-            text: "They are identical concepts with different names",
-          },
-          {
-            id: "b",
-            text: "Targets are units of source code compiled together, while products define what a package actually exposes for consumption — a package's internal target structure isn't necessarily identical to what it publicly exposes",
-          },
-          {
-            id: "c",
-            text: "Products can only be executables, never libraries",
-          },
-          {
-            id: "d",
-            text: "A package can have products but never internal, non-exposed targets",
-          },
+          { id: "a", text: "They are entirely identical concepts with merely different names attached" },
+          { id: "b", text: "A package can genuinely have products but categorically never any internal, non-exposed targets" },
+          { id: "c", text: "Products can only ever be executables specifically, never libraries at all" },
+          { id: "d", text: "Targets are units of source code compiled together, while products define what a package exposes for consumption" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This distinction lets a package have internal targets (like a shared internal core) that aren't directly exposed as consumable products, allowing internal restructuring without breaking external consumers.",
       },
       {
         id: "q6",
         prompt: "Why does the internal target/product distinction benefit a package author's ability to refactor?",
         options: [
-          {
-            id: "a",
-            text: "It has no effect on refactoring flexibility",
-          },
-          {
-            id: "b",
-            text: "A package can freely refactor internal target organization without that internal restructuring becoming a breaking change for anyone depending on the package's public products, since internal targets aren't part of the exposed API surface",
-          },
-          {
-            id: "c",
-            text: "Refactoring internal targets always breaks every consumer regardless of product boundaries",
-          },
-          {
-            id: "d",
-            text: "Products and targets must always have identical names and structure",
-          },
+          { id: "a", text: "A package can freely refactor internal targets without breaking consumers of its products" },
+          { id: "b", text: "It has absolutely no effect whatsoever on refactoring flexibility at all" },
+          { id: "c", text: "Refactoring internal targets always and invariably breaks every single consumer regardless of product boundaries" },
+          { id: "d", text: "Products and targets must always and invariably have entirely identical names and structure" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because only products constitute the package's public API surface, internal target reorganization can happen freely without affecting consumers who only depend on the stable, public products.",
       },
       {
@@ -19565,19 +19145,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "It has no practical purpose and is purely optional boilerplate",
+            text: "It has absolutely no practical purpose whatsoever and is purely optional boilerplate",
           },
           {
             id: "b",
-            text: "It provides a reliable, consistent way to locate a package's own bundled resources regardless of how the package is ultimately integrated into a consuming app (statically linked, dynamically linked, as part of an XCFramework)",
+            text: "It provides a reliable, consistent way to locate a package's own bundled resources regardless of integration",
           },
           {
             id: "c",
-            text: "`Bundle.module` only works when a package is consumed via CocoaPods",
+            text: "`Bundle.module` only ever works when a package is consumed via CocoaPods specifically",
           },
           {
             id: "d",
-            text: "It replaces the need for the `resources:` parameter entirely",
+            text: "It completely replaces the need for the `resources:` parameter entirely across the board",
           },
         ],
         correctOptionId: "b",
@@ -19587,72 +19167,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "What genuine benefit does a local path dependency (rather than a remote URL) provide during active package development?",
         options: [
-          {
-            id: "a",
-            text: "Local dependencies require publishing a new version for every change",
-          },
-          {
-            id: "b",
-            text: "Changes made to the package's source are immediately reflected in the consuming app's build without needing to publish a new version, push to a remote repository, or update any version requirement",
-          },
-          {
-            id: "c",
-            text: "Local path dependencies cannot be used with Xcode at all",
-          },
-          {
-            id: "d",
-            text: "Local dependencies are only usable for packages with binary targets",
-          },
+          { id: "a", text: "Local dependencies strictly require publishing a brand new version for every single change" },
+          { id: "b", text: "Local path dependencies categorically cannot be used with Xcode at all, ever" },
+          { id: "c", text: "Changes made to the package's source are immediately reflected in the consuming app's build without publishing anything" },
+          { id: "d", text: "Local dependencies are only ever usable for packages with binary targets specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This immediate-reflection behavior is essential for the internal-modularization use case, letting a developer iterate on a package's source and see changes reflected in the consuming app right away.",
       },
       {
         id: "q9",
         prompt: "When does the section suggest switching from a local path dependency to a proper versioned, remote reference?",
         options: [
-          {
-            id: "a",
-            text: "Immediately, before any development work begins",
-          },
-          {
-            id: "b",
-            text: "Once a package's API is genuinely stable, particularly appropriate for genuine external sharing or when the package's release cadence should be decoupled from the consuming app's own development cycle",
-          },
-          {
-            id: "c",
-            text: "Local dependencies should never be converted to remote references",
-          },
-          {
-            id: "d",
-            text: "Only when the package needs to support binary targets",
-          },
+          { id: "a", text: "Immediately, before absolutely any development work has even begun at all" },
+          { id: "b", text: "Only ever when the package needs to support binary targets specifically, nothing else" },
+          { id: "c", text: "Local dependencies should categorically never be converted to remote references at all" },
+          { id: "d", text: "Once a package's API is stable, for external sharing or decoupled cadence" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section frames this as a natural progression — local path dependencies suit active, in-development iteration, while a stable API warrants moving to a proper versioned reference for genuine sharing or decoupled release cadence.",
       },
       {
         id: "q10",
         prompt: "Why does the section describe every added dependency as \"a genuine, ongoing maintenance liability, not merely a one-time convenience\"?",
         options: [
-          {
-            id: "a",
-            text: "Dependencies have no ongoing cost once successfully integrated",
-          },
-          {
-            id: "b",
-            text: "An unmaintained dependency can eventually become a genuine security or compatibility risk (failing to support a new language mode, containing an unpatched vulnerability), and removing a deeply-integrated dependency later is considerably more costly than careful upfront evaluation",
-          },
-          {
-            id: "c",
-            text: "All dependencies automatically update themselves with no risk",
-          },
-          {
-            id: "d",
-            text: "Maintenance liability only applies to binary target dependencies",
-          },
+          { id: "a", text: "An unmaintained dependency can eventually become a genuine security risk, and removing it later is considerably more costly" },
+          { id: "b", text: "Dependencies have absolutely no ongoing cost whatsoever once successfully integrated into a project" },
+          { id: "c", text: "All dependencies automatically and fully update themselves with absolutely zero risk involved" },
+          { id: "d", text: "Maintenance liability only ever applies to binary target dependencies specifically, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section frames dependency evaluation as a worthwhile investment precisely because unmaintained dependencies carry real, growing risk over time, and removal later is more costly than upfront diligence.",
       },
       {
@@ -19661,19 +19205,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "It has no security purpose and is purely for version tracking",
+            text: "It has absolutely no security purpose whatsoever and is purely for version tracking",
           },
           {
             id: "b",
-            text: "It ensures the downloaded binary hasn't been tampered with or corrupted since the package manifest was published, providing a baseline integrity guarantee for unreviewable compiled code",
+            text: "It ensures the downloaded binary hasn't been tampered with, providing a baseline integrity guarantee for unreviewable code",
           },
           {
             id: "c",
-            text: "The checksum determines which platform the binary target supports",
+            text: "The checksum genuinely determines which specific platform the binary target actually supports",
           },
           {
             id: "d",
-            text: "Checksums are optional and rarely used in practice",
+            text: "Checksums are entirely optional and only rarely ever used in practice, generally",
           },
         ],
         correctOptionId: "b",
@@ -19683,72 +19227,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "Why is a checksum particularly important for binary targets specifically, compared to regular source-based SPM dependencies?",
         options: [
-          {
-            id: "a",
-            text: "Source-based dependencies also require checksums, making this no different",
-          },
-          {
-            id: "b",
-            text: "A binary target's compiled code can't be reviewed the way source code can, since there's no source to actually read and audit, making integrity verification via checksum a meaningful baseline safeguard",
-          },
-          {
-            id: "c",
-            text: "Checksums are actually less important for binary targets than for source dependencies",
-          },
-          {
-            id: "d",
-            text: "Binary targets never need any form of verification",
-          },
+          { id: "a", text: "Source-based dependencies also strictly require checksums, making this entirely no different" },
+          { id: "b", text: "Checksums are actually and genuinely less important for binary targets than for source dependencies" },
+          { id: "c", text: "A binary target's compiled code can't be reviewed like source code, making checksums a meaningful baseline safeguard" },
+          { id: "d", text: "Binary targets never ever need any form of verification whatsoever, under any circumstances" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The lack of reviewable source code for binary targets is precisely why the checksum requirement carries extra weight — it's one of the few integrity guarantees available for genuinely unreviewable, closed-source binary code.",
       },
       {
         id: "q13",
         prompt: "How do SPM build plugins compare to Xcode Run Script phases (section 72.5)?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical with no meaningful distinction",
-          },
-          {
-            id: "b",
-            text: "Build plugins provide a more portable, versioned, and shareable alternative — rather than each project independently maintaining its own shell script, a build plugin can be published and versioned as its own SPM package for multiple projects to share",
-          },
-          {
-            id: "c",
-            text: "Run Script phases are always superior to build plugins in every scenario",
-          },
-          {
-            id: "d",
-            text: "Build plugins can only run after a build completes, never during it",
-          },
+          { id: "a", text: "They are entirely and completely functionally identical with absolutely no meaningful distinction" },
+          { id: "b", text: "Build plugins can only ever run after a build completes, never actually during it" },
+          { id: "c", text: "Run Script phases are always and invariably superior to build plugins in every single scenario" },
+          { id: "d", text: "Build plugins provide a more portable, versioned, shareable alternative to each project's own separate shell script" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section frames build plugins as a more shareable, versioned evolution of the Run Script phase concept, letting multiple projects use genuinely identical tooling rather than divergent copies of similar scripts.",
       },
       {
         id: "q14",
         prompt: "What is the key difference in invocation between build plugins and command plugins?",
         options: [
-          {
-            id: "a",
-            text: "They are invoked identically, with no meaningful distinction",
-          },
-          {
-            id: "b",
-            text: "Build plugins run automatically on every build, appropriate for tooling a build genuinely depends on, while command plugins are invoked explicitly and on-demand, appropriate for occasional tooling like documentation generation",
-          },
-          {
-            id: "c",
-            text: "Command plugins run automatically on every build, while build plugins require manual invocation",
-          },
-          {
-            id: "d",
-            text: "Only build plugins can be used within Xcode; command plugins are terminal-only",
-          },
+          { id: "a", text: "Build plugins run automatically on every build, while command plugins are invoked explicitly and on-demand" },
+          { id: "b", text: "They are invoked entirely identically, with absolutely no meaningful distinction whatsoever" },
+          { id: "c", text: "Command plugins run automatically on every build, while build plugins strictly require manual invocation instead" },
+          { id: "d", text: "Only ever build plugins can be used within Xcode; command plugins are strictly terminal-only" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This distinction reflects intended invocation frequency — automatic, continuous execution for build-critical tooling versus deliberate, occasional invocation for tooling like report generation or formatting passes.",
       },
       {
@@ -19757,19 +19265,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "There is no real tension; traits are purely cosmetic",
+            text: "There is absolutely no real tension whatsoever; traits are purely and entirely cosmetic",
           },
           {
             id: "b",
-            text: "The tension between functionality breadth and dependency minimalism — without traits, a package author must either omit a useful but non-universal capability entirely, or include it (and its dependencies) unconditionally for every consumer",
+            text: "The tension between functionality breadth and dependency minimalism, avoiding an all-or-nothing choice for every consumer",
           },
           {
             id: "c",
-            text: "Traits only affect a package's version numbering scheme",
+            text: "Traits only ever affect a package's version numbering scheme specifically, nothing else",
           },
           {
             id: "d",
-            text: "Traits eliminate the need for any dependency declarations at all",
+            text: "Traits entirely eliminate the need for any dependency declarations at all, whatsoever",
           },
         ],
         correctOptionId: "b",
@@ -19779,72 +19287,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "What do private package registries let an organization do, according to 73.12?",
         options: [
-          {
-            id: "a",
-            text: "Only download public packages faster, with no support for internal code",
-          },
-          {
-            id: "b",
-            text: "Apply the exact same dependency management discipline (versioning, `Package.resolved` pinning) to genuinely internal, proprietary code through the same standard SPM workflow already used for public dependencies",
-          },
-          {
-            id: "c",
-            text: "Private registries replace the need for `Package.resolved` entirely",
-          },
-          {
-            id: "d",
-            text: "Private registries can only be used for binary targets",
-          },
+          { id: "a", text: "Only ever download public packages faster, with absolutely no support for internal code" },
+          { id: "b", text: "Private registries completely replace the need for `Package.resolved` entirely across the board" },
+          { id: "c", text: "Apply the exact same dependency management discipline to internal, proprietary code through the standard SPM workflow" },
+          { id: "d", text: "Private registries can only ever be used for binary targets specifically, nothing else at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Rather than needing an entirely separate, ad hoc distribution mechanism for internal code, private registries let internal packages be consumed through the identical standard SPM workflow, just pointed at an internal registry.",
       },
       {
         id: "q17",
         prompt: "What is a genuine use case for dependency mirrors, per 73.12?",
         options: [
-          {
-            id: "a",
-            text: "Mirrors are purely for improving download speed with no resilience benefit",
-          },
-          {
-            id: "b",
-            text: "Providing resilience against a public package source becoming temporarily unavailable, by redirecting resolution to an internal, cached copy",
-          },
-          {
-            id: "c",
-            text: "Mirrors can only be used for binary target dependencies",
-          },
-          {
-            id: "d",
-            text: "Mirrors eliminate the need for version requirements entirely",
-          },
+          { id: "a", text: "Mirrors are purely and entirely for improving download speed with absolutely no resilience benefit" },
+          { id: "b", text: "Mirrors entirely eliminate the need for version requirements altogether, completely" },
+          { id: "c", text: "Mirrors can only ever be used for binary target dependencies specifically, nothing else" },
+          { id: "d", text: "Providing resilience against a public source becoming temporarily unavailable, by redirecting to an internal cached copy" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section describes mirrors as useful for redirecting a public package's resolution to an internal cached copy, providing resilience if the original public source becomes temporarily unavailable.",
       },
       {
         id: "q18",
         prompt: "What migration philosophy does 73.13's incremental CocoaPods-to-SPM approach share with section 65.17?",
         options: [
-          {
-            id: "a",
-            text: "Both recommend a disruptive, all-at-once migration for maximum consistency",
-          },
-          {
-            id: "b",
-            text: "Both favor an opportunistic, one-item-at-a-time migration approach, letting each individual replacement be verified before moving to the next, reducing the risk of a broad, hard-to-diagnose regression",
-          },
-          {
-            id: "c",
-            text: "Section 65.17 and 73.13 describe entirely unrelated migration strategies",
-          },
-          {
-            id: "d",
-            text: "Both require abandoning the existing tooling entirely before any migration work begins",
-          },
+          { id: "a", text: "Both favor an opportunistic, one-item-at-a-time migration, verifying each replacement first" },
+          { id: "b", text: "Both strictly recommend a disruptive, all-at-once migration for maximum overall consistency" },
+          { id: "c", text: "Section 65.17 and 73.13 describe entirely and completely unrelated migration strategies" },
+          { id: "d", text: "Both strictly require abandoning the existing tooling entirely before any migration work even begins" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Both sections favor incremental, verifiable migration over disruptive, all-at-once replacement — reducing risk by validating each individual change before proceeding to the next.",
       },
       {
@@ -19853,19 +19325,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Incremental migration takes exactly the same amount of total risk as an all-at-once approach",
+            text: "Incremental migration takes exactly and precisely the same amount of total risk as an all-at-once approach",
           },
           {
             id: "b",
-            text: "Migrating one dependency at a time lets each replacement be verified working correctly before moving to the next, meaningfully reducing the risk of a broad regression from attempting the entire migration in one large, unverified step",
+            text: "Migrating one dependency at a time lets each replacement be verified before the next, reducing broad regression risk",
           },
           {
             id: "c",
-            text: "Risk reduction is not actually a consideration in dependency migration",
+            text: "Risk reduction is genuinely not actually a consideration whatsoever in dependency migration",
           },
           {
             id: "d",
-            text: "All-at-once migration is always safer because it's completed faster",
+            text: "All-at-once migration is always and invariably safer because it's completed considerably faster",
           },
         ],
         correctOptionId: "b",
@@ -19875,24 +19347,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "What should happen for CocoaPods dependencies that have no available SPM equivalent, according to 73.13?",
         options: [
-          {
-            id: "a",
-            text: "The entire migration must be abandoned if even one dependency lacks an SPM equivalent",
-          },
-          {
-            id: "b",
-            text: "A team should evaluate alternatives or continue CocoaPods usage for just those specific remaining dependencies, rather than blocking the overall migration entirely",
-          },
-          {
-            id: "c",
-            text: "Dependencies without SPM equivalents must be deleted from the project regardless of necessity",
-          },
-          {
-            id: "d",
-            text: "CocoaPods and SPM can never coexist within the same project under any circumstances",
-          },
+          { id: "a", text: "The entire migration must be entirely abandoned if even a single dependency lacks an SPM equivalent" },
+          { id: "b", text: "Dependencies without SPM equivalents must be entirely deleted from the project regardless of necessity" },
+          { id: "c", text: "A team should evaluate alternatives or continue CocoaPods for those remaining dependencies specifically" },
+          { id: "d", text: "CocoaPods and SPM can categorically never coexist within the same project under any circumstances whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section's incremental approach allows for genuinely SPM-unavailable dependencies to be handled separately (via alternatives or continued CocoaPods use for just those), rather than requiring the entire migration to stall on unavailable equivalents.",
       },
     ],
@@ -19907,48 +19367,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "What genuine value does Git's staging area provide when a working directory contains multiple, unrelated changes?",
         options: [
-          {
-            id: "a",
-            text: "It forces every uncommitted change to be committed together regardless of relevance",
-          },
-          {
-            id: "b",
-            text: "Selectively staging only files relevant to one coherent change lets that change be committed as its own clean, focused commit, while unrelated changes remain uncommitted for separate handling",
-          },
-          {
-            id: "c",
-            text: "The staging area has no practical purpose beyond a redundant extra step",
-          },
-          {
-            id: "d",
-            text: "Staging automatically resolves merge conflicts before committing",
-          },
+          { id: "a", text: "It strictly forces every single uncommitted change to be committed together regardless of relevance" },
+          { id: "b", text: "Staging automatically and fully resolves merge conflicts before committing, entirely" },
+          { id: "c", text: "The staging area has absolutely no practical purpose whatsoever beyond a redundant extra step" },
+          { id: "d", text: "Selectively staging files relevant to one change lets it be committed as a focused commit" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The two-step stage-then-commit model lets a developer construct a commit representing one coherent change, avoiding tangling unrelated changes together into one confusing commit.",
       },
       {
         id: "q2",
         prompt: "What is a Git branch, fundamentally?",
         options: [
-          {
-            id: "a",
-            text: "A permanent, uneditable copy of the entire repository",
-          },
-          {
-            id: "b",
-            text: "A movable pointer to a specific commit, letting development proceed independently from the main line without affecting it until explicitly merged back",
-          },
-          {
-            id: "c",
-            text: "A branch is identical to a tag and cannot receive new commits",
-          },
-          {
-            id: "d",
-            text: "Branches can only exist on a remote server, never locally",
-          },
+          { id: "a", text: "A movable pointer to a specific commit, letting development proceed independently until explicitly merged back" },
+          { id: "b", text: "A permanent, entirely uneditable copy of the whole repository altogether" },
+          { id: "c", text: "A branch is entirely identical to a tag and categorically cannot receive new commits" },
+          { id: "d", text: "Branches can only ever exist on a remote server, never locally at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "A branch's core value is enabling isolated, parallel development — multiple lines of work can proceed simultaneously without interfering with each other or with `main`'s stability.",
       },
       {
@@ -19957,19 +19393,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "They produce identical history structures with no meaningful difference",
+            text: "They produce entirely identical history structures with absolutely no meaningful difference",
           },
           {
             id: "b",
-            text: "Rebase replays commits on top of a different base, producing a linear history, while merge creates an explicit merge commit recording where two histories rejoined",
+            text: "Rebase replays commits on a different base, producing a linear history, while merge creates an explicit merge commit",
           },
           {
             id: "c",
-            text: "Merge always produces a linear history, while rebase always creates merge commits",
+            text: "Merge always and invariably produces a linear history, while rebase always creates merge commits",
           },
           {
             id: "d",
-            text: "Rebase can only be used on remote branches, never local ones",
+            text: "Rebase can only ever be used on remote branches specifically, never on local ones",
           },
         ],
         correctOptionId: "b",
@@ -19979,72 +19415,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "What genuine caution does the section raise about interactive rebase?",
         options: [
-          {
-            id: "a",
-            text: "Interactive rebase should never be used under any circumstances",
-          },
-          {
-            id: "b",
-            text: "Cleanup via interactive rebase should generally happen only on commits not yet pushed/shared, since rewriting already-shared history can create genuine confusion for anyone who has already based work on the original commits",
-          },
-          {
-            id: "c",
-            text: "Interactive rebase can only reorder commits, never squash or edit them",
-          },
-          {
-            id: "d",
-            text: "Interactive rebase automatically pushes rewritten history without any risk",
-          },
+          { id: "a", text: "Interactive rebase should categorically never be used under any circumstances whatsoever" },
+          { id: "b", text: "Interactive rebase can only ever reorder commits specifically, never squash or edit them" },
+          { id: "c", text: "Cleanup via interactive rebase should generally happen only on commits not yet pushed or shared" },
+          { id: "d", text: "Interactive rebase automatically and fully pushes rewritten history without any risk whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section specifically warns that rewriting already-shared history creates confusion for collaborators, making interactive rebase most appropriate for local, not-yet-shared commits.",
       },
       {
         id: "q5",
         prompt: "Why are merge conflicts in Xcode's `.pbxproj` file notoriously more painful to resolve than conflicts in ordinary source files?",
         options: [
-          {
-            id: "a",
-            text: "`.pbxproj` files are identical in structure to regular Swift source files",
-          },
-          {
-            id: "b",
-            text: "The file's internal structure (unique identifiers, ordering-sensitive entries) makes naive text-based conflict resolution genuinely risky, potentially corrupting the project file if resolved carelessly",
-          },
-          {
-            id: "c",
-            text: "Xcode automatically resolves all `.pbxproj` conflicts without any developer intervention",
-          },
-          {
-            id: "d",
-            text: "`.pbxproj` conflicts are actually easier to resolve than source file conflicts",
-          },
+          { id: "a", text: "`.pbxproj` files are entirely identical in structure to regular Swift source files" },
+          { id: "b", text: "`.pbxproj` conflicts are actually and genuinely easier to resolve than source file conflicts" },
+          { id: "c", text: "Xcode automatically and fully resolves all `.pbxproj` conflicts without any developer intervention whatsoever" },
+          { id: "d", text: "The file's internal structure makes naive text-based conflict resolution genuinely risky and error-prone" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The sprawling, machine-generated, identifier-heavy structure of `.pbxproj` files makes them unusually sensitive to naive manual conflict resolution compared to typical source file conflicts.",
       },
       {
         id: "q6",
         prompt: "What alternative strategy does the section suggest for resolving a genuinely difficult `.pbxproj` conflict?",
         options: [
-          {
-            id: "a",
-            text: "Deleting the entire project and starting from scratch",
-          },
-          {
-            id: "b",
-            text: "Sometimes opening the project in Xcode and re-adding a conflicting file reference cleanly, rather than attempting to hand-edit the raw, cryptic conflict markers directly",
-          },
-          {
-            id: "c",
-            text: "Manually editing every unique identifier by hand to ensure consistency",
-          },
-          {
-            id: "d",
-            text: "Merging conflicts in `.pbxproj` files is technically impossible and must always be avoided",
-          },
+          { id: "a", text: "Sometimes opening the project in Xcode and re-adding a conflicting file reference cleanly" },
+          { id: "b", text: "Deleting the entire project entirely and starting completely from scratch" },
+          { id: "c", text: "Manually editing every single unique identifier by hand to ensure consistency" },
+          { id: "d", text: "Merging conflicts in `.pbxproj` files is entirely technically impossible and must always be avoided" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section suggests that Xcode's own project file manipulation is considerably safer than manual text editing of this particular, unusually sensitive file format.",
       },
       {
@@ -20053,19 +19453,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "`xcuserdata/` contains critical shared project configuration that must be committed",
+            text: "`xcuserdata/` contains genuinely critical shared project configuration that must always be committed",
           },
           {
             id: "b",
-            text: "It stores per-developer editor state like open tabs and breakpoint positions, producing constant, meaningless merge conflicts as different developers' local editor state collides in version control",
+            text: "It stores per-developer editor state, producing meaningless merge conflicts",
           },
           {
             id: "c",
-            text: "`xcuserdata/` has no actual content and committing it has zero effect",
+            text: "`xcuserdata/` has absolutely no actual content and committing it has zero effect whatsoever",
           },
           {
             id: "d",
-            text: "Committing `xcuserdata/` is required for the project to build correctly for other developers",
+            text: "Committing `xcuserdata/` is strictly required for the project to build correctly for other developers",
           },
         ],
         correctOptionId: "b",
@@ -20075,72 +19475,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "What lightweight convention does the section mention for distinguishing blocking from non-blocking PR feedback?",
         options: [
-          {
-            id: "a",
-            text: "Writing all feedback in a separate document outside the PR itself",
-          },
-          {
-            id: "b",
-            text: "Prefixing optional suggestions with something like \"nit:\", letting an author immediately understand which feedback must be addressed before merging versus what's optional",
-          },
-          {
-            id: "c",
-            text: "Blocking and non-blocking feedback cannot actually be distinguished in a PR",
-          },
-          {
-            id: "d",
-            text: "Using all capital letters for blocking comments",
-          },
+          { id: "a", text: "Writing all feedback entirely in a separate document outside the PR itself" },
+          { id: "b", text: "Blocking and non-blocking feedback categorically cannot actually be distinguished in a PR" },
+          { id: "c", text: "Prefixing optional suggestions with something like \"nit:\", distinguishing required from optional feedback" },
+          { id: "d", text: "Using all capital letters exclusively for blocking comments, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This lightweight labeling convention removes ambiguity about whether a reviewer's comment is a hard blocker or a passing suggestion, speeding up the review-and-iterate cycle.",
       },
       {
         id: "q9",
         prompt: "Why is a specific, actionable review comment considered better than a vague one, according to 74.6?",
         options: [
-          {
-            id: "a",
-            text: "Vague comments are always faster for reviewers to write and equally useful",
-          },
-          {
-            id: "b",
-            text: "Specific feedback (like pointing to a potential retain cycle and referencing the relevant concept) gives the author clear, actionable direction, unlike vague criticism that leaves the actual concern unclear",
-          },
-          {
-            id: "c",
-            text: "Review comment specificity has no bearing on review efficiency",
-          },
-          {
-            id: "d",
-            text: "Actionable comments are only relevant for security-related code changes",
-          },
+          { id: "a", text: "Vague comments are always and invariably faster for reviewers to write and equally useful" },
+          { id: "b", text: "Actionable comments are only ever relevant for security-related code changes specifically" },
+          { id: "c", text: "Review comment specificity has absolutely no bearing whatsoever on review efficiency at all" },
+          { id: "d", text: "Specific feedback gives the author clear, actionable direction, unlike vague criticism that leaves the concern unclear" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The example contrasts \"This doesn't look right\" with a specific comment identifying the exact concern (a strong `self` capture) and referencing relevant context, illustrating why specificity produces more useful reviews.",
       },
       {
         id: "q10",
         prompt: "According to 74.7, what information does a good commit message capture that the diff itself typically doesn't?",
         options: [
-          {
-            id: "a",
-            text: "The exact line numbers that changed",
-          },
-          {
-            id: "b",
-            text: "The \"why\" — the actual reasoning, context, or problem being solved — since the \"what\" is usually already evident from the diff itself",
-          },
-          {
-            id: "c",
-            text: "The name of the developer who made the change",
-          },
-          {
-            id: "d",
-            text: "The exact timestamp of the commit",
-          },
+          { id: "a", text: "The \"why\" — the actual reasoning or problem being solved — since the \"what\" is usually evident from the diff" },
+          { id: "b", text: "The exact specific line numbers that changed in the file, nothing else" },
+          { id: "c", text: "The full name of the developer who actually made the change, nothing else" },
+          { id: "d", text: "The exact precise timestamp of the commit itself, nothing else whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section emphasizes that the diff already shows what changed, while the reasoning behind a change (why a specific value or approach was chosen) is the information genuinely at risk of being lost if not explicitly captured.",
       },
       {
@@ -20149,19 +19513,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Knowing \"that\" it changed is actually more valuable than knowing \"why\"",
+            text: "Knowing \"that\" it changed is actually and genuinely more valuable than knowing \"why\" it changed",
           },
           {
             id: "b",
-            text: "Understanding the reasoning (like specific user reports of premature timeouts on slow connections) tells a future developer whether the new value is still appropriate or safe to change again, information the diff alone cannot provide",
+            text: "Understanding the reasoning tells a future developer whether the value is still safe to change again",
           },
           {
             id: "c",
-            text: "The specific reasoning behind a change never actually matters for future development",
+            text: "The specific reasoning behind a change never actually and genuinely matters for future development",
           },
           {
             id: "d",
-            text: "Commit messages should only ever describe the \"what,\" never the \"why\"",
+            text: "Commit messages should only ever describe the \"what,\" never the \"why\" at all",
           },
         ],
         correctOptionId: "b",
@@ -20171,72 +19535,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "What is the benefit of catching linting violations via a `pre-commit` Git hook rather than later in CI?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful benefit; timing of detection doesn't matter",
-          },
-          {
-            id: "b",
-            text: "Catching issues at commit time is meaningfully earlier and cheaper to fix — a developer immediately re-fixing a violation while the change is still fresh in their mind faces considerably less friction than discovering it later in CI or during teammate review",
-          },
-          {
-            id: "c",
-            text: "Pre-commit hooks are slower and less reliable than CI-based checking",
-          },
-          {
-            id: "d",
-            text: "Pre-commit hooks can only check for security vulnerabilities, not style violations",
-          },
+          { id: "a", text: "There is absolutely no meaningful benefit whatsoever; timing of detection genuinely doesn't matter" },
+          { id: "b", text: "Pre-commit hooks are always and invariably slower and less reliable than CI-based checking" },
+          { id: "c", text: "Catching issues at commit time is earlier and cheaper to fix than discovering later in CI" },
+          { id: "d", text: "Pre-commit hooks can only ever check for security vulnerabilities specifically, not style violations" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section frames commit-time detection as meaningfully cheaper than later detection, since the developer still has full context on the change and hasn't yet moved on or pushed it into shared history.",
       },
       {
         id: "q13",
         prompt: "What genuinely different strategies do trunk-based development and release branches represent?",
         options: [
-          {
-            id: "a",
-            text: "They are identical strategies described with different terminology",
-          },
-          {
-            id: "b",
-            text: "Trunk-based development keeps a single, continuously-integrated main branch with short-lived feature branches merged frequently, while release branches maintain longer-lived branches per release version with selective backporting between them",
-          },
-          {
-            id: "c",
-            text: "Release branches never allow any bug fixes to be applied after creation",
-          },
-          {
-            id: "d",
-            text: "Trunk-based development requires a separate branch for every single commit",
-          },
+          { id: "a", text: "They are entirely identical strategies described using merely different terminology" },
+          { id: "b", text: "Trunk-based development strictly requires a separate branch for every single individual commit" },
+          { id: "c", text: "Release branches categorically never allow any bug fixes to be applied after creation whatsoever" },
+          { id: "d", text: "Trunk-based development keeps a continuously-integrated main branch with short-lived branches, unlike longer-lived release branches" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These represent genuinely distinct approaches to managing the tension between continuous integration and maintaining stable, released software, each with different branch lifetime and integration patterns.",
       },
       {
         id: "q14",
         prompt: "What factor determines the right choice between trunk-based development and a release-branch model, according to 74.9?",
         options: [
-          {
-            id: "a",
-            text: "The choice is arbitrary and has no relationship to an app's actual development practices",
-          },
-          {
-            id: "b",
-            text: "An app's actual release cadence and risk tolerance — trunk-based suits continuous shipping with strong automated testing, while release branches suit situations needing a stable, frozen snapshot for extended QA/certification",
-          },
-          {
-            id: "c",
-            text: "Only the size of the development team matters; release cadence is irrelevant",
-          },
-          {
-            id: "d",
-            text: "Trunk-based development is always objectively superior regardless of context",
-          },
+          { id: "a", text: "An app's release cadence and risk tolerance, favoring trunk-based for continuous shipping or release branches for extended QA" },
+          { id: "b", text: "The choice is entirely arbitrary and has absolutely no relationship to an app's actual development practices" },
+          { id: "c", text: "Only ever the size of the development team matters; release cadence is entirely irrelevant" },
+          { id: "d", text: "Trunk-based development is always and objectively superior regardless of context whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section frames this as a genuine trade-off depending on specific circumstances — release cadence, testing maturity, and the need for a stable release candidate window — rather than one approach being universally correct.",
       },
       {
@@ -20245,19 +19573,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Feature flags are exclusively used in release-branch models, never trunk-based development",
+            text: "Feature flags are exclusively used in release-branch models, never in trunk-based development at all",
           },
           {
             id: "b",
-            text: "Feature flags gate incomplete work directly within the continuously-integrated main branch, rather than relying on long-lived branches to isolate that unfinished work",
+            text: "Feature flags gate incomplete work directly within the main branch, rather than relying on long-lived branches",
           },
           {
             id: "c",
-            text: "Feature flags replace the need for any branching at all",
+            text: "Feature flags completely replace the need for any branching at all, whatsoever",
           },
           {
             id: "d",
-            text: "Feature flags are only relevant to backend services, not iOS apps",
+            text: "Feature flags are only ever relevant to backend services specifically, not iOS apps at all",
           },
         ],
         correctOptionId: "b",
@@ -20267,72 +19595,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "What practical advice does 74.10 give for a first contribution to an open-source Swift project?",
         options: [
-          {
-            id: "a",
-            text: "Attempt the largest, most ambitious change possible to demonstrate skill immediately",
-          },
-          {
-            id: "b",
-            text: "Start with a genuinely small, well-scoped contribution rather than a large one, since it's easier for maintainers to review and gives valuable, low-risk exposure to the project's conventions",
-          },
-          {
-            id: "c",
-            text: "Avoid reading the project's contribution guidelines to save time",
-          },
-          {
-            id: "d",
-            text: "Immediately request commit access before making any actual contribution",
-          },
+          { id: "a", text: "Attempt the largest, most ambitious change possible to demonstrate skill immediately" },
+          { id: "b", text: "Avoid entirely reading the project's contribution guidelines in order to save time" },
+          { id: "c", text: "Start with a genuinely small, well-scoped contribution rather than a large, ambitious one" },
+          { id: "d", text: "Immediately and directly request commit access before making any actual contribution whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section recommends small first contributions specifically because they're easier for often-volunteer maintainers to review promptly and provide low-risk exposure to a project's specific conventions.",
       },
       {
         id: "q17",
         prompt: "Why does the section recommend reading a project's CONTRIBUTING.md before doing anything else?",
         options: [
-          {
-            id: "a",
-            text: "CONTRIBUTING.md files are purely optional and rarely contain useful information",
-          },
-          {
-            id: "b",
-            text: "It's the first step in a practical, low-risk contribution approach, ensuring a contributor understands the project's specific conventions and expectations before investing effort",
-          },
-          {
-            id: "c",
-            text: "CONTRIBUTING.md files are only relevant for contributions to Swift itself, not other packages",
-          },
-          {
-            id: "d",
-            text: "Reading contribution guidelines is unnecessary if a contributor has experience with other open-source projects",
-          },
+          { id: "a", text: "CONTRIBUTING.md files are purely and entirely optional and rarely ever contain useful information" },
+          { id: "b", text: "Reading contribution guidelines is entirely unnecessary if a contributor has experience with other open-source projects" },
+          { id: "c", text: "CONTRIBUTING.md files are only ever relevant for contributions to Swift itself specifically, not other packages" },
+          { id: "d", text: "It's the first step in a low-risk contribution approach, ensuring understanding of a project's conventions first" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Understanding a project's specific guidelines upfront helps a new contributor avoid wasted effort from unfamiliarity with that particular project's expectations, which may differ from other projects' norms.",
       },
       {
         id: "q18",
         prompt: "Why might a large, ambitious first contribution risk rejection or extensive rework, according to 74.10?",
         options: [
-          {
-            id: "a",
-            text: "Large contributions are always automatically merged regardless of quality",
-          },
-          {
-            id: "b",
-            text: "Significant effort invested without familiarity with a project's actual review norms and expectations increases the risk of the contribution not matching what maintainers actually want, requiring substantial rework or facing rejection",
-          },
-          {
-            id: "c",
-            text: "Maintainers never review large contributions under any circumstances",
-          },
-          {
-            id: "d",
-            text: "Open-source projects only accept contributions from long-established team members",
-          },
+          { id: "a", text: "Significant effort invested without familiarity with a project's actual review norms risks substantial rework or rejection" },
+          { id: "b", text: "Large contributions are always and automatically merged regardless of any code quality whatsoever" },
+          { id: "c", text: "Maintainers categorically never review any large contributions under any circumstances whatsoever" },
+          { id: "d", text: "Open-source projects only ever accept contributions from long-established team members specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section frames starting small as reducing the risk of investing significant effort into work that ultimately doesn't align with a project's actual conventions and expectations, discovered only after a large investment of effort.",
       },
       {
@@ -20341,19 +19633,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "A contributor's own team's internal conventions should always take precedence",
+            text: "A contributor's own team's internal conventions should always and invariably take precedence",
           },
           {
             id: "b",
-            text: "A contributor should engage genuinely and patiently with review feedback, which may differ from internal team norms, rather than assuming one's own team's conventions automatically apply",
+            text: "A contributor should engage genuinely with feedback, which may differ from internal norms",
           },
           {
             id: "c",
-            text: "Review norms are identical across every open-source project and require no adjustment",
+            text: "Review norms are entirely identical across every single open-source project and require no adjustment",
           },
           {
             id: "d",
-            text: "Contributors should avoid any interaction with maintainers during the review process",
+            text: "Contributors should entirely avoid any interaction whatsoever with maintainers during the review process",
           },
         ],
         correctOptionId: "b",
@@ -20363,24 +19655,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "What common thread connects `.gitignore` hygiene (74.5) and Git hooks for linting (74.8)?",
         options: [
-          {
-            id: "a",
-            text: "They are entirely unrelated aspects of Git usage with no shared purpose",
-          },
-          {
-            id: "b",
-            text: "Both represent proactive, upfront practices that prevent problems (meaningless merge conflicts, late-discovered style violations) before they occur, rather than addressing them reactively after the fact",
-          },
-          {
-            id: "c",
-            text: "`.gitignore` and Git hooks both exclusively concern binary file handling",
-          },
-          {
-            id: "d",
-            text: "Neither practice has any measurable impact on a team's development workflow",
-          },
+          { id: "a", text: "They are entirely and completely unrelated aspects of Git usage with absolutely no shared purpose" },
+          { id: "b", text: "`.gitignore` and Git hooks both exclusively and only concern binary file handling specifically" },
+          { id: "c", text: "Both represent proactive, upfront practices that prevent problems before they occur" },
+          { id: "d", text: "Neither practice has any measurable impact whatsoever on a team's development workflow at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Both practices are proactive quality-of-life mechanisms — correct `.gitignore` prevents meaningless state-collision conflicts, while pre-commit hooks catch issues before they propagate further into the shared development and review process.",
       },
     ],
@@ -20395,24 +19675,12 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "What range of checks does SwiftLint perform, according to 75.1?",
         options: [
-          {
-            id: "a",
-            text: "Only purely cosmetic formatting rules with no substantive value",
-          },
-          {
-            id: "b",
-            text: "A configurable range from simple formatting conventions to genuinely substantive checks, like flagging force-unwrap usage or excessive function complexity",
-          },
-          {
-            id: "c",
-            text: "SwiftLint can only detect compiler errors, not style issues",
-          },
-          {
-            id: "d",
-            text: "SwiftLint exclusively checks for missing documentation comments",
-          },
+          { id: "a", text: "A configurable range from simple formatting conventions to genuinely substantive checks like force-unwrap usage" },
+          { id: "b", text: "Only ever purely cosmetic formatting rules with absolutely no substantive value whatsoever" },
+          { id: "c", text: "SwiftLint can only ever detect compiler errors specifically, not style issues at all" },
+          { id: "d", text: "SwiftLint exclusively and only checks for missing documentation comments, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "SwiftLint's rule set spans from simple style conventions to more substantive checks connecting to real correctness concerns, like force-unwrap usage discussed in the crash material from section 68.9.",
       },
       {
@@ -20421,19 +19689,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Overly strict configurations have no negative consequences",
+            text: "Overly strict configurations have absolutely no negative consequences whatsoever, ever",
           },
           {
             id: "b",
-            text: "It trains developers to routinely ignore or disable lint warnings entirely, undermining the tool's value for the genuinely important checks it could otherwise be catching",
+            text: "It trains developers to routinely ignore lint warnings, undermining the tool's value for important checks",
           },
           {
             id: "c",
-            text: "Strict configurations always improve code quality with no downside",
+            text: "Strict configurations always and invariably improve code quality with absolutely no downside",
           },
           {
             id: "d",
-            text: "Overly strict rules automatically disable themselves after repeated violations",
+            text: "Overly strict rules automatically and fully disable themselves after repeated violations, somehow",
           },
         ],
         correctOptionId: "b",
@@ -20443,72 +19711,36 @@ struct UserProfileView: View {
         id: "q3",
         prompt: "How does a formatter (SwiftFormat/`swift-format`) fundamentally differ from a linter (SwiftLint)?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical tools with different names",
-          },
-          {
-            id: "b",
-            text: "A formatter directly rewrites code to conform to a consistent style, while a linter detects and reports issues without necessarily fixing them",
-          },
-          {
-            id: "c",
-            text: "Linters can only be used on Objective-C code, while formatters work only on Swift",
-          },
-          {
-            id: "d",
-            text: "Formatters cannot be integrated into any automated workflow",
-          },
+          { id: "a", text: "They are entirely and completely identical tools with merely different names attached" },
+          { id: "b", text: "Linters can only ever be used on Objective-C code, while formatters work only ever on Swift" },
+          { id: "c", text: "A formatter directly rewrites code for consistent style, while a linter detects and reports issues without fixing them" },
+          { id: "d", text: "Formatters categorically cannot be integrated into any automated workflow whatsoever, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The section distinguishes formatters' direct-rewrite approach from linting's detect-and-report approach, which has implications for how each tool is best integrated into a workflow.",
       },
       {
         id: "q4",
         prompt: "Why is automatic formatting well suited to running unconditionally on every save or commit, while linting benefits from developer review?",
         options: [
-          {
-            id: "a",
-            text: "Both formatting and linting should always be fully automated with no human review",
-          },
-          {
-            id: "b",
-            text: "There's no judgment call involved in consistent style application, while linting's more substantive checks (like a risky force-unwrap) benefit from actual developer review since not every violation has one unambiguous, automatically-correct fix",
-          },
-          {
-            id: "c",
-            text: "Formatting requires more human judgment than linting",
-          },
-          {
-            id: "d",
-            text: "Automatic formatting is actually more error-prone than manual formatting",
-          },
+          { id: "a", text: "Both formatting and linting should always be entirely fully automated with absolutely no human review" },
+          { id: "b", text: "Automatic formatting is actually and genuinely more error-prone than manual formatting somehow" },
+          { id: "c", text: "Formatting strictly requires meaningfully more human judgment than linting does overall" },
+          { id: "d", text: "There's no judgment call in consistent style application, unlike linting's more substantive, judgment-requiring checks" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section distinguishes formatting's unambiguous, judgment-free application from linting's more substantive checks, which often require actual developer judgment rather than automatic resolution.",
       },
       {
         id: "q5",
         prompt: "What genuine value do custom SwiftLint rules provide beyond the built-in rule set?",
         options: [
-          {
-            id: "a",
-            text: "Custom rules can only duplicate existing built-in functionality",
-          },
-          {
-            id: "b",
-            text: "They let a team encode project-specific conventions (like architectural patterns or naming conventions) that no general-purpose linter would know to check, turning manual review concerns into automatically enforced conventions",
-          },
-          {
-            id: "c",
-            text: "Custom rules are purely experimental and cannot actually be used in production",
-          },
-          {
-            id: "d",
-            text: "Custom rules can only check for trailing whitespace and similar formatting issues",
-          },
+          { id: "a", text: "They let a team encode project-specific conventions no general-purpose linter would know to check" },
+          { id: "b", text: "Custom rules can only ever duplicate existing built-in functionality specifically, nothing else" },
+          { id: "c", text: "Custom rules are purely and entirely experimental and categorically cannot be used in production" },
+          { id: "d", text: "Custom rules can only ever check for trailing whitespace and similar formatting issues specifically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The example given — flagging direct network calls within a View type — shows how custom rules encode and automatically enforce a team's own specific architectural discipline, discussed in this curriculum's architecture material.",
       },
       {
@@ -20517,19 +19749,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "It has no relationship to any other material in this curriculum",
+            text: "It has absolutely no relationship whatsoever to any other material in this curriculum",
           },
           {
             id: "b",
-            text: "The view/view-model separation principle discussed in the architecture material from sections 45-46",
+            text: "The view/view-model separation principle discussed in the earlier architecture material",
           },
           {
             id: "c",
-            text: "It connects exclusively to Core Animation's layer/view separation from section 62.1",
+            text: "It connects exclusively to Core Animation's layer/view separation from section 62.1 specifically",
           },
           {
             id: "d",
-            text: "It relates to StoreKit's product/entitlement separation",
+            text: "It relates entirely to StoreKit's product/entitlement separation concept specifically, nothing else",
           },
         ],
         correctOptionId: "b",
@@ -20539,72 +19771,36 @@ struct UserProfileView: View {
         id: "q7",
         prompt: "What does Periphery specifically detect?",
         options: [
-          {
-            id: "a",
-            text: "Style and formatting violations, identical to SwiftLint",
-          },
-          {
-            id: "b",
-            text: "Genuinely unused code — declarations (functions, properties, types) that are never actually referenced anywhere in the codebase — distinct from SwiftLint's style/convention focus",
-          },
-          {
-            id: "c",
-            text: "Periphery only detects unused import statements, nothing else",
-          },
-          {
-            id: "d",
-            text: "Periphery detects runtime performance issues, not static code structure",
-          },
+          { id: "a", text: "Style and formatting violations, entirely identical to what SwiftLint already detects" },
+          { id: "b", text: "Periphery only ever detects unused import statements specifically, nothing else at all" },
+          { id: "c", text: "Genuinely unused code — declarations never actually referenced anywhere in the codebase at all" },
+          { id: "d", text: "Periphery detects runtime performance issues specifically, not static code structure at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Periphery targets a distinct concern from style/convention linting — specifically identifying code that could be safely removed because nothing actually references it.",
       },
       {
         id: "q8",
         prompt: "What ongoing costs does genuinely unused (dead) code carry, according to 75.4?",
         options: [
-          {
-            id: "a",
-            text: "None; unused code has no measurable impact once written",
-          },
-          {
-            id: "b",
-            text: "Unnecessary compile time, confusion for developers wondering whether a still-present function is actually still relevant, and occasionally a genuine, unnoticed security or correctness liability if it's dead because it was quietly broken",
-          },
-          {
-            id: "c",
-            text: "Dead code only affects binary size, with no other consequences",
-          },
-          {
-            id: "d",
-            text: "Unused code automatically improves code coverage metrics",
-          },
+          { id: "a", text: "None whatsoever; unused code has absolutely no measurable impact once written, ever" },
+          { id: "b", text: "Unused code automatically and fully improves code coverage metrics somehow, entirely" },
+          { id: "c", text: "Dead code only ever affects binary size specifically, with no other consequences whatsoever" },
+          { id: "d", text: "Unnecessary compile time, developer confusion over whether it's still relevant, and occasionally a hidden liability" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section lists several genuine, ongoing costs beyond mere tidiness — compile time overhead, developer confusion, and the risk of unnoticed, quietly-broken code lingering unaddressed.",
       },
       {
         id: "q9",
         prompt: "What kinds of checks does Danger-Swift automate, according to 75.5?",
         options: [
-          {
-            id: "a",
-            text: "Only checking for correct indentation and whitespace",
-          },
-          {
-            id: "b",
-            text: "Common, repetitive PR review tasks, like verifying a changelog entry was included, warning about unusually large PRs, or flagging source changes lacking corresponding test changes",
-          },
-          {
-            id: "c",
-            text: "Danger-Swift can only run after a PR has already been merged",
-          },
-          {
-            id: "d",
-            text: "Danger-Swift exclusively checks for security vulnerabilities",
-          },
+          { id: "a", text: "Common, repetitive PR review tasks, like flagging untested changes or oversized PRs" },
+          { id: "b", text: "Only ever checking for correct indentation and whitespace specifically, nothing else" },
+          { id: "c", text: "Danger-Swift can only ever run after a PR has already been fully merged, exclusively" },
+          { id: "d", text: "Danger-Swift exclusively and only checks for security vulnerabilities specifically, nothing else" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Danger-Swift automates mechanical, rule-based PR checks, posting findings as automated comments during CI, covering concerns like changelog updates, PR size, and test coverage for changes.",
       },
       {
@@ -20613,19 +19809,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "It replaces the need for human review entirely",
+            text: "It completely replaces the need for any human review entirely, across the board",
           },
           {
             id: "b",
-            text: "It frees human reviewers' genuinely limited attention to focus on things automation fundamentally can't evaluate — actual code correctness, architectural fit, and design quality — rather than mechanical, rule-based concerns",
+            text: "It frees human reviewers' limited attention for things automation can't evaluate",
           },
           {
             id: "c",
-            text: "Automated checks make human review slower and less effective",
+            text: "Automated checks make human review meaningfully slower and less effective overall, somehow",
           },
           {
             id: "d",
-            text: "Danger-Swift only benefits automated CI systems, not human reviewers at all",
+            text: "Danger-Swift only ever benefits automated CI systems specifically, not human reviewers at all",
           },
         ],
         correctOptionId: "b",
@@ -20635,72 +19831,36 @@ struct UserProfileView: View {
         id: "q11",
         prompt: "What does a warnings-as-errors policy (`SWIFT_TREAT_WARNINGS_AS_ERRORS`) accomplish?",
         options: [
-          {
-            id: "a",
-            text: "It silently suppresses all compiler warnings without any build impact",
-          },
-          {
-            id: "b",
-            text: "It converts compiler warnings into build-breaking errors, forcing them to be addressed immediately rather than accumulating silently and indefinitely in a codebase",
-          },
-          {
-            id: "c",
-            text: "It only applies to warnings generated by SwiftLint, not the Swift compiler itself",
-          },
-          {
-            id: "d",
-            text: "It automatically fixes every warning without requiring any developer action",
-          },
+          { id: "a", text: "It silently and completely suppresses all compiler warnings without any build impact whatsoever" },
+          { id: "b", text: "It only ever applies to warnings generated by SwiftLint specifically, not the Swift compiler itself" },
+          { id: "c", text: "It converts compiler warnings into build-breaking errors, forcing immediate attention rather than silent accumulation" },
+          { id: "d", text: "It automatically and fully fixes every single warning without requiring any developer action at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This build setting escalates warnings to build-breaking errors, preventing the common pattern of warnings quietly accumulating and being ignored over time.",
       },
       {
         id: "q12",
         prompt: "What genuine trade-off does the warnings-as-errors policy introduce, according to 75.6?",
         options: [
-          {
-            id: "a",
-            text: "There is no real trade-off; this policy has only benefits and no downsides",
-          },
-          {
-            id: "b",
-            text: "It can block a build entirely due to a warning from a third-party dependency genuinely outside the team's own control to fix, requiring an explicit mechanism for handling such externally-sourced warnings",
-          },
-          {
-            id: "c",
-            text: "Warnings-as-errors policies are incompatible with Swift Package Manager",
-          },
-          {
-            id: "d",
-            text: "This policy only affects Release builds, never Debug builds",
-          },
+          { id: "a", text: "There is absolutely no real trade-off whatsoever; this policy has only benefits and zero downsides" },
+          { id: "b", text: "This particular policy only ever affects Release builds specifically, never Debug builds at all" },
+          { id: "c", text: "Warnings-as-errors policies are entirely and completely incompatible with Swift Package Manager" },
+          { id: "d", text: "It can block a build entirely from a third-party warning, outside the team's control" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section highlights the real risk of a third-party dependency's warning blocking a build entirely, requiring teams to have a deliberate, scoped mechanism for handling such cases without abandoning the policy.",
       },
       {
         id: "q13",
         prompt: "What mechanism does the section suggest for handling an unfixable, third-party-sourced warning under a warnings-as-errors policy?",
         options: [
-          {
-            id: "a",
-            text: "Permanently disabling warnings-as-errors for the entire project",
-          },
-          {
-            id: "b",
-            text: "A clear, explicit, well-documented and scoped suppression mechanism, like a targeted `@available`-based suppression or a specific compiler flag exception",
-          },
-          {
-            id: "c",
-            text: "Deleting the dependency entirely regardless of its value to the project",
-          },
-          {
-            id: "d",
-            text: "There is no viable mechanism; teams must simply accept blocked builds indefinitely",
-          },
+          { id: "a", text: "A clear, well-documented suppression mechanism, like a targeted compiler flag exception" },
+          { id: "b", text: "Permanently and completely disabling warnings-as-errors for the entire project altogether" },
+          { id: "c", text: "Deleting the dependency entirely regardless of its genuine value to the project whatsoever" },
+          { id: "d", text: "There is absolutely no viable mechanism; teams must simply accept blocked builds indefinitely, forever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section recommends a targeted, well-documented suppression approach specifically for externally-sourced warnings, avoiding both abandoning the policy entirely and being permanently blocked.",
       },
       {
@@ -20709,19 +19869,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Random, arbitrary templates unrelated to the project's actual code",
+            text: "Random, entirely arbitrary templates unrelated to the project's actual code whatsoever",
           },
           {
             id: "b",
-            text: "Templates applied against a project's existing code, using reflection-like metadata examining actual types, protocols, and their members",
+            text: "Templates applied against a project's existing code, using reflection-like metadata on actual types and protocols",
           },
           {
             id: "c",
-            text: "Sourcery only generates code from JSON configuration files with no relationship to Swift types",
+            text: "Sourcery only ever generates code from JSON configuration files with no relationship to Swift types",
           },
           {
             id: "d",
-            text: "Sourcery requires manually writing every generated line by hand first",
+            text: "Sourcery strictly requires manually writing every single generated line by hand first",
           },
         ],
         correctOptionId: "b",
@@ -20731,72 +19891,36 @@ struct UserProfileView: View {
         id: "q15",
         prompt: "What class of bug does Sourcery's automatic mock generation eliminate, according to the example in 75.7?",
         options: [
-          {
-            id: "a",
-            text: "Memory leaks caused by retain cycles",
-          },
-          {
-            id: "b",
-            text: "The \"mock is now out of sync with the real protocol\" bug — where a hand-written mock isn't updated when the protocol it mocks changes its method signatures",
-          },
-          {
-            id: "c",
-            text: "Race conditions in concurrent code",
-          },
-          {
-            id: "d",
-            text: "Force-unwrap crashes from unexpectedly nil optionals",
-          },
+          { id: "a", text: "Memory leaks caused specifically by retain cycles, nothing else at all" },
+          { id: "b", text: "Race conditions occurring specifically within concurrent code, nothing else whatsoever" },
+          { id: "c", text: "The \"mock out of sync with the real protocol\" bug, where a hand-written mock isn't updated when the protocol changes" },
+          { id: "d", text: "Force-unwrap crashes resulting from unexpectedly nil optionals, nothing else at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Because Sourcery regenerates mock boilerplate automatically from a protocol's current, actual definition, it eliminates the risk of a manually-maintained mock drifting out of sync with the real protocol over time.",
       },
       {
         id: "q16",
         prompt: "How does Sourcery's mock generation connect to earlier testing material from Part 10?",
         options: [
-          {
-            id: "a",
-            text: "It has no relationship to any earlier testing content",
-          },
-          {
-            id: "b",
-            text: "It directly connects to the mock/test-double material from sections 65.14 and 66.1, automating what would otherwise be manually written mock implementations",
-          },
-          {
-            id: "c",
-            text: "Sourcery replaces the need for Swift Testing entirely",
-          },
-          {
-            id: "d",
-            text: "Sourcery can only generate UI tests, not mock services",
-          },
+          { id: "a", text: "It has absolutely no relationship whatsoever to any earlier testing content in the curriculum" },
+          { id: "b", text: "Sourcery can only ever generate UI tests specifically, not mock services at all" },
+          { id: "c", text: "Sourcery completely replaces the need for Swift Testing entirely across the board, always" },
+          { id: "d", text: "It directly connects to the mock/test-double material from earlier sections, automating manual mock writing" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The section explicitly ties Sourcery's mock generation capability back to the manually-written mock service examples covered in sections 65.14 and 66.1.",
       },
       {
         id: "q17",
         prompt: "What is the appropriate way to think about the relationship between SwiftLint and formatters like SwiftFormat?",
         options: [
-          {
-            id: "a",
-            text: "They are redundant tools serving an identical purpose, and only one should ever be used",
-          },
-          {
-            id: "b",
-            text: "They serve complementary but distinct roles — SwiftLint detects and reports issues (including substantive ones), while formatters automatically rewrite code for consistent style — often used together",
-          },
-          {
-            id: "c",
-            text: "Formatters replace the need for compilers entirely",
-          },
-          {
-            id: "d",
-            text: "SwiftLint can automatically rewrite code exactly like a formatter does",
-          },
+          { id: "a", text: "They serve complementary but distinct roles — SwiftLint detects issues, formatters automatically rewrite style" },
+          { id: "b", text: "They are entirely and completely redundant tools serving an identical purpose, and only one should ever be used" },
+          { id: "c", text: "Formatters completely replace the need for compilers entirely across the board" },
+          { id: "d", text: "SwiftLint can automatically and fully rewrite code exactly like a formatter does, entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The section frames linting and formatting as distinct, complementary concerns — detection/reporting versus direct, unambiguous style rewriting — each suited to different workflow integration approaches.",
       },
       {
@@ -20805,19 +19929,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "These are mutually exclusive integration points and cannot both be used",
+            text: "These are entirely mutually exclusive integration points and categorically cannot both be used",
           },
           {
             id: "b",
-            text: "Combining build-time and commit-time checking provides multiple points where style/quality issues can be caught, consistent with the \"catch issues early and cheaply\" principle discussed for Git hooks in section 74.8",
+            text: "Combining build-time and commit-time checking provides multiple points to catch style/quality issues early",
           },
           {
             id: "c",
-            text: "Build phases and Git hooks perform entirely unrelated functions unrelated to linting",
+            text: "Build phases and Git hooks perform entirely and completely unrelated functions unrelated to linting",
           },
           {
             id: "d",
-            text: "SwiftLint cannot actually be run as a Git hook under any circumstances",
+            text: "SwiftLint categorically cannot actually be run as a Git hook under any circumstances whatsoever",
           },
         ],
         correctOptionId: "b",
@@ -20827,48 +19951,24 @@ struct UserProfileView: View {
         id: "q19",
         prompt: "What does the section suggest is the ideal outcome of a well-configured code quality tooling setup across SwiftLint, formatters, Periphery, and Danger-Swift?",
         options: [
-          {
-            id: "a",
-            text: "Eliminating the need for any human code review entirely",
-          },
-          {
-            id: "b",
-            text: "Freeing human attention (reviewers and developers) to focus on genuinely substantive concerns — correctness, architecture, design — by automating mechanical, rule-based, or mechanically-derivable checks and tasks",
-          },
-          {
-            id: "c",
-            text: "Making builds slower and more cumbersome for the sake of thoroughness",
-          },
-          {
-            id: "d",
-            text: "Replacing the need for any testing infrastructure covered in Part 10",
-          },
+          { id: "a", text: "Eliminating the need for any human code review entirely, across the whole project" },
+          { id: "b", text: "Making builds meaningfully slower and more cumbersome for the sake of thoroughness alone" },
+          { id: "c", text: "Freeing human attention to focus on substantive concerns like correctness and design, by automating mechanical tasks" },
+          { id: "d", text: "Replacing the need for any testing infrastructure covered in Part 10 entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Across the tools covered in this section, the recurring theme is automating mechanical concerns (style, dead code, PR checklist items, boilerplate) to free human attention for what genuinely requires human judgment.",
       },
       {
         id: "q20",
         prompt: "Which tool pairing correctly matches a tool to its primary purpose?",
         options: [
-          {
-            id: "a",
-            text: "SwiftFormat detects unused code; Periphery rewrites code style",
-          },
-          {
-            id: "b",
-            text: "SwiftLint detects style/convention issues; Sourcery generates mechanically-derivable boilerplate code",
-          },
-          {
-            id: "c",
-            text: "Danger-Swift generates Swift source code; Sourcery automates PR review checks",
-          },
-          {
-            id: "d",
-            text: "Periphery enforces warnings-as-errors; SwiftLint detects dead code",
-          },
+          { id: "a", text: "SwiftFormat detects unused code entirely; Periphery rewrites code style completely" },
+          { id: "b", text: "Periphery entirely enforces warnings-as-errors; SwiftLint fully detects dead code" },
+          { id: "c", text: "Danger-Swift generates Swift source code entirely; Sourcery automates PR review checks fully" },
+          { id: "d", text: "SwiftLint detects style/convention issues; Sourcery generates boilerplate from existing code" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This pairing correctly reflects each tool's actual role as described in the section — SwiftLint for style/convention detection, and Sourcery for automatic, template-based code generation from existing type structure.",
       },
     ],
