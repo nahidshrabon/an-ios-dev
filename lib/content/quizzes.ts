@@ -12709,11 +12709,11 @@ struct UserProfileView: View {
           { id: "d", text: "Rather than a separate, sandboxed Intents extension process communicating via IPC, App Intents live directly in the main app's process as ordinary Swift types conforming to a protocol" },
         ],
         correctOptionId: "d",
-        explanation: "The section identifies this in-process, Swift-native design as the fundamental shift — replacing SiriKit's separate extension process and IPC communication with intents that are simply ordinary Swift types, a much simpler mental model that naturally extends across multiple system surfaces.",
+        explanation: "This in-process, Swift-native design is the fundamental shift — replacing SiriKit's separate extension process and IPC communication with intents that are simply ordinary Swift types, a much simpler mental model that naturally extends across multiple system surfaces.",
       },
       {
         id: "q2",
-        prompt: "What does a single `AppIntent` definition simultaneously power, according to 51.1?",
+        prompt: "What does a single `AppIntent` definition simultaneously power?",
         options: [
           { id: "a", text: "Siri, Shortcuts, Spotlight, and widgets, all from one definition" },
           { id: "b", text: "Only Siri voice requests, requiring separate code elsewhere" },
@@ -12733,7 +12733,7 @@ struct UserProfileView: View {
           { id: "d", text: "It replaces the need for any `@Parameter` declarations entirely" },
         ],
         correctOptionId: "b",
-        explanation: "`perform()` is where the intent's real work happens — since it supports `async`/`await` and error throwing, a well-designed intent typically delegates to the app's existing business logic layer (section 45.5) rather than reimplementing logic separately.",
+        explanation: "`perform()` is where the intent's real work happens — since it supports `async`/`await` and error throwing, a well-designed intent typically delegates to the app's existing business logic layer rather than reimplementing logic separately.",
       },
       {
         id: "q4",
@@ -12829,7 +12829,7 @@ struct UserProfileView: View {
           { id: "d", text: "`RelevantEntities` can only be used with `LongRunningIntent`" },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly distinguishes these as complementary but different mechanisms — `RelevantEntities` proactively pushes timely, contextual relevance signals (like dinner recipes at dinner time), while `suggestedEntities()` reactively responds only when a user is actively browsing options within Shortcuts.",
+        explanation: "These are complementary but different mechanisms — `RelevantEntities` proactively pushes timely, contextual relevance signals (like dinner recipes at dinner time), while `suggestedEntities()` reactively responds only when a user is actively browsing options within Shortcuts.",
       },
       {
         id: "q12",
@@ -12853,13 +12853,13 @@ struct UserProfileView: View {
           { id: "d", text: "If entity identifiers aren't consistently synced across a user's devices along with the underlying data, a Shortcut referencing a specific entity built on one device might fail to resolve that same entity correctly on another device" },
         ],
         correctOptionId: "d",
-        explanation: "`SyncableEntity` formalizes the requirement that an entity's identifier remain stable across a user's devices, connecting back to CloudKit's record identity model (section 44.1) — without this consistency, cross-device Shortcuts referencing specific data could break unpredictably.",
+        explanation: "`SyncableEntity` formalizes the requirement that an entity's identifier remain stable across a user's devices, connecting back to CloudKit's record identity model — without this consistency, cross-device Shortcuts referencing specific data could break unpredictably.",
       },
       {
         id: "q14",
         prompt: "What is `LongRunningIntent` designed for, and what earlier concept does it directly parallel?",
         options: [
-          { id: "a", text: "Genuinely lengthy operations that can't reasonably complete within the standard short execution budget — directly paralleling `BGContinuedProcessingTask`'s role for long user-initiated background work (section 49.12)" },
+          { id: "a", text: "Genuinely lengthy operations that can't reasonably complete within the standard short execution budget — directly paralleling `BGContinuedProcessingTask`'s role for long user-initiated background work" },
           { id: "b", text: "Intents that should never actually complete" },
           { id: "c", text: "`LongRunningIntent` is only used for intents with no parameters" },
           { id: "d", text: "It has no relationship to any previously covered concept" },
@@ -12881,7 +12881,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "Why does testing an `AppIntent` largely reuse the same techniques from section 47's dependency injection material?",
+        prompt: "Why does testing an `AppIntent` largely reuse the same dependency-injection techniques used elsewhere in the app?",
         options: [
           { id: "a", text: "It doesn't; `AppIntentsTesting` requires an entirely separate approach" },
           { id: "b", text: "`AppIntentsTesting` can only test intents with zero parameters" },
@@ -12889,7 +12889,7 @@ struct UserProfileView: View {
           { id: "d", text: "Intent testing requires actually invoking Siri during the test run" },
         ],
         correctOptionId: "c",
-        explanation: "Since intents are designed to be thin wrappers around existing, already-testable business logic (rather than duplicating logic), the same protocol-based substitution and injection techniques from section 47 carry over naturally — `AppIntentsTesting`'s specific contribution is making it easy to construct and invoke intents directly in tests.",
+        explanation: "Since intents are designed to be thin wrappers around existing, already-testable business logic (rather than duplicating logic), the same protocol-based substitution and injection techniques used elsewhere carry over naturally — `AppIntentsTesting`'s specific contribution is making it easy to construct and invoke intents directly in tests.",
       },
       {
         id: "q17",
@@ -12901,11 +12901,11 @@ struct UserProfileView: View {
           { id: "d", text: "None beyond the intent already being a well-formed `AppIntent` with a clear title — this is a direct payoff of App Intents' unified, multi-surface design" },
         ],
         correctOptionId: "d",
-        explanation: "Because App Intents was designed from the outset to power multiple system surfaces from one shared definition, an intent originally built for Siri/Shortcuts automatically becomes eligible for Action Button/Control Center assignment with no additional per-surface work — a direct benefit of the unified architecture described in 51.1.",
+        explanation: "Because App Intents was designed from the outset to power multiple system surfaces from one shared definition, an intent originally built for Siri/Shortcuts automatically becomes eligible for Action Button/Control Center assignment with no additional per-surface work — a direct benefit of the unified architecture.",
       },
       {
         id: "q18",
-        prompt: "What does Visual Intelligence integration represent, according to 51.16?",
+        prompt: "What does Visual Intelligence integration represent?",
         options: [
           { id: "a", text: "A genuinely advanced, still-maturing integration point where the system can proactively suggest relevant app actions based on visual context (like a photographed dish), rather than the user explicitly invoking an action by name" },
           { id: "b", text: "A stable, long-established capability with no further development expected" },
@@ -12913,11 +12913,11 @@ struct UserProfileView: View {
           { id: "d", text: "A replacement for `AppShortcutsProvider`" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly frames Visual Intelligence as an actively-evolving edge of App Intents' capabilities — extending the framework's reach from explicit user requests toward proactive suggestions triggered by visual understanding, representing where the framework is still expanding.",
+        explanation: "Visual Intelligence is an actively-evolving edge of App Intents' capabilities — extending the framework's reach from explicit user requests toward proactive suggestions triggered by visual understanding, representing where the framework is still expanding.",
       },
       {
         id: "q19",
-        prompt: "According to 51.17, why does migrating from SiriKit `INIntent` to App Intents typically not require rewriting an app's underlying business logic?",
+        prompt: "Why does migrating from SiriKit `INIntent` to App Intents typically not require rewriting an app's underlying business logic?",
         options: [
           { id: "a", text: "Business logic must always be entirely rewritten during any framework migration" },
           { id: "b", text: "A well-architected app already separates business logic from its specific integration surface, so migration primarily involves rewriting the thin integration/wrapper layer around that same, unchanged logic" },
@@ -12925,11 +12925,11 @@ struct UserProfileView: View {
           { id: "d", text: "Migration is impossible without a full app rewrite" },
         ],
         correctOptionId: "b",
-        explanation: "This directly connects back to section 45's separation-of-concerns principle — if business logic was already properly isolated from the specific SiriKit integration code, migrating to App Intents mainly involves reimplementing the thin wrapper layer around that same underlying logic, not rewriting the logic itself.",
+        explanation: "This directly connects back to the separation-of-concerns principle — if business logic was already properly isolated from the specific SiriKit integration code, migrating to App Intents mainly involves reimplementing the thin wrapper layer around that same underlying logic, not rewriting the logic itself.",
       },
       {
         id: "q20",
-        prompt: "What broader architectural lesson does the SiriKit-to-App-Intents migration (51.17) illustrate?",
+        prompt: "What broader architectural lesson does the SiriKit-to-App-Intents migration illustrate?",
         options: [
           { id: "a", text: "Framework migrations are always equally painful regardless of an app's internal architecture" },
           { id: "b", text: "Migrations should always be avoided entirely in favor of maintaining legacy frameworks indefinitely" },
@@ -12937,7 +12937,7 @@ struct UserProfileView: View {
           { id: "d", text: "App Intents makes architectural discipline unnecessary going forward" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly frames this migration scenario as a concrete illustration of the architectural principles from section 45 paying off in practice — good separation of concerns isn't just an abstract ideal, it directly reduces the blast radius of exactly this kind of significant, real-world framework transition.",
+        explanation: "This migration scenario is a concrete illustration of architectural separation-of-concerns principles paying off in practice — good separation of concerns isn't just an abstract ideal, it directly reduces the blast radius of exactly this kind of significant, real-world framework transition.",
       },
     ],
   },
@@ -12997,7 +12997,7 @@ struct UserProfileView: View {
       },
       {
         id: "q5",
-        prompt: "Why does the section describe the choice of reload `policy` as a genuine trade-off?",
+        prompt: "Why is choosing a reload `policy` a genuine trade-off?",
         options: [
           { id: "a", text: "The system imposes a strict daily reload budget shared across a widget's instances, so requesting frequent reloads (a widget refreshing every 15 minutes, for example) exhausts that budget far faster than computing a handful of entries covering several hours in one reload" },
           { id: "b", text: "There is no actual trade-off; `.atEnd` is always the correct choice" },
@@ -13005,11 +13005,11 @@ struct UserProfileView: View {
           { id: "d", text: "`.never` is always the most budget-efficient choice regardless of content needs" },
         ],
         correctOptionId: "a",
-        explanation: "Because the reload budget is limited, more frequent reload requests consume it faster — the trade-off is between wanting fresh content sooner (frequent reloads) and staying within a limited daily allowance (fewer, more front-loaded reloads), directly connecting to the resource-discipline theme from section 49.13's background execution budgets.",
+        explanation: "Because the reload budget is limited, more frequent reload requests consume it faster — the trade-off is between wanting fresh content sooner (frequent reloads) and staying within a limited daily allowance (fewer, more front-loaded reloads), directly connecting to the same resource-discipline theme as background execution budgets generally.",
       },
       {
         id: "q6",
-        prompt: "How does `@Environment(\\.widgetFamily)` relate to `horizontalSizeClass`/`verticalSizeClass` (section 33.1)?",
+        prompt: "How does `@Environment(\\.widgetFamily)` relate to `horizontalSizeClass`/`verticalSizeClass`?",
         options: [
           { id: "a", text: "They are unrelated, entirely separate mechanisms with no overlap" },
           { id: "b", text: "Both adapt one view to different contexts, just at different scopes" },
@@ -13029,7 +13029,7 @@ struct UserProfileView: View {
           { id: "d", text: "`AppIntentConfiguration` is only used for Lock Screen widgets, nothing else" },
         ],
         correctOptionId: "c",
-        explanation: "Consistent with App Intents' broader transition away from the older SiriKit-era model, widget configuration now uses `WidgetConfigurationIntent` built on the same `AppIntent`/`AppEntity` infrastructure covered in section 51, rather than a separate, widget-specific configuration mechanism.",
+        explanation: "Consistent with App Intents' broader transition away from the older SiriKit-era model, widget configuration now uses `WidgetConfigurationIntent` built on the same `AppIntent`/`AppEntity` infrastructure, rather than a separate, widget-specific configuration mechanism.",
       },
       {
         id: "q8",
@@ -13057,7 +13057,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "What is the connection between Lock Screen accessory widget families and watchOS complications (section 33.8)?",
+        prompt: "What is the connection between Lock Screen accessory widget families and watchOS complications?",
         options: [
           { id: "a", text: "There is no connection at all; they are entirely separate systems" },
           { id: "b", text: "Shares the same WidgetKit infrastructure and family names" },
@@ -13065,7 +13065,7 @@ struct UserProfileView: View {
           { id: "d", text: "Lock Screen widgets can only be built using watchOS-specific APIs" },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that these accessory families are the same ones referenced for watchOS complications, since both surfaces share underlying WidgetKit infrastructure — much of the timeline-provider and entry-view logic can be closely mirrored or shared between the two contexts.",
+        explanation: "These accessory families are the same ones used for watchOS complications, since both surfaces share underlying WidgetKit infrastructure — much of the timeline-provider and entry-view logic can be closely mirrored or shared between the two contexts.",
       },
       {
         id: "q11",
@@ -13153,7 +13153,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What problem does push-updated Live Activities (52.14) solve?",
+        prompt: "What problem does push-updated Live Activities solve?",
         options: [
           { id: "a", text: "It eliminates the need for `ActivityAttributes` entirely" },
           { id: "b", text: "It lets a server holding the authoritative state of a real-world event (like a delivery driver's live location) push updates directly to the Live Activity via a specialized APNs payload, without the device needing to poll or determine that state locally" },
@@ -13161,7 +13161,7 @@ struct UserProfileView: View {
           { id: "d", text: "It replaces the need for `Activity.update()` to ever be called locally" },
         ],
         correctOptionId: "b",
-        explanation: "For activities whose progress is driven by external, server-side events rather than something computable locally on the device, push-updated Live Activities extend the standard push notification infrastructure (section 50.4–50.5) to deliver `ContentState` updates directly from the authoritative server source.",
+        explanation: "For activities whose progress is driven by external, server-side events rather than something computable locally on the device, push-updated Live Activities extend the standard push notification infrastructure to deliver `ContentState` updates directly from the authoritative server source.",
       },
       {
         id: "q19",
@@ -13177,7 +13177,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "According to 52.15, what is a very common cause of \"my widget isn't updating\" bugs that turns out not to be a genuine code defect?",
+        prompt: "What is a very common cause of \"my widget isn't updating\" bugs that turns out not to be a genuine code defect?",
         options: [
           { id: "a", text: "Incorrect Swift syntax in the `TimelineProvider`" },
           { id: "b", text: "The user's device being in Airplane Mode" },
@@ -13185,7 +13185,7 @@ struct UserProfileView: View {
           { id: "d", text: "Reload budget exhaustion — a widget that's requested too many reloads recently may simply be throttled, not broken, which is worth checking before assuming the provider logic itself has a bug" },
         ],
         correctOptionId: "d",
-        explanation: "Because the reload budget (52.3) can silently throttle a widget's update frequency, an apparently \"stuck\" or \"stale\" widget is frequently a budget exhaustion issue rather than an actual bug in the timeline provider's logic — checking budget status is recommended as an early debugging step before deeper investigation.",
+        explanation: "Because the reload budget can silently throttle a widget's update frequency, an apparently \"stuck\" or \"stale\" widget is frequently a budget exhaustion issue rather than an actual bug in the timeline provider's logic — checking budget status is recommended as an early debugging step before deeper investigation.",
       },
     ],
   },
@@ -13217,7 +13217,7 @@ struct UserProfileView: View {
           { id: "d", text: "Extensions have no memory limit at all, unlike the main app" },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit that extensions face stricter memory limits and shorter, launched-on-demand lifecycles compared to the main app's fuller, longer-lived resource allowance — a defining characteristic of the extension model.",
+        explanation: "Extensions face stricter memory limits and shorter, launched-on-demand lifecycles compared to the main app's fuller, longer-lived resource allowance — a defining characteristic of the extension model.",
       },
       {
         id: "q3",
@@ -13293,7 +13293,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "What is distinctive about Safari web extensions compared to the other extension types in this section?",
+        prompt: "What is distinctive about Safari web extensions compared to other extension types like share or action extensions?",
         options: [
           { id: "a", text: "Built in JavaScript against the WebExtensions standard" },
           { id: "b", text: "They cannot be distributed through the App Store at all" },
@@ -13301,7 +13301,7 @@ struct UserProfileView: View {
           { id: "d", text: "They can only run on macOS, and never on iOS" },
         ],
         correctOptionId: "a",
-        explanation: "Safari web extensions represent a genuinely different technology stack within this section — built on the same JavaScript/HTML/CSS WebExtensions model used by Chrome and Firefox, enabling meaningful cross-browser code reuse, unlike the native Swift extension types covered elsewhere.",
+        explanation: "Safari web extensions represent a genuinely different technology stack — built on the same JavaScript/HTML/CSS WebExtensions model used by Chrome and Firefox, enabling meaningful cross-browser code reuse, unlike the native Swift extension types.",
       },
       {
         id: "q10",
@@ -13341,7 +13341,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "What is the intended use case for an App Clip, according to 53.8?",
+        prompt: "What is the intended use case for an App Clip?",
         options: [
           { id: "a", text: "A single, focused, quick task rather than the full app experience" },
           { id: "b", text: "Providing the complete feature set of the full app in a smaller package" },
@@ -13353,7 +13353,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "How does App Clip invocation routing relate to universal link handling from section 49.6-49.7?",
+        prompt: "How does App Clip invocation routing relate to universal link handling?",
         options: [
           { id: "a", text: "They are entirely unrelated mechanisms with no shared design" },
           { id: "b", text: "Echoes universal links, jumping directly to relevant content" },
@@ -13361,11 +13361,11 @@ struct UserProfileView: View {
           { id: "d", text: "Universal links can only be used by full apps, never App Clips" },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly draws this parallel — both mechanisms use a URL to carry specific context that routes directly to relevant content, consistent with an App Clip's entire premise of arriving directly at the one task the user came for, without a general navigation detour.",
+        explanation: "Both mechanisms use a URL to carry specific context that routes directly to relevant content, consistent with an App Clip's entire premise of arriving directly at the one task the user came for, without a general navigation detour.",
       },
       {
         id: "q15",
-        prompt: "What distinguishes Network Extension from the other extension types covered in this section?",
+        prompt: "What distinguishes Network Extension from other extension types like share or keyboard extensions?",
         options: [
           { id: "a", text: "It is the simplest extension type to implement, by far" },
           { id: "b", text: "Network Extension has no access to any network traffic at all" },
@@ -13377,7 +13377,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What are the two key considerations the section identifies as especially important for Network Extension development?",
+        prompt: "What are the two key considerations that are especially important for Network Extension development?",
         options: [
           { id: "a", text: "Battery life and screen brightness, above all other factors" },
           { id: "b", text: "Compatibility with older iOS versions only, nothing else" },
@@ -13389,7 +13389,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "Why can practices that are merely wasteful in a main app be outright fatal within an extension, according to 53.11?",
+        prompt: "Why can practices that are merely wasteful in a main app be outright fatal within an extension?",
         options: [
           { id: "a", text: "A far lower memory ceiling means exceeding it causes termination" },
           { id: "b", text: "There is no actual difference in consequence between the two contexts" },
@@ -13397,11 +13397,11 @@ struct UserProfileView: View {
           { id: "d", text: "This concern only applies to Network Extension, not other types" },
         ],
         correctOptionId: "a",
-        explanation: "The section highlights this asymmetry explicitly — an extension's much stricter memory ceiling means exceeding it causes an immediate, hard crash, whereas the same excess memory usage in the main app's more generous budget might merely be inefficient rather than fatal.",
+        explanation: "This asymmetry is real — an extension's much stricter memory ceiling means exceeding it causes an immediate, hard crash, whereas the same excess memory usage in the main app's more generous budget might merely be inefficient rather than fatal.",
       },
       {
         id: "q18",
-        prompt: "What defensive practice does 53.11 suggest for a share extension processing a large photo?",
+        prompt: "What defensive practice helps a share extension avoid crashing while processing a large photo?",
         options: [
           { id: "a", text: "Always load the full-resolution original image regardless of need" },
           { id: "b", text: "Avoid loading full-resolution images when a smaller size will do" },
@@ -13413,7 +13413,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What diagnostic tool does 53.11 recommend for testing extension memory usage?",
+        prompt: "What diagnostic tool is recommended for testing extension memory usage?",
         options: [
           { id: "a", text: "The Xcode console alone, with no additional tooling needed" },
           { id: "b", text: "The App Store Connect analytics dashboard, checked periodically" },
@@ -13433,7 +13433,7 @@ struct UserProfileView: View {
           { id: "d", text: "They all operate through a sandboxed, separate-process model receiving specific content (via `NSExtensionItem` or `PHContentEditingInput`) from a host app, processing it, and returning results or completing without broader access to the host app's other data" },
         ],
         correctOptionId: "d",
-        explanation: "Despite differing in their specific content types and use cases, these extension types share the same fundamental architectural pattern described in 53.1 — sandboxed, separate-process execution that receives limited, explicitly-provided content, processes it, and completes without broader access to the host app's internal state.",
+        explanation: "Despite differing in their specific content types and use cases, these extension types share the same fundamental architectural pattern — sandboxed, separate-process execution that receives limited, explicitly-provided content, processes it, and completes without broader access to the host app's internal state.",
       },
     ],
   },
@@ -13513,7 +13513,7 @@ struct UserProfileView: View {
           { id: "d", text: "The app must already have \"Always\" authorization granted" },
         ],
         correctOptionId: "a",
-        explanation: "Similar to ordinary usage description strings (section 54.1/49.3), the temporary precise-accuracy upgrade requires its own declared purpose string, maintaining the same privacy-transparency principle for this more granular accuracy distinction.",
+        explanation: "Similar to ordinary usage description strings, the temporary precise-accuracy upgrade requires its own declared purpose string, maintaining the same privacy-transparency principle for this more granular accuracy distinction.",
       },
       {
         id: "q7",
@@ -13565,9 +13565,9 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "How does placing `Annotation`s within a SwiftUI `Map` relate to patterns from earlier SwiftUI material?",
+        prompt: "How does placing `Annotation`s within a SwiftUI `Map` relate to other SwiftUI patterns, like building a `List`?",
         options: [
-          { id: "a", text: "It has no relationship to any previously covered pattern at all" },
+          { id: "a", text: "It has no relationship to any other SwiftUI pattern at all" },
           { id: "b", text: "The `ForEach`-driven approach mirrors `List`, one item per annotation" },
           { id: "c", text: "`Annotation` placement requires an entirely different, non-declarative style" },
           { id: "d", text: "`Map` cannot be combined with `ForEach` at all, ever" },
@@ -13597,16 +13597,16 @@ struct UserProfileView: View {
           { id: "d", text: "Visualizing a route or path as a line drawn on the map" },
         ],
         correctOptionId: "d",
-        explanation: "`MapPolyline` renders geographic path data as a line overlay on the map, well suited to displaying a computed route's geometry (such as the polyline data returned by `MKDirections`, section 54.11) directly to the user.",
+        explanation: "`MapPolyline` renders geographic path data as a line overlay on the map, well suited to displaying a computed route's geometry (such as the polyline data returned by `MKDirections`) directly to the user.",
       },
       {
         id: "q14",
-        prompt: "What does `MapCameraPosition` control, and what earlier SwiftUI concept is it analogous to?",
+        prompt: "What does `MapCameraPosition` control, and what other SwiftUI concept is it analogous to?",
         options: [
           { id: "a", text: "Controls the displayed region, the map equivalent of `scrollPosition`" },
           { id: "b", text: "It controls the map's color scheme, analogous to `@Environment(\\.colorScheme)`" },
           { id: "c", text: "`MapCameraPosition` only affects annotation styling, not the region" },
-          { id: "d", text: "It has no relationship to any previously covered SwiftUI concept" },
+          { id: "d", text: "It has no relationship to any other SwiftUI concept" },
         ],
         correctOptionId: "a",
         explanation: "Just as `scrollPosition` provides programmatic read/write control over a `ScrollView`'s current position, `MapCameraPosition` provides the equivalent capability for `Map` — both letting the app both observe and programmatically adjust the currently displayed viewport.",
@@ -13673,7 +13673,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "When would reverse geocoding be the appropriate tool, according to 54.13?",
+        prompt: "When would reverse geocoding be the appropriate tool?",
         options: [
           { id: "a", text: "When a user has typed an address that needs to be located on a map" },
           { id: "b", text: "When computing the distance between two named cities directly" },
@@ -14273,7 +14273,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "What privacy-preserving design does `AccessorySetupKit` share with `PHPickerViewController` (section 55.1)?",
+        prompt: "What privacy-preserving design does `AccessorySetupKit` share with `PHPickerViewController`?",
         options: [
           { id: "a", text: "Neither framework has any privacy-related design considerations" },
           { id: "b", text: "Both frameworks require full Bluetooth scanning permission regardless of use case" },
@@ -14345,7 +14345,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What does conforming a custom type to `Transferable` provide, as described in 57.14?",
+        prompt: "What does conforming a custom type to `Transferable` provide?",
         options: [
           { id: "a", text: "Drag-and-drop, copy/paste, and `ShareLink` support from one shared representation" },
           { id: "b", text: "Only drag-and-drop support, with copy/paste and sharing requiring separate, unrelated implementations" },
@@ -14369,7 +14369,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What infrastructure does the Translation framework's on-device capability relate to, according to the section?",
+        prompt: "What infrastructure does the Translation framework's on-device capability relate to?",
         options: [
           { id: "a", text: "It is entirely unrelated to any other on-device AI capability" },
           { id: "b", text: "It depends on Core Bluetooth for its underlying processing" },
@@ -14377,7 +14377,7 @@ struct UserProfileView: View {
           { id: "d", text: "It requires HealthKit authorization to function" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly connects Translation's on-device capability to the broader on-device language model infrastructure also used by the Foundation Models framework covered next.",
+        explanation: "Translation's on-device capability connects to the broader on-device language model infrastructure also used by the Foundation Models framework.",
       },
       {
         id: "q17",
@@ -14405,7 +14405,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What is the CarPlay template model's trade-off, as described in the section?",
+        prompt: "What is the CarPlay template model's trade-off?",
         options: [
           { id: "a", text: "Templates provide unlimited customization at the cost of performance" },
           { id: "b", text: "Trades customization for guaranteed consistency and driving safety" },
@@ -14413,7 +14413,7 @@ struct UserProfileView: View {
           { id: "d", text: "Templates are only a temporary limitation that all apps will eventually bypass" },
         ],
         correctOptionId: "b",
-        explanation: "The section frames the template constraint explicitly as trading customization flexibility for the consistency and safety benefits of a uniform, system-rendered driving interface.",
+        explanation: "The template constraint deliberately trades customization flexibility for the consistency and safety benefits of a uniform, system-rendered driving interface.",
       },
       {
         id: "q20",
@@ -14425,7 +14425,7 @@ struct UserProfileView: View {
           { id: "d", text: "CarPlay — full custom UI rendering with no template constraints" },
         ],
         correctOptionId: "c",
-        explanation: "HealthKit's defining access-control characteristic is its fine-grained, per-type and per-direction authorization model, distinct from the anonymized-token model used by Screen Time APIs (57.13) or NFC's always-visible scanning sheet (57.9).",
+        explanation: "HealthKit's defining access-control characteristic is its fine-grained, per-type and per-direction authorization model, distinct from the anonymized-token model used by Screen Time APIs or NFC's always-visible scanning sheet.",
       },
     ],
   },
@@ -14493,7 +14493,7 @@ struct UserProfileView: View {
           { id: "d", text: "Instructions can only contain a single word" },
         ],
         correctOptionId: "c",
-        explanation: "Instructions establish stable, trusted behavioral rules independent of user input, while prompts carry the specific per-turn content — a separation that also matters for prompt injection defense (58.18), since prompts may contain untrusted content.",
+        explanation: "Instructions establish stable, trusted behavioral rules independent of user input, while prompts carry the specific per-turn content — a separation that also matters for prompt injection defense, since prompts may contain untrusted content.",
       },
       {
         id: "q5",
@@ -14545,7 +14545,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "How does `@Guide`'s `.anyOf([...])` constraint behave, according to the section?",
+        prompt: "How does `@Guide`'s `.anyOf([...])` constraint behave?",
         options: [
           { id: "a", text: "It is purely documentation with no effect on actual generation" },
           { id: "b", text: "It only applies after the model has already generated a value, filtering the result" },
@@ -14617,7 +14617,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "How do Vision framework tools exposed to the model (58.13) differ from direct multimodal image input (58.12)?",
+        prompt: "How do Vision framework tools exposed to the model differ from direct multimodal image input?",
         options: [
           { id: "a", text: "They are identical mechanisms with different names" },
           { id: "b", text: "Direct multimodal input requires more code than Vision tools" },
@@ -14677,7 +14677,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "Why must apps handle the guardrail refusal case explicitly, according to 58.17?",
+        prompt: "Why must apps handle the guardrail refusal case explicitly?",
         options: [
           { id: "a", text: "Guardrails never actually trigger in practice" },
           { id: "b", text: "Refusals only occur for multimodal prompts, never text-only prompts" },
@@ -14689,7 +14689,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What is prompt injection, as described in 58.18?",
+        prompt: "What is prompt injection?",
         options: [
           { id: "a", text: "Untrusted content that overrides the app's own framing" },
           { id: "b", text: "A technique for improving model response speed" },
@@ -14701,7 +14701,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "How does defensive prompt design mitigate prompt injection risk, per the section's example?",
+        prompt: "How does defensive prompt design mitigate prompt injection risk?",
         options: [
           {
             id: "a",
@@ -14725,7 +14725,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What makes LoRA-style adapter fine-tuning (58.19) more efficient than full model fine-tuning?",
+        prompt: "What makes LoRA-style adapter fine-tuning more efficient than full model fine-tuning?",
         options: [
           { id: "a", text: "It requires retraining the entire model's weights from scratch" },
           { id: "b", text: "It eliminates the need for any training data at all" },
@@ -14813,7 +14813,7 @@ struct UserProfileView: View {
           { id: "d", text: "They substantially shrink model size and can improve inference speed, generally at some cost to prediction accuracy, requiring the right compression level to be determined by measuring actual accuracy impact" },
         ],
         correctOptionId: "d",
-        explanation: "These compression techniques trade file size and speed benefits against potential accuracy degradation — the section emphasizes measuring the actual impact against the specific task's tolerance rather than applying maximum compression by default.",
+        explanation: "These compression techniques trade file size and speed benefits against potential accuracy degradation — the recommendation is to measure the actual impact against the specific task's tolerance rather than applying maximum compression by default.",
       },
       {
         id: "q6",
@@ -14877,7 +14877,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "How does a stateful Core ML model's efficiency benefit relate to `LanguageModelSession` from section 58.3?",
+        prompt: "How does a stateful Core ML model's efficiency benefit relate to `LanguageModelSession`?",
         options: [
           { id: "a", text: "Both maintain state across calls to avoid recomputing shared info, at different levels" },
           { id: "b", text: "There is no meaningful relationship between the two" },
@@ -14885,7 +14885,7 @@ struct UserProfileView: View {
           { id: "d", text: "Stateful models are exclusively used within `LanguageModelSession`" },
         ],
         correctOptionId: "a",
-        explanation: "The section draws a direct analogy — both stateful Core ML models and `LanguageModelSession` avoid redundant recomputation by carrying forward context across calls, just at different levels of the stack.",
+        explanation: "There's a direct analogy — both stateful Core ML models and `LanguageModelSession` avoid redundant recomputation by carrying forward context across calls, just at different levels of the stack.",
       },
       {
         id: "q11",
@@ -14937,7 +14937,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What is a typical workflow relationship between MLX and Core ML, according to the section?",
+        prompt: "What is a typical workflow relationship between MLX and Core ML?",
         options: [
           { id: "a", text: "Models trained with MLX get converted via Core ML" },
           { id: "b", text: "They can never be used together in the same project" },
@@ -14945,7 +14945,7 @@ struct UserProfileView: View {
           { id: "d", text: "MLX replaces the need for `coremltools` entirely" },
         ],
         correctOptionId: "a",
-        explanation: "The section describes MLX as suited to research/training phases, with resulting models potentially deployed via Core ML for production app integration — a complementary rather than competing relationship.",
+        explanation: "MLX is well suited to research/training phases, with resulting models potentially deployed via Core ML for production app integration — a complementary rather than competing relationship.",
       },
       {
         id: "q15",
@@ -14969,11 +14969,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as a genuine architectural decision — matching the framework to whether the task requires bespoke, custom-trained model behavior or general-purpose language capability.",
+        explanation: "This is a genuine architectural decision — matching the framework to whether the task requires bespoke, custom-trained model behavior or general-purpose language capability.",
       },
       {
         id: "q16",
-        prompt: "What must happen before a PyTorch-trained model can be used within an Xcode project via the generated Swift interface described in 59.2?",
+        prompt: "What must happen before a PyTorch-trained model can be used within an Xcode project via a generated Swift interface?",
         options: [
           { id: "a", text: "Nothing; PyTorch models can be added directly to Xcode with no conversion" },
           { id: "b", text: "The model must be retrained entirely using Create ML" },
@@ -14993,7 +14993,7 @@ struct UserProfileView: View {
           { id: "d", text: "`.all`, since Core ML can pick the fastest available hardware per operation" },
         ],
         correctOptionId: "d",
-        explanation: "The section recommends `.all` as the generally correct default, since Core ML's own scheduling can select the most efficient compute unit per operation more effectively than manual restriction in most cases.",
+        explanation: "`.all` is the generally correct default, since Core ML's own scheduling can select the most efficient compute unit per operation more effectively than manual restriction in most cases.",
       },
       {
         id: "q18",
@@ -15005,11 +15005,11 @@ struct UserProfileView: View {
           { id: "d", text: "Only image classification models" },
         ],
         correctOptionId: "a",
-        explanation: "The section specifically calls out transformer-based sequential inference as the case where statefulness addresses a genuine efficiency gap, since such models benefit most from carrying forward computation across calls.",
+        explanation: "Transformer-based sequential inference is specifically the case where statefulness addresses a genuine efficiency gap, since such models benefit most from carrying forward computation across calls.",
       },
       {
         id: "q19",
-        prompt: "Why does the section describe accuracy measurement as necessary when applying quantization or palettization, rather than simply applying maximum compression?",
+        prompt: "Why is accuracy measurement necessary when applying quantization or palettization, rather than simply applying maximum compression?",
         options: [
           {
             id: "a",
@@ -15041,7 +15041,7 @@ struct UserProfileView: View {
           { id: "d", text: "MLX and Core ML are the same framework under different names" },
         ],
         correctOptionId: "c",
-        explanation: "The section positions these frameworks along a spectrum of generality versus customization and implementation responsibility, from Foundation Models' ready-to-use general LLM through Core AI's middle ground to Core ML's full flexibility, with MLX serving a distinct research/training role.",
+        explanation: "These frameworks sit along a spectrum of generality versus customization and implementation responsibility, from Foundation Models' ready-to-use general LLM through Core AI's middle ground to Core ML's full flexibility, with MLX serving a distinct research/training role.",
       },
     ],
   },
@@ -15077,7 +15077,7 @@ struct UserProfileView: View {
       },
       {
         id: "q3",
-        prompt: "What common pairing enables a live, real-time barcode scanning experience, according to 60.3?",
+        prompt: "What common pairing enables a live, real-time barcode scanning experience?",
         options: [
           { id: "a", text: "`DetectBarcodesRequest` used only on a single, manually captured still photo, never live frames" },
           { id: "b", text: "`DetectBarcodesRequest` fed from `AVCaptureVideoDataOutput`'s continuous frame stream" },
@@ -15085,7 +15085,7 @@ struct UserProfileView: View {
           { id: "d", text: "Barcode detection cannot be used with live camera frames at all" },
         ],
         correctOptionId: "b",
-        explanation: "Feeding each frame from `AVCaptureVideoDataOutput`'s continuous stream (section 55.7) into a Vision barcode request is what enables real-time scanning, rather than requiring a manually captured still photo.",
+        explanation: "Feeding each frame from `AVCaptureVideoDataOutput`'s continuous stream into a Vision barcode request is what enables real-time scanning, rather than requiring a manually captured still photo.",
       },
       {
         id: "q4",
@@ -15113,7 +15113,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "How does image feature print similarity (60.5) conceptually relate to `NLEmbedding` (60.9)?",
+        prompt: "How does image feature print similarity conceptually relate to `NLEmbedding`?",
         options: [
           { id: "a", text: "Both reduce content to a compact vector so similarity maps to small distances" },
           { id: "b", text: "They are unrelated techniques with no shared design principle" },
@@ -15157,7 +15157,7 @@ struct UserProfileView: View {
           { id: "d", text: "It requires uploading all captured audio to a remote cloud service for processing, unlike the older on-device APIs" },
         ],
         correctOptionId: "c",
-        explanation: "`SpeechAnalyzer` is a modernized, more flexible replacement for `SFSpeechRecognizer`, and its on-device operation provides the same privacy and offline benefits discussed for Translation (57.15) and Foundation Models (58.1).",
+        explanation: "`SpeechAnalyzer` is a modernized, more flexible replacement for `SFSpeechRecognizer`, and its on-device operation provides the same privacy and offline benefits discussed for Translation and Foundation Models.",
       },
       {
         id: "q9",
@@ -15185,7 +15185,7 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "What is the key distinction between Sound Analysis and ShazamKit (section 55.15)?",
+        prompt: "What is the key distinction between Sound Analysis and ShazamKit?",
         options: [
           {
             id: "a",
@@ -15205,7 +15205,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit about this distinction — Sound Analysis handles general environmental sound classification, useful for accessibility and ambient awareness, while ShazamKit performs specific song matching against a known catalog.",
+        explanation: "This is a clear distinction — Sound Analysis handles general environmental sound classification, useful for accessibility and ambient awareness, while ShazamKit performs specific song matching against a known catalog.",
       },
       {
         id: "q12",
@@ -15217,7 +15217,7 @@ struct UserProfileView: View {
           { id: "d", text: "Detecting barcodes hidden within an audio waveform visualization display" },
         ],
         correctOptionId: "c",
-        explanation: "The section highlights accessibility as a key use case — general sound category classification can alert users to important environmental sounds they might not otherwise perceive.",
+        explanation: "Accessibility is a key use case — general sound category classification can alert users to important environmental sounds they might not otherwise perceive.",
       },
       {
         id: "q13",
@@ -15233,7 +15233,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What design similarity does the section draw between Image Playground's system UI and `SubscriptionStoreView` (section 56.6)?",
+        prompt: "What design similarity exists between Image Playground's system UI and `SubscriptionStoreView`?",
         options: [
           { id: "a", text: "Both provide a consistent, system-standard UI, not a fully custom presentation" },
           { id: "b", text: "Both require identical purchase flows" },
@@ -15241,11 +15241,11 @@ struct UserProfileView: View {
           { id: "d", text: "There is no meaningful similarity drawn between these two entirely separate UI patterns" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly parallels Image Playground's standardized generation UI with `SubscriptionStoreView`'s standardized purchase UI — both reduce the custom UI burden on individual apps in favor of a consistent system-provided experience.",
+        explanation: "There's a direct parallel between Image Playground's standardized generation UI and `SubscriptionStoreView`'s standardized purchase UI — both reduce the custom UI burden on individual apps in favor of a consistent system-provided experience.",
       },
       {
         id: "q15",
-        prompt: "What Foundation Models capability from section 58.13 shares underlying functionality with Vision's text recognition (60.2)?",
+        prompt: "What Foundation Models capability shares underlying functionality with Vision's text recognition?",
         options: [
           {
             id: "a",
@@ -15265,7 +15265,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Section 58.13's example `TextRecognitionTool` performs OCR as a callable tool for the language model, directly built on the same underlying text recognition capability covered in 60.2.",
+        explanation: "A `TextRecognitionTool` performs OCR as a callable tool for the language model, directly built on the same underlying text recognition capability Vision exposes elsewhere.",
       },
       {
         id: "q16",
@@ -15305,7 +15305,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What broader platform-wide pattern does Vision's shift to an async/await-native API exemplify, according to the section?",
+        prompt: "What broader platform-wide pattern does Vision's shift to an async/await-native API exemplify?",
         options: [
           {
             id: "a",
@@ -15325,7 +15325,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects Vision's modernization to the same broader async/await adoption pattern seen in StoreKit and PhotoKit, reflecting a platform-wide trend rather than an isolated Vision-specific change.",
+        explanation: "Vision's modernization connects to the same broader async/await adoption pattern seen in StoreKit and PhotoKit, reflecting a platform-wide trend rather than an isolated Vision-specific change.",
       },
       {
         id: "q20",
