@@ -3516,7 +3516,7 @@ public struct StringifyMacro: ExpressionMacro {
           { id: "d", text: "A modern, value-type text representation with range-based, Markdown formatting" },
         ],
         correctOptionId: "d",
-        explanation: "`AttributedString` is the modern, value-type successor to `NSAttributedString`, supporting formatting attached to string ranges and native Markdown parsing. SwiftUI's `Text` view (section 23) accepts it directly, letting you author simple rich text (bold, links, emphasis) using plain Markdown syntax.",
+        explanation: "`AttributedString` is the modern, value-type successor to `NSAttributedString`, supporting formatting attached to string ranges and native Markdown parsing. SwiftUI's `Text` view accepts it directly, letting you author simple rich text (bold, links, emphasis) using plain Markdown syntax.",
       },
       {
         id: "q17",
@@ -5495,7 +5495,7 @@ public struct StringifyMacro: ExpressionMacro {
       },
       {
         id: "q14",
-        prompt: "Why do Combine's operators (`map`, `filter`, `debounce`, `merge`) look so similar to both `Sequence`'s operators (section 3) and swift-async-algorithms' operators (section 21)?",
+        prompt: "Why do Combine's operators (`map`, `filter`, `debounce`, `merge`) look so similar to both `Sequence`'s operators and swift-async-algorithms' operators?",
         options: [
           { id: "a", text: "It's a purely random coincidence with absolutely no historical connection whatsoever" },
           { id: "b", text: "Combine established much of the reactive-operator vocabulary that later tools adopted" },
@@ -8447,7 +8447,7 @@ struct TokenUsageView: View {
           { id: "d", text: "Diffing unconditionally only ever applies to `ReferenceFileDocument`, never to `FileDocument`" },
         ],
         correctOptionId: "a",
-        explanation: "Since `FileDocument` conformers are structs, SwiftUI can rely on the same value-type change detection covered earlier (section 25) — each mutation naturally produces a new distinct value, which the framework can efficiently compare against the previous one.",
+        explanation: "Since `FileDocument` conformers are structs, SwiftUI can rely on the same value-type change detection covered earlier — each mutation naturally produces a new distinct value, which the framework can efficiently compare against the previous one.",
       },
       {
         id: "q6",
@@ -8483,7 +8483,7 @@ struct TokenUsageView: View {
           { id: "d", text: "It applies structured concurrency and `AsyncSequence` iteration to document I/O, processing large files incrementally" },
         ],
         correctOptionId: "d",
-        explanation: "The streaming-style `for try await line in ...` loop is a direct application of `AsyncSequence` iteration (section 21) to file reading — letting the document type process a large file incrementally, line by line, rather than synchronously loading its entire contents into memory up front.",
+        explanation: "The streaming-style `for try await line in ...` loop is a direct application of `AsyncSequence` iteration to file reading — letting the document type process a large file incrementally, line by line, rather than synchronously loading its entire contents into memory up front.",
       },
       {
         id: "q9",
@@ -10065,7 +10065,7 @@ struct UserProfileView: View {
           { id: "d", text: "A plain class would be unable to store a dictionary of tasks at all" },
         ],
         correctOptionId: "c",
-        explanation: "This directly applies actor isolation (section 19) to a genuine concurrency hazard — without serialized access, two callers could simultaneously check the dictionary, both find no in-flight task, and each start a redundant duplicate request; the actor guarantees this check-and-set sequence happens atomically.",
+        explanation: "This directly applies actor isolation to a genuine concurrency hazard — without serialized access, two callers could simultaneously check the dictionary, both find no in-flight task, and each start a redundant duplicate request; the actor guarantees this check-and-set sequence happens atomically.",
       },
       {
         id: "q9",
@@ -10229,7 +10229,7 @@ struct UserProfileView: View {
           { id: "d", text: "It removes the need for any initializer" },
         ],
         correctOptionId: "a",
-        explanation: "`@Model` is a Swift macro (section 13) that transforms a class into a persisted type without requiring a separate schema definition file, reflecting SwiftData's design goal of making persistence feel like writing ordinary Swift model types.",
+        explanation: "`@Model` is a Swift macro that transforms a class into a persisted type without requiring a separate schema definition file, reflecting SwiftData's design goal of making persistence feel like writing ordinary Swift model types.",
       },
       {
         id: "q2",
@@ -10253,7 +10253,7 @@ struct UserProfileView: View {
           { id: "d", text: "It can only be used for read-only data, with no writes elsewhere" },
         ],
         correctOptionId: "c",
-        explanation: "`@Query` provides live, auto-updating results — closely mirroring how `@State`-driven views automatically reflect local state changes (section 25), but for persisted data across the whole app rather than purely local view state.",
+        explanation: "`@Query` provides live, auto-updating results — closely mirroring how `@State`-driven views automatically reflect local state changes, but for persisted data across the whole app rather than purely local view state.",
       },
       {
         id: "q4",
@@ -10293,7 +10293,7 @@ struct UserProfileView: View {
       },
       {
         id: "q7",
-        prompt: "What does `deleteRule: .cascade` on a `@Relationship` accomplish?",
+        prompt: "What does `deleteRule:.cascade` on a `@Relationship` accomplish?",
         options: [
           { id: "a", text: "It prevents the parent object from ever being deleted at all" },
           { id: "b", text: "It clears the relationship reference but leaves related objects intact" },
@@ -10397,7 +10397,7 @@ struct UserProfileView: View {
           { id: "d", text: "`@ModelActor` can only be used for read operations, never inserts or saves" },
         ],
         correctOptionId: "c",
-        explanation: "This directly applies actor isolation (section 19) to persistence safety — sharing a single main-actor-bound `ModelContext` across concurrent background work would risk data races, so `@ModelActor` provides its own properly-isolated context specifically safe for off-main-thread batch operations.",
+        explanation: "This directly applies actor isolation to persistence safety — sharing a single main-actor-bound `ModelContext` across concurrent background work would risk data races, so `@ModelActor` provides its own properly-isolated context specifically safe for off-main-thread batch operations.",
       },
       {
         id: "q16",
@@ -10425,7 +10425,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "How does SwiftData's CloudKit integration (via `ModelConfiguration(cloudKitDatabase: .automatic)`) compare to building CloudKit sync directly on Core Data or raw CloudKit APIs?",
+        prompt: "How does SwiftData's CloudKit integration (via `ModelConfiguration(cloudKitDatabase:.automatic)`) compare to building CloudKit sync directly on Core Data or raw CloudKit APIs?",
         options: [
           { id: "a", text: "It requires substantially more manual sync code than the alternatives" },
           { id: "b", text: "A substantial simplification, handled mostly through configuration" },
@@ -10469,7 +10469,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "According to 42.1, why does Core Data knowledge remain practically necessary despite SwiftData's emergence?",
+        prompt: "Why does Core Data knowledge remain practically necessary despite SwiftData's emergence?",
         options: [
           { id: "a", text: "A vast number of existing production apps are Core Data-based, and some advanced capabilities are still more directly accessible through it — not because it's the recommended starting point for new apps" },
           { id: "b", text: "Apple has announced Core Data will fully replace SwiftData" },
@@ -10477,7 +10477,7 @@ struct UserProfileView: View {
           { id: "d", text: "Core Data is required for all App Store submissions" },
         ],
         correctOptionId: "a",
-        explanation: "The reasoning mirrors UIKit's continued relevance (section 35.1) — legacy codebase prevalence and specific capability gaps are the concrete, practical reasons to understand Core Data, not any claim that it's preferable for greenfield development.",
+        explanation: "The reasoning mirrors UIKit's continued relevance — legacy codebase prevalence and specific capability gaps are the concrete, practical reasons to understand Core Data, not any claim that it's preferable for greenfield development.",
       },
       {
         id: "q2",
@@ -10681,7 +10681,7 @@ struct UserProfileView: View {
           { id: "d", text: "It requires disabling `NSManagedObjectContext` entirely" },
         ],
         correctOptionId: "b",
-        explanation: "`NSPersistentCloudKitContainer` established the CloudKit-sync-via-configuration pattern that SwiftData's own `cloudKitDatabase: .automatic` option later adopted and builds upon in many configurations — understanding it explains why SwiftData's CloudKit constraints (optional properties, no unique attributes) exist.",
+        explanation: "`NSPersistentCloudKitContainer` established the CloudKit-sync-via-configuration pattern that SwiftData's own `cloudKitDatabase:.automatic` option later adopted and builds upon in many configurations — understanding it explains why SwiftData's CloudKit constraints (optional properties, no unique attributes) exist.",
       },
       {
         id: "q19",
@@ -10697,7 +10697,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "According to 42.13, when is Core Data/SwiftData coexistence (sharing the same underlying store) an appropriate architectural choice?",
+        prompt: "When is Core Data/SwiftData coexistence (sharing the same underlying store) an appropriate architectural choice?",
         options: [
           { id: "a", text: "It is recommended as the default approach for all new apps going forward" },
           { id: "b", text: "It is never technically possible under any circumstances" },
@@ -10705,7 +10705,7 @@ struct UserProfileView: View {
           { id: "d", text: "Primarily to support gradual, incremental migration of an existing Core Data app toward SwiftData — genuinely advanced, edge-case territory, with most apps better served choosing one framework or the other" },
         ],
         correctOptionId: "d",
-        explanation: "This coexistence pattern is explicitly framed as a migration-bridging technique (paralleling the incremental UIKit-to-SwiftUI strategy from 38.9), appropriate for gradually transitioning an existing Core Data app rather than as a general-purpose architectural recommendation for new development.",
+        explanation: "This coexistence pattern is a migration-bridging technique (paralleling an incremental UIKit-to-SwiftUI strategy), appropriate for gradually transitioning an existing Core Data app rather than as a general-purpose architectural recommendation for new development.",
       },
     ],
   },
@@ -10729,7 +10729,7 @@ struct UserProfileView: View {
       },
       {
         id: "q2",
-        prompt: "According to the rule of thumb given in 43.1, when should data NOT go into `UserDefaults`?",
+        prompt: "When should data NOT go into `UserDefaults`?",
         options: [
           { id: "a", text: "Whenever you'd want to filter, sort, or relate the data" },
           { id: "b", text: "When it's a boolean flag representing a simple setting" },
@@ -10833,7 +10833,7 @@ struct UserProfileView: View {
           { id: "d", text: "The Keychain is slower but otherwise identical to `UserDefaults`" },
         ],
         correctOptionId: "a",
-        explanation: "This is the fundamental security distinction driving the section's guidance — a token stored in `UserDefaults` would sit unencrypted and readable by anything with sandbox file-system access, while the Keychain provides genuine encryption specifically appropriate for credential-like sensitive values.",
+        explanation: "This is the fundamental security distinction — a token stored in `UserDefaults` would sit unencrypted and readable by anything with sandbox file-system access, while the Keychain provides genuine encryption specifically appropriate for credential-like sensitive values.",
       },
       {
         id: "q11",
@@ -10973,7 +10973,7 @@ struct UserProfileView: View {
           { id: "d", text: "`CKRecord` is exclusively used for the public database, never the private database" },
         ],
         correctOptionId: "a",
-        explanation: "CloudKit's schema-flexible, key-value `CKRecord` design contrasts with the strongly-typed Swift classes of SwiftData/Core Data — this is exactly the layer that higher-level integrations like SwiftData's automatic CloudKit sync (41.18) and `NSPersistentCloudKitContainer` (42.12) translate to and from behind the scenes.",
+        explanation: "CloudKit's schema-flexible, key-value `CKRecord` design contrasts with the strongly-typed Swift classes of SwiftData/Core Data — this is exactly the layer that higher-level integrations like SwiftData's automatic CloudKit sync and `NSPersistentCloudKitContainer` translate to and from behind the scenes.",
       },
       {
         id: "q2",
@@ -11009,7 +11009,7 @@ struct UserProfileView: View {
           { id: "d", text: "A marker so a subsequent fetch returns only new changes" },
         ],
         correctOptionId: "d",
-        explanation: "Presenting a previously-saved change token to a new fetch tells CloudKit's servers to return only the delta since that point — this incremental sync model is what makes CloudKit sync scale for large datasets, conceptually parallel to Core Data's persistent history tracking (42.11).",
+        explanation: "Presenting a previously-saved change token to a new fetch tells CloudKit's servers to return only the delta since that point — this incremental sync model is what makes CloudKit sync scale for large datasets, conceptually parallel to Core Data's persistent history tracking.",
       },
       {
         id: "q5",
@@ -11133,7 +11133,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "How does offline-first architecture relate to `NWPathMonitor` (section 40.14)?",
+        prompt: "How does offline-first architecture relate to `NWPathMonitor`?",
         options: [
           { id: "a", text: "They are entirely unrelated concepts with no practical overlap" },
           { id: "b", text: "`NWPathMonitor` is required to implement optimistic updates, with no alternative" },
@@ -11141,7 +11141,7 @@ struct UserProfileView: View {
           { id: "d", text: "Offline-first architecture makes connectivity monitoring entirely unnecessary" },
         ],
         correctOptionId: "c",
-        explanation: "Offline-first design and connectivity monitoring complement each other — the local-first, optimistic-update approach keeps the app usable regardless of connectivity, while connectivity awareness (from section 40.14) helps the app know when it's appropriate to actually attempt the background sync of queued local changes.",
+        explanation: "Offline-first design and connectivity monitoring complement each other — the local-first, optimistic-update approach keeps the app usable regardless of connectivity, while connectivity awareness () helps the app know when it's appropriate to actually attempt the background sync of queued local changes.",
       },
       {
         id: "q16",
@@ -11157,7 +11157,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What does `CKError`'s `retryAfterSeconds` property provide, and how does it relate to section 40.3?",
+        prompt: "What does `CKError`'s `retryAfterSeconds` property provide?",
         options: [
           { id: "a", text: "How long to wait before retrying a rate-limited request" },
           { id: "b", text: "It has no practical use at all and is purely informational" },
@@ -11165,11 +11165,11 @@ struct UserProfileView: View {
           { id: "d", text: "It is only present on `serverRecordChanged` errors, never rate-limiting" },
         ],
         correctOptionId: "a",
-        explanation: "`retryAfterSeconds` is CloudKit's explicit guidance on retry timing for rate-limiting-related errors — this integrates naturally with the resilience patterns covered in section 40.3, providing a server-suggested delay rather than relying purely on a client-side backoff calculation.",
+        explanation: "`retryAfterSeconds` is CloudKit's explicit guidance on retry timing for rate-limiting-related errors — this integrates naturally with general network resilience/backoff patterns, providing a server-suggested delay rather than relying purely on a client-side backoff calculation.",
       },
       {
         id: "q18",
-        prompt: "What fundamentally distinguishes a CRDT-based approach from the conflict resolution strategies discussed in 44.7?",
+        prompt: "What fundamentally distinguishes a CRDT-based approach from typical manual conflict resolution strategies?",
         options: [
           { id: "a", text: "CRDTs require manual user intervention for every merge; standard conflict resolution does not" },
           { id: "b", text: "A CRDT's merge operation is mathematically guaranteed to converge to a consistent result regardless of the order changes are applied in, eliminating the need for an explicit conflict resolution strategy at all" },
@@ -11181,7 +11181,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "In the grow-only counter CRDT example, why does tracking each device's own increment count separately (rather than one shared total) enable conflict-free merging?",
+        prompt: "In a grow-only counter CRDT, why does tracking each device's own increment count separately (rather than one shared total) enable conflict-free merging?",
         options: [
           { id: "a", text: "It doesn't actually enable anything different from a shared total" },
           { id: "b", text: "Separate per-device counts require significantly more storage with no benefit" },
@@ -11193,7 +11193,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "According to 44.10, what is the practical scope of CRDT adoption suggested for most apps?",
+        prompt: "What is the practical scope of CRDT adoption suggested for most apps?",
         options: [
           { id: "a", text: "Every app should implement a full CRDT-based sync layer as the default approach" },
           { id: "b", text: "CRDTs should replace `CKShare` entirely for all collaborative features" },
@@ -11201,7 +11201,7 @@ struct UserProfileView: View {
           { id: "d", text: "Implementing a full CRDT-based sync layer is substantial engineering effort reserved for genuinely demanding collaborative use cases, though understanding the core idea offers a more principled alternative to ad hoc conflict resolution for specific, well-suited data shapes" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames full CRDT implementation as substantial, specialized engineering effort appropriate for genuinely demanding collaborative scenarios (like real-time collaborative text editing) — while the conceptual understanding of well-defined, automatic merge behavior is valuable more broadly as a design lens, even without implementing a full CRDT system for every feature.",
+        explanation: "Full CRDT implementation is substantial, specialized engineering effort appropriate for genuinely demanding collaborative scenarios (like real-time collaborative text editing) — while the conceptual understanding of well-defined, automatic merge behavior is valuable more broadly as a design lens, even without implementing a full CRDT system for every feature.",
       },
     ],
   },
@@ -11213,7 +11213,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "According to 45.1, what is the real underlying problem with a large, unmaintainable SwiftUI view, as opposed to line count itself?",
+        prompt: "What is the real underlying problem with a large, unmaintainable SwiftUI view, as opposed to line count itself?",
         options: [
           { id: "a", text: "Large views always run slower at runtime" },
           { id: "b", text: "Large views cannot be previewed in Xcode" },
@@ -11225,7 +11225,7 @@ struct UserProfileView: View {
       },
       {
         id: "q2",
-        prompt: "What are the three foundational concerns that 45.2 identifies as the basis for essentially every architectural pattern?",
+        prompt: "What are the three foundational concerns that form the basis for essentially every architectural pattern?",
         options: [
           { id: "a", text: "Model, business logic, and presentation" },
           { id: "b", text: "Views, Controllers, and Databases, as three separate layers" },
@@ -11237,7 +11237,7 @@ struct UserProfileView: View {
       },
       {
         id: "q3",
-        prompt: "According to 45.2, should a `View` generally contain business rules like validation logic?",
+        prompt: "Should a `View` generally contain business rules like validation logic?",
         options: [
           { id: "a", text: "Yes, validation logic belongs directly in the view for simplicity" },
           { id: "b", text: "No — validation logic shouldn't know it'll be displayed" },
@@ -11245,11 +11245,11 @@ struct UserProfileView: View {
           { id: "d", text: "Only if the validation logic is written using SwiftUI-specific syntax" },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly states this separation as a discipline — validation logic (business logic) and view layout (presentation) are different concerns that shouldn't be intermingled, regardless of how small or simple either piece might individually be.",
+        explanation: "This is a deliberate discipline — validation logic (business logic) and view layout (presentation) are different concerns that shouldn't be intermingled, regardless of how small or simple either piece might individually be.",
       },
       {
         id: "q4",
-        prompt: "What does a view model own and expose in the MVVM pattern shown in 45.3?",
+        prompt: "What does a view model own and expose in the MVVM pattern?",
         options: [
           { id: "a", text: "Raw `URLRequest` construction and low-level parsing details directly" },
           { id: "b", text: "The view's actual SwiftUI `body` implementation itself" },
@@ -11269,11 +11269,11 @@ struct UserProfileView: View {
           { id: "d", text: "`@Observable` classes are reference types owned via `@State`" },
         ],
         correctOptionId: "d",
-        explanation: "Since `@Observable` classes are reference types, `@State` serves as the mechanism by which a view owns and holds a persistent reference to the view model instance across the view's lifetime, while still participating in SwiftUI's observation-driven update cycle (recall `@Observable`, section 25).",
+        explanation: "Since `@Observable` classes are reference types, `@State` serves as the mechanism by which a view owns and holds a persistent reference to the view model instance across the view's lifetime, while still participating in SwiftUI's observation-driven update cycle.",
       },
       {
         id: "q6",
-        prompt: "According to 45.4, what should generally NOT be found directly inside a view model?",
+        prompt: "What should generally NOT be found directly inside a view model?",
         options: [
           { id: "a", text: "Raw networking/persistence calls — details for a service layer" },
           { id: "b", text: "Presentation-ready state like `recipes`, exposed for the view to read" },
@@ -11281,11 +11281,11 @@ struct UserProfileView: View {
           { id: "d", text: "A reference to a service protocol the view model depends on" },
         ],
         correctOptionId: "a",
-        explanation: "The section draws a clear line — a view model should orchestrate calls to lower-level services and shape their results for display, but the actual low-level implementation details of fetching or persisting data belong in a separate service/repository layer, not embedded directly in the view model.",
+        explanation: "There's a clear line — a view model should orchestrate calls to lower-level services and shape their results for display, but the actual low-level implementation details of fetching or persisting data belong in a separate service/repository layer, not embedded directly in the view model.",
       },
       {
         id: "q7",
-        prompt: "What is the \"useful test\" given in 45.4 for determining whether logic belongs in a view model?",
+        prompt: "What is a useful test for determining whether logic belongs in a view model?",
         options: [
           { id: "a", text: "Whether the logic is more than 10 lines long in total" },
           { id: "b", text: "Whether it orchestrates, or contains raw implementation" },
@@ -11297,7 +11297,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "How does a service/repository layer relate to the `APIClient` pattern from section 40.1?",
+        prompt: "How does a service/repository layer relate to the `APIClient` pattern?",
         options: [
           { id: "a", text: "They are unrelated, competing patterns that shouldn't be used together" },
           { id: "b", text: "A service layer replaces the need for an `APIClient` entirely" },
@@ -11309,7 +11309,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "What is a DTO, as defined in 45.6?",
+        prompt: "What is a DTO?",
         options: [
           { id: "a", text: "A SwiftUI-specific view type" },
           { id: "b", text: "A CloudKit-specific record format" },
@@ -11317,7 +11317,7 @@ struct UserProfileView: View {
           { id: "d", text: "A Data Transfer Object — the shape of data as it comes over the network, matching a server's specific JSON structure, often a poor fit to use directly as an app's internal domain model" },
         ],
         correctOptionId: "d",
-        explanation: "A DTO mirrors the server's actual API response shape (including any quirks like snake_case naming or awkward optionality) — the section explains why this shape is often unsuitable to use directly as the app's internal domain model without an explicit mapping step.",
+        explanation: "A DTO mirrors the server's actual API response shape (including any quirks like snake_case naming or awkward optionality), which is often unsuitable to use directly as the app's internal domain model without an explicit mapping step.",
       },
       {
         id: "q10",
@@ -11333,7 +11333,7 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "How does 45.7's \"making illegal states unrepresentable\" principle connect to material from earlier in the curriculum?",
+        prompt: "How does the \"making illegal states unrepresentable\" principle connect to material from earlier in the curriculum?",
         options: [
           { id: "a", text: "It has no connection to any earlier material; introduced here for the first time" },
           { id: "b", text: "A recurring theme from enums and network states, now generalized" },
@@ -11341,7 +11341,7 @@ struct UserProfileView: View {
           { id: "d", text: "It contradicts the enum-modeling guidance given earlier in section 6" },
         ],
         correctOptionId: "b",
-        explanation: "This principle threads consistently through the curriculum — from general enum modeling (section 6) through the specific `LoadState` example for networking (section 39.9) — and 45.7 explicitly frames it as a recurring, generalizable architectural discipline rather than a one-off technique.",
+        explanation: "This principle threads consistently through Swift — from general enum modeling through the specific `LoadState` example for networking — it's a recurring, generalizable architectural discipline rather than a one-off technique.",
       },
       {
         id: "q12",
@@ -11353,11 +11353,11 @@ struct UserProfileView: View {
           { id: "d", text: "There is no actual difference in guarantee strength between the two approaches" },
         ],
         correctOptionId: "c",
-        explanation: "This is the core distinction the section draws — \"we're careful to keep these flags in sync\" is a discipline-based guarantee that can be violated by a bug, while the enum's structural impossibility of representing contradictory states is a guarantee enforced by the type system itself, categorically stronger.",
+        explanation: "This is the core distinction — \"we're careful to keep these flags in sync\" is a discipline-based guarantee that can be violated by a bug, while the enum's structural impossibility of representing contradictory states is a guarantee enforced by the type system itself, categorically stronger.",
       },
       {
         id: "q13",
-        prompt: "How does modeling an entire screen's state as a single enum (45.8) extend the `LoadState` pattern from section 39.9?",
+        prompt: "How does modeling an entire screen's state as a single enum extend the `LoadState` pattern?",
         options: [
           { id: "a", text: "It doesn't extend it; screen-level state modeling is unrelated to `LoadState`" },
           { id: "b", text: "Screen state enums cannot include associated values, unlike `LoadState`" },
@@ -11369,7 +11369,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What benefit does the compiler's exhaustiveness checking provide when a screen's state is modeled as a single enum, as shown in `RecipeDetailView`'s `body`?",
+        prompt: "What benefit does the compiler's exhaustiveness checking provide when a screen's state is modeled as a single enum, switched over in the view's `body`?",
         options: [
           { id: "a", text: "Guarantees every state is handled by an exhaustive `switch`" },
           { id: "b", text: "It automatically writes the view's layout code for every case" },
@@ -11389,11 +11389,11 @@ struct UserProfileView: View {
           { id: "d", text: "\"By feature\" requires a separate Xcode project per feature" },
         ],
         correctOptionId: "b",
-        explanation: "The two approaches organize the same underlying files differently — \"by type\" scatters a single feature's related files across several distant top-level folders, while \"by feature\" keeps everything relevant to one feature together, which the section identifies as scaling better for larger apps.",
+        explanation: "The two approaches organize the same underlying files differently — \"by type\" scatters a single feature's related files across several distant top-level folders, while \"by feature\" keeps everything relevant to one feature together, which scales better for larger apps.",
       },
       {
         id: "q16",
-        prompt: "What downside of \"by type\" organization does 45.9 identify as an app grows?",
+        prompt: "What downside of \"by type\" organization becomes apparent as an app grows?",
         options: [
           { id: "a", text: "It makes the app's binary size larger" },
           { id: "b", text: "\"By type\" organization is incompatible with SwiftUI previews" },
@@ -11405,7 +11405,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What further architectural benefit does \"by feature\" organization naturally support, according to 45.9?",
+        prompt: "What further architectural benefit does \"by feature\" organization naturally support?",
         options: [
           { id: "a", text: "Automatic dark mode support across every screen in the app" },
           { id: "b", text: "Faster compile times, with no additional restructuring needed" },
@@ -11417,7 +11417,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What kind of code belongs in a well-organized `Shared`/`Core` area, according to 45.10?",
+        prompt: "What kind of code belongs in a well-organized `Shared`/`Core` area?",
         options: [
           { id: "a", text: "Code genuinely used across features, like a design token system" },
           { id: "b", text: "Any code the developer personally finds convenient to place there" },
@@ -11425,11 +11425,11 @@ struct UserProfileView: View {
           { id: "d", text: "Code used by exactly one feature but theoretically reusable someday" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly warns against treating `Shared` as a convenient dumping ground — the discipline is reserving it for code that's genuinely cross-feature (design tokens, networking, persistence setup, general extensions), while feature-specific code should stay local to its own feature folder even if it seems theoretically reusable.",
+        explanation: "The guidance explicitly warns against treating `Shared` as a convenient dumping ground — the discipline is reserving it for code that's genuinely cross-feature (design tokens, networking, persistence setup, general extensions), while feature-specific code should stay local to its own feature folder even if it seems theoretically reusable.",
       },
       {
         id: "q19",
-        prompt: "What discipline does 45.10 warn against when deciding what belongs in shared code?",
+        prompt: "What discipline should be followed when deciding what belongs in shared code?",
         options: [
           { id: "a", text: "Never creating a `Shared` folder at all" },
           { id: "b", text: "Resisting the temptation to put something in `Shared` just because it's convenient, when it actually only serves one specific feature and should instead stay local to that feature's own folder" },
@@ -11441,7 +11441,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What does 45.10 suggest often eventually happens to well-scoped shared modules as an app and team grow?",
+        prompt: "What often eventually happens to well-scoped shared modules as an app and team grow?",
         options: [
           { id: "a", text: "They are typically deleted entirely once the app reaches a certain size" },
           { id: "b", text: "They are merged back into a single monolithic file for simplicity" },
@@ -11461,7 +11461,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What is the structural root cause of \"Massive View Controller,\" according to 46.1?",
+        prompt: "What is the structural root cause of \"Massive View Controller\"?",
         options: [
           { id: "a", text: "`UIViewController` sits at the intersection of \"Controller\" (orchestration) and \"View\" (owning/configuring the view hierarchy), and nothing in the framework prevents it from also absorbing networking and business logic without deliberate discipline" },
           { id: "b", text: "Developers are simply careless by nature" },
@@ -11469,7 +11469,7 @@ struct UserProfileView: View {
           { id: "d", text: "MVC was never actually intended to be used with UIKit" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames this as a structural gap in the pattern's UIKit implementation rather than a personal failing — `UIViewController`'s dual role naturally invites accumulating responsibility over time unless a team actively separates concerns as discussed in section 45.2.",
+        explanation: "This is a structural gap in the pattern's UIKit implementation rather than a personal failing — `UIViewController`'s dual role naturally invites accumulating responsibility over time unless a team actively separates concerns.",
       },
       {
         id: "q2",
@@ -11493,7 +11493,7 @@ struct UserProfileView: View {
           { id: "d", text: "There is no meaningful difference in how well the two patterns fit SwiftUI" },
         ],
         correctOptionId: "c",
-        explanation: "SwiftUI's core paradigm is declarative — views describe themselves as a function of state, and MVVM's \"no reference back to the view, just observable state\" design maps directly onto that model, which the section identifies as why MVVM (not MVP) became dominant in modern SwiftUI codebases.",
+        explanation: "SwiftUI's core paradigm is declarative — views describe themselves as a function of state, and MVVM's \"no reference back to the view, just observable state\" design maps directly onto that model, which is why MVVM (not MVP) became dominant in modern SwiftUI codebases.",
       },
       {
         id: "q4",
@@ -11509,7 +11509,7 @@ struct UserProfileView: View {
       },
       {
         id: "q5",
-        prompt: "What is VIPER's well-documented trade-off, according to 46.3?",
+        prompt: "What is VIPER's well-known trade-off?",
         options: [
           { id: "a", text: "Ceremony — a simple screen needs five types wired up" },
           { id: "b", text: "VIPER cannot be tested at all, under any configuration" },
@@ -11517,7 +11517,7 @@ struct UserProfileView: View {
           { id: "d", text: "VIPER eliminates the need for any Model layer entirely" },
         ],
         correctOptionId: "a",
-        explanation: "VIPER's genuine strength (maximal testability and single-responsibility clarity) comes with a real cost in structural overhead — five types per screen is a lot of ceremony for a simple CRUD-style screen, which is why the section frames VIPER as paying off specifically for large teams with complex screens.",
+        explanation: "VIPER's genuine strength (maximal testability and single-responsibility clarity) comes with a real cost in structural overhead — five types per screen is a lot of ceremony for a simple CRUD-style screen, which is why VIPER tends to pay off specifically for large teams with complex screens.",
       },
       {
         id: "q6",
@@ -11533,7 +11533,7 @@ struct UserProfileView: View {
       },
       {
         id: "q7",
-        prompt: "How does the Data layer relate to the Domain layer in Clean Architecture, according to 46.4?",
+        prompt: "How does the Data layer relate to the Domain layer in Clean Architecture?",
         options: [
           { id: "a", text: "The Domain layer directly calls concrete Data layer classes itself" },
           { id: "b", text: "There is no relationship between the two layers at all" },
@@ -11541,7 +11541,7 @@ struct UserProfileView: View {
           { id: "d", text: "The Data layer is a subset of the Domain layer entirely" },
         ],
         correctOptionId: "c",
-        explanation: "This is the specific mechanism (dependency inversion, previewed further in 48.5) that makes the strict dependency rule work in practice — the Domain layer defines abstractions (protocols), and the Data layer provides concrete implementations of those abstractions, keeping the dependency arrow pointing inward.",
+        explanation: "This is the specific mechanism (dependency inversion) that makes the strict dependency rule work in practice — the Domain layer defines abstractions (protocols), and the Data layer provides concrete implementations of those abstractions, keeping the dependency arrow pointing inward.",
       },
       {
         id: "q8",
@@ -11553,11 +11553,11 @@ struct UserProfileView: View {
           { id: "d", text: "Every state change flows through one transformation function" },
         ],
         correctOptionId: "d",
-        explanation: "Unidirectional data flow's deliberate restrictiveness — routing every state change through one consistent transformation — is precisely what makes the full set of possible state transitions enumerable and auditable, echoing the \"illegal states unrepresentable\" philosophy (45.7) but applied to state *transitions* rather than states themselves.",
+        explanation: "Unidirectional data flow's deliberate restrictiveness — routing every state change through one consistent transformation — is precisely what makes the full set of possible state transitions enumerable and auditable, echoing the \"illegal states unrepresentable\" philosophy but applied to state *transitions* rather than states themselves.",
       },
       {
         id: "q9",
-        prompt: "What is the key property of a reducer in the reducer/action/effect pattern (46.6)?",
+        prompt: "What is the key property of a reducer in the reducer/action/effect pattern?",
         options: [
           { id: "a", text: "Deliberately pure and synchronous, with no side effects" },
           { id: "b", text: "It performs network calls directly and asynchronously itself" },
@@ -11589,11 +11589,11 @@ struct UserProfileView: View {
           { id: "d", text: "They only work with UIKit, and not with SwiftUI at all" },
         ],
         correctOptionId: "c",
-        explanation: "Like `@Model` (section 41.1) and other Swift macros (section 13), `@Reducer` and `@ObservableState` reduce the ceremony of implementing the underlying pattern by generating boilerplate at compile time, letting TCA-based code look more like ordinary, concise Swift.",
+        explanation: "Like `@Model` and other Swift macros, `@Reducer` and `@ObservableState` reduce the ceremony of implementing the underlying pattern by generating boilerplate at compile time, letting TCA-based code look more like ordinary, concise Swift.",
       },
       {
         id: "q12",
-        prompt: "What does `.run { send in }` provide in TCA, and how does it relate to earlier concurrency material?",
+        prompt: "What does `.run { send in }` provide in TCA, and how does it relate to Swift's structured concurrency?",
         options: [
           { id: "a", text: "It is unrelated to Swift's structured concurrency and uses a separate model" },
           { id: "b", text: "It replaces the need for `@Dependency` entirely, on its own" },
@@ -11601,11 +11601,11 @@ struct UserProfileView: View {
           { id: "d", text: "TCA's async effect mechanism, feeding results back via `send`" },
         ],
         correctOptionId: "d",
-        explanation: "`.run { send in }` is explicitly built on `async`/`await` rather than introducing a competing concurrency model — this direct integration with structured concurrency (Part 2) is what lets TCA effects naturally express real asynchronous work like network calls.",
+        explanation: "`.run { send in }` is explicitly built on `async`/`await` rather than introducing a competing concurrency model — this direct integration with structured concurrency is what lets TCA effects naturally express real asynchronous work like network calls.",
       },
       {
         id: "q13",
-        prompt: "What does `@Dependency(\\.recipeService)` enable in TCA, according to 46.8?",
+        prompt: "What does `@Dependency(\\.recipeService)` enable in TCA?",
         options: [
           { id: "a", text: "The actual service implementation is resolvable and overridable per-context (production, tests, previews), letting the same reducer code run against a real service in production and a controlled fake in tests, without conditional logic in the reducer" },
           { id: "b", text: "It hardcodes a single, unchangeable service implementation for all contexts" },
@@ -11625,7 +11625,7 @@ struct UserProfileView: View {
           { id: "d", text: "It has no functional purpose beyond documentation value" },
         ],
         correctOptionId: "b",
-        explanation: "This directly parallels structured concurrency's cancellation mechanisms (section 18) and `.task(id:)`'s auto-cancellation behavior (section 40.4) — `.cancellable(id:)` gives an effect an identity that can be used to explicitly cancel it when it's no longer needed.",
+        explanation: "This directly parallels structured concurrency's cancellation mechanisms and `.task(id:)`'s auto-cancellation behavior — `.cancellable(id:)` gives an effect an identity that can be used to explicitly cancel it when it's no longer needed.",
       },
       {
         id: "q15",
@@ -11665,7 +11665,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "How does SwiftUI's native `NavigationPath`-based routing (46.11) relate to the traditional Coordinator pattern?",
+        prompt: "How does SwiftUI's native `NavigationPath`-based routing relate to the traditional Coordinator pattern?",
         options: [
           { id: "a", text: "They are entirely unrelated and solve different problems" },
           { id: "b", text: "An `@Observable` router holding a `NavigationPath` captures much of the Coordinator pattern's core benefit (decoupling navigation triggers from navigation decisions) using purely SwiftUI-native building blocks, without needing UIKit-era coordinator machinery" },
@@ -11677,7 +11677,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "According to 46.11, when does a more formal, dedicated Coordinator-style object become particularly valuable, even in SwiftUI-first codebases?",
+        prompt: "When does a more formal, dedicated Coordinator-style object become particularly valuable, even in SwiftUI-first codebases?",
         options: [
           { id: "a", text: "Never; SwiftUI-native navigation is always sufficient regardless of app complexity" },
           { id: "b", text: "Only when the app has fewer than three screens total" },
@@ -11689,7 +11689,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What is the section's closing guidance (46.13) on choosing an architecture?",
+        prompt: "What is the sensible closing guidance on choosing an architecture?",
         options: [
           { id: "a", text: "Always choose the most elaborate, rigorous pattern available, regardless of team size" },
           { id: "b", text: "Architecture choice should be decided entirely by which pattern is most popular online at the time" },
@@ -11697,7 +11697,7 @@ struct UserProfileView: View {
           { id: "d", text: "There is no universally \"correct\" architecture — the right choice depends on team size, app complexity, and expected codebase lifespan, and should be a deliberate trade-off rather than a default or trend-following choice" },
         ],
         correctOptionId: "d",
-        explanation: "The section explicitly rejects a one-size-fits-all answer — every pattern beyond the foundational separation (45.2) trades additional structure for additional rigor and scalability, and the skill is honestly matching that trade-off to a project's actual scale and complexity, rather than defaulting to whatever is currently trending or maximally rigorous.",
+        explanation: "There's no one-size-fits-all answer — every pattern beyond the foundational separation trades additional structure for additional rigor and scalability, and the skill is honestly matching that trade-off to a project's actual scale and complexity, rather than defaulting to whatever is currently trending or maximally rigorous.",
       },
     ],
   },
@@ -11709,7 +11709,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What is the core problem with singletons that undermines testability, according to 47.1?",
+        prompt: "What is the core problem with singletons that undermines testability?",
         options: [
           { id: "a", text: "Reaching for a globally-accessible instance from deep inside a type's implementation makes that dependency invisible from the outside and impossible to substitute without mutating shared global state" },
           { id: "b", text: "Singletons are always slower than non-singleton objects" },
@@ -11717,7 +11717,7 @@ struct UserProfileView: View {
           { id: "d", text: "Swift does not allow singletons to conform to protocols" },
         ],
         correctOptionId: "a",
-        explanation: "The section is explicit that singletons aren't inherently \"bad\" as a concept — the specific problem is that code reaching for `.shared` internally hides that dependency from the type's public interface, making it impossible to substitute for testing without actually mutating the one shared global instance.",
+        explanation: "Singletons aren't inherently \"bad\" as a concept — the specific problem is that code reaching for `.shared` internally hides that dependency from the type's public interface, making it impossible to substitute for testing without actually mutating the one shared global instance.",
       },
       {
         id: "q2",
@@ -11733,7 +11733,7 @@ struct UserProfileView: View {
       },
       {
         id: "q3",
-        prompt: "According to 47.2, how does initializer injection relate to other DI techniques covered in the section?",
+        prompt: "How does initializer injection relate to other DI techniques?",
         options: [
           { id: "a", text: "It is entirely unrelated to the other techniques covered" },
           { id: "b", text: "Initializer injection is deprecated in favor of `@Environment`" },
@@ -11741,7 +11741,7 @@ struct UserProfileView: View {
           { id: "d", text: "Initializer injection can only be used with structs, never classes" },
         ],
         correctOptionId: "c",
-        explanation: "The section frames initializer injection as the foundational technique — subsequent approaches (`@Environment`, closures, `swift-dependencies`) all share the same underlying goal of explicit substitutability, just achieved through different specific mechanisms.",
+        explanation: "Initializer injection is the foundational technique — subsequent approaches (`@Environment`, closures, `swift-dependencies`) all share the same underlying goal of explicit substitutability, just achieved through different specific mechanisms.",
       },
       {
         id: "q4",
@@ -11769,7 +11769,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "Why does injecting a protocol type (rather than a concrete class) matter for substitutability, according to 47.4?",
+        prompt: "Why does injecting a protocol type (rather than a concrete class) matter for substitutability, beyond initializer injection alone?",
         options: [
           { id: "a", text: "Protocols execute measurably faster than concrete classes at runtime" },
           { id: "b", text: "A concrete class allows one type; a protocol allows any conforming type" },
@@ -11777,11 +11777,11 @@ struct UserProfileView: View {
           { id: "d", text: "There is no actual difference; both achieve identical substitutability" },
         ],
         correctOptionId: "b",
-        explanation: "This is the key insight combining 47.2 and 47.4 — initializer injection alone isn't enough for true substitutability if the parameter type is a concrete class; depending on a protocol is what actually enables swapping in different conforming implementations, including fakes for testing.",
+        explanation: "This is a key insight — initializer injection alone isn't enough for true substitutability if the parameter type is a concrete class; depending on a protocol is what actually enables swapping in different conforming implementations, including fakes for testing.",
       },
       {
         id: "q7",
-        prompt: "What advantage does a closure-based (or struct-of-closures) dependency offer over a full protocol, according to 47.5?",
+        prompt: "What advantage does a closure-based (or struct-of-closures) dependency offer over a full protocol?",
         options: [
           { id: "a", text: "Closures are always measurably faster to execute than protocol method calls" },
           { id: "b", text: "Closures cannot be used for asynchronous operations, unlike protocols" },
@@ -11805,7 +11805,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "In the composition root pattern, what should the rest of the codebase (view models, services) deal in, according to 47.6?",
+        prompt: "In the composition root pattern, what should the rest of the codebase (view models, services) deal in, rather than choosing concrete types themselves?",
         options: [
           { id: "a", text: "Protocol types exclusively, never choosing a concrete type" },
           { id: "b", text: "Concrete implementation types exclusively, chosen wherever convenient" },
@@ -11817,7 +11817,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "How does `swift-dependencies` relate to TCA (section 46.7-46.9)?",
+        prompt: "How does `swift-dependencies` relate to TCA?",
         options: [
           { id: "a", text: "`swift-dependencies` is exclusively part of TCA and cannot be used elsewhere" },
           { id: "b", text: "A standalone library also used by TCA, usable independently elsewhere" },
@@ -11825,11 +11825,11 @@ struct UserProfileView: View {
           { id: "d", text: "`swift-dependencies` replaces the need for TCA's `@Reducer` macro" },
         ],
         correctOptionId: "b",
-        explanation: "While `swift-dependencies` powers TCA's `@Dependency` system (46.8), it's explicitly described as a standalone library that can be adopted on its own, independent of whether an app uses TCA's broader reducer/action/effect architecture at all.",
+        explanation: "While `swift-dependencies` powers TCA's `@Dependency` system, it's explicitly described as a standalone library that can be adopted on its own, independent of whether an app uses TCA's broader reducer/action/effect architecture at all.",
       },
       {
         id: "q11",
-        prompt: "Where does `swift-dependencies`'s `@Dependency` sit conceptually between initializer injection and `@Environment`, according to 47.7?",
+        prompt: "Where does `swift-dependencies`'s `@Dependency` sit conceptually between initializer injection and `@Environment`?",
         options: [
           { id: "a", text: "It combines maximally explicit constructor-parameter visibility with SwiftUI-exclusive scope" },
           { id: "b", text: "It has no relationship to either technique at all" },
@@ -11873,11 +11873,11 @@ struct UserProfileView: View {
           { id: "d", text: "`TestClock` requires the test to run on a physical device" },
         ],
         correctOptionId: "b",
-        explanation: "By substituting a `TestClock` that resolves delays instantly and reports a controllable, fixed time, tests for time-dependent logic (like exponential backoff, section 40.3, or cache expiration, section 43.12) can run fast and deterministically, rather than requiring real elapsed wall-clock time.",
+        explanation: "By substituting a `TestClock` that resolves delays instantly and reports a controllable, fixed time, tests for time-dependent logic (like exponential backoff, or cache expiration) can run fast and deterministically, rather than requiring real elapsed wall-clock time.",
       },
       {
         id: "q15",
-        prompt: "What example use cases does the section give for where an injected `Clock` would be practically valuable?",
+        prompt: "What are practical use cases where an injected `Clock` would be valuable for testing?",
         options: [
           { id: "a", text: "Rendering a `List` and computing its layout on screen" },
           { id: "b", text: "Encoding a `Codable` model to JSON for network transmission" },
@@ -11889,7 +11889,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "Why might a dependency protocol used from concurrent contexts need to be marked `Sendable`, according to 47.9?",
+        prompt: "Why might a dependency protocol used from concurrent contexts need to be marked `Sendable`?",
         options: [
           { id: "a", text: "`Sendable` conformance is purely cosmetic and has no functional bearing at all" },
           { id: "b", text: "This requirement only applies to dependencies used exclusively on the main actor" },
@@ -11921,11 +11921,11 @@ struct UserProfileView: View {
           { id: "d", text: "Actor-based implementations cannot conform to protocols at all" },
         ],
         correctOptionId: "b",
-        explanation: "Since actors provide the serialized, data-race-free access to mutable state discussed in section 19, using an actor for a stateful dependency's concrete implementation is a natural, idiomatic way to satisfy a `Sendable`-marked protocol's safety guarantee without manual locking or synchronization code.",
+        explanation: "Since actors provide serialized, data-race-free access to mutable state, using an actor for a stateful dependency's concrete implementation is a natural, idiomatic way to satisfy a `Sendable`-marked protocol's safety guarantee without manual locking or synchronization code.",
       },
       {
         id: "q19",
-        prompt: "What common thread connects the composition root (47.6) and protocol-based abstractions (47.4)?",
+        prompt: "What common thread connects the composition root and protocol-based abstractions?",
         options: [
           { id: "a", text: "They are unrelated concepts that happen to appear in the same section" },
           { id: "b", text: "The composition root eliminates the need for any protocol abstractions" },
@@ -11937,15 +11937,15 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What overarching theme connects all the techniques covered across section 47?",
+        prompt: "What overarching theme connects all the dependency-injection techniques covered in this quiz?",
         options: [
           { id: "a", text: "Every technique is mutually exclusive; only one should ever be used in a given app" },
           { id: "b", text: "The primary goal is minimizing the total number of types in a codebase" },
           { id: "c", text: "All techniques require adopting the Composable Architecture" },
-          { id: "d", text: "Making dependencies explicit, substitutable, and injected from outside rather than reached for or constructed internally — the foundational enabler for the testability every architecture pattern from section 46 ultimately depends on" },
+          { id: "d", text: "Making dependencies explicit, substitutable, and injected from outside rather than reached for or constructed internally — the foundational enabler for the testability every architecture pattern ultimately depends on" },
         ],
         correctOptionId: "d",
-        explanation: "From initializer injection through `swift-dependencies` and concurrency-aware design, every technique in the section serves the same underlying goal — replacing hidden, internally-reached-for dependencies with explicit, externally-supplied, substitutable ones, which is precisely what makes the testing strategies discussed throughout section 46 (like TCA's `TestStore`) actually achievable in practice.",
+        explanation: "From initializer injection through `swift-dependencies` and concurrency-aware design, every technique serves the same underlying goal — replacing hidden, internally-reached-for dependencies with explicit, externally-supplied, substitutable ones, which is precisely what makes testing strategies like TCA's `TestStore` actually achievable in practice.",
       },
     ],
   },
@@ -11957,7 +11957,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "According to 48.1, what are genuine signals that it's time to modularize an app?",
+        prompt: "What are genuine signals that it's time to modularize an app?",
         options: [
           { id: "a", text: "Build times becoming painfully slow with unhelpful incremental builds, multiple teams stepping on each other in the same codebase, and wanting compiler-enforced architectural boundaries rather than mere convention" },
           { id: "b", text: "The app has more than one screen" },
@@ -11965,11 +11965,11 @@ struct UserProfileView: View {
           { id: "d", text: "The app has been in the App Store for over a year" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames modularization as a genuine investment with real costs, warranting deliberate adoption only when specific, concrete pain points (slow builds, team friction, desire for enforced boundaries) actually justify it — not as a default or reflexive choice for any app.",
+        explanation: "Modularization is a genuine investment with real costs, warranting deliberate adoption only when specific, concrete pain points (slow builds, team friction, desire for enforced boundaries) actually justify it — not as a default or reflexive choice for any app.",
       },
       {
         id: "q2",
-        prompt: "How does the \"by feature\" folder organization from section 45.9 relate to modularization?",
+        prompt: "How does the \"by feature\" folder organization relate to modularization?",
         options: [
           { id: "a", text: "It has no relationship at all; modularization starts entirely from scratch" },
           { id: "b", text: "The natural precursor to extracting a feature folder into a package" },
@@ -12005,7 +12005,7 @@ struct UserProfileView: View {
       },
       {
         id: "q5",
-        prompt: "What does the interface/implementation module split (48.4) achieve?",
+        prompt: "What does the interface/implementation module split achieve?",
         options: [
           { id: "a", text: "A small interface module other modules depend on, without heavier deps" },
           { id: "b", text: "It eliminates the need for any protocols anywhere in the codebase" },
@@ -12017,7 +12017,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "How does the interface/implementation split relate to Clean Architecture's dependency rule (section 46.4)?",
+        prompt: "How does the interface/implementation split relate to Clean Architecture's dependency rule?",
         options: [
           { id: "a", text: "They are unrelated concepts from entirely different domains" },
           { id: "b", text: "Mirrors Clean Architecture's dependency inversion at the module level" },
@@ -12029,7 +12029,7 @@ struct UserProfileView: View {
       },
       {
         id: "q7",
-        prompt: "What does dependency inversion mean at the module level, according to 48.5?",
+        prompt: "What does dependency inversion mean at the module level?",
         options: [
           { id: "a", text: "High-level modules should always directly depend on low-level concrete modules" },
           { id: "b", text: "All modules must be at the exact same \"level,\" with no hierarchy at all" },
@@ -12037,7 +12037,7 @@ struct UserProfileView: View {
           { id: "d", text: "Module-level dependency inversion is unrelated to type-level dependency inversion" },
         ],
         correctOptionId: "c",
-        explanation: "This is explicitly framed as the same dependency inversion principle from Clean Architecture (46.4) and protocol-based DI (47.4), scaled up to module granularity — a higher-level module (like `AppFeature`) depends on an interface module rather than a concrete implementation module, with the concrete implementation wired in at the composition root.",
+        explanation: "This is the same dependency inversion principle from Clean Architecture and protocol-based DI, scaled up to module granularity — a higher-level module (like `AppFeature`) depends on an interface module rather than a concrete implementation module, with the concrete implementation wired in at the composition root.",
       },
       {
         id: "q8",
@@ -12065,7 +12065,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "What is the standard fix for a circular dependency between two feature modules, according to 48.7?",
+        prompt: "What is the standard fix for a circular dependency between two feature modules?",
         options: [
           { id: "a", text: "Delete one of the two modules entirely, regardless of what it contains" },
           { id: "b", text: "Extract the shared functionality into a module both depend on" },
@@ -12073,11 +12073,11 @@ struct UserProfileView: View {
           { id: "d", text: "Circular dependencies cannot be fixed and require a full app rewrite" },
         ],
         correctOptionId: "b",
-        explanation: "Since the cycle arises from two features each needing something from the other, the standard resolution extracts that shared need into its own lower-level module both features can depend on independently — directly connecting back to the \"where does shared logic go\" discipline from section 45.10.",
+        explanation: "Since the cycle arises from two features each needing something from the other, the standard resolution extracts that shared need into its own lower-level module both features can depend on independently — directly connecting back to the \"where does shared logic go\" discipline.",
       },
       {
         id: "q11",
-        prompt: "According to 48.7, how do circular dependencies typically emerge in practice?",
+        prompt: "How do circular dependencies typically emerge in practice?",
         options: [
           { id: "a", text: "They are always the result of deliberate, intentional design decisions" },
           { id: "b", text: "They only occur when using Tuist or Bazel, never plain Swift Package Manager" },
@@ -12085,11 +12085,11 @@ struct UserProfileView: View {
           { id: "d", text: "Circular dependencies are impossible to create accidentally, by design" },
         ],
         correctOptionId: "c",
-        explanation: "The section emphasizes that circular dependencies usually aren't deliberately designed — they accumulate gradually through incremental, individually-reasonable-seeming changes made in isolation, without anyone noticing the eventual cycle until the build actually fails.",
+        explanation: "Circular dependencies usually aren't deliberately designed — they accumulate gradually through incremental, individually-reasonable-seeming changes made in isolation, without anyone noticing the eventual cycle until the build actually fails.",
       },
       {
         id: "q12",
-        prompt: "What is the general trade-off between static and dynamic linking, according to 48.8?",
+        prompt: "What is the general trade-off between static and dynamic linking?",
         options: [
           { id: "a", text: "Static linking is always strictly better in every respect" },
           { id: "b", text: "There is no meaningful performance difference between the two approaches" },
@@ -12101,7 +12101,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "What is the sensible default linking strategy for most apps with a moderate module count, according to 48.8?",
+        prompt: "What is the sensible default linking strategy for most apps with a moderate module count?",
         options: [
           { id: "a", text: "Static linking, SwiftPM's default; dynamic matters at large scale" },
           { id: "b", text: "Dynamic linking, since it's always faster in every configuration" },
@@ -12109,11 +12109,11 @@ struct UserProfileView: View {
           { id: "d", text: "The choice has no practical effect and can be made arbitrarily" },
         ],
         correctOptionId: "a",
-        explanation: "For most apps, static linking's default behavior in Swift Package Manager is described as the sensible choice — dynamic linking's benefits become more relevant specifically as module counts grow large enough that static linking's build-time and binary-size costs start to dominate (48.12 territory).",
+        explanation: "For most apps, static linking's default behavior in Swift Package Manager is the sensible choice — dynamic linking's benefits become more relevant specifically as module counts grow large enough that static linking's build-time and binary-size costs start to dominate.",
       },
       {
         id: "q14",
-        prompt: "What problem do mergeable libraries (48.9) solve?",
+        prompt: "What problem do mergeable libraries solve?",
         options: [
           { id: "a", text: "They eliminate the need for any module boundaries at all" },
           { id: "b", text: "Dynamic linking locally, static linking's traits when shipped" },
@@ -12121,11 +12121,11 @@ struct UserProfileView: View {
           { id: "d", text: "They automatically resolve circular dependencies on their own" },
         ],
         correctOptionId: "b",
-        explanation: "Rather than accepting the fixed 48.8 trade-off between static and dynamic linking for the entire development lifecycle, mergeable libraries let development builds use dynamic linking's fast incremental rebuilds while release builds merge everything into a single binary with static linking's runtime performance.",
+        explanation: "Rather than accepting a fixed trade-off between static and dynamic linking for the entire development lifecycle, mergeable libraries let development builds use dynamic linking's fast incremental rebuilds while release builds merge everything into a single binary with static linking's runtime performance.",
       },
       {
         id: "q15",
-        prompt: "What problem does Tuist's Swift-based project description (48.10) address?",
+        prompt: "What problem does Tuist's Swift-based project description address?",
         options: [
           { id: "a", text: "It makes Swift code compile faster at runtime, once built" },
           { id: "b", text: "Tuist eliminates the need for any `Package.swift` files entirely" },
@@ -12133,7 +12133,7 @@ struct UserProfileView: View {
           { id: "d", text: "Tuist is required for any app with more than one screen" },
         ],
         correctOptionId: "c",
-        explanation: "This directly echoes the Interface Builder merge-conflict problem from section 35.4, but applied to project configuration — Tuist's Swift-based, source-code-like project description avoids the pain of hand-editing and merging a complex, semi-opaque `.xcodeproj` file directly.",
+        explanation: "This directly echoes the Interface Builder merge-conflict problem, but applied to project configuration — Tuist's Swift-based, source-code-like project description avoids the pain of hand-editing and merging a complex, semi-opaque `.xcodeproj` file directly.",
       },
       {
         id: "q16",
@@ -12149,7 +12149,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What core challenge does 48.12 identify for managing a 50+ module build graph, beyond any single technique from earlier in the section?",
+        prompt: "What core challenge does managing a 50+ module build graph present, beyond any single technique used at smaller scale?",
         options: [
           { id: "a", text: "Without deliberate, ongoing investment in enforcing architectural rules, a large module graph naturally tends to accumulate exactly the kind of accidental coupling and circular dependencies modularization was meant to prevent, at a scale where manual detection becomes impractical" },
           { id: "b", text: "Having more than 50 modules is technically impossible in Swift" },
@@ -12157,23 +12157,23 @@ struct UserProfileView: View {
           { id: "d", text: "There is no additional challenge beyond what a 5-module app faces" },
         ],
         correctOptionId: "a",
-        explanation: "The section emphasizes that scale itself introduces a qualitatively different challenge — the individual techniques (interfaces, dependency inversion, etc.) remain the same, but enforcing them consistently across dozens of modules requires active, automated tooling rather than manual vigilance, which becomes impractical at that scale.",
+        explanation: "Scale itself introduces a qualitatively different challenge — the individual techniques (interfaces, dependency inversion, etc.) remain the same, but enforcing them consistently across dozens of modules requires active, automated tooling rather than manual vigilance, which becomes impractical at that scale.",
       },
       {
         id: "q18",
-        prompt: "What kind of automated enforcement does 48.12 suggest for large module graphs?",
+        prompt: "What kind of automated enforcement is suggested for large module graphs?",
         options: [
           { id: "a", text: "Manual code review alone, with no automated tooling involved" },
           { id: "b", text: "A linting step verifying architectural rules, failing CI" },
-          { id: "c", text: "Automated enforcement is unnecessary at any scale, per the section" },
+          { id: "c", text: "Automated enforcement is unnecessary at any scale" },
           { id: "d", text: "Enforcement should only happen once per year during a dedicated audit" },
         ],
         correctOptionId: "b",
-        explanation: "The section specifically describes automated CI-integrated architectural rule checking as a near-necessity at large scale — rather than relying on developers to remember and manually enforce layering rules, an automated check catches violations before they merge.",
+        explanation: "Automated CI-integrated architectural rule checking is a near-necessity at large scale — rather than relying on developers to remember and manually enforce layering rules, an automated check catches violations before they merge.",
       },
       {
         id: "q19",
-        prompt: "What is Bazel's genuinely distinguishing capability, according to 48.13?",
+        prompt: "What is Bazel's genuinely distinguishing capability?",
         options: [
           { id: "a", text: "It only works with Objective-C, not Swift" },
           { id: "b", text: "Bazel replaces the need for Xcode entirely, even for editing code" },
@@ -12185,7 +12185,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "According to 48.13, is Bazel adoption recommended for a typical app, even a fairly large one?",
+        prompt: "Is Bazel adoption recommended for a typical app, even a fairly large one?",
         options: [
           { id: "a", text: "Yes, Bazel should be the default choice for any iOS app with more than 10 screens" },
           { id: "b", text: "Bazel and Xcode cannot be used together under any circumstances" },
@@ -12193,7 +12193,7 @@ struct UserProfileView: View {
           { id: "d", text: "No — Bazel represents real added complexity and departure from Apple's native tooling that's only justified for organizations with truly massive, multi-team, multi-platform codebases where even Tuist-assisted native tooling starts to strain" },
         ],
         correctOptionId: "d",
-        explanation: "The section is explicit that Bazel's benefits come with genuine costs and complexity that are only justified at the truly largest scale (multi-platform monorepos at large organizations) — a typical app, even a fairly large one, is better served by Swift Package Manager and potentially Tuist rather than reaching for Bazel.",
+        explanation: "Bazel's benefits come with genuine costs and complexity that are only justified at the truly largest scale (multi-platform monorepos at large organizations) — a typical app, even a fairly large one, is better served by Swift Package Manager and potentially Tuist rather than reaching for Bazel.",
       },
     ],
   },
@@ -12265,19 +12265,19 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "How does the App Group entitlement relate to material covered in earlier sections?",
+        prompt: "How does the App Group entitlement relate to sharing a `ModelConfiguration`/`UserDefaults(suiteName:)` between an app and its extensions?",
         options: [
           { id: "a", text: "The prerequisite entitlement behind shared SwiftData/UserDefaults" },
-          { id: "b", text: "It has no relationship to any previously covered material at all" },
+          { id: "b", text: "It has no relationship to shared storage at all" },
           { id: "c", text: "App Group entitlements only apply to networking, not to persistence" },
           { id: "d", text: "App Groups were deprecated in favor of entitlements entirely" },
         ],
         correctOptionId: "a",
-        explanation: "This section explicitly connects the entitlement declaration back to the practical shared-storage use cases covered earlier — without the App Group entitlement properly configured, the shared `ModelConfiguration`/`UserDefaults(suiteName:)` techniques from those sections wouldn't actually function.",
+        explanation: "The App Group entitlement is the prerequisite for practical shared-storage use cases — without it properly configured, the shared `ModelConfiguration`/`UserDefaults(suiteName:)` techniques wouldn't actually function.",
       },
       {
         id: "q7",
-        prompt: "What is the key weakness of custom URL schemes, according to 49.5?",
+        prompt: "What is the key weakness of custom URL schemes?",
         options: [
           { id: "a", text: "They cannot be used to pass any data to the app at all" },
           { id: "b", text: "Scheme names aren't globally unique, so two apps could collide" },
@@ -12337,7 +12337,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "How does state restoration (49.9) differ from ordinary data persistence like SwiftData?",
+        prompt: "How does state restoration differ from ordinary data persistence like SwiftData?",
         options: [
           { id: "a", text: "They are the same thing; state restoration is just another name for persistence" },
           { id: "b", text: "State restoration only applies to data stored in `UserDefaults` specifically" },
@@ -12345,7 +12345,7 @@ struct UserProfileView: View {
           { id: "d", text: "SwiftData automatically handles state restoration with no additional code" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly distinguishes these two concerns — SwiftData (or other persistence) ensures the underlying data survives, while state restoration specifically addresses recreating exactly where in the app's navigation/UI the user was, a different and complementary concern.",
+        explanation: "These are two distinct concerns — SwiftData (or other persistence) ensures the underlying data survives, while state restoration specifically addresses recreating exactly where in the app's navigation/UI the user was, a different and complementary concern.",
       },
       {
         id: "q13",
@@ -12409,7 +12409,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "According to 49.13, what determines how much background execution time an app is granted?",
+        prompt: "What determines how much background execution time an app is granted?",
         options: [
           { id: "a", text: "Factors like how often the user actually opens the app, how much background time has been requested/used historically, and overall device conditions — a privilege the system grants adaptively, not an unconditional right" },
           { id: "b", text: "A fixed, guaranteed amount identical for every app" },
@@ -12417,11 +12417,11 @@ struct UserProfileView: View {
           { id: "d", text: "The number of `BGTaskScheduler` requests submitted per day" },
         ],
         correctOptionId: "a",
-        explanation: "The section emphasizes that Apple's throttling behavior is deliberately opaque and adaptive, based on usage patterns and historical background time consumption rather than a fixed, predictable allocation — apps should be designed defensively around this uncertainty.",
+        explanation: "Apple's throttling behavior is deliberately opaque and adaptive, based on usage patterns and historical background time consumption rather than a fixed, predictable allocation — apps should be designed defensively around this uncertainty.",
       },
       {
         id: "q19",
-        prompt: "How does Core Spotlight indexing relate to the `NSUserActivity`/Handoff mechanism from 49.8?",
+        prompt: "How does Core Spotlight indexing relate to the `NSUserActivity`/Handoff mechanism?",
         options: [
           { id: "a", text: "They are entirely unrelated, independent systems with no shared code" },
           { id: "b", text: "Spotlight taps use the same continuation infrastructure, launching via `NSUserActivity`" },
@@ -12429,11 +12429,11 @@ struct UserProfileView: View {
           { id: "d", text: "Spotlight results can only link to a fixed set of Apple-defined content types" },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that Spotlight search result activation shares underlying continuation machinery with Handoff — tapping an indexed `CSSearchableItem` in Spotlight launches the app with context available through the same `NSUserActivity`-based mechanism used for cross-device continuity.",
+        explanation: "Spotlight search result activation shares underlying continuation machinery with Handoff — tapping an indexed `CSSearchableItem` in Spotlight launches the app with context available through the same `NSUserActivity`-based mechanism used for cross-device continuity.",
       },
       {
         id: "q20",
-        prompt: "How does SharePlay/`GroupActivities` differ from CloudKit's `CKShare` (section 44.5)?",
+        prompt: "How does SharePlay/`GroupActivities` differ from CloudKit's `CKShare`?",
         options: [
           { id: "a", text: "They are identical technologies with different names" },
           { id: "b", text: "`CKShare` requires a FaceTime call to function, just like `GroupActivities`" },
@@ -12441,7 +12441,7 @@ struct UserProfileView: View {
           { id: "d", text: "`GroupActivities` is used exclusively for data persistence, with no real-time component" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly distinguishes these two collaboration mechanisms — SharePlay's `GroupActivities` is specialized for synchronized, real-time shared experiences during a live session (like cooking along together), while `CKShare` is designed for asynchronous, ongoing collaborative data access with no live-session requirement.",
+        explanation: "These are two distinct collaboration mechanisms — SharePlay's `GroupActivities` is specialized for synchronized, real-time shared experiences during a live session (like cooking along together), while `CKShare` is designed for asynchronous, ongoing collaborative data access with no live-session requirement.",
       },
     ],
   },
@@ -12461,7 +12461,7 @@ struct UserProfileView: View {
           { id: "d", text: "Nothing at all; it always succeeds silently, with no return" },
         ],
         correctOptionId: "a",
-        explanation: "`requestAuthorization` is an async API returning a `Bool` — consistent with the broader pattern of modern Apple APIs adopting `async`/`await` (Part 2) rather than older completion-handler designs.",
+        explanation: "`requestAuthorization` is an async API returning a `Bool` — consistent with the broader pattern of modern Apple APIs adopting `async`/`await` rather than older completion-handler designs.",
       },
       {
         id: "q2",
@@ -12545,7 +12545,7 @@ struct UserProfileView: View {
           { id: "d", text: "Push delivery silently breaks, unable to authenticate" },
         ],
         correctOptionId: "d",
-        explanation: "An expired certificate stops working for APNs authentication, and this failure can be easy to miss operationally (breaking push delivery without an obvious, immediate alert) — one of the practical downsides the section identifies for certificate-based auth versus token-based auth's no-expiration design.",
+        explanation: "An expired certificate stops working for APNs authentication, and this failure can be easy to miss operationally (breaking push delivery without an obvious, immediate alert) — one of the practical downsides of certificate-based auth versus token-based auth's no-expiration design.",
       },
       {
         id: "q9",
@@ -12573,7 +12573,7 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "How does routing a notification tap into the same `AppRouter`/`NavigationPath` system used for deep links (section 49.7) benefit the app's architecture?",
+        prompt: "How does routing a notification tap into the same `AppRouter`/`NavigationPath` system used for deep links benefit the app's architecture?",
         options: [
           { id: "a", text: "It has no benefit at all and adds unnecessary complexity" },
           { id: "b", text: "`NavigationPath` cannot actually be used for notification-triggered navigation" },
@@ -12581,7 +12581,7 @@ struct UserProfileView: View {
           { id: "d", text: "This pattern only works for silent push notifications, not standard ones" },
         ],
         correctOptionId: "c",
-        explanation: "Unifying notification tap handling with the same routing infrastructure used for universal/custom link deep linking (section 49.7) avoids duplicated navigation logic and ensures the destination screen behaves identically regardless of how the user arrived there.",
+        explanation: "Unifying notification tap handling with the same routing infrastructure used for universal/custom link deep linking avoids duplicated navigation logic and ensures the destination screen behaves identically regardless of how the user arrived there.",
       },
       {
         id: "q12",
@@ -12593,7 +12593,7 @@ struct UserProfileView: View {
           { id: "d", text: "Wakes the app briefly in the background, with no visible alert" },
         ],
         correctOptionId: "d",
-        explanation: "Silent push is specifically designed for background data refresh triggered by the server, without interrupting the user with a visible notification — the same mechanism referenced for CloudKit's subscription-driven sync (section 44.4), applicable more broadly to any server-driven refresh need.",
+        explanation: "Silent push is specifically designed for background data refresh triggered by the server, without interrupting the user with a visible notification — the same mechanism referenced for CloudKit's subscription-driven sync, applicable more broadly to any server-driven refresh need.",
       },
       {
         id: "q13",
@@ -12605,7 +12605,7 @@ struct UserProfileView: View {
           { id: "d", text: "There is no risk to using silent push frequently; this concern is unfounded" },
         ],
         correctOptionId: "a",
-        explanation: "Like other forms of background execution (echoing section 49.13's throttling discussion), the system can reduce how often silent pushes are honored if an app appears to be over-relying on them — reserving silent push for genuinely meaningful updates avoids triggering this throttling.",
+        explanation: "Like other forms of background execution, the system can reduce how often silent pushes are honored if an app appears to be over-relying on them — reserving silent push for genuinely meaningful updates avoids triggering this throttling.",
       },
       {
         id: "q14",
@@ -12665,11 +12665,11 @@ struct UserProfileView: View {
           { id: "d", text: "This restriction only applies to apps distributed outside the App Store" },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this gatekeeping as deliberate given the severity of what `.critical` can do (overriding mute settings) — such power is reserved for apps with a genuinely appropriate use case, rather than being freely available to any developer who might misuse it for non-critical purposes.",
+        explanation: "This gatekeeping is deliberate given the severity of what `.critical` can do (overriding mute settings) — such power is reserved for apps with a genuinely appropriate use case, rather than being freely available to any developer who might misuse it for non-critical purposes.",
       },
       {
         id: "q19",
-        prompt: "What is a common, easy-to-overlook cause of push notification delivery failure, according to 50.12?",
+        prompt: "What is a common, easy-to-overlook cause of push notification delivery failure?",
         options: [
           { id: "a", text: "The device having insufficient storage space available" },
           { id: "b", text: "The user's device being in Airplane Mode at delivery time" },
@@ -12677,7 +12677,7 @@ struct UserProfileView: View {
           { id: "d", text: "The app being more than 30 days old since its last update" },
         ],
         correctOptionId: "c",
-        explanation: "Because a development-signed build only receives pushes through APNs' sandbox environment and a production build only receives production-environment pushes, mismatching these (echoing the `aps-environment` entitlement from section 49.4) is called out as a frequent, silent failure mode worth checking early when debugging.",
+        explanation: "Because a development-signed build only receives pushes through APNs' sandbox environment and a production build only receives production-environment pushes, mismatching these (echoing the `aps-environment` entitlement) is called out as a frequent, silent failure mode worth checking early when debugging.",
       },
       {
         id: "q20",
@@ -12689,7 +12689,7 @@ struct UserProfileView: View {
           { id: "d", text: "Because push notification delivery failures can occur at any of several distinct points in the chain, and isolating exactly which link is failing requires systematically checking each one rather than guessing" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames push debugging as inherently a process of elimination across multiple potential failure points (stale tokens, expired auth, malformed payloads, environment mismatches, extension errors) — since any one of these can independently cause silent failure, methodically checking each is more reliable than assuming a single likely cause.",
+        explanation: "Push debugging is inherently a process of elimination across multiple potential failure points (stale tokens, expired auth, malformed payloads, environment mismatches, extension errors) — since any one of these can independently cause silent failure, methodically checking each is more reliable than assuming a single likely cause.",
       },
     ],
   },
@@ -12769,7 +12769,7 @@ struct UserProfileView: View {
           { id: "d", text: "`AppEnum` is only used for numeric parameters, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "`AppEnum` is designed for bounded, enumerable choice sets presented as a fixed picker — appropriate for exactly the kind of scenario a plain Swift `enum` would model elsewhere in the app (section 6), whereas `AppEntity` with `EntityQuery` is for open-ended, searchable data.",
+        explanation: "`AppEnum` is designed for bounded, enumerable choice sets presented as a fixed picker — appropriate for exactly the kind of scenario a plain Swift `enum` would model elsewhere in the app, whereas `AppEntity` with `EntityQuery` is for open-ended, searchable data.",
       },
       {
         id: "q7",
