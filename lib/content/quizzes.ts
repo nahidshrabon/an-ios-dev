@@ -15361,7 +15361,7 @@ struct UserProfileView: View {
       },
       {
         id: "q2",
-        prompt: "What consideration mirrors the app-facing model routing trade-off from section 58.15, applied here to development tasks?",
+        prompt: "What consideration mirrors Foundation Models' app-facing on-device-vs-cloud routing trade-off, applied here to development tasks?",
         options: [
           {
             id: "a",
@@ -15381,11 +15381,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Just as Foundation Models routes between on-device and cloud models based on task complexity (58.15), Xcode's coding intelligence applies the same situational trade-off to development tasks.",
+        explanation: "Just as Foundation Models routes between on-device and cloud models based on task complexity, Xcode's coding intelligence applies the same situational trade-off to development tasks.",
       },
       {
         id: "q3",
-        prompt: "What distinguishes agentic workflows from simple autocomplete, according to 61.3?",
+        prompt: "What distinguishes agentic workflows from simple autocomplete?",
         options: [
           { id: "a", text: "Agentic workflows only suggest the next few tokens at the cursor, identical to autocomplete" },
           { id: "b", text: "Agentic workflows never require any human review before changes are applied" },
@@ -15405,7 +15405,7 @@ struct UserProfileView: View {
           { id: "d", text: "A plausible, compiling view can still embed subtly wrong assumptions, like a bad aspect ratio" },
         ],
         correctOptionId: "d",
-        explanation: "Compiling successfully doesn't guarantee correctness — generated views can still contain subtle issues that only careful review would catch, consistent with the broader review discipline discussed in 61.10 and 61.11.",
+        explanation: "Compiling successfully doesn't guarantee correctness — generated views can still contain subtle issues that only careful review would catch, consistent with the broader review discipline that applies to any AI-generated code.",
       },
       {
         id: "q5",
@@ -15421,7 +15421,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "How do Xcode tool plugins relate to the `Tool` protocol from Foundation Models (section 58.10)?",
+        prompt: "How do Xcode tool plugins relate to the `Tool` protocol from Foundation Models?",
         options: [
           {
             id: "a",
@@ -15465,11 +15465,11 @@ struct UserProfileView: View {
           { id: "d", text: "It gives Claude Code persistent context instead of re-explaining it every session" },
         ],
         correctOptionId: "d",
-        explanation: "A well-maintained `CLAUDE.md` establishes stable project facts once, reducing the context that needs to be manually provided in each new coding session, similar in spirit to how session instructions establish stable framing in Foundation Models (58.4).",
+        explanation: "A well-maintained `CLAUDE.md` establishes stable project facts once, reducing the context that needs to be manually provided in each new coding session, similar in spirit to how session instructions establish stable framing in Foundation Models.",
       },
       {
         id: "q9",
-        prompt: "How does the section describe the relationship between `CLAUDE.md` and Foundation Models' instructions-vs-prompts distinction (58.4)?",
+        prompt: "How does `CLAUDE.md` relate to Foundation Models' instructions-vs-prompts distinction?",
         options: [
           { id: "a", text: "Both establish stable framing once instead of repeating context every interaction" },
           { id: "b", text: "There is no relationship drawn between them" },
@@ -15477,11 +15477,11 @@ struct UserProfileView: View {
           { id: "d", text: "Instructions and `CLAUDE.md` serve completely opposite purposes" },
         ],
         correctOptionId: "a",
-        explanation: "The section draws a direct parallel — both mechanisms let stable, persistent context be established once, letting individual interactions or sessions focus on the specific task rather than re-establishing baseline context repeatedly.",
+        explanation: "There's a direct parallel — both mechanisms let stable, persistent context be established once, letting individual interactions or sessions focus on the specific task rather than re-establishing baseline context repeatedly.",
       },
       {
         id: "q10",
-        prompt: "What do MCP servers provide for iOS development workflows, according to 61.9?",
+        prompt: "What do MCP servers provide for iOS development workflows?",
         options: [
           {
             id: "a",
@@ -15517,7 +15517,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "What specific concurrency-related review question does the section suggest a reviewer should ask about generated code?",
+        prompt: "What specific concurrency-related question should a reviewer ask about generated code?",
         options: [
           { id: "a", text: "Whether the code uses too many comments" },
           { id: "b", text: "Whether the code was generated using an on-device model or a cloud-routed model instead" },
@@ -15565,7 +15565,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What genuine data-handling concern does 61.12 raise about cloud-routed AI coding tools?",
+        prompt: "What genuine data-handling concern applies to cloud-routed AI coding tools?",
         options: [
           { id: "a", text: "Cloud-routed tools never have any data retention policy" },
           { id: "b", text: "Cloud-routed tools are always slower than on-device tools" },
@@ -15577,7 +15577,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What practical mitigation does the section suggest for keeping credentials safe when using AI coding tools?",
+        prompt: "What practical mitigation helps keep credentials safe when using AI coding tools?",
         options: [
           { id: "a", text: "Hardcoding credentials directly in source files for the sake of easy, convenient access" },
           { id: "b", text: "There is no way to protect credentials when using AI coding tools" },
@@ -15589,7 +15589,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "How does the section connect 61.12's data-handling concern to section 58's prompt injection and guardrails material?",
+        prompt: "How does the data-handling concern with cloud-routed AI coding tools connect to prompt injection and guardrails?",
         options: [
           { id: "a", text: "Related but opposite-direction concerns — one is untrusted input, the other is sensitive content sent outward" },
           { id: "b", text: "It claims the two concerns are identical with no distinction" },
@@ -15597,7 +15597,7 @@ struct UserProfileView: View {
           { id: "d", text: "It claims guardrails eliminate any need for data-handling caution" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly draws this parallel-but-inverted relationship — one direction concerns data flowing into the model maliciously, the other concerns sensitive data flowing out to the model's cloud backend.",
+        explanation: "These are related but opposite-direction concerns — one direction concerns data flowing into the model maliciously, the other concerns sensitive data flowing out to the model's cloud backend.",
       },
       {
         id: "q18",
@@ -15621,11 +15621,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section recommends deliberately choosing on-device routing for sensitive material and understanding the actual data retention policies in place, rather than assuming safety by default.",
+        explanation: "The recommendation is to deliberately choose on-device routing for sensitive material and understand the actual data retention policies in place, rather than assuming safety by default.",
       },
       {
         id: "q19",
-        prompt: "According to 61.4, what should a developer's posture be toward agent-generated SwiftUI views?",
+        prompt: "What should a developer's posture be toward agent-generated SwiftUI views?",
         options: [
           { id: "a", text: "Treat them as finished, fully unreviewed deliverables that are ready to ship out immediately for release" },
           { id: "b", text: "Reject all agent-generated views regardless of quality" },
@@ -15633,11 +15633,11 @@ struct UserProfileView: View {
           { id: "d", text: "Only use agent-generated views for prototypes that will never ship" },
         ],
         correctOptionId: "c",
-        explanation: "The section is explicit that generated views warrant the same review discipline as other generated code — a good starting point, not a finished product to accept without scrutiny.",
+        explanation: "Generated views warrant the same review discipline as other generated code — a good starting point, not a finished product to accept without scrutiny.",
       },
       {
         id: "q20",
-        prompt: "What common thread runs through 61.6 (tool plugins), 61.9 (MCP servers), and 58.10 (the Tool protocol)?",
+        prompt: "What common thread runs through Xcode tool plugins, MCP servers, and Foundation Models' `Tool` protocol?",
         options: [
           { id: "a", text: "They are completely unrelated mechanisms sharing no common design principle whatsoever" },
           { id: "b", text: "They all require disabling on-device model routing" },
@@ -15705,7 +15705,7 @@ struct UserProfileView: View {
       },
       {
         id: "q4",
-        prompt: "What does `CATransaction` allow, as demonstrated in 62.4?",
+        prompt: "What does `CATransaction` allow?",
         options: [
           { id: "a", text: "Only a single layer property can be changed per transaction" },
           { id: "b", text: "`CATransaction` has no relationship to animation timing or duration" },
@@ -15729,7 +15729,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "According to 62.6, what happens when a layer's `position` is read immediately after being set within the same run loop iteration?",
+        prompt: "What happens when a layer's `position` is read immediately after being set within the same run loop iteration?",
         options: [
           { id: "a", text: "It returns the newly set value immediately, since the model layer updates right away" },
           { id: "b", text: "It returns the old value until the next run loop iteration begins" },
@@ -15741,7 +15741,7 @@ struct UserProfileView: View {
       },
       {
         id: "q7",
-        prompt: "What are the three conceptual phases of one Core Animation commit cycle, as described in 62.6?",
+        prompt: "What are the three conceptual phases of one Core Animation commit cycle, from the model layer's update to the actual screen refresh?",
         options: [
           {
             id: "a",
@@ -15777,7 +15777,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "How can offscreen rendering issues be diagnosed, according to 62.7?",
+        prompt: "How can offscreen rendering issues be diagnosed?",
         options: [
           { id: "a", text: "There is no possible way to diagnose offscreen rendering; it must always be assumed present" },
           { id: "b", text: "Offscreen rendering can only be detected by manually counting frame drops" },
@@ -15837,7 +15837,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "When is authoring a custom `CIKernel` filter appropriate, according to 62.11?",
+        prompt: "When is authoring a custom `CIKernel` filter appropriate?",
         options: [
           { id: "a", text: "For every image processing task, regardless of complexity" },
           { id: "b", text: "`CIKernel` is required for any use of `CIFilter` at all" },
@@ -15849,7 +15849,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What visible consequence can result from incorrect color management, according to 62.12?",
+        prompt: "What visible consequence can result from incorrect color management?",
         options: [
           { id: "a", text: "An image captured in Display P3, processed assuming sRGB, can produce visibly desaturated colors" },
           { id: "b", text: "Colors always render identically regardless of color space handling" },
@@ -15861,7 +15861,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What relationship does the section draw between HDR/EDR rendering (62.13) and color management (62.12)?",
+        prompt: "What relationship exists between HDR/EDR rendering and color management?",
         options: [
           {
             id: "a",
@@ -15881,7 +15881,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames HDR/EDR as a direct extension of the same underlying principle as wide-gamut color management — both require deliberate, explicit handling in the rendering pipeline to fully take advantage of extended color or brightness range.",
+        explanation: "HDR/EDR is a direct extension of the same underlying principle as wide-gamut color management — both require deliberate, explicit handling in the rendering pipeline to fully take advantage of extended color or brightness range.",
       },
       {
         id: "q16",
@@ -15897,19 +15897,19 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What parallel does the section draw between `CATransaction`'s grouping behavior and material from section 55?",
+        prompt: "What parallel exists between `CATransaction`'s grouping behavior and `AVCaptureSession`'s configuration pattern?",
         options: [
-          { id: "a", text: "No parallel is drawn between the two sections" },
-          { id: "b", text: "The section claims `CATransaction` completely replaced `AVCaptureSession` in a recent iOS release entirely" },
+          { id: "a", text: "No parallel exists between the two" },
+          { id: "b", text: "`CATransaction` completely replaced `AVCaptureSession` in a recent iOS release" },
           { id: "c", text: "`CATransaction` is described as functionally identical to `AVCaptureSession`" },
           { id: "d", text: "`CATransaction`'s \"batch, commit atomically\" pattern mirrors `AVCaptureSession`'s configuration pattern" },
         ],
         correctOptionId: "d",
-        explanation: "Both patterns batch multiple related changes together and apply them as one atomic update, a design pattern the section explicitly connects across the two otherwise-unrelated frameworks.",
+        explanation: "Both patterns batch multiple related changes together and apply them as one atomic update — the same underlying design pattern applied across two otherwise-unrelated frameworks.",
       },
       {
         id: "q18",
-        prompt: "What underlies SwiftUI's `Canvas` view (recall section 30), according to 62.8?",
+        prompt: "What underlies SwiftUI's `Canvas` view?",
         options: [
           { id: "a", text: "Much of what `Canvas` compiles to is built on the same lower-level `CGContext` drawing API" },
           { id: "b", text: "`Canvas` has no relationship to Core Graphics" },
@@ -15917,11 +15917,11 @@ struct UserProfileView: View {
           { id: "d", text: "`Canvas` only works through Core Image filters" },
         ],
         correctOptionId: "a",
-        explanation: "The section notes that Core Graphics underlies higher-level abstractions including much of what SwiftUI's `Canvas` view ultimately compiles down to for its declarative drawing.",
+        explanation: "Core Graphics underlies higher-level abstractions including much of what SwiftUI's `Canvas` view ultimately compiles down to for its declarative drawing.",
       },
       {
         id: "q19",
-        prompt: "Why might forcing layout with `layoutIfNeeded()` mid-cycle be a useful technique, per 62.6?",
+        prompt: "Why might forcing layout with `layoutIfNeeded()` mid-cycle be a useful technique?",
         options: [
           {
             id: "a",
@@ -15945,7 +15945,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "Which scenario is most likely to benefit measurably from providing an explicit `shadowPath`, according to the section?",
+        prompt: "Which scenario is most likely to benefit measurably from providing an explicit `shadowPath`?",
         options: [
           { id: "a", text: "A single, completely static, off-screen view that never appears during any scrolling whatsoever" },
           { id: "b", text: "A view that never has a shadow applied to it" },
@@ -15953,7 +15953,7 @@ struct UserProfileView: View {
           { id: "d", text: "An app that only displays static images with no animation" },
         ],
         correctOptionId: "c",
-        explanation: "The section specifically calls out scroll-heavy interfaces with many shadowed cells (referencing sections 26 and 37) as a common real-world case where explicit `shadowPath` provides a measurable, diagnosable performance improvement.",
+        explanation: "Scroll-heavy interfaces with many shadowed cells (like a table or collection view) are a common real-world case where explicit `shadowPath` provides a measurable, diagnosable performance improvement.",
       },
     ],
   },
@@ -15965,7 +15965,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "When is reaching for Metal directly appropriate, according to 63.1?",
+        prompt: "When is reaching for Metal directly appropriate?",
         options: [
           { id: "a", text: "For every single graphics task, regardless of the complexity level involved here" },
           { id: "b", text: "Only for apps that don't use SwiftUI at all, under any circumstances" },
@@ -16033,11 +16033,11 @@ struct UserProfileView: View {
           { id: "d", text: "Compiling a pipeline state is genuinely expensive relative to using it, so it's built once and reused every frame" },
         ],
         correctOptionId: "d",
-        explanation: "The section emphasizes a \"pay the setup cost once, reuse repeatedly\" principle — pipeline state compilation is costly, so it should happen once rather than being repeated unnecessarily every frame.",
+        explanation: "This follows a \"pay the setup cost once, reuse repeatedly\" principle — pipeline state compilation is costly, so it should happen once rather than being repeated unnecessarily every frame.",
       },
       {
         id: "q6",
-        prompt: "What analogous \"build once, reuse repeatedly\" pattern from earlier in the curriculum does the section connect to `MTLRenderPipelineState`'s setup cost?",
+        prompt: "What other \"build once, reuse repeatedly\" pattern parallels `MTLRenderPipelineState`'s setup cost?",
         options: [
           {
             id: "a",
@@ -16057,7 +16057,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly draws this parallel to `AVAssetExportSession`'s presets from section 55.12 as another example of paying a setup cost once and reusing the configured result repeatedly.",
+        explanation: "This parallels `AVAssetExportSession`'s presets — another example of paying a setup cost once and reusing the configured result repeatedly.",
       },
       {
         id: "q7",
@@ -16085,7 +16085,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "How does MSL's explicit, attribute-driven data binding compare to `@Generable`'s structural binding in Foundation Models (section 58.7)?",
+        prompt: "How does MSL's explicit, attribute-driven data binding compare to `@Generable`'s structural binding in Foundation Models?",
         options: [
           { id: "a", text: "They are entirely functionally identical approaches to data binding in every respect" },
           { id: "b", text: "`@Generable` is genuinely more low-level than MSL's attribute system, surprisingly" },
@@ -16093,7 +16093,7 @@ struct UserProfileView: View {
           { id: "d", text: "There is absolutely no meaningful comparison drawn between the two approaches at all" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly contrasts MSL's explicit, manual binding with `@Generable`'s implicit structural binding, situating Metal as a much lower-level, more manual approach on the overall abstraction spectrum.",
+        explanation: "MSL's explicit, manual binding contrasts with `@Generable`'s implicit structural binding, situating Metal as a much lower-level, more manual approach on the overall abstraction spectrum.",
       },
       {
         id: "q9",
@@ -16169,7 +16169,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What parallel does the section draw between MPS and Core ML?",
+        prompt: "What parallel exists between MPS and Core ML?",
         options: [
           { id: "a", text: "MPS's relationship to raw Metal parallels Core ML's relationship to raw neural network implementation — both spare significant effort" },
           { id: "b", text: "MPS and Core ML are described as being entirely functionally unrelated to one another" },
@@ -16177,7 +16177,7 @@ struct UserProfileView: View {
           { id: "d", text: "MPS completely replaces the need for Core ML entirely across every single use case" },
         ],
         correctOptionId: "a",
-        explanation: "The section draws a direct structural parallel — in both cases, a pre-optimized library handles substantial engineering effort for common operations, letting developers use well-tested, already-tuned solutions rather than building from scratch.",
+        explanation: "There's a direct structural parallel — in both cases, a pre-optimized library handles substantial engineering effort for common operations, letting developers use well-tested, already-tuned solutions rather than building from scratch.",
       },
       {
         id: "q15",
@@ -16205,7 +16205,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What earlier trade-off from section 59.5 does MetalFX's resolution/performance trade-off parallel?",
+        prompt: "What other trade-off does MetalFX's resolution/performance trade-off parallel?",
         options: [
           { id: "a", text: "The `LanguageModel` protocol's cloud routing decision from Foundation Models entirely" },
           { id: "b", text: "HealthKit's read/write authorization granularity system for health data access" },
@@ -16213,7 +16213,7 @@ struct UserProfileView: View {
           { id: "d", text: "`AVAssetExportSession`'s preset selection mechanism for video export configuration" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly connects MetalFX's quality/performance trade-off to the same underlying pattern as Core ML's quantization/palettization trade-off from section 59.5 — both trade some fidelity for meaningful efficiency gains.",
+        explanation: "MetalFX's quality/performance trade-off follows the same underlying pattern as Core ML's quantization/palettization trade-off — both trade some fidelity for meaningful efficiency gains.",
       },
       {
         id: "q17",
@@ -16229,7 +16229,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What broader diagnostic principle does the Metal debugger's frame capture share with the Core ML performance report (59.7) and the Core Animation instrument (62.7)?",
+        prompt: "What broader diagnostic principle does the Metal debugger's frame capture share with the Core ML performance report and the Core Animation instrument?",
         options: [
           { id: "a", text: "A \"measure, don't guess\" principle — using actual measured tool output rather than reasoning from source code alone" },
           { id: "b", text: "All three tools are used exclusively and only for detecting memory leaks" },
@@ -16237,7 +16237,7 @@ struct UserProfileView: View {
           { id: "d", text: "None of these three separate tools have any principle whatsoever in common" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly ties these three diagnostic tools together under the same principle: measuring actual behavior (compute unit assignment, offscreen rendering, GPU command timing) rather than guessing from source code alone.",
+        explanation: "These three diagnostic tools share the same principle: measuring actual behavior (compute unit assignment, offscreen rendering, GPU command timing) rather than guessing from source code alone.",
       },
       {
         id: "q19",
@@ -16273,7 +16273,7 @@ struct UserProfileView: View {
           { id: "d", text: "Vertex shaders always execute after fragment shaders do within the overall pipeline" },
         ],
         correctOptionId: "c",
-        explanation: "The section distinguishes the graphics-specific vertex/fragment pipeline (rendering geometry to pixels) from compute shaders' fundamentally different, general-purpose parallel data processing model.",
+        explanation: "The graphics-specific vertex/fragment pipeline (rendering geometry to pixels) is fundamentally distinct from compute shaders' general-purpose parallel data processing model.",
       },
     ],
   },
@@ -16345,15 +16345,15 @@ struct UserProfileView: View {
       },
       {
         id: "q5",
-        prompt: "What parallel does the section draw between Reality Composer Pro's workflow and earlier curriculum material?",
+        prompt: "What parallel exists between Reality Composer Pro's workflow and other visual-authoring-plus-code patterns?",
         options: [
           { id: "a", text: "It parallels other visual-tool-plus-code patterns, like `.storekit` files or Core ML `.mlpackage` files" },
-          { id: "b", text: "No parallel is drawn to any other section of the curriculum whatsoever" },
+          { id: "b", text: "No parallel exists with any other tool at all" },
           { id: "c", text: "Reality Composer Pro is described as being entirely functionally identical to Xcode's Interface Builder" },
-          { id: "d", text: "It parallels ShazamKit's audio fingerprint matching process from an earlier, unrelated section" },
+          { id: "d", text: "It parallels ShazamKit's audio fingerprint matching process" },
         ],
         correctOptionId: "a",
-        explanation: "The section explicitly connects Reality Composer Pro's visual-authoring-plus-Swift-reference workflow to the same pattern seen with `.storekit` files and Core ML `.mlpackage` files elsewhere in the curriculum.",
+        explanation: "Reality Composer Pro's visual-authoring-plus-Swift-reference workflow follows the same pattern seen with `.storekit` files and Core ML `.mlpackage` files elsewhere.",
       },
       {
         id: "q6",
@@ -16377,7 +16377,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Shader graph materials provide sophisticated procedural visual effects through visual authoring, sitting between RealityKit's simple built-in materials and the full complexity of hand-written MSL shader code (section 63.4).",
+        explanation: "Shader graph materials provide sophisticated procedural visual effects through visual authoring, sitting between RealityKit's simple built-in materials and the full complexity of hand-written MSL shader code.",
       },
       {
         id: "q7",
@@ -16461,11 +16461,11 @@ struct UserProfileView: View {
           { id: "d", text: "The content's actual nature — a settings screen suits a window, an object suits a volume, immersion suits a space" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames this as a genuine design decision matched to content's actual nature, not a case where more immersion is automatically better regardless of what's being displayed.",
+        explanation: "This is a genuine design decision matched to content's actual nature, not a case where more immersion is automatically better regardless of what's being displayed.",
       },
       {
         id: "q13",
-        prompt: "What specific role do hover effects play in visionOS's interaction model, according to 64.13?",
+        prompt: "What specific role do hover effects play in visionOS's interaction model?",
         options: [
           { id: "a", text: "They confirm the user's gaze is currently targeting an interactive element, since there's no cursor or touch contact" },
           { id: "b", text: "Hover effects have absolutely no functional purpose whatsoever beyond pure visual decoration" },
@@ -16509,23 +16509,23 @@ struct UserProfileView: View {
           { id: "d", text: "Hand tracking completely replaces the need for `ARWorldTrackingConfiguration` entirely across the board" },
         ],
         correctOptionId: "c",
-        explanation: "The section frames hand tracking as a deliberate escalation to lower-level capability, appropriate specifically when custom gesture recognition or direct manipulation genuinely exceeds what standard pinch-to-select provides.",
+        explanation: "Hand tracking is a deliberate escalation to lower-level capability, appropriate specifically when custom gesture recognition or direct manipulation genuinely exceeds what standard pinch-to-select provides.",
       },
       {
         id: "q16",
-        prompt: "What earlier examples does the section compare hand tracking's \"escalation to lower-level capability\" pattern to?",
+        prompt: "What other examples share hand tracking's \"escalation to lower-level capability\" pattern?",
         options: [
-          { id: "a", text: "`PHPickerViewController` and `AVPlayer` from earlier, unrelated sections entirely" },
+          { id: "a", text: "`PHPickerViewController` and `AVPlayer`, which are unrelated" },
           { id: "b", text: "`NLTokenizer` and `NLTagger`" },
           { id: "c", text: "`Transaction.updates` and `VerificationResult`" },
-          { id: "d", text: "Core Bluetooth's peripheral role (57.7) and custom `CIKernel` filters (62.11)" },
+          { id: "d", text: "Core Bluetooth's peripheral role and custom `CIKernel` filters" },
         ],
         correctOptionId: "d",
-        explanation: "The section explicitly draws this parallel — reaching for hand tracking, like reaching for Core Bluetooth's peripheral role or a custom `CIKernel`, represents a deliberate move to lower-level, more specialized capability when standard abstractions aren't sufficient.",
+        explanation: "Reaching for hand tracking, like reaching for Core Bluetooth's peripheral role or a custom `CIKernel`, represents a deliberate move to lower-level, more specialized capability when standard abstractions aren't sufficient.",
       },
       {
         id: "q17",
-        prompt: "What does spatial video/photo capture rely on, technically, according to 64.16?",
+        prompt: "What does spatial video/photo capture rely on, technically?",
         options: [
           { id: "a", text: "The standard `AVCaptureSession` foundation, configured with a spatial-capable format for stereoscopic depth" },
           { id: "b", text: "An entirely separate capture framework completely unrelated to `AVCaptureSession` whatsoever" },
@@ -16533,7 +16533,7 @@ struct UserProfileView: View {
           { id: "d", text: "Spatial video can only ever be captured directly on a Vision Pro headset itself, exclusively" },
         ],
         correctOptionId: "a",
-        explanation: "Spatial capture builds directly on the same `AVCaptureSession` infrastructure covered in section 55.4, simply using a spatial-capable format for stereoscopic, depth-viewable content.",
+        explanation: "Spatial capture builds directly on the same `AVCaptureSession` infrastructure used elsewhere, simply using a spatial-capable format for stereoscopic, depth-viewable content.",
       },
       {
         id: "q18",
@@ -16557,23 +16557,23 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit that inadequate frame rate/latency in an immersive headset context can cause genuine physical discomfort, raising the stakes of performance budgeting beyond a typical 2D app's quality concerns.",
+        explanation: "Inadequate frame rate/latency in an immersive headset context can cause genuine physical discomfort, raising the stakes of performance budgeting beyond a typical 2D app's quality concerns.",
       },
       {
         id: "q19",
-        prompt: "Which profiling tools from earlier sections does 64.17 identify as relevant to Vision Pro performance discipline?",
+        prompt: "Which profiling tools are relevant to Vision Pro performance discipline?",
         options: [
-          { id: "a", text: "The Core ML performance report and `AVAssetExportSession` presets from unrelated earlier sections" },
+          { id: "a", text: "The Core ML performance report and `AVAssetExportSession` presets, which are unrelated" },
           { id: "b", text: "The App Store Connect analytics dashboard" },
           { id: "c", text: "Offscreen rendering cost analysis and Metal frame capture" },
           { id: "d", text: "`NLEmbedding` similarity search" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly connects Vision Pro's performance requirements to the offscreen rendering discipline from 62.7 and the Metal debugger's frame capture from 63.9, framing them as genuine requirements rather than polish concerns in this context.",
+        explanation: "Vision Pro's performance requirements connect directly to the offscreen rendering discipline and the Metal debugger's frame capture, framing them as genuine requirements rather than polish concerns in this context.",
       },
       {
         id: "q20",
-        prompt: "What technique does the section recommend for models viewed at varying distances in a visionOS scene?",
+        prompt: "What technique is recommended for models viewed at varying distances in a visionOS scene?",
         options: [
           { id: "a", text: "Always rendering every single model at maximum polygon count, regardless of viewing distance whatsoever" },
           { id: "b", text: "Using only 2D windows exclusively, never volumes or immersive spaces, to avoid all 3D rendering costs" },
@@ -16581,7 +16581,7 @@ struct UserProfileView: View {
           { id: "d", text: "LOD techniques, alongside simpler geometry, and profiling on-device performance" },
         ],
         correctOptionId: "d",
-        explanation: "The section recommends LOD techniques for models viewed at varying distances, alongside general polygon count discipline and on-device (not just simulator) profiling, as concrete performance-conscious practices for visionOS content.",
+        explanation: "LOD techniques for models viewed at varying distances, alongside general polygon count discipline and on-device (not just simulator) profiling, are concrete performance-conscious practices for visionOS content.",
       },
     ],
   },
@@ -16593,7 +16593,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "According to 65.1, what is the actual argument for why tests exist?",
+        prompt: "What is the actual argument for why tests exist?",
         options: [
           { id: "a", text: "To provide confidence that a future change hasn't silently broken something that used to work" },
           { id: "b", text: "To prove that code works correctly at the exact precise moment it was originally written" },
@@ -16601,11 +16601,11 @@ struct UserProfileView: View {
           { id: "d", text: "Tests exist only to document how code is supposed to behave, with absolutely no functional value" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames tests as an investment in future changeability — their real value is catching regressions when code changes later, not merely confirming current correctness.",
+        explanation: "Tests are an investment in future changeability — their real value is catching regressions when code changes later, not merely confirming current correctness.",
       },
       {
         id: "q2",
-        prompt: "What makes a test \"genuinely valuable\" rather than merely present, according to 65.1?",
+        prompt: "What makes a test \"genuinely valuable\" rather than merely present?",
         options: [
           {
             id: "a",
@@ -16625,7 +16625,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit that a test's real value comes from whether it would actually catch a genuine regression, not simply whether some test exists nominally covering that code.",
+        explanation: "A test's real value comes from whether it would actually catch a genuine regression, not simply whether some test exists nominally covering that code.",
       },
       {
         id: "q3",
@@ -16773,15 +16773,15 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "What earlier curriculum example does the section compare `confirmation()` to?",
+        prompt: "What other pattern does `confirmation()` parallel?",
         options: [
           { id: "a", text: "`withCheckedContinuation` bridging a callback-based API into async/await, as seen with PhotoKit" },
-          { id: "b", text: "`Transaction.updates`'s AsyncSequence pattern from an unrelated earlier framework entirely and completely" },
-          { id: "c", text: "`NLEmbedding`'s similarity search feature from the Natural Language framework section" },
-          { id: "d", text: "`CATransaction`'s atomic batching behavior from the Core Animation section entirely" },
+          { id: "b", text: "`Transaction.updates`'s AsyncSequence pattern, which is unrelated" },
+          { id: "c", text: "`NLEmbedding`'s similarity search feature from the Natural Language framework" },
+          { id: "d", text: "`CATransaction`'s atomic batching behavior from Core Animation" },
         ],
         correctOptionId: "a",
-        explanation: "The section draws a direct parallel between `confirmation()` bridging callbacks into test assertions and `withCheckedContinuation` bridging callback-based production APIs into async/await, as seen with PhotoKit in 55.2.",
+        explanation: "There's a direct parallel between `confirmation()` bridging callbacks into test assertions and `withCheckedContinuation` bridging callback-based production APIs into async/await, as seen with PhotoKit.",
       },
       {
         id: "q14",
@@ -16809,7 +16809,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What benefit does favoring pure functions provide beyond testability, according to 65.12?",
+        prompt: "What benefit does favoring pure functions provide beyond testability, connecting back to Swift's concurrency model?",
         options: [
           { id: "a", text: "Absolutely no benefit whatsoever beyond mere testability exists at all" },
           { id: "b", text: "Pure functions entirely eliminate the need for any type checking whatsoever, under any circumstances" },
@@ -16817,11 +16817,11 @@ struct UserProfileView: View {
           { id: "d", text: "Pure functions categorically cannot ever be used within any SwiftUI views at all, under any circumstances" },
         ],
         correctOptionId: "c",
-        explanation: "The section notes that favoring pure functions is a genuine design principle with benefits extending beyond testing, including easier correctness reasoning and safety in concurrent contexts, connecting back to Part 2's concurrency material.",
+        explanation: "Favoring pure functions is a genuine design principle with benefits extending beyond testing, including easier correctness reasoning and safety in concurrent contexts, connecting back to Swift's concurrency model.",
       },
       {
         id: "q16",
-        prompt: "How does dependency injection (65.13) make code like `ProfileViewModel` testable?",
+        prompt: "How does dependency injection make code like `ProfileViewModel` testable?",
         options: [
           { id: "a", text: "By hardcoding a very specific network implementation directly into the view model itself" },
           { id: "b", text: "By strictly requiring every single dependency to be a global singleton instance" },
@@ -16829,7 +16829,7 @@ struct UserProfileView: View {
           { id: "d", text: "By depending on a protocol rather than a concrete type, letting a test substitute a deterministic mock" },
         ],
         correctOptionId: "d",
-        explanation: "Depending on an abstraction (protocol) rather than a concrete implementation is what allows tests to substitute mock implementations, directly building on the dependency injection principles from section 47.",
+        explanation: "Depending on an abstraction (protocol) rather than a concrete implementation is what allows tests to substitute mock implementations, directly building on general dependency injection principles.",
       },
       {
         id: "q17",
@@ -16845,7 +16845,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "Why does the section argue that XCTest literacy remains practically necessary despite Swift Testing being the modern framework?",
+        prompt: "Why does XCTest literacy remain practically necessary despite Swift Testing being the modern framework?",
         options: [
           {
             id: "a",
@@ -16865,11 +16865,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Because existing test suites (especially UI test targets, covered in section 67) commonly still rely on XCTest's class-inheritance pattern, understanding it remains a practical necessity even for developers primarily writing new Swift Testing code.",
+        explanation: "Because existing test suites (especially UI test targets) commonly still rely on XCTest's class-inheritance pattern, understanding it remains a practical necessity even for developers primarily writing new Swift Testing code.",
       },
       {
         id: "q19",
-        prompt: "What does XCTest/Swift Testing interoperability (introduced in iOS 27) enable, according to 65.16?",
+        prompt: "What does XCTest/Swift Testing interoperability (introduced in iOS 27) enable?",
         options: [
           { id: "a", text: "It requires immediately and completely converting all XCTest code to Swift Testing before any benefit is gained" },
           { id: "b", text: "It completely and permanently prevents XCTest and Swift Testing from ever coexisting in the same project" },
@@ -16881,7 +16881,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What does the section recommend as a practical, incremental XCTest migration strategy?",
+        prompt: "What is a practical, incremental XCTest migration strategy?",
         options: [
           { id: "a", text: "Convert every single existing XCTest test to Swift Testing immediately, regardless of whether it's being modified" },
           { id: "b", text: "Only ever convert tests that happen to be currently failing at this exact moment" },
@@ -16889,7 +16889,7 @@ struct UserProfileView: View {
           { id: "d", text: "Write new tests in Swift Testing, converting existing tests opportunistically when already being modified" },
         ],
         correctOptionId: "d",
-        explanation: "The section recommends an opportunistic strategy — new tests in Swift Testing, converting existing tests when already being touched for other reasons, and prioritizing genuinely high-value conversions (like tests that would benefit from parameterization) over converting stable, already-working tests purely for consistency.",
+        explanation: "The recommended approach is opportunistic — new tests in Swift Testing, converting existing tests when already being touched for other reasons, and prioritizing genuinely high-value conversions (like tests that would benefit from parameterization) over converting stable, already-working tests purely for consistency.",
       },
     ],
   },
@@ -16913,7 +16913,7 @@ struct UserProfileView: View {
       },
       {
         id: "q2",
-        prompt: "According to 66.1, what kind of test double is the `MockUserService` example from section 65.14, despite its name?",
+        prompt: "What kind of test double is a `MockUserService` that just returns a fixed value with no interaction checking, despite its name?",
         options: [
           {
             id: "a",
@@ -16933,7 +16933,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section notes that despite being named \"Mock,\" the earlier example is technically a stub under this more precise taxonomy, since it just returns a fixed value without verifying interactions.",
+        explanation: "Despite being named \"Mock,\" this is technically a stub under a more precise taxonomy, since it just returns a fixed value without verifying interactions.",
       },
       {
         id: "q3",
@@ -16969,7 +16969,7 @@ struct UserProfileView: View {
           { id: "d", text: "`TestClock` strictly requires the production code to be written entirely in Objective-C" },
         ],
         correctOptionId: "a",
-        explanation: "This directly extends the dependency injection principle from 65.13 applied to time — code must depend on the abstract `Clock` protocol, not a hardcoded real-clock dependency, for `TestClock` substitution to work.",
+        explanation: "This directly extends the dependency injection principle applied to time — code must depend on the abstract `Clock` protocol, not a hardcoded real-clock dependency, for `TestClock` substitution to work.",
       },
       {
         id: "q6",
@@ -17009,7 +17009,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "Why does the section prefer testing an `@Observable` view model's logic over inspecting SwiftUI view structure directly?",
+        prompt: "Why is testing an `@Observable` view model's logic generally preferred over inspecting SwiftUI view structure directly?",
         options: [
           { id: "a", text: "View structure inspection is always and invariably faster to write in every case" },
           { id: "b", text: "`@Observable` view models categorically cannot be tested independently of their views at all" },
@@ -17017,7 +17017,7 @@ struct UserProfileView: View {
           { id: "d", text: "Testing underlying logic is more stable, since view inspection is brittle and tightly coupled to SwiftUI internals" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames logic-focused testing as more robust and stable than view structure inspection, reserving visual verification for snapshot testing (66.4) instead.",
+        explanation: "Logic-focused testing is more robust and stable than view structure inspection, reserving visual verification for snapshot testing instead.",
       },
       {
         id: "q9",
@@ -17077,7 +17077,7 @@ struct UserProfileView: View {
           { id: "d", text: "Fixtures provide fast, offline tests that can grow stale; live tests provide more realism" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames this as a genuine trade-off — fixtures offer speed and determinism but can become outdated, while live tests offer realism but at real cost to speed and reliability, with most projects using both deliberately.",
+        explanation: "This is a genuine trade-off — fixtures offer speed and determinism but can become outdated, while live tests offer realism but at real cost to speed and reliability, with most projects using both deliberately.",
       },
       {
         id: "q13",
@@ -17089,11 +17089,11 @@ struct UserProfileView: View {
           { id: "d", text: "High coverage is entirely and completely impossible to achieve in any real codebase whatsoever" },
         ],
         correctOptionId: "a",
-        explanation: "The section's core point is that coverage tracks whether code ran during tests, not whether the test actually asserted anything meaningful about that code's behavior — a test can achieve full coverage while verifying nothing.",
+        explanation: "The core point is that coverage tracks whether code ran during tests, not whether the test actually asserted anything meaningful about that code's behavior — a test can achieve full coverage while verifying nothing.",
       },
       {
         id: "q14",
-        prompt: "How does the section recommend code coverage actually be used?",
+        prompt: "How is code coverage best used?",
         options: [
           {
             id: "a",
@@ -17113,11 +17113,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly recommends using coverage to identify genuinely untested code, rather than treating a coverage percentage as certifying the quality of tests that do exist.",
+        explanation: "The recommendation is to use coverage to identify genuinely untested code, rather than treating a coverage percentage as certifying the quality of tests that do exist.",
       },
       {
         id: "q15",
-        prompt: "What is the genuine value of property-based testing, according to 66.12?",
+        prompt: "What is the genuine value of property-based testing?",
         options: [
           { id: "a", text: "It completely replaces the need for absolutely any example-based tests whatsoever" },
           { id: "b", text: "Property-based testing only ever works for testing UI code specifically, nothing else" },
@@ -17125,7 +17125,7 @@ struct UserProfileView: View {
           { id: "d", text: "Property-based tests always and invariably run meaningfully faster than parameterized tests do" },
         ],
         correctOptionId: "c",
-        explanation: "The section highlights that property-based testing's value comes from generating many random inputs that can stumble onto edge cases a human author systematically wouldn't think to include in hand-picked examples.",
+        explanation: "Property-based testing's value comes from generating many random inputs that can stumble onto edge cases a human author systematically wouldn't think to include in hand-picked examples.",
       },
       {
         id: "q16",
@@ -17185,11 +17185,11 @@ struct UserProfileView: View {
           { id: "d", text: "Sharding can only ever be used for UI tests specifically, never for unit tests at all" },
         ],
         correctOptionId: "c",
-        explanation: "Sharding operates at a coarser, multi-machine level distinct from in-process parallelism, and the section notes these two techniques compose naturally as complementary layers of parallelization.",
+        explanation: "Sharding operates at a coarser, multi-machine level distinct from in-process parallelism, and these two techniques compose naturally as complementary layers of parallelization.",
       },
       {
         id: "q20",
-        prompt: "According to the section, what practical strategy do most well-tested projects use regarding recorded fixtures and live integration tests?",
+        prompt: "What practical strategy do most well-tested projects use regarding recorded fixtures and live integration tests?",
         options: [
           { id: "a", text: "Exclusively recorded fixtures, and absolutely never any live integration tests whatsoever" },
           { id: "b", text: "Neither approach whatsoever; only manual QA testing is used for all backend integration" },
@@ -17197,7 +17197,7 @@ struct UserProfileView: View {
           { id: "d", text: "Both deliberately — fixtures for most fast tests, with fewer live tests to catch staleness" },
         ],
         correctOptionId: "d",
-        explanation: "The section recommends using both approaches together — fast fixtures for frequent unit testing, complemented by a smaller set of periodically-run live integration tests specifically to catch fixture staleness over time.",
+        explanation: "The recommendation is to use both approaches together — fast fixtures for frequent unit testing, complemented by a smaller set of periodically-run live integration tests specifically to catch fixture staleness over time.",
       },
     ],
   },
@@ -17209,7 +17209,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What is XCUITest's fundamental architectural distinction from the testing approaches covered in sections 65-66?",
+        prompt: "What is XCUITest's fundamental architectural distinction from ordinary unit testing?",
         options: [
           { id: "a", text: "XCUITest runs entirely and completely within the same exact process as the app's own code" },
           { id: "b", text: "XCUITest and unit tests use entirely identical underlying execution mechanisms in every way" },
@@ -17329,7 +17329,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "What common sources of flakiness should be checked when diagnosing a flaky UI test, according to 67.8?",
+        prompt: "What common sources of flakiness should be checked when diagnosing a flaky UI test?",
         options: [
           { id: "a", text: "Only ever network-related issues are genuinely relevant to UI test flakiness whatsoever" },
           { id: "b", text: "UI tests categorically cannot ever be flaky if written correctly; flakiness only ever occurs in unit tests" },
@@ -17337,11 +17337,11 @@ struct UserProfileView: View {
           { id: "d", text: "Missing wait calls, shared non-isolated state, hardcoded screen-size assumptions, and undisabled animations" },
         ],
         correctOptionId: "d",
-        explanation: "The section lists several genuine sources of UI test flakiness worth checking systematically, given UI tests' inherent dependence on timing, animation, and system state.",
+        explanation: "These are several genuine sources of UI test flakiness worth checking systematically, given UI tests' inherent dependence on timing, animation, and system state.",
       },
       {
         id: "q10",
-        prompt: "Why does flakiness in UI tests specifically deserve particular diagnostic attention, according to the section?",
+        prompt: "Why does flakiness in UI tests specifically deserve particular diagnostic attention?",
         options: [
           { id: "a", text: "It undermines the value tests provide, since intermittent failures erode trust and get ignored rather than investigated" },
           { id: "b", text: "Flaky UI tests have absolutely no meaningful impact whatsoever on a development team" },
@@ -17349,7 +17349,7 @@ struct UserProfileView: View {
           { id: "d", text: "UI test flakiness only ever affects test execution time, never actual test reliability" },
         ],
         correctOptionId: "a",
-        explanation: "The section connects flakiness back to the core argument for why tests exist (65.1) — flaky failures erode trust in the test suite, eventually causing failures to be dismissed rather than genuinely investigated, defeating the tests' purpose.",
+        explanation: "This connects flakiness back to the core argument for why tests exist — flaky failures erode trust in the test suite, eventually causing failures to be dismissed rather than genuinely investigated, defeating the tests' purpose.",
       },
       {
         id: "q11",
@@ -17377,7 +17377,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "What parallel does the section draw between `performAccessibilityAudit()` and snapshot testing (section 66.4)?",
+        prompt: "What parallel exists between `performAccessibilityAudit()` and snapshot testing?",
         options: [
           { id: "a", text: "They are entirely and completely functionally identical mechanisms in every respect" },
           { id: "b", text: "Snapshot testing completely replaces the need for accessibility audits entirely across the board" },
@@ -17385,7 +17385,7 @@ struct UserProfileView: View {
           { id: "d", text: "`performAccessibilityAudit()` can only ever be used within snapshot tests specifically, nowhere else" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly draws this parallel — both tools provide automated, continuous detection of a specific regression category that standard functional testing and periodic manual review would likely miss over time.",
+        explanation: "Both tools provide automated, continuous detection of a specific regression category that standard functional testing and periodic manual review would likely miss over time.",
       },
       {
         id: "q13",
@@ -17413,7 +17413,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What role does Xcode's UI test recording feature serve, according to 67.1?",
+        prompt: "What role does Xcode's UI test recording feature best serve in a testing workflow?",
         options: [
           {
             id: "a",
@@ -17433,7 +17433,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames recording as a useful starting point for generating initial test code, which is then typically refined (e.g., by extracting into a page object) into a more maintainable final test.",
+        explanation: "Recording is a useful starting point for generating initial test code, which is then typically refined (e.g., by extracting into a page object) into a more maintainable final test.",
       },
       {
         id: "q16",
@@ -17445,11 +17445,11 @@ struct UserProfileView: View {
           { id: "d", text: "UI tests exercise code entirely directly, identical to unit tests, just with added screenshots attached" },
         ],
         correctOptionId: "c",
-        explanation: "The section is explicit about this trade-off — the realism gained from exercising the app as a genuine separate process comes at the cost of speed and fragility compared to direct, in-process unit testing.",
+        explanation: "This is a genuine trade-off — the realism gained from exercising the app as a genuine separate process comes at the cost of speed and fragility compared to direct, in-process unit testing.",
       },
       {
         id: "q17",
-        prompt: "Why might a UI test need to perform a \"trivial interaction\" (like `app.tap()`) after registering an interruption monitor, per the example in 67.5?",
+        prompt: "Why might a UI test need to perform a \"trivial interaction\" (like `app.tap()`) after registering an interruption monitor?",
         options: [
           { id: "a", text: "Trivial interactions are purely and entirely decorative and have absolutely no functional purpose" },
           { id: "b", text: "Trivial interactions are strictly needed in order to completely close the app entirely" },
@@ -17457,7 +17457,7 @@ struct UserProfileView: View {
           { id: "d", text: "The monitor's check is often triggered by subsequent interaction, so a small interaction helps it detect the alert" },
         ],
         correctOptionId: "d",
-        explanation: "The example notes that a trivial interaction is often needed to trigger the interruption monitor's check, since the monitor doesn't necessarily fire purely on the alert's appearance alone.",
+        explanation: "A trivial interaction is often needed to trigger the interruption monitor's check, since the monitor doesn't necessarily fire purely on the alert's appearance alone.",
       },
       {
         id: "q18",
@@ -17497,7 +17497,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "According to 67.6, what specific example is given of test-only configuration an app might apply based on launch arguments?",
+        prompt: "What specific example is given of test-only configuration an app might apply based on launch arguments?",
         options: [
           { id: "a", text: "Changing the app's display language permanently and irreversibly across every future launch" },
           { id: "b", text: "Disabling all accessibility features entirely during the test run, with no exceptions" },
@@ -17505,7 +17505,7 @@ struct UserProfileView: View {
           { id: "d", text: "Automatically and fully submitting App Store review metadata without any developer involvement" },
         ],
         correctOptionId: "c",
-        explanation: "The example given describes the app's launch code checking test-mode arguments and configuring itself to use something like an in-memory fake store instead of a real backend, directly connecting to the fake test double concept from section 66.1.",
+        explanation: "A typical example has the app's launch code checking test-mode arguments and configuring itself to use something like an in-memory fake store instead of a real backend, directly connecting to the fake test double concept.",
       },
     ],
   },
@@ -17633,7 +17633,7 @@ struct UserProfileView: View {
           { id: "d", text: "This particular behavior only ever applies to arrays specifically, never to any other collection types at all" },
         ],
         correctOptionId: "c",
-        explanation: "The section frames this trap-on-invalid-access behavior as a deliberate design choice consistent with Swift's safety-first philosophy, even though the resulting crash is disruptive when it occurs.",
+        explanation: "This trap-on-invalid-access behavior is a deliberate design choice consistent with Swift's safety-first philosophy, even though the resulting crash is disruptive when it occurs.",
       },
       {
         id: "q9",
@@ -17645,7 +17645,7 @@ struct UserProfileView: View {
           { id: "d", text: "Using `if let`/`guard let` or `#require` instead of an unconditional force-unwrap, after examining the actual cause" },
         ],
         correctOptionId: "d",
-        explanation: "The section recommends replacing unconditional force-unwraps with safe unwrapping patterns, after diagnosing why the value could actually be nil at that specific point — an incorrect assumption or unhandled code path.",
+        explanation: "The fix is replacing unconditional force-unwraps with safe unwrapping patterns, after diagnosing why the value could actually be nil at that specific point — an incorrect assumption or unhandled code path.",
       },
       {
         id: "q10",
@@ -17709,7 +17709,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What diagnostic workflow does 68.14 describe for tracing a specific retain cycle?",
+        prompt: "What diagnostic workflow helps trace a specific retain cycle in the Memory Graph Debugger?",
         options: [
           { id: "a", text: "Selecting a flagged object and examining its \"Object Reference\" panel, tracing the chain back to source" },
           { id: "b", text: "Randomly and repeatedly commenting out code until the cycle eventually disappears somehow" },
@@ -17813,7 +17813,7 @@ struct UserProfileView: View {
           { id: "d", text: "Debugging extensions strictly requires a completely different debugger entirely unrelated to LLDB whatsoever" },
         ],
         correctOptionId: "c",
-        explanation: "Because extensions run in their own separate, sandboxed process (as established in section 53.1), correctly debugging extension-specific code requires selecting that extension's own scheme and attaching the debugger to its actual process.",
+        explanation: "Because extensions run in their own separate, sandboxed process, correctly debugging extension-specific code requires selecting that extension's own scheme and attaching the debugger to its actual process.",
       },
     ],
   },
@@ -17825,7 +17825,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What is the single most important performance principle underlying every tool in this section?",
+        prompt: "What is the single most important performance principle underlying effective use of profiling tools?",
         options: [
           { id: "a", text: "Measuring actual performance data before optimizing, since intuition about what's \"probably slow\" is often wrong" },
           { id: "b", text: "Always and invariably optimize the code that merely looks most complex on its surface" },
@@ -17833,7 +17833,7 @@ struct UserProfileView: View {
           { id: "d", text: "Performance work should only ever happen after an app has already fully shipped" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames measure-first as the foundational discipline — optimizing based on guesswork risks wasting effort on code that isn't actually the genuine bottleneck.",
+        explanation: "Measure-first is the foundational discipline — optimizing based on guesswork risks wasting effort on code that isn't actually the genuine bottleneck.",
       },
       {
         id: "q2",
@@ -17881,11 +17881,11 @@ struct UserProfileView: View {
           { id: "d", text: "Leaks targets truly unreachable, allocated memory, while Allocations suits broader unexpected growth questions" },
         ],
         correctOptionId: "d",
-        explanation: "The section distinguishes Leaks' strict, well-defined focus (unreachable yet allocated) from Allocations' broader utility for investigating any unexpected memory growth pattern, including cases like an unbounded cache.",
+        explanation: "Leaks has a strict, well-defined focus (unreachable yet allocated), while Allocations offers broader utility for investigating any unexpected memory growth pattern, including cases like an unbounded cache.",
       },
       {
         id: "q5",
-        prompt: "What diagnostic combination does the section highlight as genuinely powerful for finding the root cause of scroll jank?",
+        prompt: "What diagnostic combination is genuinely powerful for finding the root cause of scroll jank?",
         options: [
           { id: "a", text: "Correlating Animation Hitches' flagged frames with Time Profiler data on CPU activity" },
           { id: "b", text: "Using only the Leaks instrument entirely in complete isolation from anything else" },
@@ -17897,7 +17897,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "When is reaching for System Trace appropriate, according to 69.6?",
+        prompt: "When is reaching for System Trace appropriate?",
         options: [
           {
             id: "a",
@@ -17917,7 +17917,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "System Trace represents an escalation beyond app-focused tools, appropriate specifically for genuinely system-level performance issues, paralleling the escalation to a sysdiagnose for system-level crash/error diagnosis (section 68.23).",
+        explanation: "System Trace represents an escalation beyond app-focused tools, appropriate specifically for genuinely system-level performance issues, paralleling the escalation to a sysdiagnose for system-level crash/error diagnosis in general.",
       },
       {
         id: "q7",
@@ -17945,7 +17945,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "What launch-time optimization principle does 69.9 describe?",
+        prompt: "What launch-time optimization principle addresses non-essential startup work?",
         options: [
           { id: "a", text: "Deferring non-essential work, like analytics init, until after the first frame is displayed" },
           { id: "b", text: "Blocking the entire launch sequence on absolutely all initialization work, regardless of urgency" },
@@ -17953,7 +17953,7 @@ struct UserProfileView: View {
           { id: "d", text: "All singletons must be eagerly initialized at app launch for correctness, without exception" },
         ],
         correctOptionId: "a",
-        explanation: "The section recommends auditing what genuinely must happen before the user sees anything versus what can be deferred, directly paralleling the latency-budgeting discipline discussed for Foundation Models sessions and background tasks.",
+        explanation: "The recommendation is to audit what genuinely must happen before the user sees anything versus what can be deferred, directly paralleling the latency-budgeting discipline that applies to Foundation Models sessions and background tasks too.",
       },
       {
         id: "q10",
@@ -17989,7 +17989,7 @@ struct UserProfileView: View {
           { id: "d", text: "Frame budgets only ever apply to static content specifically, never to scrolling at all" },
         ],
         correctOptionId: "c",
-        explanation: "The section emphasizes that performance testing on ProMotion hardware specifically is necessary, since 60Hz-era performance intuition doesn't automatically translate to smooth performance at ProMotion's tighter budget.",
+        explanation: "Performance testing on ProMotion hardware specifically is necessary, since 60Hz-era performance intuition doesn't automatically translate to smooth performance at ProMotion's tighter budget.",
       },
       {
         id: "q12",
@@ -18013,11 +18013,11 @@ struct UserProfileView: View {
           { id: "d", text: "Hangs only ever occur on background threads specifically, never on the main thread" },
         ],
         correctOptionId: "a",
-        explanation: "The section distinguishes hangs as a more severe category — sustained unresponsiveness to touch and interaction — from the more cosmetic, momentary stutter of a single dropped frame.",
+        explanation: "Hangs are a more severe category — sustained unresponsiveness to touch and interaction — distinct from the more cosmetic, momentary stutter of a single dropped frame.",
       },
       {
         id: "q14",
-        prompt: "What connection does the section draw between main thread hangs and watchdog terminations (section 68.11)?",
+        prompt: "What connection exists between main thread hangs and watchdog terminations?",
         options: [
           {
             id: "a",
@@ -18037,7 +18037,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects severe, persistent hangs to the risk of triggering a watchdog termination during a sensitive lifecycle phase, reinforcing why hang elimination is a high-priority concern.",
+        explanation: "Severe, persistent hangs connect directly to the risk of triggering a watchdog termination during a sensitive lifecycle phase, reinforcing why hang elimination is a high-priority concern.",
       },
       {
         id: "q15",
@@ -18101,7 +18101,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "Why can a CPU-light app still have poor energy impact, according to 69.18?",
+        prompt: "Why can a CPU-light app still have poor energy impact?",
         options: [
           { id: "a", text: "Energy impact is determined exclusively by CPU usage entirely, so this scenario is genuinely impossible" },
           { id: "b", text: "Only apps with genuinely heavy CPU usage can have any measurable energy impact whatsoever" },
@@ -18109,11 +18109,11 @@ struct UserProfileView: View {
           { id: "d", text: "Energy impact only ever matters specifically for apps using Core ML models, nothing else" },
         ],
         correctOptionId: "c",
-        explanation: "The section explicitly notes that energy impact is a distinct concern from CPU efficiency — power-hungry subsystems like network radios or location services can drive significant battery cost even when CPU usage measured by Time Profiler looks low.",
+        explanation: "Energy impact is a distinct concern from CPU efficiency — power-hungry subsystems like network radios or location services can drive significant battery cost even when CPU usage measured by Time Profiler looks low.",
       },
       {
         id: "q20",
-        prompt: "How does a CI-enforced performance regression budget (69.19) differ from Organizer's regression detection (69.17) in terms of when it catches problems?",
+        prompt: "How does a CI-enforced performance regression budget differ from Organizer's regression detection in terms of when it catches problems?",
         options: [
           { id: "a", text: "They catch regressions at exactly and precisely the same point in the development process" },
           { id: "b", text: "Neither approach can actually and genuinely catch performance regressions reliably at all" },
@@ -18121,7 +18121,7 @@ struct UserProfileView: View {
           { id: "d", text: "A CI-enforced budget proactively catches a regression before release, while Organizer's detection is reactive, after release" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames CI-enforced budgets as the most proactive point on a spectrum — catching regressions before release — compared to Organizer's after-the-fact detection based on real-world, already-shipped usage data.",
+        explanation: "CI-enforced budgets sit at the most proactive point on a spectrum — catching regressions before release — compared to Organizer's after-the-fact detection based on real-world, already-shipped usage data.",
       },
     ],
   },
@@ -18141,7 +18141,7 @@ struct UserProfileView: View {
           { id: "d", text: "Hiring an external accessibility consultant before doing any internal testing whatsoever" },
         ],
         correctOptionId: "a",
-        explanation: "The section emphasizes that firsthand VoiceOver navigation surfaces problems genuinely difficult to anticipate purely by reasoning about code, making direct hands-on testing the foundational practice.",
+        explanation: "Firsthand VoiceOver navigation surfaces problems genuinely difficult to anticipate purely by reasoning about code, making direct hands-on testing the foundational practice.",
       },
       {
         id: "q2",
@@ -18309,7 +18309,7 @@ struct UserProfileView: View {
           { id: "d", text: "For users sensitive to movement, ignoring this setting can cause genuine physical discomfort, making the app unusable" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames Reduce Motion support as addressing a genuine physical sensory need, not unlike other accessibility accommodations, since ignoring it can cause real discomfort for sensitive users.",
+        explanation: "Reduce Motion support addresses a genuine physical sensory need, not unlike other accessibility accommodations, since ignoring it can cause real discomfort for sensitive users.",
       },
       {
         id: "q13",
@@ -18325,7 +18325,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What design principle connects Differentiate Without Color to accessibility labels and traits, according to 70.13?",
+        prompt: "What design principle connects Differentiate Without Color to accessibility labels and traits?",
         options: [
           {
             id: "a",
@@ -18345,7 +18345,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section draws a direct parallel — just as VoiceOver users need a non-visual equivalent of visual information, users with color vision deficiencies need a non-color-dependent equivalent, following the same underlying \"no single sensory channel as sole carrier of meaning\" principle.",
+        explanation: "There's a direct parallel — just as VoiceOver users need a non-visual equivalent of visual information, users with color vision deficiencies need a non-color-dependent equivalent, following the same underlying \"no single sensory channel as sole carrier of meaning\" principle.",
       },
       {
         id: "q15",
@@ -18361,7 +18361,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What do Switch Control and Voice Control have in common, according to 70.15?",
+        prompt: "What do Switch Control and Voice Control have in common with VoiceOver support work?",
         options: [
           { id: "a", text: "They are entirely and completely unrelated to VoiceOver's accessibility infrastructure whatsoever" },
           { id: "b", text: "They strictly require completely separate, redundant labeling work entirely apart from VoiceOver support" },
@@ -18369,7 +18369,7 @@ struct UserProfileView: View {
           { id: "d", text: "Both depend on the same underlying accessibility properties already established for VoiceOver support" },
         ],
         correctOptionId: "d",
-        explanation: "The section highlights that accessibility labeling work done for VoiceOver isn't VoiceOver-specific — it's foundational infrastructure that simultaneously benefits Switch Control and Voice Control users too.",
+        explanation: "Accessibility labeling work done for VoiceOver isn't VoiceOver-specific — it's foundational infrastructure that simultaneously benefits Switch Control and Voice Control users too.",
       },
       {
         id: "q17",
@@ -18381,11 +18381,11 @@ struct UserProfileView: View {
           { id: "d", text: "Only ever text fields need any keyboard accessibility consideration at all, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "Standard controls generally work automatically with keyboard focus navigation, mirroring the pattern seen with `accessibilityRepresentation` (70.8) — it's custom controls that need explicit attention to participate correctly.",
+        explanation: "Standard controls generally work automatically with keyboard focus navigation, mirroring the pattern seen with `accessibilityRepresentation` — it's custom controls that need explicit attention to participate correctly.",
       },
       {
         id: "q18",
-        prompt: "How does the Accessibility Inspector's automated audit relate to `performAccessibilityAudit()` from section 67.9?",
+        prompt: "How does the Accessibility Inspector's automated audit relate to `performAccessibilityAudit()`?",
         options: [
           {
             id: "a",
@@ -18405,7 +18405,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly frames these as complementary tools covering the same issue categories at different points in the development workflow — interactive investigation versus automated, continuous test integration.",
+        explanation: "These are complementary tools covering the same issue categories at different points in the development workflow — interactive investigation versus automated, continuous test integration.",
       },
       {
         id: "q19",
@@ -18417,7 +18417,7 @@ struct UserProfileView: View {
           { id: "d", text: "Nutrition Labels only ever affect App Store search ranking specifically, never actual user decisions" },
         ],
         correctOptionId: "c",
-        explanation: "The section emphasizes that accurate declaration carries genuine weight — it lets users with disabilities make informed pre-download decisions, meaning over-claiming support undermines real user trust and decision-making.",
+        explanation: "Accurate declaration carries genuine weight — it lets users with disabilities make informed pre-download decisions, meaning over-claiming support undermines real user trust and decision-making.",
       },
       {
         id: "q20",
