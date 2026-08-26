@@ -19983,48 +19983,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "Why does CI matter specifically for mobile?",
         options: [
-          {
-            id: "a",
-            text: "Mobile builds are simpler than server-side builds and require less verification",
-          },
-          {
-            id: "b",
-            text: "iOS builds involve genuinely more moving parts (code signing, provisioning profiles, simulator/device targeting, longer build times) than many server-side projects, making automated, consistent verification more valuable than relying on individual developer diligence",
-          },
-          {
-            id: "c",
-            text: "CI has no particular relevance to mobile development compared to other platforms",
-          },
-          {
-            id: "d",
-            text: "Mobile apps never require any automated testing",
-          },
+          { id: "a", text: "Mobile builds are entirely simpler than server-side builds and require significantly less verification, always" },
+          { id: "b", text: "Mobile apps categorically never require any automated testing whatsoever, under any circumstances" },
+          { id: "c", text: "CI has absolutely no particular relevance to mobile development compared to any other platform" },
+          { id: "d", text: "iOS builds involve genuinely more moving parts than many server-side projects" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "iOS-specific complexity (signing, profiles, device targeting) is a reason automated CI verification provides more value than for simpler build environments.",
       },
       {
         id: "q2",
         prompt: "How does CI connect to the general testing discipline of writing and running automated tests?",
         options: [
-          {
-            id: "a",
-            text: "CI and testing are entirely unrelated concerns",
-          },
-          {
-            id: "b",
-            text: "A comprehensive test suite provides essentially no protective value if it isn't reliably run before every change merges, and CI is the mechanism ensuring tests are actually, consistently applied rather than depending on individual developer memory",
-          },
-          {
-            id: "c",
-            text: "CI replaces the need for writing any tests at all",
-          },
-          {
-            id: "d",
-            text: "Testing only matters locally; CI has no bearing on test execution",
-          },
+          { id: "a", text: "A comprehensive test suite provides essentially no protective value if it isn't reliably run before every merge" },
+          { id: "b", text: "CI and testing are entirely and completely unrelated concerns whatsoever" },
+          { id: "c", text: "CI completely replaces the need for writing any tests at all, entirely" },
+          { id: "d", text: "Testing only ever matters locally; CI has absolutely no bearing on test execution" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "CI's value comes from closing the gap between having tests and actually, reliably running them before every merge, directly connecting back to the core argument for why tests exist in the first place.",
       },
       {
@@ -20033,19 +20009,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "There is no meaningful difference; both commands use identical destinations",
+            text: "There is absolutely no meaningful difference whatsoever; both commands use entirely identical destinations always",
           },
           {
             id: "b",
-            text: "A generic platform destination produces a build not tied to any specific simulator/device, appropriate for archiving/distribution, while testing requires an actual, specific runtime target capable of executing the compiled test code",
+            text: "A generic destination isn't tied to a device, fit for archiving; testing needs a real runtime target",
           },
           {
             id: "c",
-            text: "Generic platform destinations are only used for testing, never building",
+            text: "Generic platform destinations are only ever used for testing specifically, never for building at all",
           },
           {
             id: "d",
-            text: "`xcodebuild test` cannot accept any destination parameter at all",
+            text: "`xcodebuild test` categorically cannot accept any destination parameter whatsoever, ever",
           },
         ],
         correctOptionId: "b",
@@ -20055,72 +20031,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "What does `xcresulttool` provide that relying purely on `xcodebuild test`'s exit code does not?",
         options: [
-          {
-            id: "a",
-            text: "Nothing additional; the exit code already contains all relevant information",
-          },
-          {
-            id: "b",
-            text: "Structured access to detailed test result data — individual test outcomes, failure messages, screenshots, and code coverage — enabling considerably richer CI feedback than a simple binary pass/fail signal",
-          },
-          {
-            id: "c",
-            text: "`xcresulttool` can only report the overall pass/fail status, identical to the exit code",
-          },
-          {
-            id: "d",
-            text: "It replaces the need for `.xcresult` bundles entirely",
-          },
+          { id: "a", text: "Nothing additional whatsoever; the exit code already contains all relevant information" },
+          { id: "b", text: "`xcresulttool` can only ever report the overall pass/fail status, entirely identical to the exit code" },
+          { id: "c", text: "Structured access to detailed test result data, enabling richer CI feedback than a binary pass/fail" },
+          { id: "d", text: "It completely replaces the need for `.xcresult` bundles entirely across the board" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Relying solely on the exit code discards valuable diagnostic detail that `xcresulttool`'s structured extraction can surface for richer CI reporting.",
       },
       {
         id: "q5",
         prompt: "Why does GitHub Actions require a macOS runner specifically for iOS CI?",
         options: [
-          {
-            id: "a",
-            text: "GitHub Actions can run iOS builds on any operating system equally well",
-          },
-          {
-            id: "b",
-            text: "Xcode and the iOS build toolchain only run on macOS, making a macOS-specific runner an unavoidable requirement",
-          },
-          {
-            id: "c",
-            text: "macOS runners are actually cheaper than Linux runners on most CI platforms",
-          },
-          {
-            id: "d",
-            text: "This requirement only applies to UI testing, not unit testing",
-          },
+          { id: "a", text: "GitHub Actions can run iOS builds on absolutely any operating system equally well" },
+          { id: "b", text: "This particular requirement only ever applies to UI testing specifically, not unit testing" },
+          { id: "c", text: "macOS runners are actually and genuinely cheaper than Linux runners on most CI platforms" },
+          { id: "d", text: "Xcode and the iOS build toolchain only run on macOS, making a macOS runner an unavoidable requirement" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Since Xcode itself only runs on macOS, iOS CI fundamentally requires macOS runners, which are typically more expensive and resource-constrained than Linux alternatives.",
       },
       {
         id: "q6",
         prompt: "Why does the macOS runner cost/constraint make build time optimization and caching particularly consequential for iOS CI?",
         options: [
-          {
-            id: "a",
-            text: "These concerns are equally important across all CI platforms regardless of runner type",
-          },
-          {
-            id: "b",
-            text: "Because macOS runners are typically more expensive and resource-constrained, minimizing wasted build time through caching and optimization carries more cost/speed significance than it might for cheaper, more abundant Linux infrastructure",
-          },
-          {
-            id: "c",
-            text: "Build time optimization has no actual effect on CI cost",
-          },
-          {
-            id: "d",
-            text: "Caching is only relevant for Linux-based CI pipelines, not macOS",
-          },
+          { id: "a", text: "Because macOS runners are more expensive and resource-constrained, wasted build time carries more significance" },
+          { id: "b", text: "These particular concerns are entirely and equally important across all CI platforms regardless of runner type, always" },
+          { id: "c", text: "Build time optimization has absolutely no actual effect on CI cost whatsoever" },
+          { id: "d", text: "Caching is only ever relevant for Linux-based CI pipelines specifically, not macOS at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The elevated cost/constraint of macOS runners directly increases the importance of build time optimization and caching strategies specifically for iOS CI.",
       },
       {
@@ -20129,19 +20069,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Xcode Cloud requires more manual scripting and configuration than GitHub Actions",
+            text: "Xcode Cloud strictly requires meaningfully more manual scripting and configuration than GitHub Actions, always, in every single case",
           },
           {
             id: "b",
-            text: "Deep, native integration with the Apple developer ecosystem (schemes, test plans, App Store Connect distribution) without needing extensive manual scripting, trading some general-purpose flexibility for lower setup and maintenance burden",
+            text: "Deep, native Apple ecosystem integration without extensive manual scripting, trading flexibility for lower setup",
           },
           {
             id: "c",
-            text: "Xcode Cloud can only be used for building, never testing or archiving",
+            text: "Xcode Cloud can only ever be used for building specifically, never testing or archiving at all",
           },
           {
             id: "d",
-            text: "Xcode Cloud has no relationship to App Store Connect at all",
+            text: "Xcode Cloud has absolutely no relationship whatsoever to App Store Connect at all",
           },
         ],
         correctOptionId: "b",
@@ -20151,72 +20091,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "How does caching DerivedData and SPM checkouts connect to the incremental-vs-whole-module compilation trade-off?",
         options: [
-          {
-            id: "a",
-            text: "Caching has no relationship to compilation modes at all",
-          },
-          {
-            id: "b",
-            text: "Properly cached DerivedData lets a CI run potentially recompile only changed files (incremental compilation's benefit), rather than every run paying the full cost of compiling an entire project from scratch",
-          },
-          {
-            id: "c",
-            text: "Caching only affects SPM dependency resolution, never actual compilation",
-          },
-          {
-            id: "d",
-            text: "DerivedData caching makes whole-module optimization unnecessary in all cases",
-          },
+          { id: "a", text: "Caching has absolutely no relationship whatsoever to compilation modes at all" },
+          { id: "b", text: "Caching only ever affects SPM dependency resolution specifically, never actual compilation" },
+          { id: "c", text: "Properly cached DerivedData lets CI recompile only changed files, rather than paying the full cost every run" },
+          { id: "d", text: "DerivedData caching makes whole-module optimization entirely unnecessary in absolutely all cases, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Effective caching directly enables incremental-style compilation benefits within CI, avoiding redundant full recompilation on every run.",
       },
       {
         id: "q9",
         prompt: "What genuine value does Fastlane provide?",
         options: [
-          {
-            id: "a",
-            text: "Fastlane requires teams to write every automation step entirely from scratch",
-          },
-          {
-            id: "b",
-            text: "A large library of pre-built, battle-tested actions for common, fiddly release process steps (code signing coordination, version bumping, TestFlight upload), letting teams compose lanes from reusable building blocks rather than hand-writing custom scripts",
-          },
-          {
-            id: "c",
-            text: "Fastlane can only be used for running unit tests, not release automation",
-          },
-          {
-            id: "d",
-            text: "Fastlane eliminates the need for `xcodebuild` entirely",
-          },
+          { id: "a", text: "Fastlane strictly requires teams to write every single automation step entirely from scratch" },
+          { id: "b", text: "Fastlane completely eliminates the need for `xcodebuild` entirely across the board" },
+          { id: "c", text: "Fastlane can only ever be used for running unit tests specifically, not release automation" },
+          { id: "d", text: "A library of pre-built actions for release steps, composed into reusable lanes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Fastlane's value lies in encapsulating frequently-needed, easy-to-get-wrong release automation as reusable actions, rather than requiring teams to build this tooling independently.",
       },
       {
         id: "q10",
         prompt: "What root problem does `fastlane match` address for iOS CI?",
         options: [
-          {
-            id: "a",
-            text: "Slow build times caused by whole-module optimization",
-          },
-          {
-            id: "b",
-            text: "Inconsistent, independently-managed code signing configuration across different developers' machines and CI environments, by storing encrypted certificates/profiles in a shared repository",
-          },
-          {
-            id: "c",
-            text: "`match` addresses App Store review rejection reasons, not signing",
-          },
-          {
-            id: "d",
-            text: "Match only works for local development, never CI environments",
-          },
+          { id: "a", text: "Inconsistent code signing configuration across machines and CI, fixed via a shared encrypted certificate repository" },
+          { id: "b", text: "Slow build times caused specifically by whole-module optimization, nothing else at all" },
+          { id: "c", text: "`match` addresses App Store review rejection reasons specifically, not signing at all" },
+          { id: "d", text: "Match only ever works for local development specifically, never in CI environments at all, under any circumstances" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "`match`'s shared, centrally-managed signing repository directly addresses inconsistent per-machine signing configuration, a commonly cited source of CI pipeline breakage for iOS projects.",
       },
       {
@@ -20225,19 +20129,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Beta releases happen rarely, so automation provides minimal benefit",
+            text: "Beta releases genuinely happen rarely, so automation provides only minimal benefit overall",
           },
           {
             id: "b",
-            text: "Because beta releases tend to happen frequently during active development, a manual process taking even 15-20 minutes becomes a meaningful recurring time cost, while automation reduces that recurring task to essentially zero manual effort",
+            text: "Because beta releases happen frequently, a manual process taking 15-20 minutes becomes meaningful recurring cost",
           },
           {
             id: "c",
-            text: "Automation only matters for the final App Store submission, not beta builds",
+            text: "Automation only ever matters for the final App Store submission specifically, not beta builds",
           },
           {
             id: "d",
-            text: "TestFlight uploads cannot actually be automated under any circumstances",
+            text: "TestFlight uploads categorically cannot actually be automated under any circumstances whatsoever, ever",
           },
         ],
         correctOptionId: "b",
@@ -20247,72 +20151,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "When does direct App Store Connect API access matter, as opposed to using Fastlane's pre-built actions?",
         options: [
-          {
-            id: "a",
-            text: "Direct API access should always be preferred over Fastlane regardless of need",
-          },
-          {
-            id: "b",
-            text: "For automation needs that fall outside what Fastlane's existing actions already cover, since Fastlane's actions wrap this same underlying API for the most common release automation needs",
-          },
-          {
-            id: "c",
-            text: "The App Store Connect API cannot be accessed directly under any circumstances",
-          },
-          {
-            id: "d",
-            text: "Fastlane and the App Store Connect API are entirely unrelated tools",
-          },
+          { id: "a", text: "Direct API access should always and invariably be preferred over Fastlane regardless of need" },
+          { id: "b", text: "The App Store Connect API categorically cannot be accessed directly under any circumstances whatsoever, ever" },
+          { id: "c", text: "For automation needs outside what Fastlane's existing actions cover, since Fastlane wraps this same API" },
+          { id: "d", text: "Fastlane and the App Store Connect API are entirely and completely unrelated tools altogether" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Fastlane's actions already wrap the API for common needs, so direct API access is appropriate specifically for genuinely custom automation requirements not already covered by existing Fastlane actions.",
       },
       {
         id: "q13",
         prompt: "What real consequence results from forgetting to increment a build number before a TestFlight upload?",
         options: [
-          {
-            id: "a",
-            text: "The upload succeeds normally with no issue",
-          },
-          {
-            id: "b",
-            text: "App Store Connect rejects an upload with a build number that's not genuinely higher than a previously uploaded build, causing an avoidable upload failure",
-          },
-          {
-            id: "c",
-            text: "The app automatically increments the version for the developer",
-          },
-          {
-            id: "d",
-            text: "This only affects App Store submission, never TestFlight uploads",
-          },
+          { id: "a", text: "The upload succeeds entirely normally with absolutely no issue whatsoever" },
+          { id: "b", text: "This particular issue only ever affects App Store submission, never TestFlight uploads at all, ever" },
+          { id: "c", text: "The app automatically and fully increments the version for the developer somehow, entirely" },
+          { id: "d", text: "App Store Connect rejects an upload whose build number isn't genuinely higher than a previous one" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This is a specific, common, avoidable failure mode, which automated version/build numbering directly eliminates by handling this bookkeeping mechanically rather than relying on manual developer action.",
       },
       {
         id: "q14",
         prompt: "How does automating dSYM upload connect to the strict requirement that a dSYM match its exact build?",
         options: [
-          {
-            id: "a",
-            text: "There is no connection; dSYM upload and symbolication are unrelated concerns",
-          },
-          {
-            id: "b",
-            text: "Because a dSYM must correspond to the exact build that produced a crash, automating dSYM upload as an unskippable part of every release ensures the correct dSYM always exists wherever needed for symbolication, avoiding unsymbolicated crash reports",
-          },
-          {
-            id: "c",
-            text: "Automated dSYM upload eliminates the need for dSYMs to match specific builds at all",
-          },
-          {
-            id: "d",
-            text: "dSYM upload only matters for Debug builds, never Release builds",
-          },
+          { id: "a", text: "Because a dSYM must match the exact build, automating upload as an unskippable step ensures it exists for symbolication" },
+          { id: "b", text: "There is absolutely no connection whatsoever; dSYM upload and symbolication are entirely unrelated, separate concerns" },
+          { id: "c", text: "Automated dSYM upload entirely eliminates the need for dSYMs to match specific builds at all, ever" },
+          { id: "d", text: "dSYM upload only ever matters for Debug builds specifically, never Release builds at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This directly closes that gap — since exact build-to-dSYM matching is strict, automating upload as a mandatory pipeline step prevents the scenario of a missing matching dSYM for a real crash report.",
       },
       {
@@ -20321,19 +20189,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Running every CI job strictly sequentially to ensure consistency",
+            text: "Running every single CI job strictly and entirely sequentially to ensure consistency",
           },
           {
             id: "b",
-            text: "Parallelizing independent CI jobs (linting, unit tests, UI tests as separate concurrent jobs), using pre-warmed runner images, and aggressively applying caching given macOS runner cost sensitivity",
+            text: "Parallelizing independent CI jobs, using pre-warmed images, and aggressively applying caching",
           },
           {
             id: "c",
-            text: "Disabling all caching to ensure fresh builds every time",
+            text: "Disabling all caching entirely to ensure completely fresh builds every single time",
           },
           {
             id: "d",
-            text: "CI build time cannot actually be optimized any further at all",
+            text: "CI build time categorically cannot actually be optimized any further at all, whatsoever, under any circumstances",
           },
         ],
         correctOptionId: "b",
@@ -20343,72 +20211,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "How does parallelizing CI jobs relate to the test sharding principle used for a single test suite?",
         options: [
-          {
-            id: "a",
-            text: "They are entirely unrelated concepts with no shared principle",
-          },
-          {
-            id: "b",
-            text: "It applies the same sharding principle at the level of an entire CI pipeline's distinct job types (linting, unit tests, UI tests), rather than distributing a single test suite's tests across runners",
-          },
-          {
-            id: "c",
-            text: "Test sharding can only be applied within a single job, never across separate CI jobs",
-          },
-          {
-            id: "d",
-            text: "Job parallelization replaces the need for test sharding entirely",
-          },
+          { id: "a", text: "They are entirely and completely unrelated concepts with absolutely no shared principle" },
+          { id: "b", text: "Test sharding can only ever be applied within a single job specifically, never across separate CI jobs at all, under any circumstances" },
+          { id: "c", text: "It applies the same sharding principle to a pipeline's distinct job types, rather than a single suite's tests" },
+          { id: "d", text: "Job parallelization completely replaces the need for test sharding entirely across the board" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Both apply the same underlying principle of distributing independent work across parallel execution, just at different granularities (test-level vs. job-level).",
       },
       {
         id: "q17",
         prompt: "What genuinely subtle problem do merge queues solve that simple \"require passing CI\" branch protection does not?",
         options: [
-          {
-            id: "a",
-            text: "Merge queues prevent any PR from ever failing CI",
-          },
-          {
-            id: "b",
-            text: "Two PRs can each independently pass CI against the current `main` while still being mutually incompatible once both are actually merged together — a gap simple CI-passing requirements don't catch",
-          },
-          {
-            id: "c",
-            text: "Merge queues only address code signing issues, not merge compatibility",
-          },
-          {
-            id: "d",
-            text: "This problem doesn't actually exist in real-world development",
-          },
+          { id: "a", text: "Merge queues entirely and completely prevent any PR from ever failing CI whatsoever" },
+          { id: "b", text: "This particular problem genuinely doesn't actually exist in real-world development at all" },
+          { id: "c", text: "Merge queues only ever address code signing issues specifically, not merge compatibility at all, ever, under any circumstances" },
+          { id: "d", text: "Two PRs can each pass CI against current `main` while still being mutually incompatible once merged together" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This is a classic scenario — two independently-passing PRs can combine to break `main` in a way neither individual PR's CI run would have revealed.",
       },
       {
         id: "q18",
         prompt: "How does a merge queue close the gap described in Q17?",
         options: [
-          {
-            id: "a",
-            text: "By preventing more than one PR from ever being open simultaneously",
-          },
-          {
-            id: "b",
-            text: "By re-verifying each PR against the true, up-to-the-moment state including other PRs ahead of it in the queue, rather than testing each PR only against a static, potentially-stale version of `main`",
-          },
-          {
-            id: "c",
-            text: "Merge queues do not actually re-run any verification; they only reorder merge commits",
-          },
-          {
-            id: "d",
-            text: "By requiring manual approval from every team member before any merge",
-          },
+          { id: "a", text: "By re-verifying each PR against the true, current state including other queued PRs, not a stale `main`" },
+          { id: "b", text: "By entirely preventing more than one single PR from ever being open simultaneously" },
+          { id: "c", text: "Merge queues do not actually and genuinely re-run any verification; they only reorder merge commits, always" },
+          { id: "d", text: "By strictly requiring manual approval from every single team member before any merge" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The queue's core mechanism is re-testing each PR against the current, evolving state (including other queued changes), providing a stronger correctness guarantee than independent, isolated CI passes.",
       },
       {
@@ -20417,19 +20249,19 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "They are entirely unrelated topics with no connection",
+            text: "They are entirely and completely unrelated topics with absolutely no connection whatsoever",
           },
           {
             id: "b",
-            text: "Automated dSYM upload as part of a release pipeline can target both Apple's own crash report symbolication and third-party crash reporting services, ensuring symbolication works regardless of which crash reporting system is in use",
+            text: "Automated dSYM upload can target both Apple's own and third-party crash reporting services for symbolication",
           },
           {
             id: "c",
-            text: "Third-party crash reporting services never require dSYM uploads",
+            text: "Third-party crash reporting services genuinely never ever require any dSYM uploads whatsoever, under any circumstances",
           },
           {
             id: "d",
-            text: "Fastlane can only upload dSYMs to Apple, never to third-party services",
+            text: "Fastlane can only ever upload dSYMs to Apple specifically, never to any third-party services",
           },
         ],
         correctOptionId: "b",
@@ -20439,24 +20271,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "What overarching theme connects Fastlane's release automation, automated version numbering, and automated dSYM upload?",
         options: [
-          {
-            id: "a",
-            text: "These are unrelated, independent tooling choices with no shared purpose",
-          },
-          {
-            id: "b",
-            text: "Each eliminates a recurring, error-prone manual step in the release process, replacing fallible human memory and repetitive manual effort with reliable, consistent automation",
-          },
-          {
-            id: "c",
-            text: "All three exclusively concern code signing, nothing else",
-          },
-          {
-            id: "d",
-            text: "These tools only matter for apps with no CI pipeline at all",
-          },
+          { id: "a", text: "These are entirely unrelated, independent tooling choices with absolutely no shared purpose" },
+          { id: "b", text: "All three exclusively and only concern code signing specifically, nothing else at all" },
+          { id: "c", text: "Each eliminates a recurring, error-prone manual step, replacing fallible human memory with reliable automation" },
+          { id: "d", text: "These particular tools only ever matter for apps with absolutely no CI pipeline at all, whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The recurring theme across these subtopics is converting tedious, easily-forgotten, or error-prone manual release steps into reliable, automated, consistently-applied pipeline behavior.",
       },
     ],
@@ -20471,24 +20291,12 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "What role does a provisioning profile play among the three core signing concepts?",
         options: [
-          {
-            id: "a",
-            text: "It proves a developer's identity, identical to a certificate",
-          },
-          {
-            id: "b",
-            text: "It binds together a specific certificate, App ID, and set of allowed devices/capabilities into what gets embedded in a built app to authorize it to run",
-          },
-          {
-            id: "c",
-            text: "It identifies a specific app, identical to an App ID",
-          },
-          {
-            id: "d",
-            text: "A provisioning profile has no functional relationship to certificates or App IDs",
-          },
+          { id: "a", text: "It binds a certificate, App ID, and allowed devices into what's embedded in a built app" },
+          { id: "b", text: "It proves a developer's identity, identical to a certificate" },
+          { id: "c", text: "It identifies a specific app, identical to an App ID" },
+          { id: "d", text: "A provisioning profile has absolutely no functional relationship to certificates or App IDs at all" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "A provisioning profile is fundamentally a binding mechanism connecting a certificate, an App ID, and device/capability information together into the actual embedded authorization for a built app.",
       },
       {
@@ -20501,7 +20309,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "A signing failure is almost always traceable to a mismatch somewhere in this binding (expired certificate, mismatched capabilities, missing device), rather than being an inexplicable, opaque failure",
+            text: "A signing failure is almost always traceable to a mismatch in this binding, rather than an inexplicable failure",
           },
           {
             id: "c",
@@ -20509,7 +20317,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Only certificates matter for diagnosing signing issues; App IDs and profiles are irrelevant",
+            text: "Only certificates matter for diagnosing signing issues; App IDs and profiles are entirely irrelevant, always",
           },
         ],
         correctOptionId: "b",
@@ -20519,72 +20327,36 @@ struct UserProfileView: View {
         id: "q3",
         prompt: "Why do CI environments typically use manual signing (often via `fastlane match`) rather than Xcode's automatic signing management?",
         options: [
-          {
-            id: "a",
-            text: "Manual signing is easier to set up than automatic signing",
-          },
-          {
-            id: "b",
-            text: "CI needs deterministic, reproducible signing behavior across every run, while Xcode's automatic signing can behave unpredictably in a headless CI context, potentially attempting to create new certificates or profiles rather than using an established one",
-          },
-          {
-            id: "c",
-            text: "Automatic signing is not actually supported by Xcode at all",
-          },
-          {
-            id: "d",
-            text: "Manual signing requires no certificates or profiles whatsoever",
-          },
+          { id: "a", text: "Manual signing is easier to set up than automatic signing" },
+          { id: "b", text: "Automatic signing is not actually supported by Xcode at all, under any circumstances whatsoever" },
+          { id: "c", text: "CI needs deterministic, reproducible signing behavior across every run" },
+          { id: "d", text: "Manual signing requires no certificates or profiles whatsoever, under any circumstances, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "CI's need for consistent, predictable signing behavior across every automated run makes manual, explicit signing control more appropriate than Xcode's automatic management, which is designed more for interactive, individual developer use.",
       },
       {
         id: "q4",
         prompt: "What is \"capability drift,\"?",
         options: [
-          {
-            id: "a",
-            text: "A gradual degradation in an app's actual runtime capabilities over time",
-          },
-          {
-            id: "b",
-            text: "When an app's actual entitlements file and its corresponding App ID's configured capabilities in the Apple Developer portal fall out of sync",
-          },
-          {
-            id: "c",
-            text: "Capability drift refers to changes in device hardware capabilities across iOS versions",
-          },
-          {
-            id: "d",
-            text: "It describes drift in an app's version numbering scheme",
-          },
+          { id: "a", text: "A gradual degradation in an app's actual runtime capabilities over time, always, in every single case" },
+          { id: "b", text: "It describes drift in an app's version numbering scheme" },
+          { id: "c", text: "Capability drift refers to changes in device hardware capabilities across different iOS versions, always" },
+          { id: "d", text: "When an app's entitlements and its App ID's portal capabilities fall out of sync" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Capability drift specifically describes desynchronization between local entitlements configuration and the App ID's capability configuration on Apple's Developer portal.",
       },
       {
         id: "q5",
         prompt: "Why is capability drift described as a genuinely easy, common mistake?",
         options: [
-          {
-            id: "a",
-            text: "Entitlements automatically synchronize with App ID configuration, making drift impossible",
-          },
-          {
-            id: "b",
-            text: "Entitlements can be added locally in Xcode without automatically, correspondingly updating the App ID's capability configuration on Apple's Developer portal, producing a mismatch",
-          },
-          {
-            id: "c",
-            text: "Capability drift only occurs due to Apple server outages, never developer action",
-          },
-          {
-            id: "d",
-            text: "This mistake can only occur when using manual signing, never automatic signing",
-          },
+          { id: "a", text: "Entitlements can be added locally without automatically updating the App ID's portal configuration" },
+          { id: "b", text: "Entitlements automatically and fully synchronize with App ID configuration, making drift entirely impossible, always" },
+          { id: "c", text: "Capability drift only occurs due to Apple server outages, never developer action" },
+          { id: "d", text: "This mistake can only occur when using manual signing, never automatic signing" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because local entitlement changes don't automatically propagate to the App ID's portal configuration, a developer can easily enable a capability locally without the corresponding remote configuration being updated to match.",
       },
       {
@@ -20597,15 +20369,15 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Recognizing specific, distinct failure categories (expired certificate, missing device registration, capability drift, expired profile) by carefully reading Xcode's specific error message, since each category has a distinct root cause and fix",
+            text: "Recognizing specific failure categories by carefully reading Xcode's error message",
           },
           {
             id: "c",
-            text: "Always regenerating every certificate and profile regardless of the specific error",
+            text: "Always and invariably regenerating every single certificate and profile regardless of the specific error, every time",
           },
           {
             id: "d",
-            text: "Signing failures cannot actually be diagnosed and must simply be worked around",
+            text: "Signing failures cannot actually be diagnosed and must simply be worked around indefinitely, forever, always",
           },
         ],
         correctOptionId: "b",
@@ -20615,72 +20387,36 @@ struct UserProfileView: View {
         id: "q7",
         prompt: "What does an `.xcarchive` produced by `Product > Archive` (or `xcodebuild archive`) contain?",
         options: [
-          {
-            id: "a",
-            text: "Only the compiled binary, with no debug symbols",
-          },
-          {
-            id: "b",
-            text: "A complete, signed build bundle including debug symbols, from which a build can be exported in different forms depending on the distribution channel",
-          },
-          {
-            id: "c",
-            text: "Only source code, with no compiled output at all",
-          },
-          {
-            id: "d",
-            text: "Test results and code coverage data exclusively",
-          },
+          { id: "a", text: "Only the compiled binary, with no debug symbols" },
+          { id: "b", text: "Only ever source code, with absolutely no compiled output at all, under any circumstances" },
+          { id: "c", text: "A complete, signed build bundle including debug symbols, exportable for different distribution channels" },
+          { id: "d", text: "Test results and code coverage data exclusively" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The archive bundles both the signed build and its debug symbols, making it the appropriate complete artifact for subsequent distribution or dSYM-related processing.",
       },
       {
         id: "q8",
         prompt: "Why is the `.xcarchive` (rather than an ordinary build product) the correct artifact for automated dSYM upload?",
         options: [
-          {
-            id: "a",
-            text: "Ordinary build products always contain identical debug symbol information to archives",
-          },
-          {
-            id: "b",
-            text: "The archive genuinely contains everything needed both to distribute the app and to later symbolicate crash reports from that specific build, unlike a plain build output",
-          },
-          {
-            id: "c",
-            text: "dSYM files are never actually included in an `.xcarchive`",
-          },
-          {
-            id: "d",
-            text: "Archives cannot be used for any distribution purpose, only for symbolication",
-          },
+          { id: "a", text: "Ordinary build products always and invariably contain identical debug symbol information to archives, always" },
+          { id: "b", text: "Archives cannot be used for any distribution purpose, only for symbolication" },
+          { id: "c", text: "dSYM files are never actually included in an `.xcarchive`" },
+          { id: "d", text: "The archive contains everything needed both to distribute the app and later symbolicate crash reports" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Because archives bundle debug symbols alongside the signed build, they're the correct artifact a release pipeline should preserve and process for both distribution and later crash symbolication needs.",
       },
       {
         id: "q9",
         prompt: "What distinguishes ad hoc distribution from enterprise distribution?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical distribution methods with different names",
-          },
-          {
-            id: "b",
-            text: "Ad hoc distribution requires explicit per-device UDID registration in the provisioning profile with a hard device count limit, while enterprise distribution allows installation on an organization's devices without per-device UDID registration, but is strictly limited to internal use",
-          },
-          {
-            id: "c",
-            text: "Enterprise distribution requires UDID registration, while ad hoc does not",
-          },
-          {
-            id: "d",
-            text: "Ad hoc distribution can be used for unlimited public distribution",
-          },
+          { id: "a", text: "Ad hoc requires per-device UDID registration with a hard limit, while enterprise skips that but stays internal-only" },
+          { id: "b", text: "They are functionally identical distribution methods with different names" },
+          { id: "c", text: "Enterprise distribution requires UDID registration, while ad hoc does not" },
+          { id: "d", text: "Ad hoc distribution can be used for entirely unlimited, genuine public distribution, without any restriction whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Ad hoc distribution is UDID-limited and appropriate for small-scale testing, while enterprise distribution avoids per-device registration but carries a strict internal-use-only contractual requirement.",
       },
       {
@@ -20689,11 +20425,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "There is no consequence; enterprise distribution can be used for any distribution purpose",
+            text: "There is absolutely no consequence whatsoever; enterprise distribution can be used for any purpose at all, ever",
           },
           {
             id: "b",
-            text: "Potential enterprise certificate revocation by Apple, since this use explicitly violates Apple's terms requiring enterprise distribution to remain genuinely internal-only",
+            text: "Potential enterprise certificate revocation by Apple, for violating the internal-only terms",
           },
           {
             id: "c",
@@ -20711,72 +20447,36 @@ struct UserProfileView: View {
         id: "q11",
         prompt: "What genuinely different distribution model does MDM-based custom app distribution represent?",
         options: [
-          {
-            id: "a",
-            text: "It is functionally identical to standard App Store distribution",
-          },
-          {
-            id: "b",
-            text: "Centrally-administered, organization-controlled deployment (with the ability to also push configuration and enforce restrictions) rather than an end user discovering and installing an app through the public App Store",
-          },
-          {
-            id: "c",
-            text: "MDM distribution requires the App Store to approve every deployed app individually",
-          },
-          {
-            id: "d",
-            text: "MDM can only be used for distributing configuration settings, never actual app binaries",
-          },
+          { id: "a", text: "It is functionally identical to standard App Store distribution" },
+          { id: "b", text: "MDM distribution strictly requires the App Store to approve every single deployed app individually, always" },
+          { id: "c", text: "Centrally-administered, organization-controlled deployment, unlike public App Store discovery" },
+          { id: "d", text: "MDM can only be used for distributing configuration settings, never actual app binaries, ever, under any circumstances" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "MDM represents a fundamentally different model where an organization's IT department, not individual end users, controls installation and configuration, distinct from public App Store discovery and installation.",
       },
       {
         id: "q12",
         prompt: "What does Managed App Configuration allow an organization to do?",
         options: [
-          {
-            id: "a",
-            text: "Nothing beyond installing the app binary itself",
-          },
-          {
-            id: "b",
-            text: "Pre-configure app settings pushed to the app at install/launch, letting organizations pre-configure things like a server endpoint without requiring user input",
-          },
-          {
-            id: "c",
-            text: "Managed App Configuration only applies to consumer, non-MDM apps",
-          },
-          {
-            id: "d",
-            text: "It exclusively controls the app's visual theme and branding",
-          },
+          { id: "a", text: "Nothing beyond installing the app binary itself" },
+          { id: "b", text: "It exclusively controls the app's visual theme and branding" },
+          { id: "c", text: "Managed App Configuration only ever applies to consumer, non-MDM apps specifically, nothing else at all" },
+          { id: "d", text: "Push pre-configured app settings at install/launch, avoiding manual user configuration" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Managed App Configuration lets organizations push pre-configured settings to an app automatically, avoiding the need for manual user configuration.",
       },
       {
         id: "q13",
         prompt: "What regulatory change is driving alternative app marketplaces on iOS?",
         options: [
-          {
-            id: "a",
-            text: "A global change in Apple's App Store policy applying to all countries equally",
-          },
-          {
-            id: "b",
-            text: "The EU's Digital Markets Act, which has required Apple to support alternative app marketplaces and direct distribution outside the traditional App Store specifically within the EU",
-          },
-          {
-            id: "c",
-            text: "A change initiated voluntarily by Apple with no external regulatory pressure",
-          },
-          {
-            id: "d",
-            text: "A requirement that only applies to enterprise-distributed apps, not consumer apps",
-          },
+          { id: "a", text: "The EU's Digital Markets Act, requiring Apple to support alternative marketplaces within the EU" },
+          { id: "b", text: "A global change in Apple's App Store policy applying identically to every single country worldwide, always" },
+          { id: "c", text: "A change initiated voluntarily by Apple with no external regulatory pressure" },
+          { id: "d", text: "A requirement that only applies to enterprise-distributed apps, not consumer apps" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This shift is specifically attributed to the EU's Digital Markets Act, a regulatory requirement scoped specifically to the EU rather than a global policy change.",
       },
       {
@@ -20785,11 +20485,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Notarization replaces the need for any code signing entirely",
+            text: "Notarization completely and entirely replaces the need for any code signing whatsoever, in every case",
           },
           {
             id: "b",
-            text: "It provides a baseline security/integrity check for apps distributed through these alternative channels, distinct from and less extensive than full App Store review",
+            text: "It provides a baseline integrity check for these alternative channels, less extensive than full App Store review",
           },
           {
             id: "c",
@@ -20807,72 +20507,36 @@ struct UserProfileView: View {
         id: "q15",
         prompt: "Is the EU alternative marketplace distribution model described as applying globally?",
         options: [
-          {
-            id: "a",
-            text: "Yes, it applies identically to all countries worldwide",
-          },
-          {
-            id: "b",
-            text: "No — it is specifically scoped to the EU's regulatory requirements, with the traditional single-marketplace distribution model continuing to apply everywhere else",
-          },
-          {
-            id: "c",
-            text: "It only applies to apps developed by EU-based companies, regardless of where they're distributed",
-          },
-          {
-            id: "d",
-            text: "The scope of this regulatory change is identical to enterprise distribution rules",
-          },
+          { id: "a", text: "Yes, it applies identically to all countries worldwide" },
+          { id: "b", text: "It only ever applies to apps developed by EU-based companies specifically, regardless of where they're actually distributed" },
+          { id: "c", text: "No — it is specifically scoped to the EU's regulatory requirements, applying nowhere else" },
+          { id: "d", text: "The scope of this regulatory change is identical to enterprise distribution rules" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This distribution model change is scoped specifically to the EU's regulatory requirements and does not apply globally.",
       },
       {
         id: "q16",
         prompt: "Why is manual signing more appropriate than automatic signing specifically for automated build environments?",
         options: [
-          {
-            id: "a",
-            text: "Manual signing requires no certificates at all, simplifying CI configuration",
-          },
-          {
-            id: "b",
-            text: "Automated environments need deterministic, explicitly-controlled signing behavior, which manual signing (often via tools like `fastlane match`) provides more reliably than Xcode's automatic management designed for interactive individual use",
-          },
-          {
-            id: "c",
-            text: "Automatic signing is faster than manual signing in every scenario",
-          },
-          {
-            id: "d",
-            text: "Manual signing is only used for enterprise distribution, never for App Store builds",
-          },
+          { id: "a", text: "Manual signing requires no certificates at all, simplifying CI configuration" },
+          { id: "b", text: "Manual signing is only ever used for enterprise distribution specifically, never for App Store builds at all, ever" },
+          { id: "c", text: "Automatic signing is faster than manual signing in every scenario" },
+          { id: "d", text: "Automated environments need deterministic, explicitly-controlled signing behavior, unlike Xcode's interactive automatic management" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The predictability and determinism manual signing provides is specifically valuable for automated, headless CI environments where Xcode's interactive automatic signing behavior could be unreliable.",
       },
       {
         id: "q17",
         prompt: "What does an App ID identify?",
         options: [
-          {
-            id: "a",
-            text: "A specific developer's identity, identical to a certificate",
-          },
-          {
-            id: "b",
-            text: "A specific app (e.g., `com.example.myapp`), potentially with wildcard or explicit capability configuration",
-          },
-          {
-            id: "c",
-            text: "A specific physical device authorized to run a build",
-          },
-          {
-            id: "d",
-            text: "An App ID identifies a specific provisioning profile, not an app",
-          },
+          { id: "a", text: "A specific app, potentially with wildcard or explicit capability configuration" },
+          { id: "b", text: "A specific developer's identity, identical to a certificate" },
+          { id: "c", text: "A specific physical device authorized to run a build" },
+          { id: "d", text: "An App ID identifies a specific provisioning profile specifically, not an app at all, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "An App ID's role is identifying a specific app, distinct from a certificate's role of proving developer identity and a provisioning profile's role of binding these elements together.",
       },
       {
@@ -20885,11 +20549,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "The specific test device's UDID isn't registered in the provisioning profile being used",
+            text: "The specific test device's UDID isn't registered in the profile being used",
           },
           {
             id: "c",
-            text: "A mismatch between local entitlements and App ID capability configuration",
+            text: "A mismatch between local entitlements and App ID capability configuration, specifically and always",
           },
           {
             id: "d",
@@ -20903,48 +20567,24 @@ struct UserProfileView: View {
         id: "q19",
         prompt: "Why is ad hoc distribution unsuitable for general internal company-wide distribution?",
         options: [
-          {
-            id: "a",
-            text: "Ad hoc distribution has no device limitations at all",
-          },
-          {
-            id: "b",
-            text: "Its UDID-based device limit makes it suitable only for small-scale testing, not broader internal distribution, which would more appropriately use enterprise distribution or MDM instead",
-          },
-          {
-            id: "c",
-            text: "Ad hoc distribution requires App Store review, unlike enterprise distribution",
-          },
-          {
-            id: "d",
-            text: "Ad hoc distribution can only be used for apps without any entitlements",
-          },
+          { id: "a", text: "Ad hoc distribution has no device limitations at all" },
+          { id: "b", text: "Ad hoc distribution strictly requires App Store review, unlike enterprise distribution, always, in every case" },
+          { id: "c", text: "Its UDID-based device limit suits only small-scale testing, not broader internal distribution" },
+          { id: "d", text: "Ad hoc distribution can only be used for apps without any entitlements" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The hard device count limit tied to explicit UDID registration makes ad hoc distribution appropriate only for small-scale testing scenarios, not broader company-wide internal distribution.",
       },
       {
         id: "q20",
         prompt: "What common thread connects capability drift and the broader signing diagnosis discussion?",
         options: [
-          {
-            id: "a",
-            text: "They are entirely unrelated topics with no shared theme",
-          },
-          {
-            id: "b",
-            text: "Capability drift is presented as one specific, common example of the kind of binding mismatch that a systematic diagnosis approach is designed to identify and resolve",
-          },
-          {
-            id: "c",
-            text: "Capability drift only relates to App Store submission, not code signing diagnosis",
-          },
-          {
-            id: "d",
-            text: "Capability drift cannot actually cause signing failures",
-          },
+          { id: "a", text: "They are entirely and completely unrelated topics with absolutely no shared theme whatsoever, ever" },
+          { id: "b", text: "Capability drift cannot actually cause signing failures" },
+          { id: "c", text: "Capability drift only relates to App Store submission, not code signing diagnosis" },
+          { id: "d", text: "Capability drift is one common example of the binding mismatch a systematic diagnosis targets" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Capability drift is one of the specific, diagnosable root causes covered by a broader systematic approach to identifying and resolving signing failures.",
       },
     ],
@@ -20959,48 +20599,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "Why must an App Store Connect app record be created before other submission steps can proceed?",
         options: [
-          {
-            id: "a",
-            text: "It has no actual dependency relationship with other steps",
-          },
-          {
-            id: "b",
-            text: "TestFlight testing, metadata configuration, and privacy label declaration all require an established app record to attach to, making it the foundational first step in the submission pipeline",
-          },
-          {
-            id: "c",
-            text: "The app record is only needed at the very final stage of submission",
-          },
-          {
-            id: "d",
-            text: "App records are created automatically the first time a build is uploaded",
-          },
+          { id: "a", text: "It has no actual dependency relationship with other steps" },
+          { id: "b", text: "App records are created automatically the first time a build is uploaded, always, without exception" },
+          { id: "c", text: "The app record is only needed at the very final stage of submission, always, without exception, ever" },
+          { id: "d", text: "TestFlight, metadata, and privacy labels all require an established app record to attach to" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Several other workflow pieces (TestFlight, metadata, privacy labels) depend on the app record already existing, making its early creation a genuine prerequisite rather than something deferrable.",
       },
       {
         id: "q2",
         prompt: "Which metadata fields carry substantial App Store search weight?",
         options: [
-          {
-            id: "a",
-            text: "Only the description field, with name and subtitle having no search relevance",
-          },
-          {
-            id: "b",
-            text: "App name and subtitle, which are both weighted heavily in App Store search, unlike the keyword field which is invisible to users but also indexed for search",
-          },
-          {
-            id: "c",
-            text: "Only the invisible keyword field affects search, with name and subtitle being purely cosmetic",
-          },
-          {
-            id: "d",
-            text: "No metadata fields actually affect App Store search ranking",
-          },
+          { id: "a", text: "App name and subtitle, both weighted heavily in App Store search, unlike the invisible keyword field" },
+          { id: "b", text: "Only the description field, with name and subtitle having absolutely no search relevance whatsoever, ever" },
+          { id: "c", text: "Only the invisible keyword field affects search, with name and subtitle being purely cosmetic" },
+          { id: "d", text: "No metadata fields actually affect App Store search ranking" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Name and subtitle carry substantial search weight, alongside the separately-indexed but user-invisible keyword field, distinct from the description's role in conversion rather than search ranking.",
       },
       {
@@ -21013,7 +20629,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Screenshots showing genuinely localized in-app content provide more accurate, trustworthy insight into what a non-English-speaking user would actually experience, compared to translated captions overlaid on English-language UI",
+            text: "Screenshots showing genuinely localized content give more accurate insight into the actual user experience",
           },
           {
             id: "c",
@@ -21021,7 +20637,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Screenshot localization is required by Apple for all apps regardless of target market",
+            text: "Screenshot localization is strictly required by Apple for all apps regardless of target market, always, without exception",
           },
         ],
         correctOptionId: "b",
@@ -21031,72 +20647,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "What does the privacy manifest (`PrivacyInfo.xcprivacy`) require beyond an app's own first-party data practices?",
         options: [
-          {
-            id: "a",
-            text: "Only the app's own first-party code needs to be declared; dependencies are exempt",
-          },
-          {
-            id: "b",
-            text: "Apple aggregates declarations from an app and all its SPM/CocoaPods dependencies into a combined manifest, meaning third-party dependencies must also declare their own data practices",
-          },
-          {
-            id: "c",
-            text: "The privacy manifest only applies to apps that don't use any third-party dependencies",
-          },
-          {
-            id: "d",
-            text: "Privacy manifests are optional and have no bearing on submission approval",
-          },
+          { id: "a", text: "Only the app's own first-party code needs to be declared; dependencies are exempt, always, without exception" },
+          { id: "b", text: "The privacy manifest only applies to apps that don't use any third-party dependencies whatsoever, ever" },
+          { id: "c", text: "Apple aggregates declarations from an app and all its dependencies into a combined manifest" },
+          { id: "d", text: "Privacy manifests are optional and have no bearing on submission approval" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The aggregation across the entire dependency tree is a genuinely significant supply-chain transparency mechanism, surfacing dependency data practices a developer might not otherwise be aware of.",
       },
       {
         id: "q5",
         prompt: "What genuine privacy loophole do required reason API declarations specifically address?",
         options: [
-          {
-            id: "a",
-            text: "Loopholes related to explicit, user-facing permission prompts like camera access",
-          },
-          {
-            id: "b",
-            text: "Certain APIs (like precise file timestamps) could historically be used to fingerprint a device or correlate user identity across apps without ever triggering a permission dialog a user would see",
-          },
-          {
-            id: "c",
-            text: "Required reason APIs address only encryption export compliance concerns",
-          },
-          {
-            id: "d",
-            text: "There is no actual privacy concern addressed by required reason API declarations",
-          },
+          { id: "a", text: "Loopholes related to explicit, user-facing permission prompts like camera access specifically, always" },
+          { id: "b", text: "There is no actual privacy concern addressed by required reason API declarations" },
+          { id: "c", text: "Required reason APIs address only encryption export compliance concerns" },
+          { id: "d", text: "Certain APIs could historically fingerprint a device without any user-visible permission dialog" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Required reason APIs close a specific tracking loophole that existed without any user-facing permission prompt, unlike traditional runtime permissions for camera or location.",
       },
       {
         id: "q6",
         prompt: "How do privacy nutrition labels parallel Accessibility Nutrition Labels?",
         options: [
-          {
-            id: "a",
-            text: "They serve entirely unrelated purposes with no meaningful parallel",
-          },
-          {
-            id: "b",
-            text: "Both let users make an informed pre-download decision based on accurate declarations, with inaccurate declarations (whether careless or deliberate) undermining genuine user trust in the same way for both label types",
-          },
-          {
-            id: "c",
-            text: "Only Accessibility Nutrition Labels carry any real enforcement consequences",
-          },
-          {
-            id: "d",
-            text: "Privacy nutrition labels are a subset of Accessibility Nutrition Labels",
-          },
+          { id: "a", text: "Both let users make an informed pre-download decision based on accurate declarations" },
+          { id: "b", text: "They serve entirely unrelated purposes with no meaningful parallel whatsoever, ever, under any circumstances" },
+          { id: "c", text: "Only Accessibility Nutrition Labels carry any real enforcement consequences" },
+          { id: "d", text: "Privacy nutrition labels are a subset of Accessibility Nutrition Labels" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "There's a direct parallel — both label types exist to let users make informed decisions before downloading, and both carry genuine weight tied to accurate, honest declaration.",
       },
       {
@@ -21109,15 +20689,15 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Internal testing offers immediate availability with no Apple review but is limited to team members, while external testing supports up to 10,000 testers but requires a Beta App Review step first",
+            text: "Internal testing offers immediate availability with no review but is limited to team members",
           },
           {
             id: "c",
-            text: "External testing is faster than internal testing in every respect",
+            text: "External testing is faster than internal testing in every single respect, always, without exception",
           },
           {
             id: "d",
-            text: "Internal testing requires Beta App Review, while external testing does not",
+            text: "Internal testing requires Beta App Review, while external testing does not, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -21127,72 +20707,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "Why does thorough pre-submission preparation reduce rejection risk?",
         options: [
-          {
-            id: "a",
-            text: "Pre-submission preparation has no actual effect on rejection likelihood",
-          },
-          {
-            id: "b",
-            text: "Many rejections stem not from an app's actual functionality being problematic, but from incomplete or inconsistent metadata, missing privacy declarations, or improperly provided export compliance information",
-          },
-          {
-            id: "c",
-            text: "All rejections are caused exclusively by genuine functionality bugs",
-          },
-          {
-            id: "d",
-            text: "Pre-submission checklists are only relevant for apps using in-app purchases",
-          },
+          { id: "a", text: "Pre-submission preparation has no actual effect on rejection likelihood, always, without exception, ever, under any circumstances" },
+          { id: "b", text: "All rejections are caused exclusively by genuine functionality bugs" },
+          { id: "c", text: "Many rejections stem not from functionality problems but from incomplete metadata or declarations" },
+          { id: "d", text: "Pre-submission checklists are only ever relevant for apps using in-app purchases specifically, always" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Many rejections are avoidable through careful attention to metadata completeness, privacy declarations, and compliance information, rather than reflecting genuine functionality problems.",
       },
       {
         id: "q9",
         prompt: "Where does rejection risk disproportionately concentrate in practice?",
         options: [
-          {
-            id: "a",
-            text: "Equally across every single guideline with no particular concentration",
-          },
-          {
-            id: "b",
-            text: "Crashes/bugs, incomplete or broken functionality, inaccurate metadata/screenshots, and privacy declaration issues",
-          },
-          {
-            id: "c",
-            text: "Exclusively in App Store keyword selection",
-          },
-          {
-            id: "d",
-            text: "Only in apps that use custom product pages",
-          },
+          { id: "a", text: "Equally across every single guideline with no particular concentration whatsoever, ever, always" },
+          { id: "b", text: "Only in apps that use custom product pages" },
+          { id: "c", text: "Exclusively in App Store keyword selection" },
+          { id: "d", text: "Crashes, broken functionality, inaccurate metadata, and privacy declaration issues" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "These specific categories account for a disproportionate share of actual rejections, making them worth extra pre-submission scrutiny compared to spreading equal attention everywhere.",
       },
       {
         id: "q10",
         prompt: "What is practical advice for allocating pre-submission review time?",
         options: [
-          {
-            id: "a",
-            text: "Spread exactly equal, shallow attention across every single guideline uniformly",
-          },
-          {
-            id: "b",
-            text: "Focus more time double-checking the specific, disproportionately common rejection categories, since the actual empirical distribution of rejections skews heavily toward this learnable set of concerns",
-          },
-          {
-            id: "c",
-            text: "Pre-submission review time should be spent exclusively on ASO optimization",
-          },
-          {
-            id: "d",
-            text: "Review time allocation has no measurable effect on submission outcomes",
-          },
+          { id: "a", text: "Focus more time double-checking the specific, disproportionately common rejection categories" },
+          { id: "b", text: "Spread exactly equal, shallow attention across every single guideline uniformly, always, without exception" },
+          { id: "c", text: "Pre-submission review time should be spent exclusively on ASO optimization" },
+          { id: "d", text: "Review time allocation has no measurable effect on submission outcomes" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "The recommendation is to concentrate review effort on the categories known to disproportionately cause rejections, rather than distributing attention evenly across every guideline.",
       },
       {
@@ -21205,15 +20749,15 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "When the rejection stems from a genuine misunderstanding of a feature's actual purpose or behavior, which can sometimes be resolved via clarifying information through the Resolution Center",
+            text: "When the rejection stems from a genuine misunderstanding, resolvable via the Resolution Center",
           },
           {
             id: "c",
-            text: "Only rejections related to metadata can be resolved without code changes",
+            text: "Only rejections related to metadata can be resolved without code changes, always, without exception, ever",
           },
           {
             id: "d",
-            text: "Code changes are always required regardless of the rejection's actual cause",
+            text: "Code changes are always and invariably required regardless of the rejection's actual cause, always",
           },
         ],
         correctOptionId: "b",
@@ -21223,72 +20767,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "Why might reviewers lack full context for a submission?",
         options: [
-          {
-            id: "a",
-            text: "Reviewers always have complete, perfect understanding of every app's functionality",
-          },
-          {
-            id: "b",
-            text: "A reviewer evaluating potentially thousands of apps has necessarily limited time to understand every submission's full context, which can lead to misunderstanding-based rejections",
-          },
-          {
-            id: "c",
-            text: "Reviewers deliberately ignore context to speed up the review process",
-          },
-          {
-            id: "d",
-            text: "This consideration only applies to apps submitted for the first time",
-          },
+          { id: "a", text: "Reviewers always and invariably have complete, perfect understanding of every single app's functionality" },
+          { id: "b", text: "Reviewers deliberately ignore context to speed up the review process" },
+          { id: "c", text: "A reviewer evaluating thousands of apps has necessarily limited time per submission" },
+          { id: "d", text: "This consideration only applies to apps submitted for the first time" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The practical reality of reviewing a large volume of submissions with limited time per app explains why misunderstanding-based rejections can occur, distinct from genuine guideline violations.",
       },
       {
         id: "q13",
         prompt: "What does phased release accomplish?",
         options: [
-          {
-            id: "a",
-            text: "It immediately releases a new version to 100% of the user base with no gradual rollout",
-          },
-          {
-            id: "b",
-            text: "It gradually rolls out a new version to an increasing percentage of existing users over roughly a week, letting a team catch a serious issue affecting only a small percentage of users before it reaches everyone",
-          },
-          {
-            id: "c",
-            text: "Phased release only applies to the very first version of an app, never subsequent updates",
-          },
-          {
-            id: "d",
-            text: "Phased release has no relationship to catching bugs or issues post-release",
-          },
+          { id: "a", text: "It immediately releases a new version to 100% of the user base with no gradual rollout, always, without exception" },
+          { id: "b", text: "Phased release has no relationship to catching bugs or issues post-release" },
+          { id: "c", text: "Phased release only ever applies to the very first version of an app, never subsequent updates, always" },
+          { id: "d", text: "It gradually rolls out a new version to an increasing percentage of users over roughly a week" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The gradual percentage-based rollout schedule is specifically designed to limit the exposure of a serious, unanticipated issue before it reaches the full user base.",
       },
       {
         id: "q14",
         prompt: "What other risk-management principles does phased release directly extend?",
         options: [
-          {
-            id: "a",
-            text: "It has no relationship to any other risk-management concept",
-          },
-          {
-            id: "b",
-            text: "The same measure-before-full-commitment principle behind performance regression budgets and merge queues, applied here to the final release process",
-          },
-          {
-            id: "c",
-            text: "Phased release is described as functionally identical to A/B testing product pages",
-          },
-          {
-            id: "d",
-            text: "It extends only code signing diagnosis principles",
-          },
+          { id: "a", text: "The same measure-before-full-commitment principle behind performance budgets and merge queues" },
+          { id: "b", text: "It has no relationship to any other risk-management concept" },
+          { id: "c", text: "Phased release is described as functionally identical to A/B testing product pages, always, without exception" },
+          { id: "d", text: "It extends only code signing diagnosis principles" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Phased release connects to the broader risk-management theme seen in performance budgets and merge queues — catching problems on a limited scale before full exposure.",
       },
       {
@@ -21297,15 +20805,15 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "`requestReview()` always shows the prompt immediately, with no exceptions",
+            text: "`requestReview()` always shows the prompt immediately, with absolutely no exceptions whatsoever, ever",
           },
           {
             id: "b",
-            text: "iOS itself enforces frequency limits behind the scenes, meaning the system decides whether to actually show the prompt rather than the app being able to force it to appear on every call",
+            text: "iOS itself enforces frequency limits behind the scenes, deciding whether to show the prompt",
           },
           {
             id: "c",
-            text: "`requestReview()` is deprecated and no longer functions at all",
+            text: "`requestReview()` is deprecated and no longer functions at all, always, without exception, ever, under any circumstances",
           },
           {
             id: "d",
@@ -21319,72 +20827,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "What is the appropriate way for a well-designed app to use `requestReview()`?",
         options: [
-          {
-            id: "a",
-            text: "Calling it as frequently as possible to maximize the chance of a rating",
-          },
-          {
-            id: "b",
-            text: "Calling it at contextually appropriate moments (like after a clearly positive interaction) and trusting the system to decide whether showing the prompt at that moment is appropriate",
-          },
-          {
-            id: "c",
-            text: "Building a fully custom, unrestricted in-app rating prompt to bypass system limits entirely",
-          },
-          {
-            id: "d",
-            text: "Never calling `requestReview()` under any circumstances, since it cannot be controlled",
-          },
+          { id: "a", text: "Calling it as frequently as possible to maximize the chance of a rating" },
+          { id: "b", text: "Building a fully custom, unrestricted in-app rating prompt to bypass system limits entirely, always" },
+          { id: "c", text: "Calling it at contextually appropriate moments and trusting the system to decide whether to show it" },
+          { id: "d", text: "Never calling `requestReview()` under any circumstances, since it cannot be controlled" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The recommendation is contextually appropriate invocation while relying on the system's own frequency management, rather than assuming or attempting to force every call to produce a visible prompt.",
       },
       {
         id: "q17",
         prompt: "What does App Store Connect's product page A/B testing enable?",
         options: [
-          {
-            id: "a",
-            text: "Only manual, intuition-based selection of a single fixed listing with no measurement",
-          },
-          {
-            id: "b",
-            text: "Testing different listing variants (screenshots, preview videos, promotional text) against each other for actual conversion rate, informing which version should become the primary listing",
-          },
-          {
-            id: "c",
-            text: "A/B testing can only be used for pricing changes, not listing content",
-          },
-          {
-            id: "d",
-            text: "Product page A/B testing has no relationship to conversion rate measurement",
-          },
+          { id: "a", text: "Only manual, intuition-based selection of a single fixed listing with absolutely no measurement whatsoever, ever" },
+          { id: "b", text: "Product page A/B testing has no relationship to conversion rate measurement" },
+          { id: "c", text: "A/B testing can only be used for pricing changes, not listing content" },
+          { id: "d", text: "Testing different listing variants against each other for actual conversion rate" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This feature provides measured, real conversion data to inform listing decisions, extending ASO from intuition-driven guessing into iterative, data-informed practice.",
       },
       {
         id: "q18",
         prompt: "How does A/B testing product pages extend general App Store Optimization (ASO) practice?",
         options: [
-          {
-            id: "a",
-            text: "It replaces the need for ASO entirely",
-          },
-          {
-            id: "b",
-            text: "It turns App Store listing optimization from a one-time, intuition-driven decision into an ongoing, data-informed practice, using real measured conversion data rather than guesswork",
-          },
-          {
-            id: "c",
-            text: "A/B testing has no meaningful relationship to ASO",
-          },
-          {
-            id: "d",
-            text: "ASO only concerns keywords, while A/B testing only concerns screenshots",
-          },
+          { id: "a", text: "It turns App Store listing optimization from a one-time decision into an ongoing, data-informed practice" },
+          { id: "b", text: "It replaces the need for ASO entirely" },
+          { id: "c", text: "A/B testing has no meaningful relationship to ASO" },
+          { id: "d", text: "ASO only ever concerns keywords specifically, while A/B testing only ever concerns screenshots, always" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "A/B testing extends ASO into measurable, iterative territory, providing real data to inform metadata and visual choices rather than relying purely on intuition.",
       },
       {
@@ -21397,15 +20869,15 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Users facing a cellular download warning (or an outright block) represent real, quantifiable download abandonment, giving on-demand resources genuine practical, business-relevant value",
+            text: "Users facing a cellular download warning represent real, quantifiable download abandonment",
           },
           {
             id: "c",
-            text: "Oversized apps are automatically rejected during App Review regardless of functionality",
+            text: "Oversized apps are automatically and entirely rejected during App Review regardless of functionality, always",
           },
           {
             id: "d",
-            text: "Download size only affects storage usage, never actual download behavior",
+            text: "Download size only affects storage usage, never actual download behavior, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -21415,24 +20887,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "How does the App Store's on-demand resources feature build on general binary size reduction techniques?",
         options: [
-          {
-            id: "a",
-            text: "It contradicts general binary size guidance entirely",
-          },
-          {
-            id: "b",
-            text: "It applies the same underlying size-reduction technique specifically to the App Store's concrete download-size thresholds and their measurable, real user-facing consequences, rather than treating size reduction as purely theoretical",
-          },
-          {
-            id: "c",
-            text: "They are entirely unrelated topics",
-          },
-          {
-            id: "d",
-            text: "On-demand resources have no relationship to binary size at all",
-          },
+          { id: "a", text: "It contradicts general binary size guidance entirely" },
+          { id: "b", text: "They are entirely unrelated topics" },
+          { id: "c", text: "It applies the same size-reduction technique to the App Store's concrete download-size thresholds" },
+          { id: "d", text: "On-demand resources have absolutely no relationship whatsoever to binary size at all, ever, under any circumstances" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "On-demand resources connect the general size-reduction technique to the App Store's specific, concrete download thresholds and their real business impact.",
       },
     ],
@@ -21447,24 +20907,12 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "What genuine value does threat modeling provide?",
         options: [
-          {
-            id: "a",
-            text: "It guarantees an app can never be successfully attacked",
-          },
-          {
-            id: "b",
-            text: "It prevents scattered, unfocused security effort that either over-invests in unlikely threats or under-invests in likely ones, helping calibrate security effort to an app's actual, specific risk profile",
-          },
-          {
-            id: "c",
-            text: "Threat modeling is purely a documentation exercise with no effect on actual security decisions",
-          },
-          {
-            id: "d",
-            text: "It replaces the need for any actual security implementation work",
-          },
+          { id: "a", text: "It prevents scattered security effort, helping calibrate security to an app's actual risk profile" },
+          { id: "b", text: "It guarantees an app can never be successfully attacked, always, without exception, ever" },
+          { id: "c", text: "Threat modeling is purely a documentation exercise with no effect on actual security decisions" },
+          { id: "d", text: "It replaces the need for any actual security implementation work" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Threat modeling's core value is helping teams correctly calibrate security investment (like certificate pinning or Secure Enclave keys) to an app's actual risk profile, rather than applying security techniques ad hoc.",
       },
       {
@@ -21473,11 +20921,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Obfuscation techniques are actually unbreakable and provide complete protection",
+            text: "Obfuscation techniques are actually unbreakable and provide complete protection, always, without exception, ever",
           },
           {
             id: "b",
-            text: "The app must eventually decode and use the actual secret at runtime, meaning a sufficiently motivated attacker with access to the compiled binary can always eventually extract it",
+            text: "The app must eventually use the actual secret at runtime, so a determined attacker can always extract it",
           },
           {
             id: "c",
@@ -21495,72 +20943,36 @@ struct UserProfileView: View {
         id: "q3",
         prompt: "What design goal does CryptoKit pursue?",
         options: [
-          {
-            id: "a",
-            text: "Maximizing the flexibility of insecure cryptographic configurations",
-          },
-          {
-            id: "b",
-            text: "Making the correct, secure use of cryptography the easy, default path, reducing the risk of cryptographic implementation mistakes compared to older, lower-level C APIs",
-          },
-          {
-            id: "c",
-            text: "CryptoKit intentionally makes secure usage more difficult to discourage its use",
-          },
-          {
-            id: "d",
-            text: "CryptoKit only supports insecure legacy hashing algorithms",
-          },
+          { id: "a", text: "Maximizing the flexibility of insecure cryptographic configurations" },
+          { id: "b", text: "CryptoKit intentionally makes secure usage more difficult to discourage its use, always, without exception" },
+          { id: "c", text: "Making the correct, secure use of cryptography the easy, default path, unlike older, lower-level C APIs" },
+          { id: "d", text: "CryptoKit only supports insecure legacy hashing algorithms" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "CryptoKit's Swift-native, misuse-resistant design specifically aims to make safe cryptographic usage the natural, straightforward path, unlike more error-prone lower-level APIs.",
       },
       {
         id: "q4",
         prompt: "What does AES-GCM's \"authenticated\" encryption property provide beyond simple confidentiality?",
         options: [
-          {
-            id: "a",
-            text: "Nothing additional; authenticated encryption is identical to unauthenticated encryption",
-          },
-          {
-            id: "b",
-            text: "Verification that encrypted data hasn't been tampered with — tampering causes decryption to fail explicitly, rather than silently producing corrupted plaintext with no indication of tampering",
-          },
-          {
-            id: "c",
-            text: "Authenticated encryption only works for text data, never binary data",
-          },
-          {
-            id: "d",
-            text: "It eliminates the need for a symmetric key entirely",
-          },
+          { id: "a", text: "Nothing additional whatsoever; authenticated encryption is identical to unauthenticated encryption, always" },
+          { id: "b", text: "It eliminates the need for a symmetric key entirely" },
+          { id: "c", text: "Authenticated encryption only works for text data, never binary data" },
+          { id: "d", text: "Verification that encrypted data hasn't been tampered with — tampering causes decryption to fail explicitly" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "GCM mode's authentication tag detects tampering during decryption, causing explicit failure rather than silently returning corrupted, incorrect plaintext that might otherwise be processed unknowingly.",
       },
       {
         id: "q5",
         prompt: "What fundamentally distinguishes asymmetric (public key) cryptography from symmetric encryption?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical approaches with different names",
-          },
-          {
-            id: "b",
-            text: "Verification of a signature doesn't require possessing the same secret used to create it — anyone with the public key can verify, while only the private key holder could have created a valid signature",
-          },
-          {
-            id: "c",
-            text: "Asymmetric cryptography requires sharing the private key with anyone who needs to verify a signature",
-          },
-          {
-            id: "d",
-            text: "Symmetric encryption is always more secure than asymmetric cryptography",
-          },
+          { id: "a", text: "Verification doesn't require the same secret used to create a signature — anyone with the public key can verify" },
+          { id: "b", text: "They are functionally identical approaches with different names" },
+          { id: "c", text: "Asymmetric cryptography requires sharing the private key with anyone who needs to verify a signature, always, without exception" },
+          { id: "d", text: "Symmetric encryption is always more secure than asymmetric cryptography" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This is a fundamentally different trust model — public key verification doesn't require the shared-secret approach symmetric encryption relies on.",
       },
       {
@@ -21569,7 +20981,7 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "`Package.resolved`'s version pinning",
+            text: "`Package.resolved`'s version pinning, always, without exception, ever, under any circumstances",
           },
           {
             id: "b",
@@ -21591,72 +21003,36 @@ struct UserProfileView: View {
         id: "q7",
         prompt: "What makes Secure Enclave-backed keys genuinely stronger than software-only key storage, even compared to ordinary Keychain storage?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful difference between Secure Enclave-backed and ordinary Keychain-stored keys",
-          },
-          {
-            id: "b",
-            text: "A Secure Enclave-backed key's private material never leaves the isolated hardware at all — not even the app's own process or a jailbroken device's root access can directly extract the raw key, unlike ordinary Keychain keys which exist as extractable bytes",
-          },
-          {
-            id: "c",
-            text: "Secure Enclave keys are actually less secure than standard Keychain storage",
-          },
-          {
-            id: "d",
-            text: "Secure Enclave-backed keys can only be used for encryption, never signing",
-          },
+          { id: "a", text: "There is absolutely no meaningful difference whatsoever between Secure Enclave-backed and ordinary Keychain-stored keys, ever" },
+          { id: "b", text: "Secure Enclave keys are actually less secure than standard Keychain storage" },
+          { id: "c", text: "A Secure Enclave-backed key's private material never leaves the isolated hardware at all" },
+          { id: "d", text: "Secure Enclave-backed keys can only be used for encryption, never signing" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The architectural, physical isolation of Secure Enclave-backed key material provides a genuinely stronger guarantee than any software-only approach, since even privileged code cannot access the raw key bytes.",
       },
       {
         id: "q8",
         prompt: "Why does an app using `LAContext` for Face ID/Touch ID authentication never actually receive a user's raw biometric data?",
         options: [
-          {
-            id: "a",
-            text: "`LAContext` sends biometric data to Apple's servers for processing instead",
-          },
-          {
-            id: "b",
-            text: "Biometric processing happens entirely within the Secure Enclave's isolated hardware, with the app receiving only a simple success/failure result",
-          },
-          {
-            id: "c",
-            text: "Biometric data is actually accessible to the app but developers are contractually forbidden from using it",
-          },
-          {
-            id: "d",
-            text: "`LAContext` only works with device passcode, never actual biometric data",
-          },
+          { id: "a", text: "`LAContext` sends biometric data to Apple's servers for processing instead" },
+          { id: "b", text: "`LAContext` only works with device passcode, never actual biometric data" },
+          { id: "c", text: "Biometric data is actually accessible to the app but developers are contractually forbidden from using it, always" },
+          { id: "d", text: "Biometric processing happens entirely within the Secure Enclave, with the app receiving only a success/failure result" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This directly connects to the Secure Enclave's hardware isolation — the entire biometric comparison happens within isolated hardware, with the app only receiving a boolean result.",
       },
       {
         id: "q9",
         prompt: "What genuine security scenario does monitoring `evaluatedPolicyDomainState` address?",
         options: [
-          {
-            id: "a",
-            text: "Detecting network connectivity changes",
-          },
-          {
-            id: "b",
-            text: "Detecting when enrolled biometric data has changed (a new fingerprint or face added, or all biometric data removed), which could indicate an unauthorized person has enrolled their own biometric data on a temporarily accessible device",
-          },
-          {
-            id: "c",
-            text: "Monitoring changes to an app's own code signature",
-          },
-          {
-            id: "d",
-            text: "Verifying that a certificate hasn't expired",
-          },
+          { id: "a", text: "Detecting when enrolled biometric data has changed, indicating possible unauthorized enrollment" },
+          { id: "b", text: "Detecting network connectivity changes" },
+          { id: "c", text: "Monitoring changes to an app's own code signature, always, without exception, ever, under any circumstances" },
+          { id: "d", text: "Verifying that a certificate hasn't expired" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This detection specifically guards against the scenario where someone other than the device owner enrolls additional biometric data during temporary device access, which a security-sensitive app should detect rather than blindly trust.",
       },
       {
@@ -21669,7 +21045,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "The pin must be updated before the actual server certificate is rotated/renewed, or the app will suddenly reject all connections to its own legitimate backend once the old, pinned certificate expires",
+            text: "The pin must be updated before the server certificate rotates, or the app will reject its own backend",
           },
           {
             id: "c",
@@ -21677,7 +21053,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Certificate pinning automatically updates itself when the server certificate changes",
+            text: "Certificate pinning automatically updates itself when the server certificate changes, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -21687,72 +21063,36 @@ struct UserProfileView: View {
         id: "q11",
         prompt: "What is the genuine trade-off with jailbreak/tamper detection?",
         options: [
-          {
-            id: "a",
-            text: "It provides an absolute, foolproof guarantee against all forms of tampering",
-          },
-          {
-            id: "b",
-            text: "It provides a real, meaningful deterrent against unsophisticated or casual tampering, but essentially no guarantee against a genuinely determined, sophisticated attacker who can identify and bypass client-side detection logic",
-          },
-          {
-            id: "c",
-            text: "Jailbreak detection is entirely useless and provides no security value whatsoever",
-          },
-          {
-            id: "d",
-            text: "Jailbreak detection is only relevant for apps that don't use CryptoKit",
-          },
+          { id: "a", text: "It provides an absolute, foolproof guarantee against all forms of tampering" },
+          { id: "b", text: "Jailbreak detection is entirely useless and provides no security value whatsoever, always, without exception, ever" },
+          { id: "c", text: "It provides a real deterrent against unsophisticated tampering, but no guarantee against a determined attacker" },
+          { id: "d", text: "Jailbreak detection is only relevant for apps that don't use CryptoKit" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This is a genuinely limited but real deterrent, distinct from the stronger, hardware-backed guarantee App Attest provides for genuine tamper-resistance needs.",
       },
       {
         id: "q12",
         prompt: "How does App Attest relate to jailbreak detection heuristics?",
         options: [
-          {
-            id: "a",
-            text: "They are functionally identical approaches to the same problem",
-          },
-          {
-            id: "b",
-            text: "App Attest addresses the same underlying integrity-verification goal but through hardware-backed attestation rather than client-side heuristic detection, making it the meaningfully stronger mechanism where genuine tamper-resistance matters",
-          },
-          {
-            id: "c",
-            text: "App Attest is weaker than jailbreak detection heuristics",
-          },
-          {
-            id: "d",
-            text: "Jailbreak detection replaces the need for App Attest entirely",
-          },
+          { id: "a", text: "They are functionally identical approaches to the same problem, always, without exception, ever, under any circumstances" },
+          { id: "b", text: "Jailbreak detection replaces the need for App Attest entirely" },
+          { id: "c", text: "App Attest is weaker than jailbreak detection heuristics" },
+          { id: "d", text: "App Attest addresses the same goal but through hardware-backed attestation, making it meaningfully stronger" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "App Attest's hardware-backed approach is meaningfully stronger than heuristic-based jailbreak detection, which provides only a limited, secondary layer of protection.",
       },
       {
         id: "q13",
         prompt: "What genuine shift in default posture does App Tracking Transparency represent?",
         options: [
-          {
-            id: "a",
-            text: "ATT made cross-app tracking easier and more accessible for advertisers",
-          },
-          {
-            id: "b",
-            text: "Rather than cross-app tracking being possible by default with an opt-out buried in settings, ATT requires an explicit, standardized, system-level opt-in prompt before any cross-app tracking can occur at all",
-          },
-          {
-            id: "c",
-            text: "ATT eliminated all forms of advertising attribution entirely",
-          },
-          {
-            id: "d",
-            text: "ATT only applies to apps that don't use SKAdNetwork",
-          },
+          { id: "a", text: "Rather than tracking being possible by default, ATT requires an explicit, system-level opt-in prompt first" },
+          { id: "b", text: "ATT made cross-app tracking easier and more accessible for advertisers, always, without exception, ever" },
+          { id: "c", text: "ATT eliminated all forms of advertising attribution entirely" },
+          { id: "d", text: "ATT only applies to apps that don't use SKAdNetwork" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "ATT represents a meaningfully stronger privacy default — shifting from opt-out-by-default to explicit opt-in — compared to the industry's prior tracking norms.",
       },
       {
@@ -21765,11 +21105,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Advertisers and app developers still have a legitimate need to measure advertising effectiveness, and these frameworks provide aggregated, privacy-preserving attribution signals without the individual-level tracking data ATT now gates behind explicit permission",
+            text: "Advertisers still have a legitimate need to measure effectiveness via aggregated, privacy-preserving signals",
           },
           {
             id: "c",
-            text: "These frameworks require even more precise individual-level tracking than was previously possible",
+            text: "These frameworks require even more precise individual-level tracking than was previously possible, always, without exception",
           },
           {
             id: "d",
@@ -21783,72 +21123,36 @@ struct UserProfileView: View {
         id: "q15",
         prompt: "How does secure logging discipline connect to `Logger`'s privacy annotation feature?",
         options: [
-          {
-            id: "a",
-            text: "There is no connection; secure logging and `Logger`'s privacy annotations are unrelated",
-          },
-          {
-            id: "b",
-            text: "Secure logging directly extends `Logger`'s redaction-by-default privacy annotations into a deliberate security and compliance practice, since logs inadvertently containing PII can themselves become a genuine data protection liability",
-          },
-          {
-            id: "c",
-            text: "Secure logging replaces the need for `Logger`'s privacy annotations entirely",
-          },
-          {
-            id: "d",
-            text: "`Logger`'s privacy annotations only matter for debugging, never for compliance",
-          },
+          { id: "a", text: "There is no connection; secure logging and `Logger`'s privacy annotations are unrelated" },
+          { id: "b", text: "Secure logging replaces the need for `Logger`'s privacy annotations entirely, always, without exception, ever" },
+          { id: "c", text: "Secure logging directly extends `Logger`'s redaction-by-default annotations into a compliance practice" },
+          { id: "d", text: "`Logger`'s privacy annotations only matter for debugging, never for compliance" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Secure logging is a practical extension of `Logger`'s existing privacy annotation system, connecting good logging hygiene directly to genuine regulatory compliance obligations.",
       },
       {
         id: "q16",
         prompt: "What supply chain security practice connects to `Package.resolved`'s reproducibility guarantee?",
         options: [
-          {
-            id: "a",
-            text: "`Package.resolved` has no relevance to supply chain security at all",
-          },
-          {
-            id: "b",
-            text: "Pinning to exact, previously-reviewed dependency versions via `Package.resolved` prevents an app from automatically pulling in a newly-published, potentially-compromised version without deliberate review, extending build reproducibility into a security practice",
-          },
-          {
-            id: "c",
-            text: "`Package.resolved` should be deleted to improve supply chain security",
-          },
-          {
-            id: "d",
-            text: "Supply chain security only concerns binary targets, never regular source dependencies",
-          },
+          { id: "a", text: "`Package.resolved` has no relevance to supply chain security at all" },
+          { id: "b", text: "Supply chain security only concerns binary targets, never regular source dependencies, always, without exception, ever" },
+          { id: "c", text: "`Package.resolved` should be deleted to improve supply chain security" },
+          { id: "d", text: "Pinning to exact, reviewed dependency versions via `Package.resolved` prevents pulling in a compromised version" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "`Package.resolved`'s version pinning serves a security purpose beyond build consistency — preventing automatic adoption of unreviewed, potentially compromised dependency updates.",
       },
       {
         id: "q17",
         prompt: "Why are GDPR/CCPA compliance and technical security engineering \"genuinely intertwined concerns\"?",
         options: [
-          {
-            id: "a",
-            text: "Legal compliance and technical security are entirely separate, unrelated tracks of work",
-          },
-          {
-            id: "b",
-            text: "A user's right to request data deletion has genuine technical implications for how data storage is architected, and appropriate security measures directly connect to the CryptoKit and secure storage practices covered earlier in the section",
-          },
-          {
-            id: "c",
-            text: "GDPR and CCPA only apply to companies with no actual technical infrastructure",
-          },
-          {
-            id: "d",
-            text: "Technical security measures have no bearing on legal compliance obligations",
-          },
+          { id: "a", text: "A user's right to request data deletion has genuine technical implications for how data storage is architected" },
+          { id: "b", text: "Legal compliance and technical security are entirely separate, unrelated tracks of work, always, without exception" },
+          { id: "c", text: "GDPR and CCPA only apply to companies with no actual technical infrastructure" },
+          { id: "d", text: "Technical security measures have no bearing on legal compliance obligations" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Legal obligations like data deletion rights and security requirements directly depend on and connect to an app's technical architecture and security practices, like CryptoKit usage and secure storage.",
       },
       {
@@ -21861,11 +21165,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "It sidesteps entire categories of risk by simply not collecting unnecessary data in the first place, eliminating the corresponding risk surface entirely, rather than protecting data that's already been collected",
+            text: "It sidesteps entire categories of risk by simply not collecting unnecessary data in the first place",
           },
           {
             id: "c",
-            text: "Data minimization only applies to financial data, never other personal information",
+            text: "Data minimization only applies to financial data, never other personal information, always, without exception, ever",
           },
           {
             id: "d",
@@ -21879,48 +21183,24 @@ struct UserProfileView: View {
         id: "q19",
         prompt: "What is an example of data minimization in practice for a weather app?",
         options: [
-          {
-            id: "a",
-            text: "Collecting a user's exact birthdate for personalized weather alerts",
-          },
-          {
-            id: "b",
-            text: "Needing only approximate location, not necessarily precise GPS coordinates",
-          },
-          {
-            id: "c",
-            text: "Collecting precise GPS coordinates is always required regardless of the feature's actual needs",
-          },
-          {
-            id: "d",
-            text: "Weather apps should collect the maximum possible data \"just in case\" it becomes useful",
-          },
+          { id: "a", text: "Collecting a user's exact birthdate for personalized weather alerts" },
+          { id: "b", text: "Collecting precise GPS coordinates is always required regardless of the feature's actual needs" },
+          { id: "c", text: "Needing only approximate location, not necessarily precise GPS coordinates" },
+          { id: "d", text: "Weather apps should collect the maximum possible data \"just in case\" it becomes useful" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This illustrates data minimization concretely — using only the level of location precision genuinely needed for the feature, rather than defaulting to the most precise data available.",
       },
       {
         id: "q20",
         prompt: "When is the best time to consider data minimization during a feature's development?",
         options: [
-          {
-            id: "a",
-            text: "Only after a data breach has already occurred",
-          },
-          {
-            id: "b",
-            text: "During a feature's initial design, asking \"do we actually need this specific data point,\" rather than treating data protection purely as a downstream technical concern applied after a data collection decision has already been made",
-          },
-          {
-            id: "c",
-            text: "Data minimization should only be considered during the final App Store submission process",
-          },
-          {
-            id: "d",
-            text: "Data minimization is irrelevant to feature design and only applies to legal documentation",
-          },
+          { id: "a", text: "Only after a data breach has already occurred" },
+          { id: "b", text: "Data minimization is irrelevant to feature design and only applies to legal documentation, always, without exception" },
+          { id: "c", text: "Data minimization should only be considered during the final App Store submission process" },
+          { id: "d", text: "During a feature's initial design, asking whether we actually need this specific data point" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The recommendation is deliberate consideration of data minimization at the initial design stage, rather than treating it as an afterthought applied only after data has already been collected.",
       },
     ],
@@ -21935,24 +21215,12 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "Why does designing an event taxonomy upfront matter?",
         options: [
-          {
-            id: "a",
-            text: "Event naming has no actual effect on data usability later",
-          },
-          {
-            id: "b",
-            text: "An analyst or product manager answering a real business question depends on events being named and structured consistently enough to reliably query and join, and retrofitting consistency onto years of ad hoc events is considerably more painful than establishing good conventions early",
-          },
-          {
-            id: "c",
-            text: "Event taxonomy only matters for apps with fewer than 10 total events",
-          },
-          {
-            id: "d",
-            text: "Inconsistent event naming is always resolved automatically by analytics platforms",
-          },
+          { id: "a", text: "An analyst answering a business question depends on events being consistently named and structured" },
+          { id: "b", text: "Event naming has no actual effect on data usability later" },
+          { id: "c", text: "Event taxonomy only matters for apps with fewer than 10 total events" },
+          { id: "d", text: "Inconsistent event naming is always resolved automatically by analytics platforms, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Consistent, deliberate naming conventions established early pay off considerably compared to the difficulty of retrofitting consistency onto inconsistently-named historical data.",
       },
       {
@@ -21965,11 +21233,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "The recurring \"convert a string-based, runtime-only-discoverable pattern into a compile-time-checked one\" theme, also seen in generated asset catalog symbols and Core ML's generated interfaces",
+            text: "The recurring \"convert string-based patterns into compile-time-checked ones\" theme, seen elsewhere",
           },
           {
             id: "c",
-            text: "Type-safe analytics events are unrelated to compile-time checking of any kind",
+            text: "Type-safe analytics events are unrelated to compile-time checking of any kind, always, without exception",
           },
           {
             id: "d",
@@ -21983,72 +21251,36 @@ struct UserProfileView: View {
         id: "q3",
         prompt: "What problem does type-safe event modeling (an enum per event type) solve compared to loosely-typed dictionaries?",
         options: [
-          {
-            id: "a",
-            text: "It has no advantage over dictionary-based event tracking",
-          },
-          {
-            id: "b",
-            text: "A typo in an event name or a missing required property becomes an immediate compile error rather than a silent analytics data quality problem discovered weeks later",
-          },
-          {
-            id: "c",
-            text: "Type-safe modeling makes events slower to process at runtime",
-          },
-          {
-            id: "d",
-            text: "Enums cannot actually carry associated data like event properties",
-          },
+          { id: "a", text: "It has no advantage over dictionary-based event tracking" },
+          { id: "b", text: "Type-safe modeling makes events slower to process at runtime" },
+          { id: "c", text: "A typo or missing property becomes an immediate compile error rather than a silent problem" },
+          { id: "d", text: "Enums cannot actually carry associated data like event properties, always, without exception, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The compiler catches structural mistakes immediately, unlike loosely-typed dictionary-based events where typos or missing properties fail silently and are only discovered later through data quality investigation.",
       },
       {
         id: "q4",
         prompt: "What two benefits does batching analytics events provide?",
         options: [
-          {
-            id: "a",
-            text: "Faster app launch time and reduced binary size",
-          },
-          {
-            id: "b",
-            text: "Reduced network overhead (fewer, larger requests rather than many small ones) and reduced battery/energy impact, since network radio usage carries a real energy cost",
-          },
-          {
-            id: "c",
-            text: "Batching only affects data accuracy, not efficiency",
-          },
-          {
-            id: "d",
-            text: "Batching eliminates the need for any local event persistence",
-          },
+          { id: "a", text: "Faster app launch time and reduced binary size" },
+          { id: "b", text: "Batching eliminates the need for any local event persistence, always, without exception, ever" },
+          { id: "c", text: "Batching only affects data accuracy, not efficiency" },
+          { id: "d", text: "Reduced network overhead from fewer, larger requests, and reduced battery impact from less network radio usage" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Both network efficiency and battery impact are genuine benefits of batching, directly connecting to the general energy-cost concerns of network radio usage.",
       },
       {
         id: "q5",
         prompt: "Why does offline event queueing matter for analytics completeness?",
         options: [
-          {
-            id: "a",
-            text: "Offline queueing has no actual effect on data completeness",
-          },
-          {
-            id: "b",
-            text: "Persisting events locally until they can actually be delivered ensures analytics data isn't simply lost when a user's device lacks connectivity at the moment an event occurs",
-          },
-          {
-            id: "c",
-            text: "Events generated while offline are automatically discarded regardless of queueing",
-          },
-          {
-            id: "d",
-            text: "Offline queueing only matters for crash reports, not general analytics events",
-          },
+          { id: "a", text: "Persisting events locally until delivery ensures analytics data isn't lost when a device lacks connectivity" },
+          { id: "b", text: "Offline queueing has no actual effect on data completeness" },
+          { id: "c", text: "Events generated while offline are automatically discarded regardless of queueing, always, without exception" },
+          { id: "d", text: "Offline queueing only matters for crash reports, not general analytics events" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Without offline queueing, events generated during connectivity gaps would be lost entirely, undermining the completeness and accuracy of collected analytics data.",
       },
       {
@@ -22061,11 +21293,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Without dSYMs matching the exact crashed build, crash reports remain raw, unreadable memory addresses rather than symbolicated, actionable stack traces — directly reflecting the strict dSYM-matching requirement for symbolication",
+            text: "Without matching dSYMs, crash reports remain unreadable addresses rather than actionable traces",
           },
           {
             id: "c",
-            text: "dSYM matching only affects crash report timestamps, not readability",
+            text: "dSYM matching only affects crash report timestamps, not readability, always, without exception, ever",
           },
           {
             id: "d",
@@ -22079,72 +21311,36 @@ struct UserProfileView: View {
         id: "q7",
         prompt: "What does Organizer's crash signature grouping accomplish?",
         options: [
-          {
-            id: "a",
-            text: "It presents every individual crash instance as a separate, undifferentiated problem",
-          },
-          {
-            id: "b",
-            text: "It clusters crashes sharing the same underlying signature (likely the same root cause) together as one aggregated issue, letting developers prioritize fixes based on genuine aggregate impact",
-          },
-          {
-            id: "c",
-            text: "Crash signature grouping only works for crashes affecting fewer than 10 users",
-          },
-          {
-            id: "d",
-            text: "Signature grouping replaces the need for symbolication entirely",
-          },
+          { id: "a", text: "It presents every individual crash instance as a separate, undifferentiated problem, always, without exception" },
+          { id: "b", text: "Crash signature grouping only works for crashes affecting fewer than 10 users" },
+          { id: "c", text: "It clusters crashes sharing the same signature into one aggregated issue for prioritization" },
+          { id: "d", text: "Signature grouping replaces the need for symbolication entirely" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Rather than an overwhelming flood of individual crash reports, signature grouping aggregates similar crashes together, enabling prioritization based on how many distinct users are actually affected by each specific issue.",
       },
       {
         id: "q8",
         prompt: "What value does establishing crash-free session rate as an explicit SLO provide?",
         options: [
-          {
-            id: "a",
-            text: "It has no practical value beyond a vague, informal aspiration",
-          },
-          {
-            id: "b",
-            text: "A specific, numeric threshold gives a team a clear, objective signal for when a release's stability has genuinely regressed and requires investigation, rather than relying on subjective impressions",
-          },
-          {
-            id: "c",
-            text: "Crash-free session rate cannot actually be measured or tracked over time",
-          },
-          {
-            id: "d",
-            text: "SLOs are only relevant for backend services, never mobile apps",
-          },
+          { id: "a", text: "It has no practical value beyond a vague, informal aspiration, always, without exception, ever" },
+          { id: "b", text: "SLOs are only relevant for backend services, never mobile apps" },
+          { id: "c", text: "Crash-free session rate cannot actually be measured or tracked over time" },
+          { id: "d", text: "A specific, numeric threshold gives a team a clear signal for when a release's stability has genuinely regressed" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "An explicit SLO provides objective, measurable discipline, directly paralleling the performance regression budget discipline used for other performance metrics.",
       },
       {
         id: "q9",
         prompt: "Why is hang rate monitoring described as covering a genuine blind spot that crash-free session rate alone would miss?",
         options: [
-          {
-            id: "a",
-            text: "Hangs and crashes are functionally identical and always detected by the same mechanism",
-          },
-          {
-            id: "b",
-            text: "A severely unresponsive app that never technically crashes can still represent a genuinely serious quality problem, yet a hang produces no traditional crash report at all, meaning crash-free rate alone provides no visibility into hangs",
-          },
-          {
-            id: "c",
-            text: "Hang rate monitoring is redundant with crash-free session rate and provides no additional information",
-          },
-          {
-            id: "d",
-            text: "Hangs only occur in apps that don't use `MetricKit`",
-          },
+          { id: "a", text: "A severely unresponsive app that never technically crashes is invisible to crash-free session rate alone" },
+          { id: "b", text: "Hangs and crashes are functionally identical and always detected by the same mechanism" },
+          { id: "c", text: "Hang rate monitoring is redundant with crash-free session rate and provides no additional information, always" },
+          { id: "d", text: "Hangs only occur in apps that don't use `MetricKit`" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Because hangs don't produce traditional crash reports, a team monitoring only crash-free session rate could have a complete blind spot around serious hang-related quality issues, which MetricKit's hang rate reporting specifically surfaces.",
       },
       {
@@ -22153,11 +21349,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Never; Organizer's built-in views are always sufficient for every team's needs",
+            text: "Never; Organizer's built-in views are always sufficient for every single team's needs, without exception",
           },
           {
             id: "b",
-            text: "When Organizer's built-in presentation isn't sufficient — for example, needing custom alerting thresholds or correlation with backend service metrics for full-stack observability",
+            text: "When Organizer's built-in presentation isn't sufficient — needing custom alerting or correlation with backend metrics",
           },
           {
             id: "c",
@@ -22175,72 +21371,36 @@ struct UserProfileView: View {
         id: "q11",
         prompt: "What genuine observability gap does distributed tracing address?",
         options: [
-          {
-            id: "a",
-            text: "Distributed tracing has no relationship to diagnosing performance issues",
-          },
-          {
-            id: "b",
-            text: "Without a shared trace identifier connecting client-side and backend-side monitoring, diagnosing why a specific request was slow requires manually correlating timestamps across entirely separate logging systems; a propagated trace ID lets one coherent trace follow the entire request path",
-          },
-          {
-            id: "c",
-            text: "Distributed tracing only works for requests that never touch a backend service",
-          },
-          {
-            id: "d",
-            text: "Trace IDs are generated exclusively by the backend, never the client app",
-          },
+          { id: "a", text: "Distributed tracing has no relationship to diagnosing performance issues, always, without exception, ever" },
+          { id: "b", text: "Distributed tracing only works for requests that never touch a backend service" },
+          { id: "c", text: "Without a shared trace identifier, diagnosing a slow request requires manually correlating separate logging systems" },
+          { id: "d", text: "Trace IDs are generated exclusively by the backend, never the client app" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Distributed tracing solves the disconnection between separate app-side and backend-side monitoring systems by propagating a shared identifier, unifying diagnosis across the entire request path.",
       },
       {
         id: "q12",
         prompt: "What genuine decoupling do feature flags provide?",
         options: [
-          {
-            id: "a",
-            text: "Feature flags eliminate the need for any code deployment at all",
-          },
-          {
-            id: "b",
-            text: "A decoupling between deploying code (getting a feature into a shipped app binary) and releasing it (making it active/visible), letting activation happen remotely and independently of the App Store's own release and review timeline",
-          },
-          {
-            id: "c",
-            text: "Feature flags require an App Store release for every single toggle change",
-          },
-          {
-            id: "d",
-            text: "Feature flags only work for features that have already been fully rolled out",
-          },
+          { id: "a", text: "Feature flags eliminate the need for any code deployment at all" },
+          { id: "b", text: "Feature flags only work for features that have already been fully rolled out, always, without exception, ever" },
+          { id: "c", text: "Feature flags require an App Store release for every single toggle change" },
+          { id: "d", text: "A decoupling between deploying code and releasing it, activating remotely independent of App Store review" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This deploy/release decoupling is feature flags' core value — code can be shipped while flagged off, then activated remotely without waiting for App Review.",
       },
       {
         id: "q13",
         prompt: "How does a kill switch relate to phased release?",
         options: [
-          {
-            id: "a",
-            text: "Kill switches and phased release are unrelated, redundant mechanisms",
-          },
-          {
-            id: "b",
-            text: "While phased release limits a bad release's initial blast radius gradually, a kill switch provides an even faster, more immediate mitigation once a problem is discovered, instantly disabling a feature for all users without waiting for a paused rollout's already-affected users to age out",
-          },
-          {
-            id: "c",
-            text: "Kill switches replace the need for phased release entirely in every scenario",
-          },
-          {
-            id: "d",
-            text: "Phased release is faster-acting than a kill switch in every case",
-          },
+          { id: "a", text: "Phased release limits blast radius gradually, while a kill switch mitigates instantly for all users" },
+          { id: "b", text: "Kill switches and phased release are unrelated, redundant mechanisms, always, without exception, ever" },
+          { id: "c", text: "Kill switches replace the need for phased release entirely in every scenario" },
+          { id: "d", text: "Phased release is faster-acting than a kill switch in every case" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Kill switches are a complementary, faster-acting safety mechanism specifically for a feature already discovered to be broken, distinct from phased release's gradual, blast-radius-limiting approach.",
       },
       {
@@ -22253,11 +21413,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "A kill switch is a remotely-controllable flag, letting a problematic feature be instantly disabled for all users without needing a new app binary submission and review",
+            text: "A kill switch is a remotely-controllable flag, letting a feature be instantly disabled without a new app submission",
           },
           {
             id: "c",
-            text: "Emergency App Store reviews are always instantaneous, making this distinction irrelevant",
+            text: "Emergency App Store reviews are always instantaneous, making this distinction entirely irrelevant, without exception",
           },
           {
             id: "d",
@@ -22271,72 +21431,36 @@ struct UserProfileView: View {
         id: "q15",
         prompt: "What is the key distinction between assignment logging and exposure logging in A/B testing?",
         options: [
-          {
-            id: "a",
-            text: "They are identical concepts recorded at the same moment for every user",
-          },
-          {
-            id: "b",
-            text: "Assignment logging records which experimental variant a user was assigned to, while exposure logging records when a user actually experienced/saw that variant's effect — these two events don't always coincide",
-          },
-          {
-            id: "c",
-            text: "Exposure logging always occurs before assignment logging",
-          },
-          {
-            id: "d",
-            text: "Only assignment logging is necessary; exposure logging provides no additional value",
-          },
+          { id: "a", text: "They are identical concepts recorded at the same moment for every user" },
+          { id: "b", text: "Exposure logging always occurs before assignment logging" },
+          { id: "c", text: "Assignment records the assigned variant; exposure records when it was experienced" },
+          { id: "d", text: "Only assignment logging is necessary; exposure logging provides no additional value, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "These are genuinely distinct events that can occur at different times (or not both occur at all for a given user), making conflating them a source of experimental error.",
       },
       {
         id: "q16",
         prompt: "What statistical problem occurs if an experiment's results are based purely on assignment rather than genuine exposure?",
         options: [
-          {
-            id: "a",
-            text: "No problem occurs; assignment and exposure produce identical statistical results",
-          },
-          {
-            id: "b",
-            text: "A user assigned to a treatment variant but who never actually reached the screen where that variant applies would incorrectly dilute the experiment's measured effect with users never truly exposed to the tested variant",
-          },
-          {
-            id: "c",
-            text: "This only matters for experiments running longer than six months",
-          },
-          {
-            id: "d",
-            text: "Assignment-based counting always overstates an experiment's true effect, never understates it",
-          },
+          { id: "a", text: "No problem occurs; assignment and exposure produce identical statistical results" },
+          { id: "b", text: "Assignment-based counting always overstates an experiment's true effect, never understates it, always, without exception" },
+          { id: "c", text: "This only matters for experiments running longer than six months" },
+          { id: "d", text: "A user assigned but never reaching the applicable screen would dilute the experiment's measured effect" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Counting assigned-but-never-exposed users toward experimental results dilutes the measured effect with users who never actually experienced the variant, undermining the statistical validity of the experiment's conclusions.",
       },
       {
         id: "q17",
         prompt: "What connects feature flag cleanup discipline to the dead code concerns Periphery addresses?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful connection between these two topics",
-          },
-          {
-            id: "b",
-            text: "Both concern accumulated, unnecessary complexity — a stale feature flag that's effectively always true/false represents unnecessary conditional complexity, similar to genuinely unused code that Periphery detects, both requiring deliberate cleanup",
-          },
-          {
-            id: "c",
-            text: "Periphery can automatically detect and remove stale feature flags without any additional tooling",
-          },
-          {
-            id: "d",
-            text: "Feature flag debt only affects binary size, unrelated to code complexity",
-          },
+          { id: "a", text: "Both concern accumulated complexity — a stale flag is like unused code Periphery detects" },
+          { id: "b", text: "There is no meaningful connection between these two topics" },
+          { id: "c", text: "Periphery can automatically detect and remove stale feature flags without any additional tooling, always" },
+          { id: "d", text: "Feature flag debt only affects binary size, unrelated to code complexity" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Both represent forms of accumulated complexity (stale flags, genuinely unused code) that require deliberate, ongoing cleanup discipline rather than one-time effort.",
       },
       {
@@ -22349,11 +21473,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "It still represents unnecessary, accumulated conditional complexity in the codebase that a periodic, deliberate flag audit could simplify away",
+            text: "It still represents unnecessary conditional complexity a periodic flag audit could simplify away",
           },
           {
             id: "c",
-            text: "Feature flags automatically expire and remove themselves after a fixed time period",
+            text: "Feature flags automatically expire and remove themselves after a fixed time period, always, without exception",
           },
           {
             id: "d",
@@ -22367,48 +21491,24 @@ struct UserProfileView: View {
         id: "q19",
         prompt: "What is the recommended approach to feature flag cleanup?",
         options: [
-          {
-            id: "a",
-            text: "Feature flags should never be removed once added, regardless of their current relevance",
-          },
-          {
-            id: "b",
-            text: "A periodic, deliberate flag audit removing flags whose rollout has fully concluded or whose associated experiment has already reached its conclusion",
-          },
-          {
-            id: "c",
-            text: "Flag cleanup should only happen once, immediately after initial implementation",
-          },
-          {
-            id: "d",
-            text: "Feature flags require no maintenance and clean themselves up automatically",
-          },
+          { id: "a", text: "Feature flags should never be removed once added, regardless of their current relevance, always, without exception" },
+          { id: "b", text: "Flag cleanup should only happen once, immediately after initial implementation" },
+          { id: "c", text: "A periodic, deliberate flag audit removing flags whose rollout or experiment has already concluded" },
+          { id: "d", text: "Feature flags require no maintenance and clean themselves up automatically" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The recommendation is to treat flag cleanup as an ongoing maintenance practice via periodic audits, rather than a one-time setup concern or something requiring no attention at all.",
       },
       {
         id: "q20",
         prompt: "What overarching theme connects event taxonomy design, type-safe events, and feature flag cleanup discipline?",
         options: [
-          {
-            id: "a",
-            text: "These topics are entirely unrelated with no shared theme",
-          },
-          {
-            id: "b",
-            text: "Each addresses the importance of deliberate, upfront and ongoing discipline (consistent design, compile-time safety, active maintenance) in observability/analytics infrastructure, rather than allowing ad hoc, inconsistent, or accumulating complexity to degrade the system's usefulness over time",
-          },
-          {
-            id: "c",
-            text: "All three topics exclusively concern crash reporting, nothing else",
-          },
-          {
-            id: "d",
-            text: "These are unrelated tooling choices with no bearing on data quality or maintainability",
-          },
+          { id: "a", text: "These topics are entirely unrelated with no shared theme" },
+          { id: "b", text: "These are unrelated tooling choices with no bearing on data quality or maintainability, always, without exception" },
+          { id: "c", text: "All three topics exclusively concern crash reporting, nothing else" },
+          { id: "d", text: "Each addresses the importance of deliberate, ongoing discipline in observability and analytics infrastructure" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Across these subtopics, the recurring theme is deliberate discipline — whether in initial design (taxonomy), implementation safety (type-safety), or ongoing maintenance (flag cleanup) — preventing analytics and feature infrastructure from degrading into an unreliable or overly complex state over time.",
       },
     ],
@@ -22423,48 +21523,24 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "Why does a Vapor route handler typically avoid relying on persistent, app-lifetime shared mutable state?",
         options: [
-          {
-            id: "a",
-            text: "Vapor route handlers cannot access any shared state under any circumstances",
-          },
-          {
-            id: "b",
-            text: "Each request is a fresh, isolated unit of work processed concurrently with many others, unlike an iOS app's `AppDelegate` or `App` struct which persists for the whole process lifetime",
-          },
-          {
-            id: "c",
-            text: "Vapor deliberately disables all instance properties in route handlers",
-          },
-          {
-            id: "d",
-            text: "Persistent state is only disallowed in Hummingbird, not Vapor",
-          },
+          { id: "a", text: "Vapor route handlers cannot access any shared state under any circumstances, always, without exception" },
+          { id: "b", text: "Persistent state is only disallowed in Hummingbird, not Vapor" },
+          { id: "c", text: "Vapor deliberately disables all instance properties in route handlers" },
+          { id: "d", text: "Each request is a fresh, isolated unit of work processed concurrently with many others" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The per-request, concurrently-processed nature of server route handlers is the central mental shift from app development, where lifetime-scoped singletons and caches are the norm.",
       },
       {
         id: "q2",
         prompt: "What familiar Swift pattern do Vapor's `async throws` route closures directly reuse?",
         options: [
-          {
-            id: "a",
-            text: "Completion-handler-based networking exclusive to server code",
-          },
-          {
-            id: "b",
-            text: "The same structured concurrency (async/await) and typed error-throwing model used throughout the rest of Swift",
-          },
-          {
-            id: "c",
-            text: "A Vapor-specific concurrency model with no relationship to Swift's language-level concurrency",
-          },
-          {
-            id: "d",
-            text: "GCD-based dispatch queues exclusively",
-          },
+          { id: "a", text: "The same structured concurrency and typed error-throwing model used throughout the rest of Swift" },
+          { id: "b", text: "Completion-handler-based networking exclusive to server code" },
+          { id: "c", text: "A Vapor-specific concurrency model with no relationship to Swift's language-level concurrency, always, without exception" },
+          { id: "d", text: "GCD-based dispatch queues exclusively" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Route handlers use the same async/await and throwing-error conventions already familiar from structured concurrency and error handling elsewhere in Swift.",
       },
       {
@@ -22477,11 +21553,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Middleware wraps cross-cutting concerns like authentication around a route boundary, echoing the same \"wrap behavior around a boundary without touching business logic\" pattern seen in URLSession interceptors",
+            text: "Middleware wraps cross-cutting concerns around a route boundary, echoing the interceptor pattern",
           },
           {
             id: "c",
-            text: "Middleware in Vapor replaces the need for any routing system",
+            text: "Middleware in Vapor replaces the need for any routing system, always, without exception, ever",
           },
           {
             id: "d",
@@ -22495,72 +21571,36 @@ struct UserProfileView: View {
         id: "q4",
         prompt: "How does Fluent's `@Parent`/`@Children` relationship modeling compare to SwiftData?",
         options: [
-          {
-            id: "a",
-            text: "Fluent has no meaningful relationship modeling capability at all",
-          },
-          {
-            id: "b",
-            text: "Fluent's relationship property wrappers map directly onto the same conceptual relationships expressed by SwiftData's `@Relationship` or Core Data's managed object relationships, despite querying a real server database rather than on-device storage",
-          },
-          {
-            id: "c",
-            text: "Fluent relationships only work with a single, hardcoded database engine",
-          },
-          {
-            id: "d",
-            text: "SwiftData and Fluent share no conceptual similarity whatsoever",
-          },
+          { id: "a", text: "Fluent has no meaningful relationship modeling capability at all, always, without exception, ever" },
+          { id: "b", text: "Fluent relationships only work with a single, hardcoded database engine" },
+          { id: "c", text: "Fluent's relationship property wrappers map directly onto SwiftData's or Core Data's relationship concepts" },
+          { id: "d", text: "SwiftData and Fluent share no conceptual similarity whatsoever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The vocabulary of declarative relationships transfers directly even though the underlying storage (real Postgres/MySQL vs. on-device SQLite) differs substantially.",
       },
       {
         id: "q5",
         prompt: "What is the genuine trade-off between Vapor and Hummingbird?",
         options: [
-          {
-            id: "a",
-            text: "Hummingbird is strictly worse than Vapor in every respect",
-          },
-          {
-            id: "b",
-            text: "Vapor offers a complete, opinionated stack (Fluent, Leaf, broad ecosystem) while Hummingbird keeps a smaller, more composable core with fewer built-in opinions and tighter control over binary dependencies",
-          },
-          {
-            id: "c",
-            text: "Vapor cannot be used to build a REST API at all",
-          },
-          {
-            id: "d",
-            text: "Hummingbird requires an entirely different, incompatible version of Swift",
-          },
+          { id: "a", text: "Hummingbird is strictly worse than Vapor in every respect" },
+          { id: "b", text: "Hummingbird requires an entirely different, incompatible version of Swift, always, without exception, ever" },
+          { id: "c", text: "Vapor cannot be used to build a REST API at all" },
+          { id: "d", text: "Vapor offers a complete, opinionated stack, while Hummingbird keeps a smaller, more composable core" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This is a genuine batteries-included-versus-minimal-core trade-off, not a strict quality hierarchy between the two frameworks.",
       },
       {
         id: "q6",
         prompt: "Why must code running on a SwiftNIO event loop avoid long, synchronous blocking work?",
         options: [
-          {
-            id: "a",
-            text: "Event loops automatically spawn a new thread whenever blocked, so blocking has no cost",
-          },
-          {
-            id: "b",
-            text: "An event loop is a single thread cooperatively serving many connections, so blocking it starves every other connection sharing that same loop — mirroring the \"never block the main thread\" discipline from UI development",
-          },
-          {
-            id: "c",
-            text: "SwiftNIO has no concept of blocking or non-blocking work",
-          },
-          {
-            id: "d",
-            text: "Blocking an event loop only affects the specific connection that caused the block",
-          },
+          { id: "a", text: "An event loop is a single thread cooperatively serving many connections, so blocking starves them all" },
+          { id: "b", text: "Event loops automatically spawn a new thread whenever blocked, so blocking has no cost, always, without exception" },
+          { id: "c", text: "SwiftNIO has no concept of blocking or non-blocking work" },
+          { id: "d", text: "Blocking an event loop only affects the specific connection that caused the block" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "There's a direct analogy between blocking a SwiftNIO event loop (starving all connections on that loop) and blocking the main thread in UI development (freezing rendering for the whole app).",
       },
       {
@@ -22569,11 +21609,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "Modern code is written entirely in terms of `EventLoopFuture` and promises, with no async/await",
+            text: "Modern code is written entirely in terms of `EventLoopFuture` and promises, with no async/await, always, without exception",
           },
           {
             id: "b",
-            text: "Swift's concurrency runtime bridges async/await on the surface to SwiftNIO's underlying event loops, so most modern code no longer writes `EventLoopFuture` code directly even though the event-loop model still applies underneath",
+            text: "Swift's concurrency runtime bridges async/await to SwiftNIO's underlying event loops directly",
           },
           {
             id: "c",
@@ -22591,72 +21631,36 @@ struct UserProfileView: View {
         id: "q8",
         prompt: "What concrete problem does sharing a Swift model package between an app and a server target solve?",
         options: [
-          {
-            id: "a",
-            text: "It eliminates the need for any networking code entirely",
-          },
-          {
-            id: "b",
-            text: "It prevents a category of bugs where the client's understanding of a JSON shape silently drifts from the server's, since both targets import the exact same Codable type definitions",
-          },
-          {
-            id: "c",
-            text: "Shared model packages are only useful for UI code, not data models",
-          },
-          {
-            id: "d",
-            text: "Model sharing requires both the client and server to run on identical operating systems",
-          },
+          { id: "a", text: "It eliminates the need for any networking code entirely" },
+          { id: "b", text: "Shared model packages are only useful for UI code, not data models" },
+          { id: "c", text: "It prevents client/server JSON-shape drift, since both targets import the exact same Codable type definitions" },
+          { id: "d", text: "Model sharing requires both the client and server to run on identical operating systems, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Exact JSON-shape drift between client and server is the specific bug category eliminated by importing shared, platform-agnostic Codable types.",
       },
       {
         id: "q9",
         prompt: "How does the constraint on a shared model package's dependencies connect to general modularization principles?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful connection at all",
-          },
-          {
-            id: "b",
-            text: "The shared package must avoid UIKit and Vapor-specific imports to compile cleanly for both iOS and Linux targets, directly extending the modularization discipline of minimizing a module's platform-specific dependencies",
-          },
-          {
-            id: "c",
-            text: "Modularization principles only apply to single-platform apps, making them irrelevant here",
-          },
-          {
-            id: "d",
-            text: "Shared packages are required to depend on both UIKit and Vapor simultaneously",
-          },
+          { id: "a", text: "There is no meaningful connection at all" },
+          { id: "b", text: "Shared packages are required to depend on both UIKit and Vapor simultaneously" },
+          { id: "c", text: "Modularization principles only apply to single-platform apps, making them entirely irrelevant here, always, without exception" },
+          { id: "d", text: "The shared package must avoid UIKit and Vapor-specific imports to compile cleanly for both iOS and Linux targets" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The dependency discipline required for a genuinely cross-target shared package is a direct extension of general modularization principles.",
       },
       {
         id: "q10",
         prompt: "What is the practical lesson regarding Foundation on Linux?",
         options: [
-          {
-            id: "a",
-            text: "Foundation is byte-for-byte identical on Linux and Apple platforms with zero differences",
-          },
-          {
-            id: "b",
-            text: "Foundation should never be used at all in any Linux-targeted Swift code",
-          },
-          {
-            id: "c",
-            text: "Specific APIs — particularly around dates, locales, and file attributes — can still differ subtly, so the practical approach is testing the specific APIs your shared code uses on both platforms rather than assuming full parity",
-          },
-          {
-            id: "d",
-            text: "Foundation differences are purely theoretical and never actually manifest in real code",
-          },
+          { id: "a", text: "Specific APIs can still differ subtly, so testing what your code actually uses on both platforms matters" },
+          { id: "b", text: "Foundation should never be used at all in any Linux-targeted Swift code" },
+          { id: "c", text: "Foundation is byte-for-byte identical on Linux and Apple platforms with zero differences, always, without exception" },
+          { id: "d", text: "Foundation differences are purely theoretical and never actually manifest in real code" },
         ],
-        correctOptionId: "c",
+        correctOptionId: "a",
         explanation: "Despite significant narrowing of the gap (including via Swift 6's pure-Swift Foundation rewrite), real differences persist and should be verified rather than assumed away.",
       },
       {
@@ -22669,11 +21673,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Both use the same conditional-compilation tool (`#if os(...)`) to guard platform differences — UI-layer differences between iPhone and Mac in one case, and standard-library/Foundation-layer differences between Apple platforms and Linux in the other",
+            text: "Both use the same conditional-compilation tool to guard platform differences at different layers",
           },
           {
             id: "c",
-            text: "Conditional compilation is only valid for UI code, not standard library code",
+            text: "Conditional compilation is only valid for UI code, not standard library code, always, without exception, ever",
           },
           {
             id: "d",
@@ -22687,72 +21691,36 @@ struct UserProfileView: View {
         id: "q12",
         prompt: "What deployment problem does the static Linux SDK directly solve?",
         options: [
-          {
-            id: "a",
-            text: "It eliminates the need to write any server-side Swift code",
-          },
-          {
-            id: "b",
-            text: "The historical friction of needing to build on the exact same Linux distribution/version as the deployment target, or ship a full Swift runtime alongside the binary, by producing a fully statically linked binary with the runtime baked in",
-          },
-          {
-            id: "c",
-            text: "Static linking only matters for iOS apps, never for server deployments",
-          },
-          {
-            id: "d",
-            text: "The static Linux SDK is used exclusively for compiling to WebAssembly",
-          },
+          { id: "a", text: "It eliminates the need to write any server-side Swift code" },
+          { id: "b", text: "Static linking only matters for iOS apps, never for server deployments, always, without exception, ever" },
+          { id: "c", text: "The historical friction of matching build and deployment Linux distributions, solved by a fully statically linked binary" },
+          { id: "d", text: "The static Linux SDK is used exclusively for compiling to WebAssembly" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The static SDK removes the runtime-version-matching requirement between build and deployment environments, a real and previously significant source of friction.",
       },
       {
         id: "q13",
         prompt: "How does the static Linux SDK's trade-off connect to the static-vs-dynamic linking trade-off elsewhere in the Swift build system?",
         options: [
-          {
-            id: "a",
-            text: "There is no meaningful relationship between the two",
-          },
-          {
-            id: "b",
-            text: "It's the server-side analog of the same static linking trade-off — trading a larger binary for fewer runtime dependencies, just applied to an entire Linux deployment environment rather than a single app sandbox",
-          },
-          {
-            id: "c",
-            text: "The build system never involves any static versus dynamic linking trade-off at all",
-          },
-          {
-            id: "d",
-            text: "The static Linux SDK makes binaries smaller in every case with no trade-off whatsoever",
-          },
+          { id: "a", text: "There is no meaningful relationship between the two" },
+          { id: "b", text: "The static Linux SDK makes binaries smaller in every case with no trade-off whatsoever, always, without exception" },
+          { id: "c", text: "The build system never involves any static versus dynamic linking trade-off at all" },
+          { id: "d", text: "It's the server-side analog of the same static linking trade-off — a larger binary for fewer runtime dependencies" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The same larger-binary-for-fewer-dependencies trade-off appears at both the app level and the deployment-environment level.",
       },
       {
         id: "q14",
         prompt: "What is an honest characterization of Swift-to-WebAssembly's current maturity?",
         options: [
-          {
-            id: "a",
-            text: "It is fully mature and a drop-in replacement for JavaScript in every context",
-          },
-          {
-            id: "b",
-            text: "The toolchain support, debugging experience, and binary size are considerably rougher than native iOS or server toolchains, making it a deliberate bet on an actively-developing target rather than a mature, drop-in option",
-          },
-          {
-            id: "c",
-            text: "WebAssembly support for Swift does not exist in any form",
-          },
-          {
-            id: "d",
-            text: "WebAssembly is only usable for compiling C code, never Swift",
-          },
+          { id: "a", text: "The toolchain, debugging experience, and binary size are considerably rougher than native toolchains today" },
+          { id: "b", text: "It is fully mature and a drop-in replacement for JavaScript in every context, always, without exception, ever" },
+          { id: "c", text: "WebAssembly support for Swift does not exist in any form" },
+          { id: "d", text: "WebAssembly is only usable for compiling C code, never Swift" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This is an even-handed characterization of the maturity gap, framing adoption today as a deliberate bet rather than a safe, fully-baked choice.",
       },
       {
@@ -22761,11 +21729,11 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "These features were removed arbitrarily with no underlying technical reason",
+            text: "These features were removed arbitrarily with no underlying technical reason, always, without exception, ever",
           },
           {
             id: "b",
-            text: "Full generics and existentials in ordinary Swift rely on runtime metadata and dynamic dispatch machinery that assumes a heap and capable OS — resources unavailable on microcontrollers with kilobytes of RAM",
+            text: "Full generics and existentials rely on runtime metadata unavailable on microcontrollers with kilobytes of RAM",
           },
           {
             id: "c",
@@ -22783,72 +21751,36 @@ struct UserProfileView: View {
         id: "q16",
         prompt: "How does Embedded Swift's approach to generics (monomorphization) relate to the general static-vs-dynamic-cost trade-off in low-level Swift?",
         options: [
-          {
-            id: "a",
-            text: "There is no relationship at all",
-          },
-          {
-            id: "b",
-            text: "It represents the same static-cost-at-compile-time-versus-dynamic-cost-at-runtime trade-off, pushed to its logical extreme because embedded hardware has almost no room for any runtime cost at all",
-          },
-          {
-            id: "c",
-            text: "That trade-off exclusively concerns generics on Linux servers, unrelated to embedded contexts",
-          },
-          {
-            id: "d",
-            text: "Monomorphization is a runtime dispatch technique, not a compile-time one",
-          },
+          { id: "a", text: "There is no relationship at all" },
+          { id: "b", text: "That trade-off exclusively concerns generics on Linux servers, unrelated to embedded contexts, always, without exception" },
+          { id: "c", text: "It represents the same static-versus-dynamic-cost trade-off, pushed to its logical extreme" },
+          { id: "d", text: "Monomorphization is a runtime dispatch technique, not a compile-time one" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Embedded Swift's fully-specialized generics are an extreme application of the same static-versus-dynamic-cost trade-off found elsewhere in low-level Swift.",
       },
       {
         id: "q17",
         prompt: "What is the shared design philosophy behind `swift-log`, `swift-metrics`, and similar packages?",
         options: [
-          {
-            id: "a",
-            text: "Each package bundles a single, fixed backend implementation with no ability to swap it out",
-          },
-          {
-            id: "b",
-            text: "They define stable, API-only interfaces (like `Logger` and `Counter`) separate from any specific backend, so a backend implementation can be swapped at the composition root without touching call sites — mirroring URLSession's protocol-oriented design and os.Logger's structured logging model",
-          },
-          {
-            id: "c",
-            text: "These packages exist solely to disable logging in production builds",
-          },
-          {
-            id: "d",
-            text: "swift-log and swift-metrics require the same backend to be used across all projects industry-wide",
-          },
+          { id: "a", text: "Each package bundles a single, fixed backend implementation with no ability to swap it out" },
+          { id: "b", text: "swift-log and swift-metrics require the same backend to be used across all projects industry-wide, always, without exception" },
+          { id: "c", text: "These packages exist solely to disable logging in production builds" },
+          { id: "d", text: "They define stable, API-only interfaces separate from any specific backend, swappable at the composition root" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "This API/backend separation directly parallels other protocol-oriented patterns like URLSession and os.Logger.",
       },
       {
         id: "q18",
         prompt: "What problem does `swift-service-lifecycle` solve that has no direct iOS equivalent?",
         options: [
-          {
-            id: "a",
-            text: "It solves UI rendering coordination, which iOS apps also need",
-          },
-          {
-            id: "b",
-            text: "Coordinated startup ordering and graceful shutdown across multiple long-running services in one process — a genuinely different problem since an iOS app's process lifecycle is managed entirely by the OS rather than orchestrated by app code",
-          },
-          {
-            id: "c",
-            text: "It solves memory management, identical to ARC on iOS",
-          },
-          {
-            id: "d",
-            text: "It replaces the need for structured concurrency entirely",
-          },
+          { id: "a", text: "Coordinated startup ordering and graceful shutdown across multiple long-running services in one process" },
+          { id: "b", text: "It solves UI rendering coordination, which iOS apps also need" },
+          { id: "c", text: "It solves memory management, identical to ARC on iOS" },
+          { id: "d", text: "It replaces the need for structured concurrency entirely, always, without exception, ever, under any circumstances" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "This is a genuinely different problem domain, since iOS apps never need to orchestrate their own process-level startup/shutdown sequencing the way a multi-service backend process does.",
       },
       {
@@ -22861,7 +21793,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Skip, which compiles SwiftUI-like syntax to native Android views through a Kotlin interop layer, letting a mostly-shared Swift codebase target Android with native rendering",
+            text: "Skip, which compiles SwiftUI-like syntax to native Android views through a Kotlin interop layer",
           },
           {
             id: "c",
@@ -22869,7 +21801,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "There are no existing tools attempting to share UI code between Apple platforms and Android",
+            text: "There are no existing tools attempting to share UI code between Apple platforms and Android, always, without exception",
           },
         ],
         correctOptionId: "b",
@@ -22879,24 +21811,12 @@ struct UserProfileView: View {
         id: "q20",
         prompt: "What is a conservative, widely-used alternative to a single shared UI framework across all platforms?",
         options: [
-          {
-            id: "a",
-            text: "Rewriting the entire application from scratch for each platform, including all business logic",
-          },
-          {
-            id: "b",
-            text: "Sharing the model layer, networking, and business logic as a Swift package while building genuinely separate, platform-native UI layers for each platform, accepting UI duplication in exchange for full per-platform idiomatic support",
-          },
-          {
-            id: "c",
-            text: "Using only WebAssembly for every platform's UI, including iOS",
-          },
-          {
-            id: "d",
-            text: "Avoiding any code sharing whatsoever between platforms",
-          },
+          { id: "a", text: "Rewriting the entire application from scratch for each platform, including all business logic, always, without exception" },
+          { id: "b", text: "Using only WebAssembly for every platform's UI, including iOS" },
+          { id: "c", text: "Sharing the model, networking, and business logic as a Swift package while building separate, native UI layers" },
+          { id: "d", text: "Avoiding any code sharing whatsoever between platforms" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "This is a legitimate, common trade-off — sharing only the non-UI logic while keeping each platform's UI fully native — and the right choice depends on team size and how native the UI must feel on each platform.",
       },
     ],
@@ -22911,24 +21831,12 @@ struct UserProfileView: View {
         id: "q1",
         prompt: "What separates a genuinely useful technical design doc from a rubber-stamp formality?",
         options: [
-          {
-            id: "a",
-            text: "Using the longest possible document length",
-          },
-          {
-            id: "b",
-            text: "Honest, comparative treatment of alternatives, such that a reader could disagree with the conclusion from the document alone without a hallway conversation",
-          },
-          {
-            id: "c",
-            text: "Presenting exactly one option with no alternatives discussed",
-          },
-          {
-            id: "d",
-            text: "Avoiding any mention of constraints or deadlines",
-          },
+          { id: "a", text: "Honest, comparative treatment of alternatives, such that a reader could disagree with the conclusion alone" },
+          { id: "b", text: "Using the longest possible document length" },
+          { id: "c", text: "Presenting exactly one option with no alternatives discussed, always, without exception, ever" },
+          { id: "d", text: "Avoiding any mention of constraints or deadlines" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Genuine, honest alternative-weighing — not performing due diligence after the fact — is the key trait separating a useful design doc from a formality.",
       },
       {
@@ -22941,7 +21849,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "A design doc proposing an architectural choice should apply the same honest, comparative trade-off treatment given to MVVM, MVC, and TCA-style patterns, rather than presenting a single \"correct\" answer",
+            text: "A design doc should apply the same honest, comparative treatment given to MVVM, MVC, and TCA",
           },
           {
             id: "c",
@@ -22949,7 +21857,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Design docs are unrelated to architectural decisions entirely",
+            text: "Design docs are unrelated to architectural decisions entirely, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -22959,72 +21867,36 @@ struct UserProfileView: View {
         id: "q3",
         prompt: "What is the defining characteristic of an architecture decision record (ADR)?",
         options: [
-          {
-            id: "a",
-            text: "It is continuously edited and rewritten as circumstances change",
-          },
-          {
-            id: "b",
-            text: "It is a lightweight, permanent record of a settled decision, written at the time it's made and only superseded (never edited) by a new ADR if the decision changes",
-          },
-          {
-            id: "c",
-            text: "ADRs replace the need for any design doc discussion beforehand",
-          },
-          {
-            id: "d",
-            text: "ADRs are informal chat messages with no fixed structure",
-          },
+          { id: "a", text: "It is continuously edited and rewritten as circumstances change" },
+          { id: "b", text: "ADRs replace the need for any design doc discussion beforehand, always, without exception, ever" },
+          { id: "c", text: "It is a lightweight, permanent record of a settled decision, only superseded by a new ADR if it changes" },
+          { id: "d", text: "ADRs are informal chat messages with no fixed structure" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Permanence and dating are the core value of an ADR — a record left untouched so future readers understand the reasoning behind a past decision.",
       },
       {
         id: "q4",
         prompt: "How does an ADR's purpose relate to general commit message discipline?",
         options: [
-          {
-            id: "a",
-            text: "The two have no meaningful relationship",
-          },
-          {
-            id: "b",
-            text: "Both share the instinct of making prior reasoning legible to a future reader — a commit message explains why a specific change was made, and an ADR does the same at the scale of an architectural decision",
-          },
-          {
-            id: "c",
-            text: "ADRs replace commit messages entirely",
-          },
-          {
-            id: "d",
-            text: "Good commit message discipline argues against ever explaining reasoning in commits",
-          },
+          { id: "a", text: "The two have no meaningful relationship" },
+          { id: "b", text: "Good commit message discipline argues against ever explaining reasoning in commits, always, without exception" },
+          { id: "c", text: "ADRs replace commit messages entirely" },
+          { id: "d", text: "Both share the instinct of making prior reasoning legible to a future reader, at different scales" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "There's a direct parallel between commit message discipline and ADR permanence, both aimed at preserving the \"why\" for future readers.",
       },
       {
         id: "q5",
         prompt: "What is a key skill in giving effective code review feedback?",
         options: [
-          {
-            id: "a",
-            text: "Blocking on every single comment regardless of severity",
-          },
-          {
-            id: "b",
-            text: "Explicitly signaling whether a comment is a blocking correctness/security/convention issue versus a non-blocking stylistic preference, rather than leaving the author to guess",
-          },
-          {
-            id: "c",
-            text: "Never leaving any non-blocking comments under any circumstances",
-          },
-          {
-            id: "d",
-            text: "Only senior engineers are permitted to leave blocking comments",
-          },
+          { id: "a", text: "Explicitly signaling whether a comment is blocking versus a non-blocking stylistic preference" },
+          { id: "b", text: "Blocking on every single comment regardless of severity" },
+          { id: "c", text: "Never leaving any non-blocking comments under any circumstances, always, without exception, ever" },
+          { id: "d", text: "Only senior engineers are permitted to leave blocking comments" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Explicit severity-signaling is the practical skill that prevents review friction and erosion of trust.",
       },
       {
@@ -23037,7 +21909,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Automated tooling (linters, formatters, tests) should serve as the arbiter of objectively-checkable concerns, freeing human review time for genuinely subjective judgment calls like architecture fit and correctness under edge cases",
+            text: "Automated tooling should serve as the arbiter of checkable concerns, freeing human review for judgment calls",
           },
           {
             id: "c",
@@ -23045,7 +21917,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Merge queues eliminate the need for any review severity signaling",
+            text: "Merge queues eliminate the need for any review severity signaling, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -23055,72 +21927,36 @@ struct UserProfileView: View {
         id: "q7",
         prompt: "What is the recommended response to a genuine \"unknown unknown\" during estimation?",
         options: [
-          {
-            id: "a",
-            text: "Provide a confident-sounding estimate anyway to keep planning on schedule",
-          },
-          {
-            id: "b",
-            text: "Scope a small, explicitly-defined investigation task (a \"spike\") whose deliverable is knowledge rather than a shipped feature, after which the remaining work can actually be estimated",
-          },
-          {
-            id: "c",
-            text: "Skip estimating that piece of work entirely and never revisit it",
-          },
-          {
-            id: "d",
-            text: "Assume the unknown unknown will resolve itself without any dedicated task",
-          },
+          { id: "a", text: "Provide a confident-sounding estimate anyway to keep planning on schedule, always, without exception" },
+          { id: "b", text: "Skip estimating that piece of work entirely and never revisit it" },
+          { id: "c", text: "Scope a small, explicitly-defined investigation task, a \"spike,\" whose deliverable is knowledge" },
+          { id: "d", text: "Assume the unknown unknown will resolve itself without any dedicated task" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "A scoped spike task is specifically recommended to convert unknown unknowns into known-scope work before attempting a real estimate.",
       },
       {
         id: "q8",
         prompt: "What is the most common cause of estimates that turn out to be substantially wrong?",
         options: [
-          {
-            id: "a",
-            text: "Developers are inherently bad at estimating time regardless of task clarity",
-          },
-          {
-            id: "b",
-            text: "Treating a genuine unknown unknown as if it were a well-defined, known-scope task, rather than recognizing it needs investigation first",
-          },
-          {
-            id: "c",
-            text: "Estimates are always accurate as long as they're written down",
-          },
-          {
-            id: "d",
-            text: "Breaking large epics into smaller pieces makes estimates less accurate",
-          },
+          { id: "a", text: "Developers are inherently bad at estimating time regardless of task clarity, always, without exception" },
+          { id: "b", text: "Breaking large epics into smaller pieces makes estimates less accurate" },
+          { id: "c", text: "Estimates are always accurate as long as they're written down" },
+          { id: "d", text: "Treating a genuine unknown unknown as if it were a well-defined, known-scope task" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Mistaking an unknown unknown for a well-scoped task — not estimation itself — is the primary driver of significantly wrong estimates.",
       },
       {
         id: "q9",
         prompt: "What practical discipline helps manage technical debt well?",
         options: [
-          {
-            id: "a",
-            text: "Avoiding technical debt entirely under all circumstances",
-          },
-          {
-            id: "b",
-            text: "Treating debt like actual debt — naming it explicitly when incurred, ideally in an ADR, and periodically making its ongoing cost visible to whoever prioritizes work",
-          },
-          {
-            id: "c",
-            text: "Never discussing technical debt with non-engineering stakeholders",
-          },
-          {
-            id: "d",
-            text: "Technical debt should only be addressed once it causes a complete system failure",
-          },
+          { id: "a", text: "Treating debt like actual debt — naming it explicitly when incurred, ideally in an ADR" },
+          { id: "b", text: "Avoiding technical debt entirely under all circumstances" },
+          { id: "c", text: "Never discussing technical debt with non-engineering stakeholders" },
+          { id: "d", text: "Technical debt should only be addressed once it causes a complete system failure, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Debt is a legitimate trade-off as long as it's tracked and its cost is made visible, rather than something to avoid outright or ignore.",
       },
       {
@@ -23133,7 +21969,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Expressing the cost in concrete, measurable terms — such as the number of production incidents caused and the estimated time to fix — rather than a vague engineering complaint",
+            text: "Expressing the cost in concrete, measurable terms, like the number of production incidents and time to fix",
           },
           {
             id: "c",
@@ -23141,7 +21977,7 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Tech debt should never be raised with stakeholders under any circumstances",
+            text: "Tech debt should never be raised with stakeholders under any circumstances, always, without exception, ever",
           },
         ],
         correctOptionId: "b",
@@ -23151,72 +21987,36 @@ struct UserProfileView: View {
         id: "q11",
         prompt: "What makes mobile incident response meaningfully different from server incident response?",
         options: [
-          {
-            id: "a",
-            text: "Mobile incidents are never actually serious enough to require a response",
-          },
-          {
-            id: "b",
-            text: "A shipped client binary usually cannot be instantly rolled back the way a server deployment can be reverted, requiring different tools like remote feature flags and server-side mitigations",
-          },
-          {
-            id: "c",
-            text: "Mobile apps have no crash reporting or observability tooling available",
-          },
-          {
-            id: "d",
-            text: "Server incidents are always resolved faster than mobile incidents in every case",
-          },
+          { id: "a", text: "Mobile incidents are never actually serious enough to require a response" },
+          { id: "b", text: "Mobile apps have no crash reporting or observability tooling available" },
+          { id: "c", text: "A shipped client binary usually cannot be instantly rolled back, unlike a server deployment" },
+          { id: "d", text: "Server incidents are always resolved faster than mobile incidents in every case, always, without exception" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "The inability to instantly revert a shipped binary is the crucial difference, requiring feature flags and server-side levers as alternative tools.",
       },
       {
         id: "q12",
         prompt: "How does phased release support the incident response process?",
         options: [
-          {
-            id: "a",
-            text: "Phased release has no relationship to incident response",
-          },
-          {
-            id: "b",
-            text: "By design, phased release limits exposure before a full rollout completes, which aids in assessing actual severity and affected user percentage during an incident",
-          },
-          {
-            id: "c",
-            text: "Phased release guarantees an incident will never occur",
-          },
-          {
-            id: "d",
-            text: "Phased release is only relevant to App Store review timing, not incident assessment",
-          },
+          { id: "a", text: "Phased release has no relationship to incident response" },
+          { id: "b", text: "Phased release is only relevant to App Store review timing, not incident assessment, always, without exception" },
+          { id: "c", text: "Phased release guarantees an incident will never occur" },
+          { id: "d", text: "By design, phased release limits exposure before a full rollout completes, aiding severity assessment" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "Phased release's gradual rollout aids severity assessment during incident response, since it limits exposure before full release.",
       },
       {
         id: "q13",
         prompt: "Why does a full \"rollback\" in the mobile context usually mean halting a phased rollout rather than truly reverting a release?",
         options: [
-          {
-            id: "a",
-            text: "Apple allows instant un-releasing of any previously downloaded build",
-          },
-          {
-            id: "b",
-            text: "Apple doesn't support un-releasing a build users have already downloaded, so halting further rollout limits additional exposure without retroactively fixing already-updated devices",
-          },
-          {
-            id: "c",
-            text: "Rollbacks are technically impossible in any form for mobile apps",
-          },
-          {
-            id: "d",
-            text: "Halting a rollout has no effect on how many additional users are affected",
-          },
+          { id: "a", text: "Apple doesn't support un-releasing an already-downloaded build, so halting rollout limits further exposure" },
+          { id: "b", text: "Apple allows instant un-releasing of any previously downloaded build" },
+          { id: "c", text: "Rollbacks are technically impossible in any form for mobile apps" },
+          { id: "d", text: "Halting a rollout has no effect on how many additional users are affected, always, without exception, ever" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Halting further rollout is the closest available action to a \"rollback,\" since already-downloaded builds cannot be retroactively un-released.",
       },
       {
@@ -23229,11 +22029,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Choosing the fastest path that actually addresses the severity of what's happening, rather than defaulting to one option regardless of the situation",
+            text: "Choosing the fastest path that actually addresses the severity of what's happening",
           },
           {
             id: "c",
-            text: "Server-side mitigation should never be used for genuinely severe bugs",
+            text: "Server-side mitigation should never be used for genuinely severe bugs, always, without exception, ever",
           },
           {
             id: "d",
@@ -23247,72 +22047,36 @@ struct UserProfileView: View {
         id: "q15",
         prompt: "Why is blamelessness essential to an effective postmortem process?",
         options: [
-          {
-            id: "a",
-            text: "Blamelessness is purely a morale-boosting gesture with no effect on the information gathered",
-          },
-          {
-            id: "b",
-            text: "An engineer who fears individual blame has incentive to omit details or downplay their role, so blamelessness is what produces the honest, complete timeline needed to identify the actual systemic gap",
-          },
-          {
-            id: "c",
-            text: "Blameless postmortems are required by law for all software incidents",
-          },
-          {
-            id: "d",
-            text: "Assigning individual blame produces more accurate timelines than a blameless approach",
-          },
+          { id: "a", text: "Blamelessness is purely a morale-boosting gesture with no effect on the information gathered, always, without exception" },
+          { id: "b", text: "Blameless postmortems are required by law for all software incidents" },
+          { id: "c", text: "An engineer who fears blame has incentive to omit details, so blamelessness produces the honest timeline needed" },
+          { id: "d", text: "Assigning individual blame produces more accurate timelines than a blameless approach" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "Blamelessness is functionally necessary — not just a soft gesture — because it removes the incentive to hide details that would otherwise obscure the true systemic cause.",
       },
       {
         id: "q16",
         prompt: "In a typical postmortem example, what was the actual systemic root cause of a push notification failure?",
         options: [
-          {
-            id: "a",
-            text: "An individual engineer's careless mistake during deployment",
-          },
-          {
-            id: "b",
-            text: "Certificate expiration was untracked in the deployment checklist and no automated expiration alert existed",
-          },
-          {
-            id: "c",
-            text: "A completely unrelated server outage caused the failure",
-          },
-          {
-            id: "d",
-            text: "The postmortem concluded no actionable root cause could be identified",
-          },
+          { id: "a", text: "An individual engineer's careless mistake during deployment" },
+          { id: "b", text: "The postmortem concluded no actionable root cause could be identified, always, without exception, ever" },
+          { id: "c", text: "A completely unrelated server outage caused the failure" },
+          { id: "d", text: "Certificate expiration was untracked in the deployment checklist and no automated expiration alert existed" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The example postmortem identifies the missing automated certificate-expiration alerting and checklist gap as the systemic root cause, not any individual's fault.",
       },
       {
         id: "q17",
         prompt: "What mechanism is most effective for transferring engineering judgment to a junior developer?",
         options: [
-          {
-            id: "a",
-            text: "Simply handing over the direct answer as quickly as possible",
-          },
-          {
-            id: "b",
-            text: "Asking questions that make the junior developer articulate their own reasoning, surfacing gaps in that reasoning without directly handing over the answer",
-          },
-          {
-            id: "c",
-            text: "Avoiding any discussion of reasoning and focusing only on final code correctness",
-          },
-          {
-            id: "d",
-            text: "Judgment cannot be taught or transferred through mentoring in any way",
-          },
+          { id: "a", text: "Asking questions that make the junior developer articulate their own reasoning, surfacing gaps in it" },
+          { id: "b", text: "Simply handing over the direct answer as quickly as possible" },
+          { id: "c", text: "Avoiding any discussion of reasoning and focusing only on final code correctness, always, without exception" },
+          { id: "d", text: "Judgment cannot be taught or transferred through mentoring in any way" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "a",
         explanation: "Question-asking that surfaces a mentee's own reasoning gaps is more effective than direct instruction for transferring judgment.",
       },
       {
@@ -23325,11 +22089,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Such puzzles correlate weakly with the day-to-day skills of navigating a large existing codebase, working through ambiguous requirements, and making pragmatic architecture trade-offs",
+            text: "Such puzzles correlate weakly with day-to-day skills like navigating a large codebase",
           },
           {
             id: "c",
-            text: "Algorithmic puzzles are the single best predictor of on-the-job success for any engineering role",
+            text: "Algorithmic puzzles are the single best predictor of on-the-job success for any engineering role, always, without exception",
           },
           {
             id: "d",
@@ -23343,48 +22107,24 @@ struct UserProfileView: View {
         id: "q19",
         prompt: "What distinguishes a portfolio project that generates callbacks from one that doesn't?",
         options: [
-          {
-            id: "a",
-            text: "The sheer number of tutorial-following projects included",
-          },
-          {
-            id: "b",
-            text: "Depth on a small number of substantial projects with documented reasoning (e.g., explaining why SwiftData was chosen over Core Data) rather than breadth across many shallow, undistinguished projects",
-          },
-          {
-            id: "c",
-            text: "Portfolios should never include any written explanation of decisions made",
-          },
-          {
-            id: "d",
-            text: "Only projects using the newest possible APIs generate callbacks",
-          },
+          { id: "a", text: "The sheer number of tutorial-following projects included" },
+          { id: "b", text: "Portfolios should never include any written explanation of decisions made, always, without exception, ever" },
+          { id: "c", text: "Depth on a small number of substantial projects with documented reasoning, not breadth across shallow ones" },
+          { id: "d", text: "Only projects using the newest possible APIs generate callbacks" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "c",
         explanation: "A single project with genuine documented decision-making outweighs ten shallow tutorial clones, favoring depth and visible reasoning.",
       },
       {
         id: "q20",
         prompt: "What is the recommended approach to staying current with Swift Evolution and WWDC content?",
         options: [
-          {
-            id: "a",
-            text: "Reading every single Evolution proposal and watching every WWDC session in full",
-          },
-          {
-            id: "b",
-            text: "Triage based on relevance to your actual work, going deep only on changes that matter to what you build while maintaining lighter situational awareness of everything else",
-          },
-          {
-            id: "c",
-            text: "Ignoring all official sources and relying solely on secondhand summaries",
-          },
-          {
-            id: "d",
-            text: "Staying current is unnecessary once initial Swift proficiency is achieved",
-          },
+          { id: "a", text: "Reading every single Evolution proposal and watching every WWDC session in full, always, without exception" },
+          { id: "b", text: "Staying current is unnecessary once initial Swift proficiency is achieved" },
+          { id: "c", text: "Ignoring all official sources and relying solely on secondhand summaries" },
+          { id: "d", text: "Triage based on relevance to your actual work, going deep only on changes that matter" },
         ],
-        correctOptionId: "b",
+        correctOptionId: "d",
         explanation: "The recommendation is triage over exhaustive consumption, focusing deep attention only on changes relevant to one's actual work.",
       },
     ],
