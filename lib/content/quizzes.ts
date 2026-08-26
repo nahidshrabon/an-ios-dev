@@ -18621,7 +18621,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "What is the genuine value of pseudolocalization testing, according to 71.13?",
+        prompt: "What is the genuine value of pseudolocalization testing?",
         options: [
           { id: "a", text: "It provides entirely final, fully ready-to-ship translations for every single supported language" },
           { id: "b", text: "It has absolutely no relationship whatsoever to actual translation length or layout behavior" },
@@ -18641,7 +18641,7 @@ struct UserProfileView: View {
           { id: "d", text: "It converts all strings entirely and exclusively to uppercase only, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "The section describes pseudolocalization as artificially lengthening strings and substituting accented characters specifically to surface truncation, wrapping, and hardcoded-string issues without needing real translations.",
+        explanation: "Pseudolocalization artificially lengthens strings and substitutes accented characters specifically to surface truncation, wrapping, and hardcoded-string issues without needing real translations.",
       },
       {
         id: "q15",
@@ -18669,7 +18669,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "Why can even a perfectly localized in-app experience underperform in a given market, according to 71.14?",
+        prompt: "Why can even a perfectly localized in-app experience underperform in a given market?",
         options: [
           { id: "a", text: "In-app localization quality has absolutely no relationship whatsoever to App Store performance" },
           { id: "b", text: "App Store algorithms entirely and completely ignore metadata localization altogether" },
@@ -18677,11 +18677,11 @@ struct UserProfileView: View {
           { id: "d", text: "Store listings are entirely and automatically translated regardless of any developer action whatsoever, always" },
         ],
         correctOptionId: "c",
-        explanation: "The section highlights that store listing localization directly affects discoverability and conversion, meaning in-app localization quality alone doesn't guarantee good market performance if the listing itself remains untranslated.",
+        explanation: "Store listing localization directly affects discoverability and conversion, meaning in-app localization quality alone doesn't guarantee good market performance if the listing itself remains untranslated.",
       },
       {
         id: "q17",
-        prompt: "What state do AI-drafted translations receive within the String Catalog, according to 71.15?",
+        prompt: "What state do AI-drafted translations receive within the String Catalog?",
         options: [
           { id: "a", text: "They are entirely and automatically marked as fully \"translated\" and final, requiring absolutely no review" },
           { id: "b", text: "They automatically and completely overwrite any existing human-reviewed translations entirely" },
@@ -18693,7 +18693,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What is the genuine value AI-assisted localization provides, according to 71.15 and the earlier discussion in section 61.5?",
+        prompt: "What is the genuine value AI-assisted localization provides?",
         options: [
           { id: "a", text: "It accelerates the first draft of translation work, while human review remains essential before any translation ships" },
           { id: "b", text: "It entirely and completely replaces the need for absolutely any human translator review" },
@@ -18701,7 +18701,7 @@ struct UserProfileView: View {
           { id: "d", text: "It entirely eliminates the need for translation states and comments altogether, completely" },
         ],
         correctOptionId: "a",
-        explanation: "Both sections consistently frame AI-assisted localization as accelerating the first draft, not eliminating the human review discipline that remains necessary before shipping any translation.",
+        explanation: "AI-assisted localization is best understood as accelerating the first draft, not eliminating the human review discipline that remains necessary before shipping any translation.",
       },
       {
         id: "q19",
@@ -18729,7 +18729,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What broader theme connects String Catalog comments (71.2), pseudolocalization (71.13), and App Store metadata localization (71.14)?",
+        prompt: "What broader theme connects String Catalog comments, pseudolocalization, and App Store metadata localization?",
         options: [
           { id: "a", text: "They are entirely and completely unrelated aspects of shipping a genuinely localized app" },
           { id: "b", text: "All three exclusively and only concern date and number formatting specifically, nothing else" },
@@ -18757,7 +18757,7 @@ struct UserProfileView: View {
           { id: "d", text: "Fuzzy-searching directly to a known file or symbol is consistently faster than traversing a deeply nested navigator" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames these shortcuts as a compounding productivity investment, with \"Open Quickly\" being especially valuable as project size and navigational complexity grow.",
+        explanation: "These shortcuts are a compounding productivity investment, with \"Open Quickly\" being especially valuable as project size and navigational complexity grow.",
       },
       {
         id: "q2",
@@ -18773,7 +18773,7 @@ struct UserProfileView: View {
       },
       {
         id: "q3",
-        prompt: "Why does debugging a widget extension require selecting that extension's own scheme, per the connection drawn to section 68.24?",
+        prompt: "Why does debugging a widget extension require selecting that extension's own scheme?",
         options: [
           {
             id: "a",
@@ -18817,11 +18817,11 @@ struct UserProfileView: View {
           { id: "d", text: "A GUI change produces a diff in the sprawling `.pbxproj` file, while `.xcconfig` produces a small, clean diff" },
         ],
         correctOptionId: "d",
-        explanation: "The section highlights the meaningfully better diff/review experience `.xcconfig` files provide compared to the considerably less human-readable `.pbxproj` format, benefiting team code review workflows.",
+        explanation: "`.xcconfig` files provide a meaningfully better diff/review experience compared to the considerably less human-readable `.pbxproj` format, benefiting team code review workflows.",
       },
       {
         id: "q6",
-        prompt: "What is a Run Script build phase used for, according to 72.5?",
+        prompt: "What is a Run Script build phase used for?",
         options: [
           { id: "a", text: "Letting a developer insert arbitrary shell script execution at a specific point in the build sequence" },
           { id: "b", text: "Only ever for compiling Swift source files specifically, nothing else at all" },
@@ -18833,7 +18833,7 @@ struct UserProfileView: View {
       },
       {
         id: "q7",
-        prompt: "What responsibility comes with the power of Run Script phases, according to the section?",
+        prompt: "What responsibility comes with the power of Run Script phases?",
         options: [
           {
             id: "a",
@@ -18877,11 +18877,11 @@ struct UserProfileView: View {
           { id: "d", text: "A misspelled string-based asset name silently fails at runtime, while a typo in a generated symbol is a compile error" },
         ],
         correctOptionId: "d",
-        explanation: "Converting string-based, runtime-only-discoverable lookups into compile-time-checked Swift symbols eliminates an entire category of silently-failing typo bugs, a pattern the section notes recurs elsewhere (like Core ML's generated interfaces).",
+        explanation: "Converting string-based, runtime-only-discoverable lookups into compile-time-checked Swift symbols eliminates an entire category of silently-failing typo bugs, a pattern that recurs elsewhere too (like Core ML's generated interfaces).",
       },
       {
         id: "q10",
-        prompt: "Why can code behave subtly differently between Debug and Release builds, according to 72.8?",
+        prompt: "Why can code behave subtly differently between Debug and Release builds?",
         options: [
           { id: "a", text: "Certain bugs around undefined behavior or Debug-only assertions can manifest only under Release's optimization level" },
           { id: "b", text: "Debug and Release builds always and invariably produce byte-for-byte identical compiled output" },
@@ -18925,11 +18925,11 @@ struct UserProfileView: View {
           { id: "d", text: "Only ever brand new projects can use any level other than \"complete\" specifically" },
         ],
         correctOptionId: "c",
-        explanation: "The graduated levels mirror the incremental migration philosophy also seen in XCTest-to-Swift-Testing migration (section 65.17), letting teams adopt stricter checking progressively rather than all at once.",
+        explanation: "The graduated levels mirror the same incremental migration philosophy seen in XCTest-to-Swift-Testing migration, letting teams adopt stricter checking progressively rather than all at once.",
       },
       {
         id: "q13",
-        prompt: "What principle from section 69.1 does 72.11's approach to diagnosing slow builds directly connect to?",
+        prompt: "What general performance-tuning principle does diagnosing slow builds directly connect to?",
         options: [
           { id: "a", text: "Binary size reduction techniques specifically, nothing else at all" },
           { id: "b", text: "Property-based testing's random input generation technique entirely, nothing else" },
@@ -18937,7 +18937,7 @@ struct UserProfileView: View {
           { id: "d", text: "The measure-before-optimizing discipline, applied here to build performance rather than runtime performance" },
         ],
         correctOptionId: "d",
-        explanation: "The section explicitly draws this connection — vague complaints like \"the build feels slow\" benefit from actual measurement of where build time is spent before attempting a fix, just as with runtime performance.",
+        explanation: "Vague complaints like \"the build feels slow\" benefit from actual measurement of where build time is spent before attempting a fix, just as with runtime performance.",
       },
       {
         id: "q14",
@@ -18989,7 +18989,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "How do explicit modules relate to `Package.resolved` from section 73.2, according to 72.14?",
+        prompt: "How do explicit modules relate to `Package.resolved`?",
         options: [
           { id: "a", text: "They are entirely and completely unrelated build system concepts whatsoever" },
           { id: "b", text: "`Package.resolved` is entirely and automatically generated from explicit module data alone" },
@@ -18997,7 +18997,7 @@ struct UserProfileView: View {
           { id: "d", text: "Both reflect a broader pattern toward explicitness in dependency resolution, applied to packages and modules respectively" },
         ],
         correctOptionId: "d",
-        explanation: "The section draws a direct parallel between these two mechanisms, both moving from implicit, on-demand resolution toward explicit, precomputed dependency information for improved reliability and parallelism.",
+        explanation: "There's a direct parallel between these two mechanisms, both moving from implicit, on-demand resolution toward explicit, precomputed dependency information for improved reliability and parallelism.",
       },
       {
         id: "q18",
@@ -19013,7 +19013,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What specific area does the section highlight as particularly benefiting from Xcode 27's diagnostics improvements?",
+        prompt: "What specific area particularly benefits from Xcode 27's diagnostics improvements?",
         options: [
           {
             id: "a",
@@ -19033,11 +19033,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section specifically connects diagnostic improvements to the complex type inference and strict concurrency error categories discussed in 72.10 and Part 2's Sendable/actor isolation material, historically difficult areas to diagnose clearly.",
+        explanation: "Diagnostic improvements specifically target the complex type inference and strict concurrency error categories — including Sendable/actor isolation errors — that have historically been difficult to diagnose clearly.",
       },
       {
         id: "q20",
-        prompt: "Why does the section describe improved diagnostic clarity as having \"genuinely compounding value\" across a codebase's development lifecycle?",
+        prompt: "Why does improved diagnostic clarity have \"genuinely compounding value\" across a codebase's development lifecycle?",
         options: [
           { id: "a", text: "Diagnostic improvements only ever matter a single time, at initial project setup exclusively" },
           { id: "b", text: "Diagnostic clarity has absolutely no measurable effect whatsoever on developer productivity at all" },
@@ -19057,7 +19057,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "How does SPM's integration model contrast with CocoaPods, according to 73.1?",
+        prompt: "How does SPM's integration model contrast with CocoaPods?",
         options: [
           { id: "a", text: "Both strictly require an entirely identical separate installation step and generated workspace" },
           { id: "b", text: "CocoaPods is genuinely and natively integrated into Xcode's build process, while SPM is not" },
@@ -19101,11 +19101,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section recommends committing `Package.resolved` for application projects specifically to prevent \"works on my machine\" inconsistencies, while noting this guidance differs for library packages meant for external consumption.",
+        explanation: "The recommendation is to commit `Package.resolved` for application projects specifically to prevent \"works on my machine\" inconsistencies, while this guidance differs for library packages meant for external consumption.",
       },
       {
         id: "q4",
-        prompt: "Why is creating an internal Swift package for a single app's own modularization considered legitimate, per 73.3?",
+        prompt: "Why is creating an internal Swift package for a single app's own modularization considered legitimate?",
         options: [
           { id: "a", text: "Internal packages provide absolutely no real benefit whatsoever over simple folder organization" },
           { id: "b", text: "Internal packages can only ever be used for code meant for public, external distribution specifically" },
@@ -19113,7 +19113,7 @@ struct UserProfileView: View {
           { id: "d", text: "Creating internal packages is entirely discouraged and considered a genuine anti-pattern altogether" },
         ],
         correctOptionId: "c",
-        explanation: "The section connects this directly to section 48's modularization principles — package boundaries provide genuine, compiler-enforced separation that simple folder organization within a single target cannot replicate.",
+        explanation: "This connects directly to general modularization principles — package boundaries provide genuine, compiler-enforced separation that simple folder organization within a single target cannot replicate.",
       },
       {
         id: "q5",
@@ -19177,7 +19177,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "When does the section suggest switching from a local path dependency to a proper versioned, remote reference?",
+        prompt: "When is it sensible to switch from a local path dependency to a proper versioned, remote reference?",
         options: [
           { id: "a", text: "Immediately, before absolutely any development work has even begun at all" },
           { id: "b", text: "Only ever when the package needs to support binary targets specifically, nothing else" },
@@ -19185,11 +19185,11 @@ struct UserProfileView: View {
           { id: "d", text: "Once a package's API is stable, for external sharing or decoupled cadence" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames this as a natural progression — local path dependencies suit active, in-development iteration, while a stable API warrants moving to a proper versioned reference for genuine sharing or decoupled release cadence.",
+        explanation: "This is a natural progression — local path dependencies suit active, in-development iteration, while a stable API warrants moving to a proper versioned reference for genuine sharing or decoupled release cadence.",
       },
       {
         id: "q10",
-        prompt: "Why does the section describe every added dependency as \"a genuine, ongoing maintenance liability, not merely a one-time convenience\"?",
+        prompt: "Why is every added dependency \"a genuine, ongoing maintenance liability, not merely a one-time convenience\"?",
         options: [
           { id: "a", text: "An unmaintained dependency can eventually become a genuine security risk, and removing it later is considerably more costly" },
           { id: "b", text: "Dependencies have absolutely no ongoing cost whatsoever once successfully integrated into a project" },
@@ -19197,7 +19197,7 @@ struct UserProfileView: View {
           { id: "d", text: "Maintenance liability only ever applies to binary target dependencies specifically, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames dependency evaluation as a worthwhile investment precisely because unmaintained dependencies carry real, growing risk over time, and removal later is more costly than upfront diligence.",
+        explanation: "Dependency evaluation is a worthwhile investment precisely because unmaintained dependencies carry real, growing risk over time, and removal later is more costly than upfront diligence.",
       },
       {
         id: "q11",
@@ -19237,7 +19237,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "How do SPM build plugins compare to Xcode Run Script phases (section 72.5)?",
+        prompt: "How do SPM build plugins compare to Xcode Run Script phases?",
         options: [
           { id: "a", text: "They are entirely and completely functionally identical with absolutely no meaningful distinction" },
           { id: "b", text: "Build plugins can only ever run after a build completes, never actually during it" },
@@ -19245,7 +19245,7 @@ struct UserProfileView: View {
           { id: "d", text: "Build plugins provide a more portable, versioned, shareable alternative to each project's own separate shell script" },
         ],
         correctOptionId: "d",
-        explanation: "The section frames build plugins as a more shareable, versioned evolution of the Run Script phase concept, letting multiple projects use genuinely identical tooling rather than divergent copies of similar scripts.",
+        explanation: "Build plugins are a more shareable, versioned evolution of the Run Script phase concept, letting multiple projects use genuinely identical tooling rather than divergent copies of similar scripts.",
       },
       {
         id: "q14",
@@ -19285,7 +19285,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What do private package registries let an organization do, according to 73.12?",
+        prompt: "What do private package registries let an organization do?",
         options: [
           { id: "a", text: "Only ever download public packages faster, with absolutely no support for internal code" },
           { id: "b", text: "Private registries completely replace the need for `Package.resolved` entirely across the board" },
@@ -19297,7 +19297,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What is a genuine use case for dependency mirrors, per 73.12?",
+        prompt: "What is a genuine use case for dependency mirrors?",
         options: [
           { id: "a", text: "Mirrors are purely and entirely for improving download speed with absolutely no resilience benefit" },
           { id: "b", text: "Mirrors entirely eliminate the need for version requirements altogether, completely" },
@@ -19305,19 +19305,19 @@ struct UserProfileView: View {
           { id: "d", text: "Providing resilience against a public source becoming temporarily unavailable, by redirecting to an internal cached copy" },
         ],
         correctOptionId: "d",
-        explanation: "The section describes mirrors as useful for redirecting a public package's resolution to an internal cached copy, providing resilience if the original public source becomes temporarily unavailable.",
+        explanation: "Mirrors are useful for redirecting a public package's resolution to an internal cached copy, providing resilience if the original public source becomes temporarily unavailable.",
       },
       {
         id: "q18",
-        prompt: "What migration philosophy does 73.13's incremental CocoaPods-to-SPM approach share with section 65.17?",
+        prompt: "What migration philosophy does an incremental CocoaPods-to-SPM approach share with an incremental XCTest-to-Swift-Testing migration?",
         options: [
           { id: "a", text: "Both favor an opportunistic, one-item-at-a-time migration, verifying each replacement first" },
           { id: "b", text: "Both strictly recommend a disruptive, all-at-once migration for maximum overall consistency" },
-          { id: "c", text: "Section 65.17 and 73.13 describe entirely and completely unrelated migration strategies" },
+          { id: "c", text: "They describe entirely and completely unrelated migration strategies" },
           { id: "d", text: "Both strictly require abandoning the existing tooling entirely before any migration work even begins" },
         ],
         correctOptionId: "a",
-        explanation: "Both sections favor incremental, verifiable migration over disruptive, all-at-once replacement — reducing risk by validating each individual change before proceeding to the next.",
+        explanation: "Both favor incremental, verifiable migration over disruptive, all-at-once replacement — reducing risk by validating each individual change before proceeding to the next.",
       },
       {
         id: "q19",
@@ -19341,11 +19341,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly frames the incremental approach's value in terms of verifiability — each step can be confirmed working before proceeding, unlike a single large, hard-to-diagnose migration attempt.",
+        explanation: "The incremental approach's value is verifiability — each step can be confirmed working before proceeding, unlike a single large, hard-to-diagnose migration attempt.",
       },
       {
         id: "q20",
-        prompt: "What should happen for CocoaPods dependencies that have no available SPM equivalent, according to 73.13?",
+        prompt: "What should happen for CocoaPods dependencies that have no available SPM equivalent?",
         options: [
           { id: "a", text: "The entire migration must be entirely abandoned if even a single dependency lacks an SPM equivalent" },
           { id: "b", text: "Dependencies without SPM equivalents must be entirely deleted from the project regardless of necessity" },
@@ -19353,7 +19353,7 @@ struct UserProfileView: View {
           { id: "d", text: "CocoaPods and SPM can categorically never coexist within the same project under any circumstances whatsoever" },
         ],
         correctOptionId: "c",
-        explanation: "The section's incremental approach allows for genuinely SPM-unavailable dependencies to be handled separately (via alternatives or continued CocoaPods use for just those), rather than requiring the entire migration to stall on unavailable equivalents.",
+        explanation: "The incremental approach allows for genuinely SPM-unavailable dependencies to be handled separately (via alternatives or continued CocoaPods use for just those), rather than requiring the entire migration to stall on unavailable equivalents.",
       },
     ],
   },
@@ -19409,11 +19409,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section distinguishes rebase's linear-history-producing replay approach from merge's explicit branching-and-rejoining structure with a dedicated merge commit.",
+        explanation: "Rebase's linear-history-producing replay approach is distinct from merge's explicit branching-and-rejoining structure with a dedicated merge commit.",
       },
       {
         id: "q4",
-        prompt: "What genuine caution does the section raise about interactive rebase?",
+        prompt: "What genuine caution applies to interactive rebase?",
         options: [
           { id: "a", text: "Interactive rebase should categorically never be used under any circumstances whatsoever" },
           { id: "b", text: "Interactive rebase can only ever reorder commits specifically, never squash or edit them" },
@@ -19421,7 +19421,7 @@ struct UserProfileView: View {
           { id: "d", text: "Interactive rebase automatically and fully pushes rewritten history without any risk whatsoever" },
         ],
         correctOptionId: "c",
-        explanation: "The section specifically warns that rewriting already-shared history creates confusion for collaborators, making interactive rebase most appropriate for local, not-yet-shared commits.",
+        explanation: "Rewriting already-shared history creates confusion for collaborators, making interactive rebase most appropriate for local, not-yet-shared commits.",
       },
       {
         id: "q5",
@@ -19437,7 +19437,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "What alternative strategy does the section suggest for resolving a genuinely difficult `.pbxproj` conflict?",
+        prompt: "What alternative strategy helps resolve a genuinely difficult `.pbxproj` conflict?",
         options: [
           { id: "a", text: "Sometimes opening the project in Xcode and re-adding a conflicting file reference cleanly" },
           { id: "b", text: "Deleting the entire project entirely and starting completely from scratch" },
@@ -19445,7 +19445,7 @@ struct UserProfileView: View {
           { id: "d", text: "Merging conflicts in `.pbxproj` files is entirely technically impossible and must always be avoided" },
         ],
         correctOptionId: "a",
-        explanation: "The section suggests that Xcode's own project file manipulation is considerably safer than manual text editing of this particular, unusually sensitive file format.",
+        explanation: "Xcode's own project file manipulation is considerably safer than manual text editing of this particular, unusually sensitive file format.",
       },
       {
         id: "q7",
@@ -19473,7 +19473,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "What lightweight convention does the section mention for distinguishing blocking from non-blocking PR feedback?",
+        prompt: "What lightweight convention helps distinguish blocking from non-blocking PR feedback?",
         options: [
           { id: "a", text: "Writing all feedback entirely in a separate document outside the PR itself" },
           { id: "b", text: "Blocking and non-blocking feedback categorically cannot actually be distinguished in a PR" },
@@ -19485,7 +19485,7 @@ struct UserProfileView: View {
       },
       {
         id: "q9",
-        prompt: "Why is a specific, actionable review comment considered better than a vague one, according to 74.6?",
+        prompt: "Why is a specific, actionable review comment considered better than a vague one?",
         options: [
           { id: "a", text: "Vague comments are always and invariably faster for reviewers to write and equally useful" },
           { id: "b", text: "Actionable comments are only ever relevant for security-related code changes specifically" },
@@ -19497,7 +19497,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "According to 74.7, what information does a good commit message capture that the diff itself typically doesn't?",
+        prompt: "What information does a good commit message capture that the diff itself typically doesn't?",
         options: [
           { id: "a", text: "The \"why\" — the actual reasoning or problem being solved — since the \"what\" is usually evident from the diff" },
           { id: "b", text: "The exact specific line numbers that changed in the file, nothing else" },
@@ -19505,7 +19505,7 @@ struct UserProfileView: View {
           { id: "d", text: "The exact precise timestamp of the commit itself, nothing else whatsoever" },
         ],
         correctOptionId: "a",
-        explanation: "The section emphasizes that the diff already shows what changed, while the reasoning behind a change (why a specific value or approach was chosen) is the information genuinely at risk of being lost if not explicitly captured.",
+        explanation: "The diff already shows what changed, while the reasoning behind a change (why a specific value or approach was chosen) is the information genuinely at risk of being lost if not explicitly captured.",
       },
       {
         id: "q11",
@@ -19541,7 +19541,7 @@ struct UserProfileView: View {
           { id: "d", text: "Pre-commit hooks can only ever check for security vulnerabilities specifically, not style violations" },
         ],
         correctOptionId: "c",
-        explanation: "The section frames commit-time detection as meaningfully cheaper than later detection, since the developer still has full context on the change and hasn't yet moved on or pushed it into shared history.",
+        explanation: "Commit-time detection is meaningfully cheaper than later detection, since the developer still has full context on the change and hasn't yet moved on or pushed it into shared history.",
       },
       {
         id: "q13",
@@ -19557,7 +19557,7 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What factor determines the right choice between trunk-based development and a release-branch model, according to 74.9?",
+        prompt: "What factor determines the right choice between trunk-based development and a release-branch model?",
         options: [
           { id: "a", text: "An app's release cadence and risk tolerance, favoring trunk-based for continuous shipping or release branches for extended QA" },
           { id: "b", text: "The choice is entirely arbitrary and has absolutely no relationship to an app's actual development practices" },
@@ -19565,11 +19565,11 @@ struct UserProfileView: View {
           { id: "d", text: "Trunk-based development is always and objectively superior regardless of context whatsoever" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames this as a genuine trade-off depending on specific circumstances — release cadence, testing maturity, and the need for a stable release candidate window — rather than one approach being universally correct.",
+        explanation: "This is a genuine trade-off depending on specific circumstances — release cadence, testing maturity, and the need for a stable release candidate window — rather than one approach being universally correct.",
       },
       {
         id: "q15",
-        prompt: "What role do feature flags play in trunk-based development, according to the diagram in 74.9?",
+        prompt: "What role do feature flags play in trunk-based development?",
         options: [
           {
             id: "a",
@@ -19589,11 +19589,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section notes that trunk-based development uses feature flags to gate incomplete work merged into `main`, as an alternative to isolating unfinished work on long-lived branches.",
+        explanation: "Trunk-based development uses feature flags to gate incomplete work merged into `main`, as an alternative to isolating unfinished work on long-lived branches.",
       },
       {
         id: "q16",
-        prompt: "What practical advice does 74.10 give for a first contribution to an open-source Swift project?",
+        prompt: "What is practical advice for a first contribution to an open-source Swift project?",
         options: [
           { id: "a", text: "Attempt the largest, most ambitious change possible to demonstrate skill immediately" },
           { id: "b", text: "Avoid entirely reading the project's contribution guidelines in order to save time" },
@@ -19601,11 +19601,11 @@ struct UserProfileView: View {
           { id: "d", text: "Immediately and directly request commit access before making any actual contribution whatsoever" },
         ],
         correctOptionId: "c",
-        explanation: "The section recommends small first contributions specifically because they're easier for often-volunteer maintainers to review promptly and provide low-risk exposure to a project's specific conventions.",
+        explanation: "Small first contributions are recommended specifically because they're easier for often-volunteer maintainers to review promptly and provide low-risk exposure to a project's specific conventions.",
       },
       {
         id: "q17",
-        prompt: "Why does the section recommend reading a project's CONTRIBUTING.md before doing anything else?",
+        prompt: "Why is reading a project's CONTRIBUTING.md a sensible first step before doing anything else?",
         options: [
           { id: "a", text: "CONTRIBUTING.md files are purely and entirely optional and rarely ever contain useful information" },
           { id: "b", text: "Reading contribution guidelines is entirely unnecessary if a contributor has experience with other open-source projects" },
@@ -19617,7 +19617,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "Why might a large, ambitious first contribution risk rejection or extensive rework, according to 74.10?",
+        prompt: "Why might a large, ambitious first contribution risk rejection or extensive rework?",
         options: [
           { id: "a", text: "Significant effort invested without familiarity with a project's actual review norms risks substantial rework or rejection" },
           { id: "b", text: "Large contributions are always and automatically merged regardless of any code quality whatsoever" },
@@ -19625,11 +19625,11 @@ struct UserProfileView: View {
           { id: "d", text: "Open-source projects only ever accept contributions from long-established team members specifically" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames starting small as reducing the risk of investing significant effort into work that ultimately doesn't align with a project's actual conventions and expectations, discovered only after a large investment of effort.",
+        explanation: "Starting small reduces the risk of investing significant effort into work that ultimately doesn't align with a project's actual conventions and expectations, discovered only after a large investment of effort.",
       },
       {
         id: "q19",
-        prompt: "What does the section say about engaging with an open-source project's review and discussion norms?",
+        prompt: "How should a contributor engage with an open-source project's review and discussion norms?",
         options: [
           {
             id: "a",
@@ -19649,11 +19649,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that a new contributor should be prepared for a project's norms to differ from their own team's internal conventions, requiring genuine engagement rather than assuming familiarity.",
+        explanation: "A new contributor should be prepared for a project's norms to differ from their own team's internal conventions, requiring genuine engagement rather than assuming familiarity.",
       },
       {
         id: "q20",
-        prompt: "What common thread connects `.gitignore` hygiene (74.5) and Git hooks for linting (74.8)?",
+        prompt: "What common thread connects `.gitignore` hygiene and Git hooks for linting?",
         options: [
           { id: "a", text: "They are entirely and completely unrelated aspects of Git usage with absolutely no shared purpose" },
           { id: "b", text: "`.gitignore` and Git hooks both exclusively and only concern binary file handling specifically" },
@@ -19673,7 +19673,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What range of checks does SwiftLint perform, according to 75.1?",
+        prompt: "What range of checks does SwiftLint perform?",
         options: [
           { id: "a", text: "A configurable range from simple formatting conventions to genuinely substantive checks like force-unwrap usage" },
           { id: "b", text: "Only ever purely cosmetic formatting rules with absolutely no substantive value whatsoever" },
@@ -19681,7 +19681,7 @@ struct UserProfileView: View {
           { id: "d", text: "SwiftLint exclusively and only checks for missing documentation comments, nothing else" },
         ],
         correctOptionId: "a",
-        explanation: "SwiftLint's rule set spans from simple style conventions to more substantive checks connecting to real correctness concerns, like force-unwrap usage discussed in the crash material from section 68.9.",
+        explanation: "SwiftLint's rule set spans from simple style conventions to more substantive checks connecting to real correctness concerns, like force-unwrap usage and the crashes it can cause.",
       },
       {
         id: "q2",
@@ -19705,7 +19705,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section warns that a rule set flagging purely stylistic preferences a team doesn't actually care about can erode the practice of taking lint warnings seriously, undermining genuinely valuable checks in the process.",
+        explanation: "A rule set flagging purely stylistic preferences a team doesn't actually care about can erode the practice of taking lint warnings seriously, undermining genuinely valuable checks in the process.",
       },
       {
         id: "q3",
@@ -19717,7 +19717,7 @@ struct UserProfileView: View {
           { id: "d", text: "Formatters categorically cannot be integrated into any automated workflow whatsoever, ever" },
         ],
         correctOptionId: "c",
-        explanation: "The section distinguishes formatters' direct-rewrite approach from linting's detect-and-report approach, which has implications for how each tool is best integrated into a workflow.",
+        explanation: "Formatters' direct-rewrite approach is distinct from linting's detect-and-report approach, which has implications for how each tool is best integrated into a workflow.",
       },
       {
         id: "q4",
@@ -19729,7 +19729,7 @@ struct UserProfileView: View {
           { id: "d", text: "There's no judgment call in consistent style application, unlike linting's more substantive, judgment-requiring checks" },
         ],
         correctOptionId: "d",
-        explanation: "The section distinguishes formatting's unambiguous, judgment-free application from linting's more substantive checks, which often require actual developer judgment rather than automatic resolution.",
+        explanation: "Formatting's unambiguous, judgment-free application is distinct from linting's more substantive checks, which often require actual developer judgment rather than automatic resolution.",
       },
       {
         id: "q5",
@@ -19741,7 +19741,7 @@ struct UserProfileView: View {
           { id: "d", text: "Custom rules can only ever check for trailing whitespace and similar formatting issues specifically" },
         ],
         correctOptionId: "a",
-        explanation: "The example given — flagging direct network calls within a View type — shows how custom rules encode and automatically enforce a team's own specific architectural discipline, discussed in this curriculum's architecture material.",
+        explanation: "The example given — flagging direct network calls within a View type — shows how custom rules encode and automatically enforce a team's own specific architectural discipline.",
       },
       {
         id: "q6",
@@ -19749,15 +19749,15 @@ struct UserProfileView: View {
         options: [
           {
             id: "a",
-            text: "It has absolutely no relationship whatsoever to any other material in this curriculum",
+            text: "It has absolutely no relationship whatsoever to any broader architectural principle",
           },
           {
             id: "b",
-            text: "The view/view-model separation principle discussed in the earlier architecture material",
+            text: "The view/view-model separation principle central to MVVM-style architecture",
           },
           {
             id: "c",
-            text: "It connects exclusively to Core Animation's layer/view separation from section 62.1 specifically",
+            text: "It connects exclusively to Core Animation's layer/view separation specifically",
           },
           {
             id: "d",
@@ -19765,7 +19765,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects this custom rule example to the view/view-model separation architectural discipline covered earlier in the curriculum's architecture sections.",
+        explanation: "This custom rule example connects to the view/view-model separation architectural discipline central to MVVM-style architecture.",
       },
       {
         id: "q7",
@@ -19781,7 +19781,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "What ongoing costs does genuinely unused (dead) code carry, according to 75.4?",
+        prompt: "What ongoing costs does genuinely unused (dead) code carry?",
         options: [
           { id: "a", text: "None whatsoever; unused code has absolutely no measurable impact once written, ever" },
           { id: "b", text: "Unused code automatically and fully improves code coverage metrics somehow, entirely" },
@@ -19789,11 +19789,11 @@ struct UserProfileView: View {
           { id: "d", text: "Unnecessary compile time, developer confusion over whether it's still relevant, and occasionally a hidden liability" },
         ],
         correctOptionId: "d",
-        explanation: "The section lists several genuine, ongoing costs beyond mere tidiness — compile time overhead, developer confusion, and the risk of unnoticed, quietly-broken code lingering unaddressed.",
+        explanation: "There are several genuine, ongoing costs beyond mere tidiness — compile time overhead, developer confusion, and the risk of unnoticed, quietly-broken code lingering unaddressed.",
       },
       {
         id: "q9",
-        prompt: "What kinds of checks does Danger-Swift automate, according to 75.5?",
+        prompt: "What kinds of checks does Danger-Swift automate?",
         options: [
           { id: "a", text: "Common, repetitive PR review tasks, like flagging untested changes or oversized PRs" },
           { id: "b", text: "Only ever checking for correct indentation and whitespace specifically, nothing else" },
@@ -19841,7 +19841,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "What genuine trade-off does the warnings-as-errors policy introduce, according to 75.6?",
+        prompt: "What genuine trade-off does the warnings-as-errors policy introduce?",
         options: [
           { id: "a", text: "There is absolutely no real trade-off whatsoever; this policy has only benefits and zero downsides" },
           { id: "b", text: "This particular policy only ever affects Release builds specifically, never Debug builds at all" },
@@ -19849,11 +19849,11 @@ struct UserProfileView: View {
           { id: "d", text: "It can block a build entirely from a third-party warning, outside the team's control" },
         ],
         correctOptionId: "d",
-        explanation: "The section highlights the real risk of a third-party dependency's warning blocking a build entirely, requiring teams to have a deliberate, scoped mechanism for handling such cases without abandoning the policy.",
+        explanation: "There's a real risk of a third-party dependency's warning blocking a build entirely, requiring teams to have a deliberate, scoped mechanism for handling such cases without abandoning the policy.",
       },
       {
         id: "q13",
-        prompt: "What mechanism does the section suggest for handling an unfixable, third-party-sourced warning under a warnings-as-errors policy?",
+        prompt: "What mechanism helps handle an unfixable, third-party-sourced warning under a warnings-as-errors policy?",
         options: [
           { id: "a", text: "A clear, well-documented suppression mechanism, like a targeted compiler flag exception" },
           { id: "b", text: "Permanently and completely disabling warnings-as-errors for the entire project altogether" },
@@ -19861,11 +19861,11 @@ struct UserProfileView: View {
           { id: "d", text: "There is absolutely no viable mechanism; teams must simply accept blocked builds indefinitely, forever" },
         ],
         correctOptionId: "a",
-        explanation: "The section recommends a targeted, well-documented suppression approach specifically for externally-sourced warnings, avoiding both abandoning the policy entirely and being permanently blocked.",
+        explanation: "A targeted, well-documented suppression approach specifically for externally-sourced warnings is recommended, avoiding both abandoning the policy entirely and being permanently blocked.",
       },
       {
         id: "q14",
-        prompt: "What does Sourcery generate code from, according to 75.7?",
+        prompt: "What does Sourcery generate code from?",
         options: [
           {
             id: "a",
@@ -19889,7 +19889,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What class of bug does Sourcery's automatic mock generation eliminate, according to the example in 75.7?",
+        prompt: "What class of bug does Sourcery's automatic mock generation eliminate?",
         options: [
           { id: "a", text: "Memory leaks caused specifically by retain cycles, nothing else at all" },
           { id: "b", text: "Race conditions occurring specifically within concurrent code, nothing else whatsoever" },
@@ -19901,15 +19901,15 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "How does Sourcery's mock generation connect to earlier testing material from Part 10?",
+        prompt: "How does Sourcery's mock generation connect to the general concept of mock test doubles?",
         options: [
-          { id: "a", text: "It has absolutely no relationship whatsoever to any earlier testing content in the curriculum" },
+          { id: "a", text: "It has absolutely no relationship whatsoever to mock test doubles" },
           { id: "b", text: "Sourcery can only ever generate UI tests specifically, not mock services at all" },
           { id: "c", text: "Sourcery completely replaces the need for Swift Testing entirely across the board, always" },
-          { id: "d", text: "It directly connects to the mock/test-double material from earlier sections, automating manual mock writing" },
+          { id: "d", text: "It directly connects to the mock/test-double concept, automating manual mock writing" },
         ],
         correctOptionId: "d",
-        explanation: "The section explicitly ties Sourcery's mock generation capability back to the manually-written mock service examples covered in sections 65.14 and 66.1.",
+        explanation: "Sourcery's mock generation capability ties directly back to manually-written mock service test doubles, automating the boilerplate a developer would otherwise write by hand.",
       },
       {
         id: "q17",
@@ -19921,7 +19921,7 @@ struct UserProfileView: View {
           { id: "d", text: "SwiftLint can automatically and fully rewrite code exactly like a formatter does, entirely" },
         ],
         correctOptionId: "a",
-        explanation: "The section frames linting and formatting as distinct, complementary concerns — detection/reporting versus direct, unambiguous style rewriting — each suited to different workflow integration approaches.",
+        explanation: "Linting and formatting are distinct, complementary concerns — detection/reporting versus direct, unambiguous style rewriting — each suited to different workflow integration approaches.",
       },
       {
         id: "q18",
@@ -19945,19 +19945,19 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Both integration points serve the same underlying goal of catching quality issues early, connecting to the broader \"catch it cheaply, catch it early\" theme discussed for Git hooks in the previous section.",
+        explanation: "Both integration points serve the same underlying goal of catching quality issues early, connecting to the broader \"catch it cheaply, catch it early\" theme that applies to Git hooks generally.",
       },
       {
         id: "q19",
-        prompt: "What does the section suggest is the ideal outcome of a well-configured code quality tooling setup across SwiftLint, formatters, Periphery, and Danger-Swift?",
+        prompt: "What is the ideal outcome of a well-configured code quality tooling setup across SwiftLint, formatters, Periphery, and Danger-Swift?",
         options: [
           { id: "a", text: "Eliminating the need for any human code review entirely, across the whole project" },
           { id: "b", text: "Making builds meaningfully slower and more cumbersome for the sake of thoroughness alone" },
           { id: "c", text: "Freeing human attention to focus on substantive concerns like correctness and design, by automating mechanical tasks" },
-          { id: "d", text: "Replacing the need for any testing infrastructure covered in Part 10 entirely" },
+          { id: "d", text: "Replacing the need for any testing infrastructure entirely" },
         ],
         correctOptionId: "c",
-        explanation: "Across the tools covered in this section, the recurring theme is automating mechanical concerns (style, dead code, PR checklist items, boilerplate) to free human attention for what genuinely requires human judgment.",
+        explanation: "Across these tools, the recurring theme is automating mechanical concerns (style, dead code, PR checklist items, boilerplate) to free human attention for what genuinely requires human judgment.",
       },
       {
         id: "q20",
@@ -19969,7 +19969,7 @@ struct UserProfileView: View {
           { id: "d", text: "SwiftLint detects style/convention issues; Sourcery generates boilerplate from existing code" },
         ],
         correctOptionId: "d",
-        explanation: "This pairing correctly reflects each tool's actual role as described in the section — SwiftLint for style/convention detection, and Sourcery for automatic, template-based code generation from existing type structure.",
+        explanation: "This pairing correctly reflects each tool's actual role — SwiftLint for style/convention detection, and Sourcery for automatic, template-based code generation from existing type structure.",
       },
     ],
   },
@@ -19981,7 +19981,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "Why does CI matter specifically for mobile, according to 76.1?",
+        prompt: "Why does CI matter specifically for mobile?",
         options: [
           {
             id: "a",
@@ -20001,11 +20001,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section highlights iOS-specific complexity (signing, profiles, device targeting) as a reason automated CI verification provides more value than for simpler build environments.",
+        explanation: "iOS-specific complexity (signing, profiles, device targeting) is a reason automated CI verification provides more value than for simpler build environments.",
       },
       {
         id: "q2",
-        prompt: "How does CI connect to the testing discipline established throughout Part 10?",
+        prompt: "How does CI connect to the general testing discipline of writing and running automated tests?",
         options: [
           {
             id: "a",
@@ -20025,7 +20025,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly ties CI's value to closing the gap between having tests and actually, reliably running them before every merge, directly connecting back to section 65.1's argument for why tests exist.",
+        explanation: "CI's value comes from closing the gap between having tests and actually, reliably running them before every merge, directly connecting back to the core argument for why tests exist in the first place.",
       },
       {
         id: "q3",
@@ -20073,7 +20073,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes that relying solely on the exit code discards valuable diagnostic detail that `xcresulttool`'s structured extraction can surface for richer CI reporting.",
+        explanation: "Relying solely on the exit code discards valuable diagnostic detail that `xcresulttool`'s structured extraction can surface for richer CI reporting.",
       },
       {
         id: "q5",
@@ -20097,11 +20097,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "Since Xcode itself only runs on macOS, iOS CI fundamentally requires macOS runners, which the section notes are typically more expensive and resource-constrained than Linux alternatives.",
+        explanation: "Since Xcode itself only runs on macOS, iOS CI fundamentally requires macOS runners, which are typically more expensive and resource-constrained than Linux alternatives.",
       },
       {
         id: "q6",
-        prompt: "Why does the macOS runner cost/constraint make build time optimization (76.14) and caching (76.7) particularly consequential for iOS CI?",
+        prompt: "Why does the macOS runner cost/constraint make build time optimization and caching particularly consequential for iOS CI?",
         options: [
           {
             id: "a",
@@ -20121,7 +20121,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects the elevated cost/constraint of macOS runners to the increased importance of build time optimization and caching strategies specifically for iOS CI.",
+        explanation: "The elevated cost/constraint of macOS runners directly increases the importance of build time optimization and caching strategies specifically for iOS CI.",
       },
       {
         id: "q7",
@@ -20145,11 +20145,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames Xcode Cloud's value as its inherent understanding of Apple-specific concepts, reducing setup burden at some cost to general-purpose flexibility compared to GitHub Actions.",
+        explanation: "Xcode Cloud's value comes from its inherent understanding of Apple-specific concepts, reducing setup burden at some cost to general-purpose flexibility compared to GitHub Actions.",
       },
       {
         id: "q8",
-        prompt: "How does caching DerivedData and SPM checkouts connect to the compilation trade-off discussed in section 72.13?",
+        prompt: "How does caching DerivedData and SPM checkouts connect to the incremental-vs-whole-module compilation trade-off?",
         options: [
           {
             id: "a",
@@ -20169,11 +20169,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section directly connects effective caching to enabling incremental-style compilation benefits within CI, avoiding redundant full recompilation on every run.",
+        explanation: "Effective caching directly enables incremental-style compilation benefits within CI, avoiding redundant full recompilation on every run.",
       },
       {
         id: "q9",
-        prompt: "What genuine value does Fastlane provide, according to 76.8?",
+        prompt: "What genuine value does Fastlane provide?",
         options: [
           {
             id: "a",
@@ -20193,7 +20193,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section highlights Fastlane's value as encapsulating frequently-needed, easy-to-get-wrong release automation as reusable actions, rather than requiring teams to build this tooling independently.",
+        explanation: "Fastlane's value lies in encapsulating frequently-needed, easy-to-get-wrong release automation as reusable actions, rather than requiring teams to build this tooling independently.",
       },
       {
         id: "q10",
@@ -20289,11 +20289,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section notes this specific, common, avoidable failure mode, which automated version/build numbering directly eliminates by handling this bookkeeping mechanically rather than relying on manual developer action.",
+        explanation: "This is a specific, common, avoidable failure mode, which automated version/build numbering directly eliminates by handling this bookkeeping mechanically rather than relying on manual developer action.",
       },
       {
         id: "q14",
-        prompt: "How does automating dSYM upload connect to the strict dSYM-matching requirement discussed in section 68.22?",
+        prompt: "How does automating dSYM upload connect to the strict requirement that a dSYM match its exact build?",
         options: [
           {
             id: "a",
@@ -20313,11 +20313,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "This directly closes the gap identified in 68.22 — since exact build-to-dSYM matching is strict, automating upload as a mandatory pipeline step prevents the scenario of a missing matching dSYM for a real crash report.",
+        explanation: "This directly closes that gap — since exact build-to-dSYM matching is strict, automating upload as a mandatory pipeline step prevents the scenario of a missing matching dSYM for a real crash report.",
       },
       {
         id: "q15",
-        prompt: "What CI-specific optimization does 76.14 describe beyond general build time techniques from section 72.11?",
+        prompt: "What CI-specific optimizations go beyond general build time diagnosis techniques?",
         options: [
           {
             id: "a",
@@ -20333,15 +20333,15 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "CI build time cannot actually be optimized beyond what section 72.11 already covers",
+            text: "CI build time cannot actually be optimized any further at all",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section describes CI-specific strategies — job parallelization, pre-configured images, and aggressive caching — building on but extending beyond the general build diagnosis techniques from 72.11.",
+        explanation: "CI-specific strategies — job parallelization, pre-configured images, and aggressive caching — build on but extend beyond general build diagnosis techniques.",
       },
       {
         id: "q16",
-        prompt: "How does parallelizing CI jobs relate to the test sharding principle from section 66.15?",
+        prompt: "How does parallelizing CI jobs relate to the test sharding principle used for a single test suite?",
         options: [
           {
             id: "a",
@@ -20361,7 +20361,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly draws this parallel — both apply the same underlying principle of distributing independent work across parallel execution, just at different granularities (test-level vs. job-level).",
+        explanation: "Both apply the same underlying principle of distributing independent work across parallel execution, just at different granularities (test-level vs. job-level).",
       },
       {
         id: "q17",
@@ -20385,7 +20385,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section specifically illustrates this scenario — two independently-passing PRs can combine to break `main` in a way neither individual PR's CI run would have revealed.",
+        explanation: "This is a classic scenario — two independently-passing PRs can combine to break `main` in a way neither individual PR's CI run would have revealed.",
       },
       {
         id: "q18",
@@ -20413,7 +20413,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What is the relationship between Fastlane's `upload_symbols_to_crashlytics` action (76.13) and third-party crash reporting services mentioned in section 80.4?",
+        prompt: "What is the relationship between Fastlane's `upload_symbols_to_crashlytics` action and third-party crash reporting services generally?",
         options: [
           {
             id: "a",
@@ -20433,11 +20433,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section's example shows dSYM upload targeting a third-party service (Crashlytics), illustrating that automated symbolication support extends to whichever crash reporting infrastructure a team actually uses, connecting to the broader crash reporting material in section 80.4.",
+        explanation: "This example shows dSYM upload targeting a third-party service (Crashlytics), illustrating that automated symbolication support extends to whichever crash reporting infrastructure a team actually uses.",
       },
       {
         id: "q20",
-        prompt: "What overarching theme connects Fastlane's release automation, automated version numbering, and automated dSYM upload across sections 76.8-76.13?",
+        prompt: "What overarching theme connects Fastlane's release automation, automated version numbering, and automated dSYM upload?",
         options: [
           {
             id: "a",
@@ -20541,7 +20541,7 @@ struct UserProfileView: View {
       },
       {
         id: "q4",
-        prompt: "What is \"capability drift,\" as described in 77.3?",
+        prompt: "What is \"capability drift,\"?",
         options: [
           {
             id: "a",
@@ -20589,7 +20589,7 @@ struct UserProfileView: View {
       },
       {
         id: "q6",
-        prompt: "What is the actual diagnostic skill emphasized in 77.4 for resolving signing failures?",
+        prompt: "What is the actual diagnostic skill for resolving signing failures?",
         options: [
           {
             id: "a",
@@ -20609,7 +20609,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes that correctly identifying which specific failure category applies (based on the actual error message) is what turns signing issues from opaque blockers into straightforward, mechanical fixes.",
+        explanation: "Correctly identifying which specific failure category applies (based on the actual error message) is what turns signing issues from opaque blockers into straightforward, mechanical fixes.",
       },
       {
         id: "q7",
@@ -20637,7 +20637,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "Why is the `.xcarchive` (rather than an ordinary build product) the correct artifact for the dSYM upload automation discussed in section 76.13?",
+        prompt: "Why is the `.xcarchive` (rather than an ordinary build product) the correct artifact for automated dSYM upload?",
         options: [
           {
             id: "a",
@@ -20705,11 +20705,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that violating the internal-only requirement carries a real consequence — potential revocation of the enterprise certificate — reflecting Apple's contractual enforcement of this restriction.",
+        explanation: "Violating the internal-only requirement carries a real consequence — potential revocation of the enterprise certificate — reflecting Apple's contractual enforcement of this restriction.",
       },
       {
         id: "q11",
-        prompt: "What genuinely different distribution model does MDM-based custom app distribution represent, according to 77.7?",
+        prompt: "What genuinely different distribution model does MDM-based custom app distribution represent?",
         options: [
           {
             id: "a",
@@ -20733,7 +20733,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "What does Managed App Configuration allow an organization to do, according to 77.7?",
+        prompt: "What does Managed App Configuration allow an organization to do?",
         options: [
           {
             id: "a",
@@ -20753,11 +20753,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section describes Managed App Configuration as letting organizations push pre-configured settings to an app automatically, avoiding the need for manual user configuration.",
+        explanation: "Managed App Configuration lets organizations push pre-configured settings to an app automatically, avoiding the need for manual user configuration.",
       },
       {
         id: "q13",
-        prompt: "What regulatory change is described in 77.8 as driving alternative app marketplaces on iOS?",
+        prompt: "What regulatory change is driving alternative app marketplaces on iOS?",
         options: [
           {
             id: "a",
@@ -20777,7 +20777,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section specifically attributes this shift to the EU's Digital Markets Act, a regulatory requirement scoped specifically to the EU rather than a global policy change.",
+        explanation: "This shift is specifically attributed to the EU's Digital Markets Act, a regulatory requirement scoped specifically to the EU rather than a global policy change.",
       },
       {
         id: "q14",
@@ -20801,7 +20801,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section describes notarization as Apple's attempt to preserve a minimal integrity guarantee for apps distributed outside traditional App Store review, while being distinct from and less extensive than that full review process.",
+        explanation: "Notarization is Apple's attempt to preserve a minimal integrity guarantee for apps distributed outside traditional App Store review, while being distinct from and less extensive than that full review process.",
       },
       {
         id: "q15",
@@ -20825,11 +20825,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit that this distribution model change is scoped specifically to the EU's regulatory requirements and does not apply globally.",
+        explanation: "This distribution model change is scoped specifically to the EU's regulatory requirements and does not apply globally.",
       },
       {
         id: "q16",
-        prompt: "Why does the section describe manual signing as more appropriate than automatic signing specifically for automated build environments?",
+        prompt: "Why is manual signing more appropriate than automatic signing specifically for automated build environments?",
         options: [
           {
             id: "a",
@@ -20853,7 +20853,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "According to 77.1, what does an App ID identify?",
+        prompt: "What does an App ID identify?",
         options: [
           {
             id: "a",
@@ -20877,7 +20877,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "What kind of error would \"Provisioning profile doesn't include device\" typically indicate, according to 77.4's diagnostic categories?",
+        prompt: "What kind of error would \"Provisioning profile doesn't include device\" typically indicate?",
         options: [
           {
             id: "a",
@@ -20901,7 +20901,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "Why is ad hoc distribution unsuitable for general internal company-wide distribution, according to 77.6?",
+        prompt: "Why is ad hoc distribution unsuitable for general internal company-wide distribution?",
         options: [
           {
             id: "a",
@@ -20925,7 +20925,7 @@ struct UserProfileView: View {
       },
       {
         id: "q20",
-        prompt: "What common thread connects capability drift (77.3) and the broader signing diagnosis discussion (77.4)?",
+        prompt: "What common thread connects capability drift and the broader signing diagnosis discussion?",
         options: [
           {
             id: "a",
@@ -20933,7 +20933,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Capability drift is presented as one specific, common example of the kind of binding mismatch that the broader systematic diagnosis approach in 77.4 is designed to identify and resolve",
+            text: "Capability drift is presented as one specific, common example of the kind of binding mismatch that a systematic diagnosis approach is designed to identify and resolve",
           },
           {
             id: "c",
@@ -20941,11 +20941,11 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "77.4 explicitly states that capability drift cannot actually cause signing failures",
+            text: "Capability drift cannot actually cause signing failures",
           },
         ],
         correctOptionId: "b",
-        explanation: "Capability drift is one of the specific, diagnosable root causes listed within the broader systematic approach to identifying and resolving signing failures described in 77.4.",
+        explanation: "Capability drift is one of the specific, diagnosable root causes covered by a broader systematic approach to identifying and resolving signing failures.",
       },
     ],
   },
@@ -20981,7 +20981,7 @@ struct UserProfileView: View {
       },
       {
         id: "q2",
-        prompt: "Which metadata fields carry substantial App Store search weight, according to 78.2?",
+        prompt: "Which metadata fields carry substantial App Store search weight?",
         options: [
           {
             id: "a",
@@ -21001,11 +21001,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies name and subtitle as carrying substantial search weight, alongside the separately-indexed but user-invisible keyword field, distinct from the description's role in conversion rather than search ranking.",
+        explanation: "Name and subtitle carry substantial search weight, alongside the separately-indexed but user-invisible keyword field, distinct from the description's role in conversion rather than search ranking.",
       },
       {
         id: "q3",
-        prompt: "Why does the section recommend localizing screenshots, not just text metadata?",
+        prompt: "Why is it recommended to localize screenshots, not just text metadata?",
         options: [
           {
             id: "a",
@@ -21025,7 +21025,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section connects this to section 71.14's localization discussion, emphasizing that genuinely localized screenshots (not just translated captions) give a more accurate preview of the actual localized experience.",
+        explanation: "This connects to the broader localization discipline: genuinely localized screenshots (not just translated captions) give a more accurate preview of the actual localized experience.",
       },
       {
         id: "q4",
@@ -21073,11 +21073,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explains that required reason APIs close a specific tracking loophole that existed without any user-facing permission prompt, unlike traditional runtime permissions for camera or location.",
+        explanation: "Required reason APIs close a specific tracking loophole that existed without any user-facing permission prompt, unlike traditional runtime permissions for camera or location.",
       },
       {
         id: "q6",
-        prompt: "How do privacy nutrition labels (78.6) parallel Accessibility Nutrition Labels from section 70.18?",
+        prompt: "How do privacy nutrition labels parallel Accessibility Nutrition Labels?",
         options: [
           {
             id: "a",
@@ -21097,7 +21097,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly draws this parallel — both label types exist to let users make informed decisions before downloading, and both carry genuine weight tied to accurate, honest declaration.",
+        explanation: "There's a direct parallel — both label types exist to let users make informed decisions before downloading, and both carry genuine weight tied to accurate, honest declaration.",
       },
       {
         id: "q7",
@@ -21121,11 +21121,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as a genuine speed-versus-reach trade-off — internal testing prioritizes fast iteration, while external testing prioritizes broader, more representative pre-release validation at the cost of a review step.",
+        explanation: "This is a genuine speed-versus-reach trade-off — internal testing prioritizes fast iteration, while external testing prioritizes broader, more representative pre-release validation at the cost of a review step.",
       },
       {
         id: "q8",
-        prompt: "Why does thorough pre-submission preparation reduce rejection risk, according to 78.8?",
+        prompt: "Why does thorough pre-submission preparation reduce rejection risk?",
         options: [
           {
             id: "a",
@@ -21145,11 +21145,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section notes that many rejections are avoidable through careful attention to metadata completeness, privacy declarations, and compliance information, rather than reflecting genuine functionality problems.",
+        explanation: "Many rejections are avoidable through careful attention to metadata completeness, privacy declarations, and compliance information, rather than reflecting genuine functionality problems.",
       },
       {
         id: "q9",
-        prompt: "According to 78.9, where does rejection risk disproportionately concentrate in practice?",
+        prompt: "Where does rejection risk disproportionately concentrate in practice?",
         options: [
           {
             id: "a",
@@ -21169,11 +21169,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies these specific categories as accounting for a disproportionate share of actual rejections, making them worth extra pre-submission scrutiny compared to spreading equal attention everywhere.",
+        explanation: "These specific categories account for a disproportionate share of actual rejections, making them worth extra pre-submission scrutiny compared to spreading equal attention everywhere.",
       },
       {
         id: "q10",
-        prompt: "What practical advice does the section give for allocating pre-submission review time?",
+        prompt: "What is practical advice for allocating pre-submission review time?",
         options: [
           {
             id: "a",
@@ -21193,11 +21193,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly recommends concentrating review effort on the categories known to disproportionately cause rejections, rather than distributing attention evenly across every guideline.",
+        explanation: "The recommendation is to concentrate review effort on the categories known to disproportionately cause rejections, rather than distributing attention evenly across every guideline.",
       },
       {
         id: "q11",
-        prompt: "When might a rejection be resolved without an actual code change, according to 78.10?",
+        prompt: "When might a rejection be resolved without an actual code change?",
         options: [
           {
             id: "a",
@@ -21217,11 +21217,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section highlights that reviewers have limited context, and a misunderstanding-based rejection can sometimes be resolved through clarification rather than an unnecessary code change and resubmission.",
+        explanation: "Reviewers have limited context, and a misunderstanding-based rejection can sometimes be resolved through clarification rather than an unnecessary code change and resubmission.",
       },
       {
         id: "q12",
-        prompt: "Why does the section note that reviewers might lack full context for a submission?",
+        prompt: "Why might reviewers lack full context for a submission?",
         options: [
           {
             id: "a",
@@ -21245,7 +21245,7 @@ struct UserProfileView: View {
       },
       {
         id: "q13",
-        prompt: "What does phased release accomplish, according to 78.11?",
+        prompt: "What does phased release accomplish?",
         options: [
           {
             id: "a",
@@ -21269,15 +21269,15 @@ struct UserProfileView: View {
       },
       {
         id: "q14",
-        prompt: "What earlier risk-management principles does phased release directly extend, according to the section?",
+        prompt: "What other risk-management principles does phased release directly extend?",
         options: [
           {
             id: "a",
-            text: "It has no relationship to any other risk-management concept in the curriculum",
+            text: "It has no relationship to any other risk-management concept",
           },
           {
             id: "b",
-            text: "The same measure-before-full-commitment principle discussed for performance regression budgets (69.19) and merge queues (76.15), applied here to the final release process",
+            text: "The same measure-before-full-commitment principle behind performance regression budgets and merge queues, applied here to the final release process",
           },
           {
             id: "c",
@@ -21285,11 +21285,11 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "It extends only the code signing diagnosis principles from section 77.4",
+            text: "It extends only code signing diagnosis principles",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects phased release to the broader risk-management theme seen in performance budgets and merge queues — catching problems on a limited scale before full exposure.",
+        explanation: "Phased release connects to the broader risk-management theme seen in performance budgets and merge queues — catching problems on a limited scale before full exposure.",
       },
       {
         id: "q15",
@@ -21317,7 +21317,7 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "What is the appropriate way for a well-designed app to use `requestReview()`, according to 78.12?",
+        prompt: "What is the appropriate way for a well-designed app to use `requestReview()`?",
         options: [
           {
             id: "a",
@@ -21337,11 +21337,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section recommends contextually appropriate invocation while relying on the system's own frequency management, rather than assuming or attempting to force every call to produce a visible prompt.",
+        explanation: "The recommendation is contextually appropriate invocation while relying on the system's own frequency management, rather than assuming or attempting to force every call to produce a visible prompt.",
       },
       {
         id: "q17",
-        prompt: "What does App Store Connect's product page A/B testing enable, according to 78.13?",
+        prompt: "What does App Store Connect's product page A/B testing enable?",
         options: [
           {
             id: "a",
@@ -21365,7 +21365,7 @@ struct UserProfileView: View {
       },
       {
         id: "q18",
-        prompt: "How does A/B testing product pages extend the ASO discussion from 78.2, according to the section?",
+        prompt: "How does A/B testing product pages extend general App Store Optimization (ASO) practice?",
         options: [
           {
             id: "a",
@@ -21385,11 +21385,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames A/B testing as extending ASO into measurable, iterative territory, providing real data to inform metadata and visual choices rather than relying purely on intuition.",
+        explanation: "A/B testing extends ASO into measurable, iterative territory, providing real data to inform metadata and visual choices rather than relying purely on intuition.",
       },
       {
         id: "q19",
-        prompt: "What concrete, real-world consequence does the section attribute to an oversized initial app download?",
+        prompt: "What concrete, real-world consequence results from an oversized initial app download?",
         options: [
           {
             id: "a",
@@ -21409,15 +21409,15 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames on-demand resources as addressing a concrete business impact — real user download abandonment triggered by cellular size warnings or blocks — not merely a theoretical optimization concern.",
+        explanation: "On-demand resources address a concrete business impact — real user download abandonment triggered by cellular size warnings or blocks — not merely a theoretical optimization concern.",
       },
       {
         id: "q20",
-        prompt: "How does 78.14's discussion of on-demand resources build on section 69.15's binary size material?",
+        prompt: "How does the App Store's on-demand resources feature build on general binary size reduction techniques?",
         options: [
           {
             id: "a",
-            text: "It contradicts 69.15's recommendations entirely",
+            text: "It contradicts general binary size guidance entirely",
           },
           {
             id: "b",
@@ -21425,15 +21425,15 @@ struct UserProfileView: View {
           },
           {
             id: "c",
-            text: "Section 69.15 and 78.14 discuss entirely unrelated topics",
+            text: "They are entirely unrelated topics",
           },
           {
             id: "d",
-            text: "On-demand resources were only introduced in 78.14, with no prior mention in the curriculum",
+            text: "On-demand resources have no relationship to binary size at all",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly builds on 69.15's earlier introduction of on-demand resources, connecting the general size-reduction technique to the App Store's specific, concrete download thresholds and their real business impact.",
+        explanation: "On-demand resources connect the general size-reduction technique to the App Store's specific, concrete download thresholds and their real business impact.",
       },
     ],
   },
@@ -21445,7 +21445,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What genuine value does threat modeling provide, according to 79.1?",
+        prompt: "What genuine value does threat modeling provide?",
         options: [
           {
             id: "a",
@@ -21493,7 +21493,7 @@ struct UserProfileView: View {
       },
       {
         id: "q3",
-        prompt: "What design goal does CryptoKit pursue, according to 79.3?",
+        prompt: "What design goal does CryptoKit pursue?",
         options: [
           {
             id: "a",
@@ -21541,7 +21541,7 @@ struct UserProfileView: View {
       },
       {
         id: "q5",
-        prompt: "What fundamentally distinguishes asymmetric (public key) cryptography from symmetric encryption, according to 79.5?",
+        prompt: "What fundamentally distinguishes asymmetric (public key) cryptography from symmetric encryption?",
         options: [
           {
             id: "a",
@@ -21561,11 +21561,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section highlights this fundamentally different trust model — public key verification doesn't require the shared-secret approach symmetric encryption relies on.",
+        explanation: "This is a fundamentally different trust model — public key verification doesn't require the shared-secret approach symmetric encryption relies on.",
       },
       {
         id: "q6",
-        prompt: "What earlier curriculum mechanism does the section connect to the foundation of asymmetric cryptography?",
+        prompt: "What other mechanism relies on the same foundation as asymmetric cryptography?",
         options: [
           {
             id: "a",
@@ -21573,7 +21573,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "App Attest (recall section 57.16), which needs to prove authenticity without embedding a shared, extractable secret",
+            text: "App Attest, which needs to prove authenticity without embedding a shared, extractable secret",
           },
           {
             id: "c",
@@ -21585,7 +21585,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects asymmetric cryptography's trust model to App Attest's need to prove authenticity without relying on an extractable shared secret.",
+        explanation: "Asymmetric cryptography's trust model connects directly to App Attest's need to prove authenticity without relying on an extractable shared secret.",
       },
       {
         id: "q7",
@@ -21633,7 +21633,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "This directly connects to the Secure Enclave's hardware isolation discussed in 79.6 — the entire biometric comparison happens within isolated hardware, with the app only receiving a boolean result.",
+        explanation: "This directly connects to the Secure Enclave's hardware isolation — the entire biometric comparison happens within isolated hardware, with the app only receiving a boolean result.",
       },
       {
         id: "q9",
@@ -21685,7 +21685,7 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "What is the genuine trade-off with jailbreak/tamper detection, according to 79.10?",
+        prompt: "What is the genuine trade-off with jailbreak/tamper detection?",
         options: [
           {
             id: "a",
@@ -21705,11 +21705,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as a genuinely limited but real deterrent, distinct from the stronger, hardware-backed guarantee App Attest provides for genuine tamper-resistance needs.",
+        explanation: "This is a genuinely limited but real deterrent, distinct from the stronger, hardware-backed guarantee App Attest provides for genuine tamper-resistance needs.",
       },
       {
         id: "q12",
-        prompt: "How does App Attest (section 57.16) relate to jailbreak detection heuristics, according to 79.10?",
+        prompt: "How does App Attest relate to jailbreak detection heuristics?",
         options: [
           {
             id: "a",
@@ -21729,11 +21729,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section positions App Attest's hardware-backed approach as meaningfully stronger than heuristic-based jailbreak detection, which provides only a limited, secondary layer of protection.",
+        explanation: "App Attest's hardware-backed approach is meaningfully stronger than heuristic-based jailbreak detection, which provides only a limited, secondary layer of protection.",
       },
       {
         id: "q13",
-        prompt: "What genuine shift in default posture does App Tracking Transparency represent, according to 79.11?",
+        prompt: "What genuine shift in default posture does App Tracking Transparency represent?",
         options: [
           {
             id: "a",
@@ -21753,7 +21753,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames ATT as a meaningfully stronger privacy default — shifting from opt-out-by-default to explicit opt-in — compared to the industry's prior tracking norms.",
+        explanation: "ATT represents a meaningfully stronger privacy default — shifting from opt-out-by-default to explicit opt-in — compared to the industry's prior tracking norms.",
       },
       {
         id: "q14",
@@ -21781,7 +21781,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "How does secure logging discipline (79.13) connect to the `Logger` privacy annotation material from section 68.19?",
+        prompt: "How does secure logging discipline connect to `Logger`'s privacy annotation feature?",
         options: [
           {
             id: "a",
@@ -21801,11 +21801,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames secure logging as a practical extension of `Logger`'s existing privacy annotation system, connecting good logging hygiene directly to genuine regulatory compliance obligations discussed in 79.15.",
+        explanation: "Secure logging is a practical extension of `Logger`'s existing privacy annotation system, connecting good logging hygiene directly to genuine regulatory compliance obligations.",
       },
       {
         id: "q16",
-        prompt: "What supply chain security practice does 79.14 connect to `Package.resolved`'s reproducibility guarantee from section 73.2?",
+        prompt: "What supply chain security practice connects to `Package.resolved`'s reproducibility guarantee?",
         options: [
           {
             id: "a",
@@ -21825,11 +21825,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly reframes `Package.resolved`'s version pinning as serving a security purpose beyond build consistency — preventing automatic adoption of unreviewed, potentially compromised dependency updates.",
+        explanation: "`Package.resolved`'s version pinning serves a security purpose beyond build consistency — preventing automatic adoption of unreviewed, potentially compromised dependency updates.",
       },
       {
         id: "q17",
-        prompt: "Why does the section describe GDPR/CCPA compliance and technical security engineering as \"genuinely intertwined concerns\"?",
+        prompt: "Why are GDPR/CCPA compliance and technical security engineering \"genuinely intertwined concerns\"?",
         options: [
           {
             id: "a",
@@ -21849,11 +21849,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes that legal obligations like data deletion rights and security requirements directly depend on and connect to the technical architecture and security practices covered throughout the section.",
+        explanation: "Legal obligations like data deletion rights and security requirements directly depend on and connect to an app's technical architecture and security practices, like CryptoKit usage and secure storage.",
       },
       {
         id: "q18",
-        prompt: "What does data minimization accomplish that other security techniques (encryption, secure storage) do not, according to 79.16?",
+        prompt: "What does data minimization accomplish that other security techniques (encryption, secure storage) do not?",
         options: [
           {
             id: "a",
@@ -21877,7 +21877,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What example does the section give of data minimization in practice for a weather app?",
+        prompt: "What is an example of data minimization in practice for a weather app?",
         options: [
           {
             id: "a",
@@ -21897,11 +21897,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section's example illustrates data minimization concretely — using only the level of location precision genuinely needed for the feature, rather than defaulting to the most precise data available.",
+        explanation: "This illustrates data minimization concretely — using only the level of location precision genuinely needed for the feature, rather than defaulting to the most precise data available.",
       },
       {
         id: "q20",
-        prompt: "When does the section recommend considering data minimization during a feature's development?",
+        prompt: "When is the best time to consider data minimization during a feature's development?",
         options: [
           {
             id: "a",
@@ -21921,7 +21921,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly recommends deliberate consideration of data minimization at the initial design stage, rather than treating it as an afterthought applied only after data has already been collected.",
+        explanation: "The recommendation is deliberate consideration of data minimization at the initial design stage, rather than treating it as an afterthought applied only after data has already been collected.",
       },
     ],
   },
@@ -21933,7 +21933,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "Why does designing an event taxonomy upfront matter, according to 80.1?",
+        prompt: "Why does designing an event taxonomy upfront matter?",
         options: [
           {
             id: "a",
@@ -21953,19 +21953,19 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes that consistent, deliberate naming conventions established early pay off considerably compared to the difficulty of retrofitting consistency onto inconsistently-named historical data.",
+        explanation: "Consistent, deliberate naming conventions established early pay off considerably compared to the difficulty of retrofitting consistency onto inconsistently-named historical data.",
       },
       {
         id: "q2",
-        prompt: "What broader curriculum theme does type-safe analytics event modeling connect to, according to 80.2?",
+        prompt: "What broader recurring pattern does type-safe analytics event modeling connect to?",
         options: [
           {
             id: "a",
-            text: "It has no relationship to any other pattern discussed elsewhere in the curriculum",
+            text: "It has no relationship to any other pattern used elsewhere",
           },
           {
             id: "b",
-            text: "The recurring \"convert a string-based, runtime-only-discoverable pattern into a compile-time-checked one\" theme, also seen in generated asset catalog symbols (72.7) and Core ML's generated interfaces (59.2)",
+            text: "The recurring \"convert a string-based, runtime-only-discoverable pattern into a compile-time-checked one\" theme, also seen in generated asset catalog symbols and Core ML's generated interfaces",
           },
           {
             id: "c",
@@ -21977,7 +21977,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects type-safe event modeling to the same recurring theme of converting error-prone string-based lookups into compile-time-checked Swift constructs seen elsewhere in the curriculum.",
+        explanation: "Type-safe event modeling connects to the same recurring theme of converting error-prone string-based lookups into compile-time-checked Swift constructs seen elsewhere, like generated asset catalog symbols.",
       },
       {
         id: "q3",
@@ -22005,7 +22005,7 @@ struct UserProfileView: View {
       },
       {
         id: "q4",
-        prompt: "What two benefits does batching analytics events provide, according to 80.3?",
+        prompt: "What two benefits does batching analytics events provide?",
         options: [
           {
             id: "a",
@@ -22013,7 +22013,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Reduced network overhead (fewer, larger requests rather than many small ones) and reduced battery/energy impact, connecting to the network radio energy cost discussed in section 69.18",
+            text: "Reduced network overhead (fewer, larger requests rather than many small ones) and reduced battery/energy impact, since network radio usage carries a real energy cost",
           },
           {
             id: "c",
@@ -22025,7 +22025,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies both network efficiency and battery impact as genuine benefits of batching, directly connecting to the energy impact material from section 69.18.",
+        explanation: "Both network efficiency and battery impact are genuine benefits of batching, directly connecting to the general energy-cost concerns of network radio usage.",
       },
       {
         id: "q5",
@@ -22061,7 +22061,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Without dSYMs matching the exact crashed build, crash reports remain raw, unreadable memory addresses rather than symbolicated, actionable stack traces — directly reflecting the strict dSYM-matching requirement from section 68.22",
+            text: "Without dSYMs matching the exact crashed build, crash reports remain raw, unreadable memory addresses rather than symbolicated, actionable stack traces — directly reflecting the strict dSYM-matching requirement for symbolication",
           },
           {
             id: "c",
@@ -22073,7 +22073,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section reinforces the section 68.22 symbolication requirement, emphasizing that mismatched or missing dSYMs render crash reports essentially useless for diagnosis.",
+        explanation: "This reinforces the strict dSYM-matching requirement, emphasizing that mismatched or missing dSYMs render crash reports essentially useless for diagnosis.",
       },
       {
         id: "q7",
@@ -22101,7 +22101,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "What value does establishing crash-free session rate as an explicit SLO provide, according to 80.6?",
+        prompt: "What value does establishing crash-free session rate as an explicit SLO provide?",
         options: [
           {
             id: "a",
@@ -22121,7 +22121,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames an explicit SLO as providing objective, measurable discipline, directly paralleling the performance regression budget discipline discussed in section 69.19.",
+        explanation: "An explicit SLO provides objective, measurable discipline, directly paralleling the performance regression budget discipline used for other performance metrics.",
       },
       {
         id: "q9",
@@ -22149,7 +22149,7 @@ struct UserProfileView: View {
       },
       {
         id: "q10",
-        prompt: "When is ingesting `MetricKit` data into a team's own observability stack (via `MXMetricManagerSubscriber`) appropriate, according to 80.8?",
+        prompt: "When is ingesting `MetricKit` data into a team's own observability stack (via `MXMetricManagerSubscriber`) appropriate?",
         options: [
           {
             id: "a",
@@ -22173,7 +22173,7 @@ struct UserProfileView: View {
       },
       {
         id: "q11",
-        prompt: "What genuine observability gap does distributed tracing address, according to 80.9?",
+        prompt: "What genuine observability gap does distributed tracing address?",
         options: [
           {
             id: "a",
@@ -22197,7 +22197,7 @@ struct UserProfileView: View {
       },
       {
         id: "q12",
-        prompt: "What genuine decoupling do feature flags provide, according to 80.10?",
+        prompt: "What genuine decoupling do feature flags provide?",
         options: [
           {
             id: "a",
@@ -22217,11 +22217,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section highlights this deploy/release decoupling as feature flags' core value — code can be shipped while flagged off, then activated remotely without waiting for App Review.",
+        explanation: "This deploy/release decoupling is feature flags' core value — code can be shipped while flagged off, then activated remotely without waiting for App Review.",
       },
       {
         id: "q13",
-        prompt: "How does a kill switch relate to phased release (section 78.11), according to 80.11?",
+        prompt: "How does a kill switch relate to phased release?",
         options: [
           {
             id: "a",
@@ -22241,7 +22241,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames kill switches as a complementary, faster-acting safety mechanism specifically for a feature already discovered to be broken, distinct from phased release's gradual, blast-radius-limiting approach.",
+        explanation: "Kill switches are a complementary, faster-acting safety mechanism specifically for a feature already discovered to be broken, distinct from phased release's gradual, blast-radius-limiting approach.",
       },
       {
         id: "q14",
@@ -22269,7 +22269,7 @@ struct UserProfileView: View {
       },
       {
         id: "q15",
-        prompt: "What is the key distinction between assignment logging and exposure logging in A/B testing, according to 80.12?",
+        prompt: "What is the key distinction between assignment logging and exposure logging in A/B testing?",
         options: [
           {
             id: "a",
@@ -22289,7 +22289,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes these are genuinely distinct events that can occur at different times (or not both occur at all for a given user), making conflating them a source of experimental error.",
+        explanation: "These are genuinely distinct events that can occur at different times (or not both occur at all for a given user), making conflating them a source of experimental error.",
       },
       {
         id: "q16",
@@ -22317,7 +22317,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What connects feature flag cleanup discipline (80.13) to the dead code concerns raised for Periphery in section 75.4?",
+        prompt: "What connects feature flag cleanup discipline to the dead code concerns Periphery addresses?",
         options: [
           {
             id: "a",
@@ -22337,7 +22337,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects these two concerns — both represent forms of accumulated complexity (stale flags, genuinely unused code) that require deliberate, ongoing cleanup discipline rather than one-time effort.",
+        explanation: "Both represent forms of accumulated complexity (stale flags, genuinely unused code) that require deliberate, ongoing cleanup discipline rather than one-time effort.",
       },
       {
         id: "q18",
@@ -22365,7 +22365,7 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "What is the recommended approach to feature flag cleanup, according to 80.13?",
+        prompt: "What is the recommended approach to feature flag cleanup?",
         options: [
           {
             id: "a",
@@ -22385,11 +22385,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section recommends treating flag cleanup as an ongoing maintenance practice via periodic audits, rather than a one-time setup concern or something requiring no attention at all.",
+        explanation: "The recommendation is to treat flag cleanup as an ongoing maintenance practice via periodic audits, rather than a one-time setup concern or something requiring no attention at all.",
       },
       {
         id: "q20",
-        prompt: "What overarching theme connects event taxonomy design (80.1), type-safe events (80.2), and feature flag cleanup discipline (80.13)?",
+        prompt: "What overarching theme connects event taxonomy design, type-safe events, and feature flag cleanup discipline?",
         options: [
           {
             id: "a",
@@ -22441,11 +22441,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames the per-request, concurrently-processed nature of server route handlers as the central mental shift from app development, where lifetime-scoped singletons and caches are the norm.",
+        explanation: "The per-request, concurrently-processed nature of server route handlers is the central mental shift from app development, where lifetime-scoped singletons and caches are the norm.",
       },
       {
         id: "q2",
-        prompt: "What familiar pattern from earlier sections do Vapor's `async throws` route closures directly reuse?",
+        prompt: "What familiar Swift pattern do Vapor's `async throws` route closures directly reuse?",
         options: [
           {
             id: "a",
@@ -22453,7 +22453,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "The same structured concurrency (async/await) and typed error-throwing model from sections 17–18 and section 9",
+            text: "The same structured concurrency (async/await) and typed error-throwing model used throughout the rest of Swift",
           },
           {
             id: "c",
@@ -22465,11 +22465,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that route handlers use the same async/await and throwing-error conventions already covered for structured concurrency and error handling.",
+        explanation: "Route handlers use the same async/await and throwing-error conventions already familiar from structured concurrency and error handling elsewhere in Swift.",
       },
       {
         id: "q3",
-        prompt: "How does Vapor middleware relate to concepts from section 40's advanced networking material?",
+        prompt: "How does Vapor middleware relate to the interceptor pattern from advanced networking?",
         options: [
           {
             id: "a",
@@ -22489,11 +22489,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly draws this parallel between Vapor's middleware and the interceptor pattern from advanced networking, both isolating cross-cutting concerns from core logic.",
+        explanation: "There's a direct parallel between Vapor's middleware and the interceptor pattern from advanced networking, both isolating cross-cutting concerns from core logic.",
       },
       {
         id: "q4",
-        prompt: "How does Fluent's `@Parent`/`@Children` relationship modeling compare to SwiftData, according to 81.2?",
+        prompt: "How does Fluent's `@Parent`/`@Children` relationship modeling compare to SwiftData?",
         options: [
           {
             id: "a",
@@ -22513,11 +22513,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section draws this direct parallel, noting that the vocabulary of declarative relationships transfers even though the underlying storage (real Postgres/MySQL vs. on-device SQLite) differs substantially.",
+        explanation: "The vocabulary of declarative relationships transfers directly even though the underlying storage (real Postgres/MySQL vs. on-device SQLite) differs substantially.",
       },
       {
         id: "q5",
-        prompt: "What is the genuine trade-off between Vapor and Hummingbird, according to 81.3?",
+        prompt: "What is the genuine trade-off between Vapor and Hummingbird?",
         options: [
           {
             id: "a",
@@ -22537,7 +22537,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as a genuine batteries-included-versus-minimal-core trade-off, not a strict quality hierarchy between the two frameworks.",
+        explanation: "This is a genuine batteries-included-versus-minimal-core trade-off, not a strict quality hierarchy between the two frameworks.",
       },
       {
         id: "q6",
@@ -22561,11 +22561,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section draws a direct analogy between blocking a SwiftNIO event loop (starving all connections on that loop) and blocking the main thread in UI development (freezing rendering for the whole app).",
+        explanation: "There's a direct analogy between blocking a SwiftNIO event loop (starving all connections on that loop) and blocking the main thread in UI development (freezing rendering for the whole app).",
       },
       {
         id: "q7",
-        prompt: "How does modern Vapor/Hummingbird code relate to SwiftNIO's original `EventLoopFuture`-based API, according to 81.4?",
+        prompt: "How does modern Vapor/Hummingbird code relate to SwiftNIO's original `EventLoopFuture`-based API?",
         options: [
           {
             id: "a",
@@ -22585,11 +22585,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explains that async/await now sits atop SwiftNIO's event loop machinery, with the future/promise API mostly hidden from everyday route-handling code.",
+        explanation: "Async/await now sits atop SwiftNIO's event loop machinery, with the future/promise API mostly hidden from everyday route-handling code.",
       },
       {
         id: "q8",
-        prompt: "What concrete problem does sharing a Swift model package between an app and a server target solve, per 81.5?",
+        prompt: "What concrete problem does sharing a Swift model package between an app and a server target solve?",
         options: [
           {
             id: "a",
@@ -22609,23 +22609,23 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies exact JSON-shape drift between client and server as the specific bug category eliminated by importing shared, platform-agnostic Codable types.",
+        explanation: "Exact JSON-shape drift between client and server is the specific bug category eliminated by importing shared, platform-agnostic Codable types.",
       },
       {
         id: "q9",
-        prompt: "How does the constraint on a shared model package's dependencies connect to section 48's modularization material?",
+        prompt: "How does the constraint on a shared model package's dependencies connect to general modularization principles?",
         options: [
           {
             id: "a",
-            text: "There is no meaningful connection between the two sections",
+            text: "There is no meaningful connection at all",
           },
           {
             id: "b",
-            text: "The shared package must avoid UIKit and Vapor-specific imports to compile cleanly for both iOS and Linux targets, directly extending section 48's modularization discipline of minimizing a module's platform-specific dependencies",
+            text: "The shared package must avoid UIKit and Vapor-specific imports to compile cleanly for both iOS and Linux targets, directly extending the modularization discipline of minimizing a module's platform-specific dependencies",
           },
           {
             id: "c",
-            text: "Section 48 only discussed modularization for single-platform apps, making it irrelevant here",
+            text: "Modularization principles only apply to single-platform apps, making them irrelevant here",
           },
           {
             id: "d",
@@ -22633,11 +22633,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly frames the dependency discipline required for a genuinely cross-target shared package as a direct extension of the modularization principles from section 48.",
+        explanation: "The dependency discipline required for a genuinely cross-target shared package is a direct extension of general modularization principles.",
       },
       {
         id: "q10",
-        prompt: "What is the practical lesson regarding Foundation on Linux, according to 81.6?",
+        prompt: "What is the practical lesson regarding Foundation on Linux?",
         options: [
           {
             id: "a",
@@ -22657,19 +22657,19 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "c",
-        explanation: "The section is explicit that despite significant narrowing of the gap (including via Swift 6's pure-Swift Foundation rewrite), real differences persist and should be verified rather than assumed away.",
+        explanation: "Despite significant narrowing of the gap (including via Swift 6's pure-Swift Foundation rewrite), real differences persist and should be verified rather than assumed away.",
       },
       {
         id: "q11",
-        prompt: "How does the `#if os(Linux)` conditional compilation pattern in 81.6 relate to section 33's multiplatform SwiftUI material?",
+        prompt: "How does the `#if os(Linux)` conditional compilation pattern relate to multiplatform SwiftUI's `#if os(...)` usage?",
         options: [
           {
             id: "a",
-            text: "The two sections use entirely unrelated compilation mechanisms",
+            text: "They use entirely unrelated compilation mechanisms",
           },
           {
             id: "b",
-            text: "Both use the same conditional-compilation tool (`#if os(...)`) to guard platform differences — UI-layer differences between iPhone and Mac in section 33, and standard-library/Foundation-layer differences between Apple platforms and Linux here",
+            text: "Both use the same conditional-compilation tool (`#if os(...)`) to guard platform differences — UI-layer differences between iPhone and Mac in one case, and standard-library/Foundation-layer differences between Apple platforms and Linux in the other",
           },
           {
             id: "c",
@@ -22677,15 +22677,15 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Section 33 never used any conditional compilation techniques",
+            text: "Multiplatform SwiftUI never uses any conditional compilation techniques",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly identifies this as the same underlying tool applied to a different layer of platform variation — UI conventions there, Foundation/stdlib behavior here.",
+        explanation: "This is the same underlying tool applied to a different layer of platform variation — UI conventions in one case, Foundation/stdlib behavior in the other.",
       },
       {
         id: "q12",
-        prompt: "What deployment problem does the static Linux SDK (81.7) directly solve?",
+        prompt: "What deployment problem does the static Linux SDK directly solve?",
         options: [
           {
             id: "a",
@@ -22705,11 +22705,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames the static SDK as removing the runtime-version-matching requirement between build and deployment environments, a real and previously significant source of friction.",
+        explanation: "The static SDK removes the runtime-version-matching requirement between build and deployment environments, a real and previously significant source of friction.",
       },
       {
         id: "q13",
-        prompt: "How does the static Linux SDK's trade-off connect to section 72's build system material, according to 81.7?",
+        prompt: "How does the static Linux SDK's trade-off connect to the static-vs-dynamic linking trade-off elsewhere in the Swift build system?",
         options: [
           {
             id: "a",
@@ -22717,11 +22717,11 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "It's described as the server-side analog of static linking trade-offs from section 72 — trading a larger binary for fewer runtime dependencies, just applied to an entire Linux deployment environment rather than a single app sandbox",
+            text: "It's the server-side analog of the same static linking trade-off — trading a larger binary for fewer runtime dependencies, just applied to an entire Linux deployment environment rather than a single app sandbox",
           },
           {
             id: "c",
-            text: "Section 72 never discussed static versus dynamic linking at all",
+            text: "The build system never involves any static versus dynamic linking trade-off at all",
           },
           {
             id: "d",
@@ -22729,11 +22729,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly draws this parallel, noting the same larger-binary-for-fewer-dependencies trade-off appears at both the app level and the deployment-environment level (81.7).",
+        explanation: "The same larger-binary-for-fewer-dependencies trade-off appears at both the app level and the deployment-environment level.",
       },
       {
         id: "q14",
-        prompt: "What is an honest characterization of Swift-to-WebAssembly's current maturity, according to 81.8?",
+        prompt: "What is an honest characterization of Swift-to-WebAssembly's current maturity?",
         options: [
           {
             id: "a",
@@ -22753,7 +22753,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit and even-handed about the maturity gap, framing adoption today as a deliberate bet rather than a safe, fully-baked choice.",
+        explanation: "This is an even-handed characterization of the maturity gap, framing adoption today as a deliberate bet rather than a safe, fully-baked choice.",
       },
       {
         id: "q15",
@@ -22777,23 +22777,23 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explains that each restriction maps to a concrete resource constraint on microcontroller hardware, not an arbitrary limitation.",
+        explanation: "Each restriction maps to a concrete resource constraint on microcontroller hardware, not an arbitrary limitation.",
       },
       {
         id: "q16",
-        prompt: "How does Embedded Swift's approach to generics (monomorphization) relate to section 15's low-level Swift material?",
+        prompt: "How does Embedded Swift's approach to generics (monomorphization) relate to the general static-vs-dynamic-cost trade-off in low-level Swift?",
         options: [
           {
             id: "a",
-            text: "There is no relationship between the two sections",
+            text: "There is no relationship at all",
           },
           {
             id: "b",
-            text: "It represents the same static-cost-at-compile-time-versus-dynamic-cost-at-runtime trade-off from section 15, pushed to its logical extreme because embedded hardware has almost no room for any runtime cost at all",
+            text: "It represents the same static-cost-at-compile-time-versus-dynamic-cost-at-runtime trade-off, pushed to its logical extreme because embedded hardware has almost no room for any runtime cost at all",
           },
           {
             id: "c",
-            text: "Section 15 exclusively covered generics on Linux servers, unrelated to embedded contexts",
+            text: "That trade-off exclusively concerns generics on Linux servers, unrelated to embedded contexts",
           },
           {
             id: "d",
@@ -22801,11 +22801,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly frames Embedded Swift's fully-specialized generics as an extreme application of the static-versus-dynamic-cost trade-off already introduced in section 15.",
+        explanation: "Embedded Swift's fully-specialized generics are an extreme application of the same static-versus-dynamic-cost trade-off found elsewhere in low-level Swift.",
       },
       {
         id: "q17",
-        prompt: "What is the shared design philosophy behind `swift-log`, `swift-metrics`, and similar packages, according to 81.10?",
+        prompt: "What is the shared design philosophy behind `swift-log`, `swift-metrics`, and similar packages?",
         options: [
           {
             id: "a",
@@ -22825,11 +22825,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section draws an explicit parallel between this API/backend separation and earlier protocol-oriented patterns like URLSession and os.Logger (section 68.19).",
+        explanation: "This API/backend separation directly parallels other protocol-oriented patterns like URLSession and os.Logger.",
       },
       {
         id: "q18",
-        prompt: "What problem does `swift-service-lifecycle` solve that has no direct iOS equivalent, per 81.10?",
+        prompt: "What problem does `swift-service-lifecycle` solve that has no direct iOS equivalent?",
         options: [
           {
             id: "a",
@@ -22849,11 +22849,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes this as a genuinely different problem domain, since iOS apps never need to orchestrate their own process-level startup/shutdown sequencing the way a multi-service backend process does.",
+        explanation: "This is a genuinely different problem domain, since iOS apps never need to orchestrate their own process-level startup/shutdown sequencing the way a multi-service backend process does.",
       },
       {
         id: "q19",
-        prompt: "According to 81.11, what is a concrete example of a shared-UI-framework approach for reaching non-Apple platforms?",
+        prompt: "What is a concrete example of a shared-UI-framework approach for reaching non-Apple platforms?",
         options: [
           {
             id: "a",
@@ -22873,11 +22873,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section names Skip specifically as a real (if young) tool in this space, contrasted honestly against its limitations (not every SwiftUI API has an equivalent, and the toolchain is still maturing).",
+        explanation: "Skip is a real (if young) tool in this space, contrasted honestly against its limitations (not every SwiftUI API has an equivalent, and the toolchain is still maturing).",
       },
       {
         id: "q20",
-        prompt: "What conservative, widely-used alternative does 81.11 describe to a single shared UI framework across all platforms?",
+        prompt: "What is a conservative, widely-used alternative to a single shared UI framework across all platforms?",
         options: [
           {
             id: "a",
@@ -22897,7 +22897,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as a legitimate, common trade-off — sharing only the non-UI logic while keeping each platform's UI fully native — and notes the right choice depends on team size and how native the UI must feel on each platform.",
+        explanation: "This is a legitimate, common trade-off — sharing only the non-UI logic while keeping each platform's UI fully native — and the right choice depends on team size and how native the UI must feel on each platform.",
       },
     ],
   },
@@ -22909,7 +22909,7 @@ struct UserProfileView: View {
     questions: [
       {
         id: "q1",
-        prompt: "What separates a genuinely useful technical design doc from a rubber-stamp formality, according to 82.1?",
+        prompt: "What separates a genuinely useful technical design doc from a rubber-stamp formality?",
         options: [
           {
             id: "a",
@@ -22929,23 +22929,23 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames genuine, honest alternative-weighing — not performing due diligence after the fact — as the key trait separating a useful design doc from a formality.",
+        explanation: "Genuine, honest alternative-weighing — not performing due diligence after the fact — is the key trait separating a useful design doc from a formality.",
       },
       {
         id: "q2",
-        prompt: "How does the design doc discipline in 82.1 connect to section 46's architecture patterns material?",
+        prompt: "How does the design doc discipline connect to the comparative treatment of architecture patterns like MVVM, MVC, and TCA?",
         options: [
           {
             id: "a",
-            text: "There is no connection between the two sections",
+            text: "There is no connection between the two",
           },
           {
             id: "b",
-            text: "A design doc proposing an architectural choice should apply the same honest, comparative trade-off treatment that section 46 gave to MVVM, MVC, and TCA-style patterns, rather than presenting a single \"correct\" answer",
+            text: "A design doc proposing an architectural choice should apply the same honest, comparative trade-off treatment given to MVVM, MVC, and TCA-style patterns, rather than presenting a single \"correct\" answer",
           },
           {
             id: "c",
-            text: "Section 46 concluded there is exactly one correct architecture for all apps",
+            text: "There's exactly one correct architecture for all apps",
           },
           {
             id: "d",
@@ -22953,11 +22953,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly ties the honest-alternatives discipline in design docs back to section 46's comparative treatment of architecture patterns.",
+        explanation: "The honest-alternatives discipline in design docs ties directly back to the comparative treatment of architecture patterns.",
       },
       {
         id: "q3",
-        prompt: "What is the defining characteristic of an architecture decision record (ADR), according to 82.2?",
+        prompt: "What is the defining characteristic of an architecture decision record (ADR)?",
         options: [
           {
             id: "a",
@@ -22977,11 +22977,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section emphasizes permanence and dating as the core value of an ADR — a record left untouched so future readers understand the reasoning behind a past decision.",
+        explanation: "Permanence and dating are the core value of an ADR — a record left untouched so future readers understand the reasoning behind a past decision.",
       },
       {
         id: "q4",
-        prompt: "How does an ADR's purpose relate to the commit message discipline from section 74, per 82.2?",
+        prompt: "How does an ADR's purpose relate to general commit message discipline?",
         options: [
           {
             id: "a",
@@ -22997,15 +22997,15 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Section 74 argued against ever explaining reasoning in commits",
+            text: "Good commit message discipline argues against ever explaining reasoning in commits",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section draws this explicit parallel between commit message discipline and ADR permanence, both aimed at preserving the \"why\" for future readers.",
+        explanation: "There's a direct parallel between commit message discipline and ADR permanence, both aimed at preserving the \"why\" for future readers.",
       },
       {
         id: "q5",
-        prompt: "What is the key skill in code review described in 82.3?",
+        prompt: "What is a key skill in giving effective code review feedback?",
         options: [
           {
             id: "a",
@@ -23025,11 +23025,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies explicit severity-signaling as the practical skill that prevents review friction and erosion of trust.",
+        explanation: "Explicit severity-signaling is the practical skill that prevents review friction and erosion of trust.",
       },
       {
         id: "q6",
-        prompt: "How does 82.3 connect code review practice to section 76's CI/CD and merge queue material?",
+        prompt: "How does code review practice connect to CI/CD and merge queue automation?",
         options: [
           {
             id: "a",
@@ -23041,7 +23041,7 @@ struct UserProfileView: View {
           },
           {
             id: "c",
-            text: "Section 76 argued that CI should replace human code review entirely",
+            text: "CI should replace human code review entirely",
           },
           {
             id: "d",
@@ -23049,11 +23049,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly connects treating automated tooling as the arbiter of checkable concerns to freeing human reviewers to focus on subjective judgment.",
+        explanation: "Treating automated tooling as the arbiter of checkable concerns frees human reviewers to focus on subjective judgment.",
       },
       {
         id: "q7",
-        prompt: "What is the recommended response to a genuine \"unknown unknown\" during estimation, according to 82.4?",
+        prompt: "What is the recommended response to a genuine \"unknown unknown\" during estimation?",
         options: [
           {
             id: "a",
@@ -23073,11 +23073,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section specifically recommends a scoped spike task to convert unknown unknowns into known-scope work before attempting a real estimate.",
+        explanation: "A scoped spike task is specifically recommended to convert unknown unknowns into known-scope work before attempting a real estimate.",
       },
       {
         id: "q8",
-        prompt: "According to 82.4, what is the most common cause of estimates that turn out to be substantially wrong?",
+        prompt: "What is the most common cause of estimates that turn out to be substantially wrong?",
         options: [
           {
             id: "a",
@@ -23097,11 +23097,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies mistaking an unknown unknown for a well-scoped task — not estimation itself — as the primary driver of significantly wrong estimates.",
+        explanation: "Mistaking an unknown unknown for a well-scoped task — not estimation itself — is the primary driver of significantly wrong estimates.",
       },
       {
         id: "q9",
-        prompt: "What practical discipline does 82.5 recommend for managing technical debt?",
+        prompt: "What practical discipline helps manage technical debt well?",
         options: [
           {
             id: "a",
@@ -23121,11 +23121,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames debt as a legitimate trade-off as long as it's tracked and its cost is made visible, rather than something to avoid outright or ignore.",
+        explanation: "Debt is a legitimate trade-off as long as it's tracked and its cost is made visible, rather than something to avoid outright or ignore.",
       },
       {
         id: "q10",
-        prompt: "How does 82.5 recommend translating tech debt into terms a non-engineering stakeholder can act on?",
+        prompt: "How can tech debt be translated into terms a non-engineering stakeholder can act on?",
         options: [
           {
             id: "a",
@@ -23145,11 +23145,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section gives a concrete example translating a networking layer's debt into specific incident counts and a time estimate, mirroring the performance-budget framing from section 69.19.",
+        explanation: "A concrete example is translating a networking layer's debt into specific incident counts and a time estimate, mirroring the performance-budget framing used for other engineering metrics.",
       },
       {
         id: "q11",
-        prompt: "What makes mobile incident response meaningfully different from server incident response, according to 82.6?",
+        prompt: "What makes mobile incident response meaningfully different from server incident response?",
         options: [
           {
             id: "a",
@@ -23169,11 +23169,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies the inability to instantly revert a shipped binary as the crucial difference, requiring feature flags and server-side levers as alternative tools.",
+        explanation: "The inability to instantly revert a shipped binary is the crucial difference, requiring feature flags and server-side levers as alternative tools.",
       },
       {
         id: "q12",
-        prompt: "How does phased release (from section 78.11) support the incident response process described in 82.6?",
+        prompt: "How does phased release support the incident response process?",
         options: [
           {
             id: "a",
@@ -23193,11 +23193,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly notes that phased release's gradual rollout aids severity assessment during incident response, since it limits exposure before full release.",
+        explanation: "Phased release's gradual rollout aids severity assessment during incident response, since it limits exposure before full release.",
       },
       {
         id: "q13",
-        prompt: "According to 82.7, why does a full \"rollback\" in the mobile context usually mean halting a phased rollout rather than truly reverting a release?",
+        prompt: "Why does a full \"rollback\" in the mobile context usually mean halting a phased rollout rather than truly reverting a release?",
         options: [
           {
             id: "a",
@@ -23217,11 +23217,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section is explicit that halting further rollout is the closest available action to a \"rollback,\" since already-downloaded builds cannot be retroactively un-released.",
+        explanation: "Halting further rollout is the closest available action to a \"rollback,\" since already-downloaded builds cannot be retroactively un-released.",
       },
       {
         id: "q14",
-        prompt: "What is the central judgment call described in 82.7 when choosing between rollback, hotfix, and server-side mitigation?",
+        prompt: "What is the central judgment call when choosing between rollback, hotfix, and server-side mitigation?",
         options: [
           {
             id: "a",
@@ -23241,11 +23241,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section frames this as matching the severity of the incident to the fastest available remediation path that can actually address it, rather than a one-size-fits-all default.",
+        explanation: "This is about matching the severity of the incident to the fastest available remediation path that can actually address it, rather than a one-size-fits-all default.",
       },
       {
         id: "q15",
-        prompt: "Why is blamelessness essential to an effective postmortem process, according to 82.8?",
+        prompt: "Why is blamelessness essential to an effective postmortem process?",
         options: [
           {
             id: "a",
@@ -23265,11 +23265,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section argues blamelessness is functionally necessary — not just a soft gesture — because it removes the incentive to hide details that would otherwise obscure the true systemic cause.",
+        explanation: "Blamelessness is functionally necessary — not just a soft gesture — because it removes the incentive to hide details that would otherwise obscure the true systemic cause.",
       },
       {
         id: "q16",
-        prompt: "In the postmortem example in 82.8, what was the actual systemic root cause of the push notification failure?",
+        prompt: "In a typical postmortem example, what was the actual systemic root cause of a push notification failure?",
         options: [
           {
             id: "a",
@@ -23277,7 +23277,7 @@ struct UserProfileView: View {
           },
           {
             id: "b",
-            text: "Certificate expiration was untracked in the deployment checklist and no automated expiration alert existed, contrasting with the code signing lifecycle discussion in section 77.7",
+            text: "Certificate expiration was untracked in the deployment checklist and no automated expiration alert existed",
           },
           {
             id: "c",
@@ -23293,7 +23293,7 @@ struct UserProfileView: View {
       },
       {
         id: "q17",
-        prompt: "What mechanism does 82.9 identify as most effective for transferring engineering judgment to a junior developer?",
+        prompt: "What mechanism is most effective for transferring engineering judgment to a junior developer?",
         options: [
           {
             id: "a",
@@ -23313,11 +23313,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section identifies question-asking that surfaces a mentee's own reasoning gaps as more effective than direct instruction for transferring judgment.",
+        explanation: "Question-asking that surfaces a mentee's own reasoning gaps is more effective than direct instruction for transferring judgment.",
       },
       {
         id: "q18",
-        prompt: "Why does 82.10 caution against a purely algorithmic-puzzle-based interview loop for a senior iOS role?",
+        prompt: "Why is a purely algorithmic-puzzle-based interview loop a poor fit for a senior iOS role?",
         options: [
           {
             id: "a",
@@ -23333,15 +23333,15 @@ struct UserProfileView: View {
           },
           {
             id: "d",
-            text: "Section 82.10 recommends using only algorithmic puzzles for all interview loops",
+            text: "Using only algorithmic puzzles is recommended for all interview loops",
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly names weak correlation with real job skills as the reason to avoid over-relying on abstract algorithmic puzzles for a role focused on applied iOS engineering.",
+        explanation: "Weak correlation with real job skills is the reason to avoid over-relying on abstract algorithmic puzzles for a role focused on applied iOS engineering.",
       },
       {
         id: "q19",
-        prompt: "According to 82.12, what distinguishes a portfolio project that generates callbacks from one that doesn't?",
+        prompt: "What distinguishes a portfolio project that generates callbacks from one that doesn't?",
         options: [
           {
             id: "a",
@@ -23361,11 +23361,11 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section contrasts a single project with genuine documented decision-making against ten shallow tutorial clones, favoring depth and visible reasoning.",
+        explanation: "A single project with genuine documented decision-making outweighs ten shallow tutorial clones, favoring depth and visible reasoning.",
       },
       {
         id: "q20",
-        prompt: "What is the recommended approach to staying current with Swift Evolution and WWDC content, according to 82.13?",
+        prompt: "What is the recommended approach to staying current with Swift Evolution and WWDC content?",
         options: [
           {
             id: "a",
@@ -23385,7 +23385,7 @@ struct UserProfileView: View {
           },
         ],
         correctOptionId: "b",
-        explanation: "The section explicitly recommends triage over exhaustive consumption, focusing deep attention only on changes relevant to one's actual work.",
+        explanation: "The recommendation is triage over exhaustive consumption, focusing deep attention only on changes relevant to one's actual work.",
       },
     ],
   },
