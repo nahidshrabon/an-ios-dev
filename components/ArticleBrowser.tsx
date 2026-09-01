@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SearchIcon, XIcon } from "@/components/Icons";
+import { matchesAllTerms, toSearchTerms } from "@/lib/search";
 
 /**
  * Article fields the browser needs. Deliberately excludes `content` — the
@@ -46,14 +47,13 @@ export function ArticleBrowser({
   );
 
   const results = useMemo(() => {
-    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const terms = toSearchTerms(query);
 
     return articles.filter((article) => {
       if (activeTag && !article.tags.includes(activeTag)) return false;
       if (terms.length === 0) return true;
 
-      const haystack = haystacks.get(article.slug) ?? "";
-      return terms.every((term) => haystack.includes(term));
+      return matchesAllTerms(haystacks.get(article.slug) ?? "", terms);
     });
   }, [articles, haystacks, query, activeTag]);
 

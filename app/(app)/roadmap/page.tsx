@@ -1,6 +1,7 @@
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { roadmap } from "@/lib/content/roadmap";
 import { getAllQuizzes } from "@/lib/content/quizzes";
+import { getAllArticles, getFilterTags } from "@/lib/content/articles";
 import { RoadmapChecklist } from "@/components/RoadmapChecklist";
 
 export default async function RoadmapPage() {
@@ -77,6 +78,13 @@ export default async function RoadmapPage() {
     }
   });
 
+  // Roadmap sections carry no tags of their own — they come from the linked
+  // article. Only the tags travel to the client; article bodies must not.
+  const tagsByArticleSlug: Record<string, string[]> = {};
+  getAllArticles().forEach((article) => {
+    tagsByArticleSlug[article.slug] = article.tags;
+  });
+
   return (
     <RoadmapChecklist
       parts={roadmap}
@@ -84,6 +92,8 @@ export default async function RoadmapPage() {
       readArticleSlugs={readArticleSlugs}
       bookmarkCountByArticleSlug={bookmarkCountByArticleSlug}
       bestScoreByArticleSlug={bestScoreByArticleSlug}
+      tagsByArticleSlug={tagsByArticleSlug}
+      filterTags={getFilterTags()}
     />
   );
 }

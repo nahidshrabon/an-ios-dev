@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   isRoadmapSectionCompleted,
@@ -15,10 +15,16 @@ import {
   ChevronRightIcon,
   FlagIcon,
   InfoIcon,
+  SearchIcon,
 } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
+import { matchesAllTerms, toSearchTerms } from "@/lib/search";
+
+const activeChip = "bg-accent text-white";
+const inactiveChip =
+  "border border-black/10 text-zinc-600 hover:bg-black/[.03] dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5";
 
 const completedRoadmapEntryColor =
   "border-emerald-200/70 bg-emerald-50/80 hover:bg-emerald-100/80 dark:border-emerald-400/15 dark:bg-emerald-400/10 dark:hover:bg-emerald-400/15";
@@ -31,13 +37,19 @@ export function RoadmapChecklist({
   readArticleSlugs,
   bookmarkCountByArticleSlug,
   bestScoreByArticleSlug,
+  tagsByArticleSlug,
+  filterTags,
 }: {
   parts: RoadmapPart[];
   manualCompleted: Record<string, boolean>;
   readArticleSlugs: string[];
   bookmarkCountByArticleSlug: Record<string, number>;
   bestScoreByArticleSlug: Record<string, { score: number; total: number }>;
+  tagsByArticleSlug: Record<string, string[]>;
+  filterTags: string[];
 }) {
+  const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const readSlugs = useMemo(
     () => new Set(readArticleSlugs),
     [readArticleSlugs]
@@ -85,6 +97,43 @@ export function RoadmapChecklist({
             100
         )
       : 0;
+
+  const isFiltered = query.trim().length > 0 || activeTag !== null;
+
+  // Parts whose sections all fall out of the filter are dropped entirely, so
+  // the accordion doesn't leave empty shells behind.
+  const filteredParts = useMemo(() => {
+    const terms = toSearchTerms(query);
+
+    return parts
+      .map((part) => ({
+        ...part,
+        sections: part.sections.filter((sec) => {
+          const tags = sec.articleSlug
+            ? (tagsByArticleSlug[sec.articleSlug] ?? [])
+            : [];
+
+          if (activeTag && !tags.includes(activeTag)) return false;
+          if (terms.length === 0) return true;
+
+          // Number included so "47" jumps straight to that section.
+          const haystack =
+            `${sec.number} ${sec.title} ${tags.join(" ")}`.toLowerCase();
+          return matchesAllTerms(haystack, terms);
+        }),
+      }))
+      .filter((part) => part.sections.length > 0);
+  }, [parts, tagsByArticleSlug, query, activeTag]);
+
+  const matchCount = filteredParts.reduce(
+    (sum, part) => sum + part.sections.length,
+    0
+  );
+
+  function clearFilters() {
+    setQuery("");
+    setActiveTag(null);
+  }
 
   return (
     <div>
@@ -182,14 +231,70 @@ export function RoadmapChecklist({
         )}
       </div>
 
-      <div className="mt-8 flex flex-col gap-4">
-        {parts.map((part) => {
+      <div className="relative mt-8">
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500" />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search sections…"
+          aria-label="Search roadmap sections"
+          className="font-heading w-full rounded-full border border-black/10 bg-transparent py-2.5 pr-4 pl-10 text-sm outline-none placeholder:text-zinc-500 focus:border-accent dark:border-white/10"
+        />
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveTag(null)}
+          className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
+            activeTag === null ? activeChip : inactiveChip
+          }`}
+        >
+          All
+        </button>
+        {filterTags.map((tag) => (
+          <button
+            key={tag}
+            onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+            className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
+              activeTag === tag ? activeChip : inactiveChip
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {isFiltered && (
+        <p
+          aria-live="polite"
+          className="mt-4 text-sm text-zinc-600 dark:text-zinc-400"
+        >
+          {matchCount} {matchCount === 1 ? "section" : "sections"}
+          {" · "}
+          <button onClick={clearFilters} className="underline">
+            Clear filters
+          </button>
+        </p>
+      )}
+
+      {isFiltered && matchCount === 0 && (
+        <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+          Nothing matched. Try a broader search, or{" "}
+          <button onClick={clearFilters} className="underline">
+            clear the filters
+          </button>
+          .
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-col gap-4">
+        {filteredParts.map((part) => {
           const partCompleted = part.sections.filter(isCompleted).length;
-          const hasAvailable = part.sections.some((s) => s.articleSlug);
           return (
             <details
               key={part.id}
-              open={hasAvailable}
+              open
               className="group rounded-xl border border-black/10 p-4 dark:border-white/10"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between">
