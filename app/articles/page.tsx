@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { getAllArticles } from "@/lib/content/articles";
+import { getAllArticles, getFilterTags } from "@/lib/content/articles";
+import { ArticleBrowser } from "@/components/ArticleBrowser";
 
 export const metadata: Metadata = {
   title: "Articles",
@@ -8,29 +8,28 @@ export const metadata: Metadata = {
 };
 
 export default function ArticlesPage() {
-  const articles = getAllArticles();
+  // Strip `content` — the browser only lists articles, and the full markdown
+  // bodies would balloon the client payload.
+  const articles = getAllArticles().map(
+    ({ slug, title, description, tags }) => ({
+      slug,
+      title,
+      description,
+      tags,
+    })
+  );
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">Articles</h1>
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        Articles
+      </h1>
       <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-        Read at your own pace — sign in to track which ones you've finished.
+        Read at your own pace — sign in to track which ones you&apos;ve
+        finished.
       </p>
-      <ul className="mt-8 flex flex-col gap-4">
-        {articles.map((article) => (
-          <li key={article.slug}>
-            <Link
-              href={`/articles/${article.slug}`}
-              className="block rounded-xl border border-black/10 p-5 transition-colors hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-[#161616]"
-            >
-              <p className="font-heading font-medium">{article.title}</p>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {article.description}
-              </p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+
+      <ArticleBrowser articles={articles} filterTags={getFilterTags()} />
     </main>
   );
 }

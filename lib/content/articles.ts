@@ -757,3 +757,23 @@ export function getAllArticles(): Article[] {
 export function getArticle(slug: string): Article | undefined {
   return articles.find((article) => article.slug === slug);
 }
+
+/**
+ * Tags broad enough to be worth offering as a filter, most-used first.
+ *
+ * Most tags are article-specific keywords used exactly once ("gcd",
+ * "voiceover", "testflight") — invaluable for search, but useless as filter
+ * chips, since each would narrow to a single article. The threshold keeps
+ * only the handful that behave like real categories.
+ */
+export function getFilterTags(minArticles = 3): string[] {
+  const counts = new Map<string, number>();
+  articles.forEach((article) => {
+    article.tags.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1));
+  });
+
+  return [...counts.entries()]
+    .filter(([, count]) => count >= minArticles)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([tag]) => tag);
+}
