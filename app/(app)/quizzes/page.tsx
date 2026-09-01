@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
 import { roadmap } from "@/lib/content/roadmap";
@@ -19,8 +19,7 @@ const notTakenQuizEntryColor =
   "border-black/10 bg-transparent hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/5";
 
 export default async function QuizzesPage() {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string;
+  const { userId } = await getAuthenticatedUser();
 
   const allQuizzes = getAllQuizzes();
   const totalQuestionsByQuizId = new Map(

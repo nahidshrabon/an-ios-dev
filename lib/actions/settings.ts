@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 
 export type ResetResult = { ok: true } | { ok: false; error: string };
 
 async function getUserId() {
-  const { data: claims } = await getClaims();
-  return claims?.claims.sub as string | undefined;
+  const { userId } = await getAuthenticatedUser();
+  return userId;
 }
 
 export async function resetRoadmapProgress(): Promise<ResetResult> {

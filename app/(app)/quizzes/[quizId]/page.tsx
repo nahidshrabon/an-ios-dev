@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getQuiz } from "@/lib/content/quizzes";
 import type { GradedAnswer } from "@/lib/content/types";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { QuizRunner } from "@/components/QuizRunner";
 
 type Props = {
@@ -22,8 +22,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
   let previousAnswers: Record<string, GradedAnswer> | undefined;
 
   if (practice === "1") {
-    const { data: claims } = await getClaims();
-    const userId = claims?.claims.sub as string | undefined;
+    const { userId } = await getAuthenticatedUser();
 
     if (userId) {
       const supabase = await createClient();

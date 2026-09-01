@@ -1,15 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import type { ReadingStatus } from "@/lib/types";
 
 export async function updateReadingStatus(
   articleSlug: string,
   status: ReadingStatus
 ) {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string | undefined;
+  const { userId } = await getAuthenticatedUser();
   if (!userId) return;
 
   const supabase = await createClient();

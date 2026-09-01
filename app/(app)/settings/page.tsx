@@ -1,4 +1,4 @@
-import { getClaims } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { SettingsIcon } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
 import { ResetActionButton } from "@/components/ResetActionButton";
@@ -48,8 +48,7 @@ const RESET_SECTIONS = [
 ] as const;
 
 export default async function SettingsPage() {
-  const { data: claims } = await getClaims();
-  const email = claims?.claims.email as string | undefined;
+  const { email } = await getAuthenticatedUser();
 
   return (
     <div>

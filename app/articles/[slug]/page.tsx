@@ -8,7 +8,7 @@ import {
   getNextArticleSection,
   getRoadmapSectionByArticleSlug,
 } from "@/lib/content/roadmap";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { AppShell } from "@/components/AppShell";
 import { ReadingStatusProvider } from "@/components/ReadingStatusProvider";
 import { ReadingStatusControl } from "@/components/ReadingStatusControl";
@@ -64,13 +64,7 @@ export default async function ArticlePage({ params, searchParams }: Props) {
   // roadmap — direct/listing visits keep the plain top nav instead.
   let email: string | undefined;
   if (from === "roadmap") {
-    const { data, error } = await getClaims();
-    email = data?.claims.email as string | undefined;
-    if (!data?.claims && error) {
-      const supabase = await createClient();
-      const { data: userData } = await supabase.auth.getUser();
-      email = userData.user?.email;
-    }
+    ({ email } = await getAuthenticatedUser());
   }
 
   const content = (

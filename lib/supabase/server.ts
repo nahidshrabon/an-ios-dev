@@ -36,3 +36,38 @@ export const getClaims = cache(async () => {
   const supabase = await createClient();
   return supabase.auth.getClaims();
 });
+
+// The single source of truth for "who is the current user" server-side.
+//
+// getClaims() verifies the session JWT locally (via WebCrypto/JWKS) and is
+// normally enough on its own — but on a cold instance that hasn't fetched
+// Supabase's JWKS keys yet, verification can fail transiently even for a
+// perfectly valid session. That's not the same as "logged out": fall back
+// to getUser(), which asks Supabase's Auth server directly, before
+// concluding there's no user. Every call site that needs the current
+// user's id/email should go through this rather than reading
+// getClaims() directly, so that fallback isn't silently skipped.
+export const getAuthenticatedUser = cache(async (): Promise<{
+  userId: string | undefined;
+  email: string | undefined;
+}> => {
+  const { data, error } = await getClaims();
+
+  if (data?.claims) {
+    return {
+      userId: data.claims.sub,
+      email: data.claims.email as string | undefined,
+    };
+  }
+
+  if (error) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return { userId: user?.id, email: user?.email };
+  }
+
+  // A definitive "no session" (data: null, error: null) — actually logged out.
+  return { userId: undefined, email: undefined };
+});

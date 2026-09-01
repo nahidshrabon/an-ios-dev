@@ -1,15 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 
 export async function addBookmark(
   articleSlug: string,
   headingSlug: string,
   headingTitle: string
 ) {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string | undefined;
+  const { userId } = await getAuthenticatedUser();
   if (!userId) return;
 
   const supabase = await createClient();
@@ -25,8 +24,7 @@ export async function addBookmark(
 }
 
 export async function removeBookmark(articleSlug: string, headingSlug: string) {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string | undefined;
+  const { userId } = await getAuthenticatedUser();
   if (!userId) return;
 
   const supabase = await createClient();

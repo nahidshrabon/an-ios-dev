@@ -1,11 +1,10 @@
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { roadmap } from "@/lib/content/roadmap";
 import { getAllQuizzes } from "@/lib/content/quizzes";
 import { RoadmapChecklist } from "@/components/RoadmapChecklist";
 
 export default async function RoadmapPage() {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string;
+  const { userId } = await getAuthenticatedUser();
 
   const supabase = await createClient();
   const [
@@ -85,7 +84,6 @@ export default async function RoadmapPage() {
       readArticleSlugs={readArticleSlugs}
       bookmarkCountByArticleSlug={bookmarkCountByArticleSlug}
       bestScoreByArticleSlug={bestScoreByArticleSlug}
-      userId={userId}
     />
   );
 }

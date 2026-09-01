@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient, getClaims } from "@/lib/supabase/server";
+import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { getArticle } from "@/lib/content/articles";
 import { BookmarkIcon, ChevronRightIcon, InfoIcon } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
@@ -12,8 +12,7 @@ type BookmarkRow = {
 };
 
 export default async function BookmarksPage() {
-  const { data: claims } = await getClaims();
-  const userId = claims?.claims.sub as string;
+  const { userId } = await getAuthenticatedUser();
 
   const supabase = await createClient();
   const { data: bookmarks } = await supabase

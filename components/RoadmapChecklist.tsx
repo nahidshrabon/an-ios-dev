@@ -37,7 +37,6 @@ export function RoadmapChecklist({
   readArticleSlugs: string[];
   bookmarkCountByArticleSlug: Record<string, number>;
   bestScoreByArticleSlug: Record<string, { score: number; total: number }>;
-  userId: string;
 }) {
   const readSlugs = useMemo(
     () => new Set(readArticleSlugs),
