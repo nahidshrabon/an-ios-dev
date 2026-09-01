@@ -305,10 +305,10 @@ Other common strategies include `.base64` for `Data` fields (the default, decodi
 Since Swift 5.7, regular expressions are a first-class language feature — a regex literal (`/pattern/`) is checked and type-inferred at *compile time*, catching malformed patterns before runtime, unlike a regex built from a plain string:
 
 ```swift
-let text = "Contact: nahid@example.com or 555-1234"
+let text = "Contact: alex@example.com or 555-1234"
 
 if let match = text.firstMatch(of: /[\w.]+@[\w.]+/) {
-    print(match.0)   // "nahid@example.com"
+    print(match.0)   // "alex@example.com"
 }
 
 let phonePattern = /(\d{3})-(\d{4})/
