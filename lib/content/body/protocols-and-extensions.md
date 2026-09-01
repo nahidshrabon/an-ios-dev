@@ -15,8 +15,8 @@ struct Person: Greetable {
     }
 }
 
-let person = Person(name: "Nahidul")
-print(person.greet())   // "Hello, I'm Nahidul"
+let person = Person(name: "Alex")
+print(person.greet())   // "Hello, I'm Alex"
 ```
 
 Any type — struct, class, or enum — can conform to a protocol, listed after `:` (or after the superclass, for classes) separated by commas if conforming to multiple protocols:

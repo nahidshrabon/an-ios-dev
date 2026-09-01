@@ -197,7 +197,7 @@ export const quizzes: Quiz[] = [
           { id: "d", text: "Enables string interpolation everywhere, even for non-string types" },
         ],
         correctOptionId: "c",
-        explanation: "Raw strings turn off `\\n`-style escapes and `\\(...)` interpolation by default, which is why they're ideal for regex patterns or file paths full of backslashes (`#\"C:\\Users\\Nahidul\\Documents\"#`). To interpolate inside a raw string, you must match the `#` count: `#\"\\#(value)\"#`.",
+        explanation: "Raw strings turn off `\\n`-style escapes and `\\(...)` interpolation by default, which is why they're ideal for regex patterns or file paths full of backslashes (`#\"C:\\Users\\Alex\\Documents\"#`). To interpolate inside a raw string, you must match the `#` count: `#\"\\#(value)\"#`.",
       },
       {
         id: "q17",
@@ -756,7 +756,7 @@ export const quizzes: Quiz[] = [
         prompt: "Which of these can actually be assigned `nil`?",
         options: [
           { id: "a", text: "`var middleName: String? = \"Ahmed\"`, an optional" },
-          { id: "b", text: "`var name: String = \"Nahidul\"`, non-optional" },
+          { id: "b", text: "`var name: String = \"Alex\"`, non-optional" },
           { id: "c", text: "Neither of these — `nil` doesn't exist anywhere in Swift" },
           { id: "d", text: "Both of these declarations can hold `nil` equally" },
         ],
@@ -1037,7 +1037,7 @@ export const quizzes: Quiz[] = [
       },
       {
         id: "q4",
-        prompt: "Given `func greet(name: String, greeting: String = \"Hello\") -> String`, what happens if you call `greet(name: \"Nahidul\")`?",
+        prompt: "Given `func greet(name: String, greeting: String = \"Hello\") -> String`, what happens if you call `greet(name: \"Alex\")`?",
         options: [
           { id: "a", text: "It's a compile-time error, since every parameter must be supplied" },
           { id: "b", text: "`greeting` silently becomes `nil` for the rest of the function body" },

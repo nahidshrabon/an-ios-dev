@@ -14,7 +14,7 @@ maxAttempts = 4   // ❌ compile error: cannot assign to value: 'maxAttempts' is
 **Default to `let`.** The Swift compiler will warn you if you declare something with `var` but never mutate it:
 
 ```swift
-var name = "Nahidul"   // ⚠️ warning: variable 'name' was never mutated; consider changing to 'let'
+var name = "Alex"   // ⚠️ warning: variable 'name' was never mutated; consider changing to 'let'
 ```
 
 This isn't stylistic pickiness — it's a correctness signal. A `let` constant tells the next reader (often future-you) that this value is fixed for its entire lifetime, which eliminates a whole category of bugs where something changes unexpectedly deep in a function.
@@ -271,10 +271,10 @@ message += ", " + "world"
 **String interpolation** is the idiomatic way to build strings from mixed content, using `\(...)`:
 
 ```swift
-let name = "Nahidul"
+let name = "Alex"
 let age = 28
 let bio = "\(name) is \(age) years old."
-// "Nahidul is 28 years old."
+// "Alex is 28 years old."
 ```
 
 Interpolation accepts any expression, not just simple variables:
@@ -411,7 +411,7 @@ let longLine = """
 let regularString = "Line 1\nLine 2"       // \n is a real newline
 let rawString = #"Line 1\nLine 2"#          // \n stays literal text: "Line 1\nLine 2"
 
-let path = #"C:\Users\Nahidul\Documents"#   // no need to escape every backslash
+let path = #"C:\Users\Alex\Documents"#      // no need to escape every backslash
 
 let pattern = #"\d{3}-\d{4}"#               // a regex pattern, backslashes untouched
 ```
@@ -504,8 +504,8 @@ print(coordinate.1)     // 3
 Or, more readably, give the elements names:
 
 ```swift
-let person = (name: "Nahidul", age: 28)
-print(person.name)      // "Nahidul"
+let person = (name: "Alex", age: 28)
+print(person.name)      // "Alex"
 print(person.age)       // 28
 ```
 

@@ -60,8 +60,8 @@ struct JSON {
     }
 }
 
-let json = JSON(storage: ["name": "Nahidul", "age": 28])
-print(json.name as Any)   // Optional("Nahidul") — "name" was never declared as a real property
+let json = JSON(storage: ["name": "Alex", "age": 28])
+print(json.name as Any)   // Optional("Alex") — "name" was never declared as a real property
 print(json.age as Any)    // Optional(28)
 ```
 

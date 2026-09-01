@@ -367,11 +367,11 @@ Unlike `LazyVGrid` (built for large, scrollable, uniformly-structured content), 
 Grid(alignment: .leading) {
     GridRow {
         Text("Name:")
-        Text("Nahidul")
+        Text("Alex")
     }
     GridRow {
         Text("Email:")
-        Text("nahid@example.com")
+        Text("alex@example.com")
     }
 }
 ```

@@ -7,7 +7,7 @@ func greet(name: String) -> String {
     return "Hello, \(name)!"
 }
 
-print(greet(name: "Nahidul"))   // "Hello, Nahidul!"
+print(greet(name: "Alex"))   // "Hello, Alex!"
 ```
 
 A function with no return value can omit `-> Void` entirely (it's implicit), and a single-expression body can omit `return` (implicit return, Swift 5.1+):
@@ -73,8 +73,8 @@ func greet(name: String, greeting: String = "Hello") -> String {
     "\(greeting), \(name)!"
 }
 
-print(greet(name: "Nahidul"))                    // "Hello, Nahidul!"
-print(greet(name: "Nahidul", greeting: "Hey"))    // "Hey, Nahidul!"
+print(greet(name: "Alex"))                    // "Hello, Alex!"
+print(greet(name: "Alex", greeting: "Hey"))    // "Hey, Alex!"
 ```
 
 Parameters with defaults are conventionally placed after required parameters (though Swift doesn't strictly enforce this, it keeps call sites readable). Defaults can reference other parameters or even call functions:

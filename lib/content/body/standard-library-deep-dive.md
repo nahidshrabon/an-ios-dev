@@ -127,16 +127,16 @@ struct User: Codable {
     var age: Int
 }
 
-let user = User(name: "Nahidul", age: 28)
+let user = User(name: "Alex", age: 28)
 
 let encoder = JSONEncoder()
 let data = try encoder.encode(user)
 print(String(data: data, encoding: .utf8)!)
-// {"name":"Nahidul","age":28}
+// {"name":"Alex","age":28}
 
 let decoder = JSONDecoder()
 let decoded = try decoder.decode(User.self, from: data)
-print(decoded.name)   // "Nahidul"
+print(decoded.name)   // "Alex"
 ```
 
 No manual encoding/decoding code is required at all here — as long as every property is itself `Codable` (which all the basic types, `Array`, `Dictionary`, and `Optional` of `Codable` types already are), the compiler generates a complete, correct implementation.
@@ -159,11 +159,11 @@ struct User: Codable {
 }
 
 let json = """
-{"full_name": "Nahidul", "age": 28}
+{"full_name": "Alex", "age": 28}
 """.data(using: .utf8)!
 
 let user = try JSONDecoder().decode(User.self, from: json)
-print(user.fullName)   // "Nahidul"
+print(user.fullName)   // "Alex"
 ```
 
 `CodingKeys` must list every property you want encoded/decoded (omitting one excludes it from both directions), and its raw values are what actually appear in the encoded JSON — the enum case names are just the Swift-side mapping.
@@ -225,7 +225,7 @@ struct Response: Decodable {
     }
 }
 
-// decodes: {"data": {"user": {"name": "Nahidul"}}}
+// decodes: {"data": {"user": {"name": "Alex"}}}
 ```
 
 For most nested JSON, though, it's simpler to model the nesting directly as nested `Codable` structs and let automatic synthesis handle each layer — manual nested containers are typically reserved for cases where the Swift model's shape genuinely needs to differ from the JSON's shape.

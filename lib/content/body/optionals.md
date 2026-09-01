@@ -3,7 +3,7 @@
 In Swift, a variable can only be `nil` if its type is explicitly marked as optional — plain types can never silently hold "no value." This is enforced entirely at compile time.
 
 ```swift
-var name: String = "Nahidul"
+var name: String = "Alex"
 name = nil    // ❌ error: nil cannot be assigned to type 'String'
 
 var middleName: String? = "Ahmed"
@@ -62,7 +62,7 @@ if let unwrappedAge = age {
 `if let` binds the unwrapped value to a new (or, with the shorthand, same-named) constant, and only enters the block if the optional actually held a value:
 
 ```swift
-let username: String? = "nahidul"
+let username: String? = "alex"
 
 if let unwrapped = username {
     print("Hello, \(unwrapped)")
@@ -271,7 +271,7 @@ In application code processing external or user-provided data (network responses
 An implicitly unwrapped optional is declared with `!` instead of `?`, and behaves like a regular optional except it's automatically force-unwrapped whenever used as its underlying type — while still allowing explicit `if let` unwrapping when needed.
 
 ```swift
-var name: String! = "Nahidul"
+var name: String! = "Alex"
 let length = name.count      // implicitly force-unwrapped — works like a plain String here
 
 name = nil
@@ -327,7 +327,7 @@ case nil:
 This becomes especially powerful combined with tuple patterns and `where` clauses (recall 2.3–2.4) when switching over multiple related optionals at once:
 
 ```swift
-let username: String? = "nahidul"
+let username: String? = "alex"
 let age: Int? = nil
 
 switch (username, age) {
@@ -338,7 +338,7 @@ case let (name?, nil):
 case (nil, _):
     print("No username")
 }
-// "nahidul, age unknown"
+// "alex, age unknown"
 ```
 
 ---
