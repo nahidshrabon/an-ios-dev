@@ -73,13 +73,16 @@ export function AppShell({
 
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:sticky md:top-0 md:flex md:h-screen">
-        <Link
-          href="/"
-          className="font-heading inline-flex items-center gap-2 px-2 font-semibold tracking-tight"
-        >
-          <Logomark className="size-6" />
-          Home
-        </Link>
+        <div className="flex items-center justify-between gap-2 px-2">
+          <Link
+            href="/"
+            className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
+          >
+            <Logomark className="size-6" />
+            Home
+          </Link>
+          <ThemeToggle />
+        </div>
         <nav className="mt-6 flex flex-col gap-1 border-t border-black/10 pt-6 dark:border-white/10">
           {NAV_ITEMS.map((item) => (
             <Link
@@ -102,9 +105,6 @@ export function AppShell({
               {email}
             </span>
           )}
-          <div className="px-3">
-            <ThemeToggle />
-          </div>
           <div className="px-3">
             <SignOutButton />
           </div>
