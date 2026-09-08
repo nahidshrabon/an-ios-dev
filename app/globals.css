@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * Drives `dark:` utilities off a `.dark` class instead of the default
+ * prefers-color-scheme media query, so the theme toggle can override the OS
+ * setting. The inline script in the root layout applies the class before
+ * first paint; "system" is resolved there rather than in CSS.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
   --accent: #007aff;
@@ -16,12 +25,11 @@
   --font-article: var(--font-literata);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --accent: #0a84ff;
-  }
+.dark {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --accent: #0a84ff;
 }
 
 body {

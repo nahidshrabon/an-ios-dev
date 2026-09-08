@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
 import { ArticleIcon, DashboardIcon } from "@/components/Icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Nav() {
   const [supabase] = useState(() => createClient());
@@ -40,7 +41,8 @@ export function Nav() {
             an <span className="text-accent">iOS</span> dev
           </span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm">
+        <nav className="flex items-center gap-4 text-sm sm:gap-6">
+          <ThemeToggle />
           <Link
             href="/articles"
             className="font-heading inline-flex items-center gap-1.5 hover:underline"

@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
 import { BookmarkIcon, FlagIcon, SettingsIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/roadmap", label: "Roadmap", Icon: FlagIcon },
@@ -46,7 +47,10 @@ export function AppShell({
               <Logomark className="size-6" />
               Home
             </Link>
-            <SignOutButton />
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <SignOutButton />
+            </div>
           </div>
           <nav className="flex gap-4 overflow-x-auto border-b border-black/10 px-6 py-3 text-sm dark:border-white/10 md:hidden">
             {NAV_ITEMS.map((item) => (
@@ -98,6 +102,9 @@ export function AppShell({
               {email}
             </span>
           )}
+          <div className="px-3">
+            <ThemeToggle />
+          </div>
           <div className="px-3">
             <SignOutButton />
           </div>
