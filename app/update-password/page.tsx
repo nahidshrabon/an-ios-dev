@@ -2,11 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function UpdatePasswordPage() {
-  const router = useRouter();
   const [supabase] = useState(() => createClient());
   const [status, setStatus] = useState<"checking" | "ready" | "no-session">(
     "checking"
@@ -56,8 +54,10 @@ export default function UpdatePasswordPage() {
       return;
     }
 
-    router.push("/roadmap");
-    router.refresh();
+    // Full navigation, not router.push: the password change just rotated the
+    // session, and a hard load guarantees the destination renders against the
+    // new cookie rather than a cached client-router entry.
+    window.location.assign("/roadmap");
   }
 
   if (status === "checking") {
