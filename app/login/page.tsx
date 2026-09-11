@@ -4,6 +4,7 @@ import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { OAuthButtons } from "@/components/OAuthButtons";
 
 export default function LoginPage() {
   return (
@@ -49,7 +50,17 @@ function LoginForm() {
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Log in</h1>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+      <div className="mt-8">
+        <OAuthButtons next={next} />
+      </div>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
+        <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+        OR
+        <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="email" className="text-sm font-medium">
             Email
