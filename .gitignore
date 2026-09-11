@@ -28,9 +28,6 @@ yarn-error.log*
 .env*.local
 .env
 
-# vercel
-.vercel
-
 # claude code local settings
 .claude/settings.local.json
 
