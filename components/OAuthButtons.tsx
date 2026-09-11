@@ -11,11 +11,14 @@ const PROVIDERS: { id: Provider; label: string; Icon: typeof GoogleIcon }[] = [
   { id: "github", label: "Continue with GitHub", Icon: GitHubIcon },
 ];
 
-// `next` mirrors the ?next= param the email/password flow already uses —
-// preserved through the OAuth round trip so both paths land in the same
-// place. /auth/callback needs no changes: it already exchanges the `code`
-// param that any Supabase OAuth provider redirects back with.
-export function OAuthButtons({ next }: { next?: string }) {
+// Deliberately does NOT forward a ?next= param through redirectTo. Every
+// call site here wants /roadmap anyway (the login page's own default and
+// /auth/callback's fallback both already resolve there), and a callback URL
+// carrying its own nested query string is one more thing that has to survive
+// unmangled through Supabase's redirect-URL matching and the full
+// provider round trip. Keeping this URL as plain as possible removes a
+// variable that isn't earning its keep.
+export function OAuthButtons() {
   const [loadingProvider, setLoadingProvider] = useState<Provider | null>(
     null
   );
@@ -26,7 +29,6 @@ export function OAuthButtons({ next }: { next?: string }) {
     setError(null);
 
     const redirectTo = new URL("/auth/callback", window.location.origin);
-    if (next) redirectTo.searchParams.set("next", next);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
