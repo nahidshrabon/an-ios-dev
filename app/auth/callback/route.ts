@@ -12,6 +12,20 @@ import { createClient } from "@/lib/supabase/server";
 // The email templates decide which one the link carries. Prefer the
 // token-hash form for the password-reset template so a link requested on a
 // laptop still works when opened on a phone.
+// A plain server-side NextResponse.redirect() is unusable here: Netlify's
+// Next.js runtime has a bug (netlify/next-runtime#2209) where it re-appends
+// the *original* request's query string (our one-time `code`) onto whatever
+// Location header a Route Handler returns. The cookies are already set by
+// the time we respond, so a client-side bounce is just as safe and sidesteps
+// that bug entirely.
+function redirectResponse(url: string) {
+  return new NextResponse(
+    `<!doctype html><meta http-equiv="refresh" content="0;url=${url}">` +
+      `<script>location.replace(${JSON.stringify(url)})</script>`,
+    { status: 200, headers: { "content-type": "text/html" } }
+  );
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -33,18 +47,18 @@ export async function GET(request: Request) {
       token_hash: tokenHash,
     });
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return redirectResponse(`${origin}${next}`);
     }
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return redirectResponse(`${origin}${next}`);
     }
     // A present-but-rejected code is almost always one of: already consumed
     // (an email link-scanner prefetched it), expired, or — for PKCE — opened
     // in a different browser than the one that requested it, so the matching
     // verifier cookie isn't here.
-    return NextResponse.redirect(
+    return redirectResponse(
       `${origin}/login?error=${encodeURIComponent(
         "That link couldn't be verified. It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser."
       )}`
@@ -56,14 +70,14 @@ export async function GET(request: Request) {
   // If that happened, the account is usually already confirmed — the code
   // just isn't valid for a second use.
   if (errorCode === "otp_expired") {
-    return NextResponse.redirect(
+    return redirectResponse(
       `${origin}/login?error=${encodeURIComponent(
         "That link was already used (often by your email app scanning it for safety). If you just signed up, your email is likely already confirmed — try logging in."
       )}`
     );
   }
 
-  return NextResponse.redirect(
+  return redirectResponse(
     `${origin}/login?error=${encodeURIComponent("Could not authenticate")}`
   );
 }
