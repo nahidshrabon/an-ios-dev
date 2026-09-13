@@ -33,6 +33,11 @@ export const metadata: Metadata = {
   },
   description:
     "Learn iOS development with short articles, track your reading progress, and test yourself with quizzes.",
+  // Proves domain ownership to Google Search Console, which the OAuth
+  // consent screen's brand verification depends on.
+  verification: {
+    google: "mXsAF_9tBe5h2-Q63pvWZ4e9dzhi4XjjfDw5Pu0KJ44",
+  },
 };
 
 /**
