@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GitHubIcon, GoogleIcon } from "@/components/Icons";
+import { GitHubIcon } from "@/components/Icons";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
-type Provider = "google" | "github";
+type Provider = "github";
 
-const PROVIDERS: { id: Provider; label: string; Icon: typeof GoogleIcon }[] = [
-  { id: "google", label: "Continue with Google", Icon: GoogleIcon },
+const PROVIDERS: { id: Provider; label: string; Icon: typeof GitHubIcon }[] = [
   { id: "github", label: "Continue with GitHub", Icon: GitHubIcon },
 ];
 
@@ -46,6 +46,7 @@ export function OAuthButtons() {
 
   return (
     <div className="flex flex-col gap-3">
+      <GoogleSignInButton />
       {PROVIDERS.map(({ id, label, Icon }) => (
         <button
           key={id}
