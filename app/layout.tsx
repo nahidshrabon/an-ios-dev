@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
 import "highlight.js/styles/github-dark.css";
@@ -68,6 +69,19 @@ export default function RootLayout({
           <ConditionalNav />
         </Suspense>
         <div className="flex flex-1 flex-col">{children}</div>
+        <footer className="border-t border-black/10 dark:border-white/10">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-6 text-sm text-zinc-500">
+            <p>© {new Date().getFullYear()} an iOS dev</p>
+            <nav className="flex gap-4">
+              <Link href="/privacy" className="hover:underline">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:underline">
+                Terms
+              </Link>
+            </nav>
+          </div>
+        </footer>
       </body>
     </html>
   );
