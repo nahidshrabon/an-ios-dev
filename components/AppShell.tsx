@@ -7,6 +7,7 @@ import { Logomark } from "@/components/Logomark";
 import { BookmarkIcon, FlagIcon, SettingsIcon } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteSearch } from "@/components/SiteSearch";
 
 const NAV_ITEMS = [
   { href: "/roadmap", label: "Roadmap", Icon: FlagIcon },
@@ -48,6 +49,7 @@ export function AppShell({
               Home
             </Link>
             <div className="flex items-center gap-3">
+              <SiteSearch />
               <ThemeToggle />
               <SignOutButton />
             </div>
@@ -83,7 +85,10 @@ export function AppShell({
           </Link>
           <ThemeToggle />
         </div>
-        <nav className="mt-6 flex flex-col gap-1 border-t border-black/10 pt-6 dark:border-white/10">
+        <div className="mt-4 px-1">
+          <SiteSearch className="w-full" />
+        </div>
+        <nav className="mt-4 flex flex-col gap-1 border-t border-black/10 pt-6 dark:border-white/10">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
