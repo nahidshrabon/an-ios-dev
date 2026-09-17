@@ -20,7 +20,7 @@ export default async function RoadmapPage() {
       .eq("user_id", userId),
     supabase
       .from("reading_progress")
-      .select("article_slug, status")
+      .select("article_slug, status, updated_at")
       .eq("user_id", userId),
     supabase.from("bookmarks").select("article_slug").eq("user_id", userId),
     supabase
@@ -38,6 +38,14 @@ export default async function RoadmapPage() {
     readingRows
       ?.filter((row) => row.status === "read")
       .map((row) => row.article_slug) ?? [];
+
+  // Whichever article was last left unfinished. Timestamps are ISO strings,
+  // so they sort lexicographically.
+  const inProgressArticleSlug =
+    readingRows
+      ?.filter((row) => row.status === "in_progress")
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0]
+      ?.article_slug ?? null;
 
   const bookmarkCountByArticleSlug: Record<string, number> = {};
   bookmarkRows?.forEach((row) => {
@@ -90,6 +98,7 @@ export default async function RoadmapPage() {
       parts={roadmap}
       manualCompleted={manualCompleted}
       readArticleSlugs={readArticleSlugs}
+      inProgressArticleSlug={inProgressArticleSlug}
       bookmarkCountByArticleSlug={bookmarkCountByArticleSlug}
       bestScoreByArticleSlug={bestScoreByArticleSlug}
       tagsByArticleSlug={tagsByArticleSlug}

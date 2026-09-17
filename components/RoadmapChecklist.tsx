@@ -35,6 +35,7 @@ export function RoadmapChecklist({
   parts,
   manualCompleted,
   readArticleSlugs,
+  inProgressArticleSlug,
   bookmarkCountByArticleSlug,
   bestScoreByArticleSlug,
   tagsByArticleSlug,
@@ -43,6 +44,7 @@ export function RoadmapChecklist({
   parts: RoadmapPart[];
   manualCompleted: Record<string, boolean>;
   readArticleSlugs: string[];
+  inProgressArticleSlug: string | null;
   bookmarkCountByArticleSlug: Record<string, number>;
   bestScoreByArticleSlug: Record<string, { score: number; total: number }>;
   tagsByArticleSlug: Record<string, string[]>;
@@ -86,6 +88,24 @@ export function RoadmapChecklist({
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parts, manualCompleted, readSlugs]);
+
+  // Prefer resuming the article already started over starting the next one.
+  // An article that isn't on the roadmap, or whose section is already ticked
+  // off, falls through to the next unfinished section instead.
+  const resumeSection = useMemo(() => {
+    if (!inProgressArticleSlug) return undefined;
+    for (const part of parts) {
+      for (const sec of part.sections) {
+        if (sec.articleSlug === inProgressArticleSlug && !isCompleted(sec)) {
+          return sec;
+        }
+      }
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parts, inProgressArticleSlug, manualCompleted, readSlugs]);
+
+  const highlightSection = resumeSection ?? nextSection;
 
   const bestScores = Object.values(bestScoreByArticleSlug);
   const quizzesTaken = bestScores.length;
@@ -210,18 +230,18 @@ export function RoadmapChecklist({
           </div>
         )}
 
-        {nextSection && (
+        {highlightSection && (
           <div className="flex items-center justify-between gap-4 rounded-xl border border-blue-200/70 bg-blue-50/80 p-4 sm:flex-1 dark:border-blue-400/15 dark:bg-blue-400/10">
             <div className="min-w-0">
               <p className="text-sm text-blue-700 dark:text-blue-400">
-                Next up
+                {resumeSection ? "Continue where you left off" : "Next up"}
               </p>
               <p className="font-heading mt-0.5 truncate text-base font-semibold text-blue-700 dark:text-blue-400">
-                {nextSection.number}. {nextSection.title}
+                {highlightSection.number}. {highlightSection.title}
               </p>
             </div>
             <Link
-              href={`/articles/${nextSection.articleSlug}?from=roadmap`}
+              href={`/articles/${highlightSection.articleSlug}?from=roadmap`}
               className="font-heading inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-sm font-medium text-white"
             >
               Continue
