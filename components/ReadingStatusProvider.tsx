@@ -59,8 +59,17 @@ export function ReadingStatusProvider({
           .select("status")
           .eq("article_slug", articleSlug)
           .maybeSingle();
-        if (active && data) {
-          setStatus(data.status as ReadingStatus);
+        if (!active) return;
+
+        const current = (data?.status as ReadingStatus | undefined) ?? "unread";
+        setStatus(current);
+
+        // Opening an article you haven't finished is what makes it the one
+        // to resume, and re-opening refreshes the timestamp so the roadmap
+        // offers the most recent one. Finished articles are left alone.
+        if (current !== "read") {
+          setStatus("in_progress");
+          await updateReadingStatus(articleSlug, "in_progress");
         }
       }
     })();
