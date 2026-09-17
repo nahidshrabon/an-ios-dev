@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 // Type-only: importing the builder itself would pull `fs` into the browser.
 import type { SearchEntry } from "@/lib/content/search-index";
@@ -177,111 +178,113 @@ export function SiteSearch({ className = "" }: { className?: string }) {
         <span className="hidden truncate md:inline">Search…</span>
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[10vh] backdrop-blur-sm"
-          onMouseDown={close}
-        >
+      {open &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search articles"
-            onMouseDown={(event) => event.stopPropagation()}
-            onKeyDown={onKeyDown}
-            className="flex max-h-[75vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-black/10 bg-background shadow-2xl dark:border-white/15"
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[10vh] backdrop-blur-sm"
+            onMouseDown={close}
           >
-            <div className="flex items-center gap-3 border-b border-black/10 px-4 dark:border-white/10">
-              <SearchIcon className="size-4 shrink-0 text-zinc-500" />
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={(event) => updateQuery(event.target.value)}
-                placeholder="Search articles and sections…"
-                aria-label="Search articles and sections"
-                className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-500"
-              />
-              <button
-                type="button"
-                onClick={close}
-                aria-label="Close search"
-                className="text-zinc-500 hover:text-foreground"
-              >
-                <XIcon className="size-4" />
-              </button>
-            </div>
-
-            {!index ? (
-              <p className="px-4 py-8 text-center text-sm text-zinc-500">
-                Loading…
-              </p>
-            ) : results.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-zinc-500">
-                Nothing matches “{query}”.
-              </p>
-            ) : (
-              <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-                <ul
-                  ref={articleListRef}
-                  className="min-h-0 flex-1 overflow-y-auto p-2 sm:max-w-[45%] sm:border-r sm:border-black/10 sm:dark:border-white/10"
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Search articles"
+              onMouseDown={(event) => event.stopPropagation()}
+              onKeyDown={onKeyDown}
+              className="flex max-h-[75vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-black/10 bg-background shadow-2xl dark:border-white/15"
+            >
+              <div className="flex items-center gap-3 border-b border-black/10 px-4 dark:border-white/10">
+                <SearchIcon className="size-4 shrink-0 text-zinc-500" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(event) => updateQuery(event.target.value)}
+                  placeholder="Search articles and sections…"
+                  aria-label="Search articles and sections"
+                  className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-500"
+                />
+                <button
+                  type="button"
+                  onClick={close}
+                  aria-label="Close search"
+                  className="text-zinc-500 hover:text-foreground"
                 >
-                  {results.map((entry, entryIndex) => (
-                    <li key={entry.slug}>
-                      <button
-                        type="button"
-                        data-active={entryIndex === activeArticle}
-                        onMouseEnter={() => {
-                          setActiveArticle(entryIndex);
-                          setPane("articles");
-                        }}
-                        onClick={() => go(`/articles/${entry.slug}`)}
-                        className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                          entryIndex === activeArticle
-                            ? "bg-accent/10 text-accent"
-                            : "hover:bg-black/[.04] dark:hover:bg-white/5"
-                        }`}
-                      >
-                        <span className="font-heading block truncate font-medium">
-                          {entry.title}
-                        </span>
-                        <span className="block truncate text-xs text-zinc-500">
-                          {entry.headings.length} sections
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-
-                <ul className="min-h-0 flex-1 overflow-y-auto border-t border-black/10 p-2 sm:border-t-0 dark:border-white/10">
-                  {headings.map((heading, headingIndex) => (
-                    <li key={heading.slug}>
-                      <button
-                        type="button"
-                        onMouseEnter={() => {
-                          setPane("headings");
-                          setActiveHeading(headingIndex);
-                        }}
-                        onClick={() =>
-                          current &&
-                          go(`/articles/${current.slug}#${heading.slug}`)
-                        }
-                        className={`w-full rounded-lg py-1.5 pr-3 text-left text-sm transition-colors ${
-                          heading.level === 3 ? "pl-6" : "pl-3"
-                        } ${
-                          pane === "headings" && headingIndex === activeHeading
-                            ? "bg-accent/10 text-accent"
-                            : "text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/5"
-                        }`}
-                      >
-                        <span className="block truncate">{heading.title}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                  <XIcon className="size-4" />
+                </button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+
+              {!index ? (
+                <p className="px-4 py-8 text-center text-sm text-zinc-500">
+                  Loading…
+                </p>
+              ) : results.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-zinc-500">
+                  Nothing matches “{query}”.
+                </p>
+              ) : (
+                <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
+                  <ul
+                    ref={articleListRef}
+                    className="min-h-0 flex-1 overflow-y-auto p-2 sm:max-w-[45%] sm:border-r sm:border-black/10 sm:dark:border-white/10"
+                  >
+                    {results.map((entry, entryIndex) => (
+                      <li key={entry.slug}>
+                        <button
+                          type="button"
+                          data-active={entryIndex === activeArticle}
+                          onMouseEnter={() => {
+                            setActiveArticle(entryIndex);
+                            setPane("articles");
+                          }}
+                          onClick={() => go(`/articles/${entry.slug}`)}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                            entryIndex === activeArticle
+                              ? "bg-accent/10 text-accent"
+                              : "hover:bg-black/[.04] dark:hover:bg-white/5"
+                          }`}
+                        >
+                          <span className="font-heading block truncate font-medium">
+                            {entry.title}
+                          </span>
+                          <span className="block truncate text-xs text-zinc-500">
+                            {entry.headings.length} sections
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <ul className="min-h-0 flex-1 overflow-y-auto border-t border-black/10 p-2 sm:border-t-0 dark:border-white/10">
+                    {headings.map((heading, headingIndex) => (
+                      <li key={heading.slug}>
+                        <button
+                          type="button"
+                          onMouseEnter={() => {
+                            setPane("headings");
+                            setActiveHeading(headingIndex);
+                          }}
+                          onClick={() =>
+                            current &&
+                            go(`/articles/${current.slug}#${heading.slug}`)
+                          }
+                          className={`w-full rounded-lg py-1.5 pr-3 text-left text-sm transition-colors ${
+                            heading.level === 3 ? "pl-6" : "pl-3"
+                          } ${
+                            pane === "headings" && headingIndex === activeHeading
+                              ? "bg-accent/10 text-accent"
+                              : "text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/5"
+                          }`}
+                        >
+                          <span className="block truncate">{heading.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }
