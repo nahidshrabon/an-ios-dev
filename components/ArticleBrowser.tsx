@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { SearchIcon, XIcon } from "@/components/Icons";
-import { matchesAllTerms, toSearchTerms } from "@/lib/search";
+import { XIcon } from "@/components/Icons";
 
 /**
  * Article fields the browser needs. Deliberately excludes `content` — the
@@ -28,57 +27,27 @@ export function ArticleBrowser({
   articles: ArticleListItem[];
   filterTags: string[];
 }) {
-  const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  // Tags are part of the haystack so one-off keywords ("gcd", "voiceover")
-  // find their article even when the word appears in neither title nor
-  // description. Article bodies aren't searched — they'd have to be shipped
-  // to the client in full.
-  const haystacks = useMemo(
+  // Text search lives in the site-wide search panel, which also covers
+  // article sections; this list only narrows by tag.
+  const results = useMemo(
     () =>
-      new Map(
-        articles.map((article) => [
-          article.slug,
-          `${article.title} ${article.description} ${article.tags.join(" ")}`.toLowerCase(),
-        ])
-      ),
-    [articles]
+      activeTag
+        ? articles.filter((article) => article.tags.includes(activeTag))
+        : articles,
+    [articles, activeTag]
   );
 
-  const results = useMemo(() => {
-    const terms = toSearchTerms(query);
-
-    return articles.filter((article) => {
-      if (activeTag && !article.tags.includes(activeTag)) return false;
-      if (terms.length === 0) return true;
-
-      return matchesAllTerms(haystacks.get(article.slug) ?? "", terms);
-    });
-  }, [articles, haystacks, query, activeTag]);
-
-  const isFiltered = query.trim().length > 0 || activeTag !== null;
+  const isFiltered = activeTag !== null;
 
   function clearFilters() {
-    setQuery("");
     setActiveTag(null);
   }
 
   return (
     <div>
-      <div className="relative mt-6">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search articles…"
-          aria-label="Search articles"
-          className="font-heading w-full rounded-full border border-black/10 bg-transparent py-2.5 pr-4 pl-10 text-sm outline-none placeholder:text-zinc-500 focus:border-accent dark:border-white/10"
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         <button
           onClick={() => setActiveTag(null)}
           className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
@@ -117,9 +86,9 @@ export function ArticleBrowser({
 
       {results.length === 0 ? (
         <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-          Nothing matched. Try a broader search, or{" "}
+          No articles with that tag.{" "}
           <button onClick={clearFilters} className="underline">
-            clear the filters
+            Clear the filter
           </button>
           .
         </p>

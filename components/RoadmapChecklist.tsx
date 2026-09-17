@@ -15,12 +15,10 @@ import {
   ChevronRightIcon,
   FlagIcon,
   InfoIcon,
-  SearchIcon,
 } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
-import { matchesAllTerms, toSearchTerms } from "@/lib/search";
 
 const activeChip = "bg-accent text-white";
 const inactiveChip =
@@ -50,7 +48,6 @@ export function RoadmapChecklist({
   tagsByArticleSlug: Record<string, string[]>;
   filterTags: string[];
 }) {
-  const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const readSlugs = useMemo(
     () => new Set(readArticleSlugs),
@@ -118,12 +115,13 @@ export function RoadmapChecklist({
         )
       : 0;
 
-  const isFiltered = query.trim().length > 0 || activeTag !== null;
+  const isFiltered = activeTag !== null;
 
-  // Parts whose sections all fall out of the filter are dropped entirely, so
-  // the accordion doesn't leave empty shells behind.
+  // Text search lives in the site-wide search panel, which also covers
+  // article sections; the roadmap only narrows by tag. Parts whose sections
+  // all fall out are dropped so the accordion leaves no empty shells.
   const filteredParts = useMemo(() => {
-    const terms = toSearchTerms(query);
+    if (!activeTag) return parts;
 
     return parts
       .map((part) => ({
@@ -132,18 +130,11 @@ export function RoadmapChecklist({
           const tags = sec.articleSlug
             ? (tagsByArticleSlug[sec.articleSlug] ?? [])
             : [];
-
-          if (activeTag && !tags.includes(activeTag)) return false;
-          if (terms.length === 0) return true;
-
-          // Number included so "47" jumps straight to that section.
-          const haystack =
-            `${sec.number} ${sec.title} ${tags.join(" ")}`.toLowerCase();
-          return matchesAllTerms(haystack, terms);
+          return tags.includes(activeTag);
         }),
       }))
       .filter((part) => part.sections.length > 0);
-  }, [parts, tagsByArticleSlug, query, activeTag]);
+  }, [parts, tagsByArticleSlug, activeTag]);
 
   const matchCount = filteredParts.reduce(
     (sum, part) => sum + part.sections.length,
@@ -151,7 +142,6 @@ export function RoadmapChecklist({
   );
 
   function clearFilters() {
-    setQuery("");
     setActiveTag(null);
   }
 
@@ -251,19 +241,7 @@ export function RoadmapChecklist({
         )}
       </div>
 
-      <div className="relative mt-8">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search sections…"
-          aria-label="Search roadmap sections"
-          className="font-heading w-full rounded-full border border-black/10 bg-transparent py-2.5 pr-4 pl-10 text-sm outline-none placeholder:text-zinc-500 focus:border-accent dark:border-white/10"
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-8 flex flex-wrap gap-2">
         <button
           onClick={() => setActiveTag(null)}
           className={`font-heading rounded-full px-3 py-1 text-sm transition-colors ${
@@ -300,9 +278,9 @@ export function RoadmapChecklist({
 
       {isFiltered && matchCount === 0 && (
         <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-          Nothing matched. Try a broader search, or{" "}
+          No sections with that tag.{" "}
           <button onClick={clearFilters} className="underline">
-            clear the filters
+            Clear the filter
           </button>
           .
         </p>
