@@ -78,6 +78,7 @@ export async function GET(request: Request) {
     if (!error) {
       return redirectResponse(next);
     }
+    console.error("[auth/callback] verifyOtp failed:", error);
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
@@ -86,10 +87,13 @@ export async function GET(request: Request) {
     // A present-but-rejected code is almost always one of: already consumed
     // (an email link-scanner prefetched it), expired, or — for PKCE — opened
     // in a different browser than the one that requested it, so the matching
-    // verifier cookie isn't here.
+    // verifier cookie isn't here. Logged (and, TEMPORARILY, shown) so we can
+    // tell which of those it actually is on Netlify instead of guessing —
+    // drop the `error.message` from the user-facing text once diagnosed.
+    console.error("[auth/callback] exchangeCodeForSession failed:", error);
     return redirectResponse(
       `/login?error=${encodeURIComponent(
-        "That link couldn't be verified. It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser."
+        `That link couldn't be verified (${error.message}). It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser.`
       )}`
     );
   }
