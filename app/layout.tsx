@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
+import { getSiteUrl } from "@/lib/site";
 import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 
@@ -26,13 +27,30 @@ const literata = Literata({
   subsets: ["latin"],
 });
 
+const description =
+  "Learn iOS development with short articles, track your reading progress, and test yourself with quizzes.";
+
 export const metadata: Metadata = {
+  // Without this, every relative canonical and og:image below stays relative,
+  // which crawlers and social scrapers can't resolve.
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "an iOS dev",
     template: "%s | an iOS dev",
   },
-  description:
-    "Learn iOS development with short articles, track your reading progress, and test yourself with quizzes.",
+  description,
+  openGraph: {
+    siteName: "an iOS dev",
+    type: "website",
+    locale: "en_US",
+    title: "an iOS dev",
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "an iOS dev",
+    description,
+  },
   // Proves domain ownership to Google Search Console, which the OAuth
   // consent screen's brand verification depends on.
   verification: {

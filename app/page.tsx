@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GetStartedButton } from "@/components/GetStartedButton";
 import { ReadIcon, TrackIcon, TestIcon } from "@/components/HowItWorksIcons";
 import { BookmarkIcon } from "@/components/Icons";
+
+// `absolute` so the root template doesn't render "an iOS dev | an iOS dev".
+export const metadata: Metadata = {
+  title: {
+    absolute: "an iOS dev — Learn iOS development, one article at a time",
+  },
+  alternates: { canonical: "/" },
+};
 
 const HOW_IT_WORKS = [
   {
