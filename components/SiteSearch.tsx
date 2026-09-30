@@ -39,6 +39,8 @@ export function SiteSearch({ className = "" }: { className?: string }) {
   const [pane, setPane] = useState<Pane>("articles");
   const inputRef = useRef<HTMLInputElement>(null);
   const articleListRef = useRef<HTMLUListElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const openSearch = useCallback(() => {
     setOpen(true);
@@ -108,6 +110,8 @@ export function SiteSearch({ className = "" }: { className?: string }) {
   const close = useCallback(() => {
     setOpen(false);
     setQuery("");
+    // Send focus back to the trigger rather than leaving it on <body>.
+    triggerRef.current?.focus();
   }, []);
 
   const go = useCallback(
@@ -122,6 +126,27 @@ export function SiteSearch({ className = "" }: { className?: string }) {
     if (event.key === "Escape") {
       event.preventDefault();
       close();
+      return;
+    }
+
+    // Without this, Tab walks out of the panel into the page behind it, which
+    // is still rendered and still focusable.
+    if (event.key === "Tab") {
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
       return;
     }
 
@@ -170,8 +195,11 @@ export function SiteSearch({ className = "" }: { className?: string }) {
     <>
       <button
         type="button"
+        ref={triggerRef}
         onClick={openSearch}
         aria-label="Search articles"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className={`flex items-center gap-2 rounded-full border border-black/10 px-2.5 py-1.5 text-sm text-zinc-500 transition-colors hover:border-black/20 dark:border-white/15 dark:hover:border-white/25 ${className}`}
       >
         <SearchIcon className="size-4 shrink-0" />
@@ -185,6 +213,7 @@ export function SiteSearch({ className = "" }: { className?: string }) {
             onMouseDown={close}
           >
             <div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-label="Search articles"
