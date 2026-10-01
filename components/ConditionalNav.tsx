@@ -36,7 +36,10 @@ export function ConditionalNav() {
     pathname.startsWith("/roadmap") ||
     pathname.startsWith("/quizzes") ||
     pathname.startsWith("/bookmarks") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/settings") ||
+    // About renders its own chrome: AppShell with a session, Nav without.
+    // Deciding here instead would flash both while auth resolves.
+    pathname.startsWith("/about")
   ) {
     return null;
   }

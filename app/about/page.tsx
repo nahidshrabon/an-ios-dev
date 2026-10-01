@@ -7,6 +7,9 @@ import {
   MailIcon,
 } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
+import { AppShell } from "@/components/AppShell";
+import { Nav } from "@/components/Nav";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "About us" };
 
@@ -34,10 +37,15 @@ const LINKS = [
   },
 ] as const;
 
-export default function AboutPage() {
-  return (
-    // Supplies its own padding and <main>; AppShell used to provide both, and
-    // this page no longer renders inside it. Matches the other public pages.
+// Reachable without an account, but signed-in readers arrive from the
+// sidebar and should keep it. The page therefore picks its own chrome:
+// AppShell when there's a session, the plain public layout otherwise.
+// That makes this route server-rendered rather than static, which is the
+// cost of the shell depending on who is asking.
+export default async function AboutPage() {
+  const { userId, email } = await getAuthenticatedUser();
+
+  const content = (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <PageHeader icon={InfoIcon} title="About us" />
 
@@ -129,5 +137,21 @@ export default function AboutPage() {
         ))}
       </ul>
     </main>
+  );
+
+  // wrapContent={false}: the content above already provides its own <main>.
+  if (userId) {
+    return (
+      <AppShell email={email} wrapContent={false}>
+        {content}
+      </AppShell>
+    );
+  }
+
+  return (
+    <>
+      <Nav userEmail={null} />
+      {content}
+    </>
   );
 }
