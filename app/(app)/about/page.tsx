@@ -56,16 +56,11 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <p className="mt-5 text-lg leading-relaxed text-zinc-700 dark:text-zinc-300">
-          I built{" "}
-          <span className="font-heading font-semibold text-foreground">
-            an <span className="text-accent">iOS</span> dev
-          </span>{" "}
-          for my own use, as a place to <Highlight>read</Highlight>,{" "}
-          <Highlight>track my progress</Highlight>, and{" "}
-          <Highlight>practice with quizzes</Highlight>.
+        <p className="mt-5 leading-relaxed text-zinc-600 dark:text-zinc-400">
+          I built an iOS dev for my own use, as a place to read, track my
+          progress, and practice with quizzes.
         </p>
-        <p className="mt-3 leading-relaxed text-zinc-600 dark:text-zinc-400">
+        <p className="font-heading mt-4 border-l-4 border-accent pl-4 text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
           If it ends up helping you too, that&apos;s a bonus.
         </p>
       </section>
@@ -110,13 +105,5 @@ export default function AboutPage() {
         ))}
       </ul>
     </div>
-  );
-}
-
-function Highlight({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-md bg-accent/10 px-1.5 py-0.5 font-medium text-accent">
-      {children}
-    </span>
   );
 }
