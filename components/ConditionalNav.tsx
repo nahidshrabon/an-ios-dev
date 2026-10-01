@@ -9,21 +9,28 @@ export function ConditionalNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [supabase] = useState(() => createClient());
-  const [loggedIn, setLoggedIn] = useState(false);
+  // Owned here and handed to Nav, so one subscription serves both rather
+  // than each component opening its own.
+  // undefined = still checking, null = logged out, string = user's email
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setLoggedIn(!!data.user);
+      setUserEmail(data.user?.email ?? null);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setLoggedIn(!!session);
+      setUserEmail(session?.user?.email ?? null);
     });
 
     return () => subscription.unsubscribe();
   }, [supabase]);
+
+  const loggedIn = userEmail != null;
 
   if (
     pathname.startsWith("/roadmap") ||
@@ -45,10 +52,10 @@ export function ConditionalNav() {
   if (fromRoadmap && loggedIn) {
     return (
       <div className="md:hidden">
-        <Nav />
+        <Nav userEmail={userEmail} />
       </div>
     );
   }
 
-  return <Nav />;
+  return <Nav userEmail={userEmail} />;
 }
