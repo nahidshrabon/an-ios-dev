@@ -57,10 +57,14 @@ export default function AboutPage() {
         </div>
 
         <p className="mt-5 leading-relaxed text-zinc-600 dark:text-zinc-400">
-          I built an iOS dev for my own use, as a place to read, track my
-          progress, and practice with quizzes.
+          I built{" "}
+          <span className="font-heading font-semibold text-foreground">
+            an <span className="text-accent">iOS</span> dev
+          </span>{" "}
+          for my own use, as a place to read, track my progress, and practice
+          with quizzes.
         </p>
-        <p className="font-heading mt-4 border-l-4 border-accent pl-4 text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+        <p className="mt-3 font-medium text-foreground">
           If it ends up helping you too, that&apos;s a bonus.
         </p>
       </section>
