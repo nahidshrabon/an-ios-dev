@@ -16,14 +16,12 @@ const HOW_IT_WORKS = [
   {
     Icon: ReadIcon,
     title: "1. Read",
-    description:
-      "Work through articles on Swift, SwiftUI, and app architecture.",
+    description: "Work through articles on Swift, SwiftUI, and app architecture.",
   },
   {
     Icon: BookmarkIcon,
     title: "2. Bookmark",
-    description:
-      "Save key sections while reading and find them all in one place.",
+    description: "Save key sections while reading and find them all in one place.",
   },
   {
     Icon: TrackIcon,
@@ -35,24 +33,6 @@ const HOW_IT_WORKS = [
     Icon: TestIcon,
     title: "4. Test yourself",
     description: "Take short quizzes and see your scores improve over time.",
-  },
-];
-
-const ABOUT_POINTS = [
-  {
-    title: "Short and focused",
-    description:
-      "Each article covers one idea in Swift, SwiftUI, or app architecture — no filler.",
-  },
-  {
-    title: "Structured path",
-    description:
-      "A roadmap and quizzes turn a pile of articles into something you can finish.",
-  },
-  {
-    title: "Yours across devices",
-    description:
-      "Sign in to sync your progress and bookmarks everywhere you read.",
   },
 ];
 
@@ -101,42 +81,6 @@ export default function Home() {
               ))}
             </ol>
           </div>
-        </div>
-      </section>
-
-      <section
-        id="about"
-        aria-labelledby="about-heading"
-        className="w-full max-w-4xl scroll-mt-8 border-t border-black/10 px-6 py-16 dark:border-white/10 sm:py-20"
-      >
-        <h2
-          id="about-heading"
-          className="font-heading text-sm font-semibold uppercase tracking-wide text-accent"
-        >
-          About
-        </h2>
-        <div className="mt-4 grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-12">
-          <div>
-            <p className="font-heading text-2xl font-semibold tracking-tight">
-              Built by a learner, for learners.
-            </p>
-            <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              an iOS dev is a small, independent project that grew out of the
-              journey of learning iOS development: too many scattered tutorials,
-              too little structure, and no easy way to see how far along you
-              are.
-            </p>
-          </div>
-          <ul className="flex flex-col gap-4">
-            {ABOUT_POINTS.map(({ title, description }) => (
-              <li key={title}>
-                <p className="font-medium">{title}</p>
-                <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
-                  {description}
-                </p>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
     </main>
