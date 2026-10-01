@@ -36,7 +36,9 @@ const LINKS = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-3xl">
+    // Supplies its own padding and <main>; AppShell used to provide both, and
+    // this page no longer renders inside it. Matches the other public pages.
+    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
       <PageHeader icon={InfoIcon} title="About us" />
 
       <section className="relative mt-6 overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-accent/10 via-transparent to-transparent p-6 sm:p-8 dark:border-white/10">
@@ -126,6 +128,6 @@ export default function AboutPage() {
           </li>
         ))}
       </ul>
-    </div>
+    </main>
   );
 }
