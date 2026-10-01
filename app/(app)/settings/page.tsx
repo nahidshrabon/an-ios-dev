@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/supabase/server";
-import { GitHubIcon, LinkedInIcon, SettingsIcon } from "@/components/Icons";
+import { SettingsIcon } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
 import { ResetActionButton } from "@/components/ResetActionButton";
 import {
@@ -41,23 +41,9 @@ const RESET_SECTIONS = [
     key: "bookmarks",
     label: "Reset bookmarks",
     confirmLabel: "Yes, reset bookmarks",
-    warning:
-      "This will permanently delete all of your bookmarks. This can't be undone.",
+    warning: "This will permanently delete all of your bookmarks. This can't be undone.",
     successMessage: "Your bookmarks have been reset.",
     action: resetBookmarks,
-  },
-] as const;
-
-const ABOUT_LINKS = [
-  {
-    label: "GitHub",
-    href: "https://github.com/nahidshrabon",
-    Icon: GitHubIcon,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/in/nahidshrabon",
-    Icon: LinkedInIcon,
   },
 ] as const;
 
@@ -108,31 +94,6 @@ export default async function SettingsPage() {
           </div>
         ))}
       </div>
-
-      <h2 className="font-heading mt-12 text-base font-medium">About us</h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Hi, I&apos;m Nahidul. I built an iOS dev for my own learning, as a place
-        to read, track progress, and practice with quizzes. If it ends up
-        helping you too, that&apos;s a bonus.
-      </p>
-      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-        Hit a problem or have a suggestion? Report it and I&apos;ll fix it.
-      </p>
-      <ul className="mt-4 flex flex-wrap gap-3">
-        {ABOUT_LINKS.map(({ label, href, Icon }) => (
-          <li key={label}>
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-heading inline-flex h-10 items-center gap-2 rounded-full border border-black/10 px-4 text-sm transition-colors hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-[#1a1a1a]"
-            >
-              <Icon className="size-4 text-accent" />
-              {label}
-            </a>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

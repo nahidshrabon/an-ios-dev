@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
-import { BookmarkIcon, FlagIcon, SettingsIcon } from "@/components/Icons";
+import {
+  BookmarkIcon,
+  FlagIcon,
+  InfoIcon,
+  SettingsIcon,
+} from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SiteSearch } from "@/components/SiteSearch";
@@ -14,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/quizzes", label: "Quizzes", Icon: TestIcon },
   { href: "/bookmarks", label: "Bookmarks", Icon: BookmarkIcon },
   { href: "/settings", label: "Settings", Icon: SettingsIcon },
+  { href: "/about", label: "About us", Icon: InfoIcon },
 ];
 
 export function AppShell({
