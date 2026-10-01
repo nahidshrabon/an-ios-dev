@@ -11,6 +11,10 @@ import { createClient } from "@/lib/supabase/client";
 import type { ReadingStatus } from "@/lib/types";
 import { updateReadingStatus } from "@/lib/actions/reading-progress";
 
+// Articles already marked in progress in this tab. Deliberately module
+// scope, not state: it must survive remounts as the reader navigates.
+const markedThisSession = new Set<string>();
+
 type ReadingStatusContextValue = {
   // undefined = still checking auth, null = logged out, string = user id
   userId: string | null | undefined;
@@ -67,9 +71,16 @@ export function ReadingStatusProvider({
         // Opening an article you haven't finished is what makes it the one
         // to resume, and re-opening refreshes the timestamp so the roadmap
         // offers the most recent one. Finished articles are left alone.
-        if (current !== "read") {
+        //
+        // Bouncing between articles in one sitting would otherwise write on
+        // every visit; once per article per tab is enough to keep the
+        // ordering right without the extra round trips.
+        if (current !== "read" && !markedThisSession.has(articleSlug)) {
+          markedThisSession.add(articleSlug);
           setStatus("in_progress");
           await updateReadingStatus(articleSlug, "in_progress");
+        } else if (current !== "read") {
+          setStatus("in_progress");
         }
       }
     })();
