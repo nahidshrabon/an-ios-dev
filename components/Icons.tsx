@@ -275,3 +275,11 @@ export function MailIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function StarIcon({ className }: IconProps) {
+  return (
+    <svg {...shared} className={className} aria-hidden="true">
+      <path d="m12 3.5 2.6 5.3 5.9.9-4.25 4.15 1 5.85L12 16.9l-5.25 2.8 1-5.85L3.5 9.7l5.9-.9L12 3.5Z" />
+    </svg>
+  );
+}

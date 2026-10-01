@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   GitHubIcon,
   InfoIcon,
+  StarIcon,
   LinkedInIcon,
   MailIcon,
 } from "@/components/Icons";
@@ -80,6 +81,23 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
+
+      <a
+        href="https://github.com/nahidshrabon/an-ios-dev"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group mt-3 flex items-center gap-3 rounded-2xl border border-black/10 p-5 transition hover:border-accent/40 hover:bg-accent/5 dark:border-white/10"
+      >
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+          <StarIcon className="size-5" />
+        </div>
+        <div>
+          <h3 className="font-heading font-medium">Like it? Give it a star</h3>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            A star on GitHub helps others find the project.
+          </p>
+        </div>
+      </a>
 
       <h2 className="font-heading mt-10 text-sm font-semibold uppercase tracking-wide text-accent">
         Get in touch
