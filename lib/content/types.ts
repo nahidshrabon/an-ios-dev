@@ -34,6 +34,19 @@ export interface Quiz {
   questions: QuizQuestion[];
 }
 
+/**
+ * What the browser is allowed to see before an attempt is submitted — the
+ * answer key is withheld so a quiz can't be read off the page source.
+ */
+export type ClientQuizQuestion = Omit<
+  QuizQuestion,
+  "correctOptionId" | "explanation"
+>;
+
+export interface ClientQuiz extends Omit<Quiz, "questions"> {
+  questions: ClientQuizQuestion[];
+}
+
 /** Shape of each entry in quiz_attempts.answers. */
 export interface GradedAnswer {
   questionId: string;

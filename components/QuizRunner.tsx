@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import type { GradedAnswer, Quiz } from "@/lib/content/types";
+import type { ClientQuiz, GradedAnswer } from "@/lib/content/types";
+import { submitQuizAttempt, type QuizResult } from "@/lib/actions/quiz";
 import { ChevronLeftIcon, CheckIcon, InfoIcon, XIcon } from "@/components/Icons";
 import { InlineMarkdown } from "@/components/InlineMarkdown";
 import { QuizCodeBlock } from "@/components/QuizCodeBlock";
@@ -12,46 +12,25 @@ export function QuizRunner({
   quiz,
   previousAnswers,
 }: {
-  quiz: Quiz;
+  quiz: ClientQuiz;
   previousAnswers?: Record<string, GradedAnswer>;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{
-    score: number;
-    total: number;
-    graded: GradedAnswer[];
-  } | null>(null);
-  const [supabase] = useState(() => createClient());
+  const [result, setResult] = useState<QuizResult | null>(null);
 
   async function handleSubmit() {
     setSubmitting(true);
 
-    const graded: GradedAnswer[] = quiz.questions.map((q) => {
-      const selectedOptionId = answers[q.id];
-      return {
-        questionId: q.id,
-        selectedOptionId,
-        correct: selectedOptionId === q.correctOptionId,
-      };
-    });
-    const score = graded.filter((a) => a.correct).length;
+    // Graded on the server, which holds the answer key; this component never
+    // sees it until the result comes back.
+    const submitted = await submitQuizAttempt(
+      quiz.id,
+      quiz.questions.map((question) => question.id),
+      answers
+    );
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      await supabase.from("quiz_attempts").insert({
-        user_id: user.id,
-        quiz_id: quiz.id,
-        score,
-        total_questions: quiz.questions.length,
-        answers: graded,
-      });
-    }
-
-    setResult({ score, total: quiz.questions.length, graded });
+    setResult(submitted);
     setSubmitting(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -112,7 +91,7 @@ export function QuizRunner({
                 <ul className="mt-3 flex flex-col gap-1.5 text-base">
                   {question.options.map((option) => {
                     const isCorrectOption =
-                      option.id === question.correctOptionId;
+                      option.id === result.answerKey[question.id]?.correctOptionId;
                     const isSelected = option.id === graded.selectedOptionId;
                     return (
                       <li
@@ -148,7 +127,9 @@ export function QuizRunner({
                   <InfoIcon className="mt-0.5 size-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
                   <div>
                     <p className="font-article text-base text-zinc-600 dark:text-zinc-400">
-                      <InlineMarkdown>{question.explanation}</InlineMarkdown>
+                      <InlineMarkdown>
+                        {result.answerKey[question.id]?.explanation ?? ""}
+                      </InlineMarkdown>
                     </p>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getQuiz } from "@/lib/content/quizzes";
-import type { GradedAnswer } from "@/lib/content/types";
+import type { ClientQuiz, GradedAnswer } from "@/lib/content/types";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { QuizRunner } from "@/components/QuizRunner";
 
@@ -54,5 +54,18 @@ export default async function QuizPage({ params, searchParams }: Props) {
     }
   }
 
-  return <QuizRunner quiz={activeQuiz} previousAnswers={previousAnswers} />;
+  // The answer key stays on the server — otherwise the quiz is readable
+  // straight from the page source. It comes back with the graded result.
+  const clientQuiz: ClientQuiz = {
+    ...activeQuiz,
+    questions: activeQuiz.questions.map(
+      ({ correctOptionId, explanation, ...question }) => {
+        void correctOptionId;
+        void explanation;
+        return question;
+      }
+    ),
+  };
+
+  return <QuizRunner quiz={clientQuiz} previousAnswers={previousAnswers} />;
 }
