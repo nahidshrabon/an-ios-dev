@@ -36,7 +36,8 @@ export function ConditionalNav() {
     pathname.startsWith("/roadmap") ||
     pathname.startsWith("/quizzes") ||
     pathname.startsWith("/bookmarks") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/about")
   ) {
     return null;
   }

@@ -96,6 +96,9 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-6 text-sm text-zinc-500">
             <p>© {new Date().getFullYear()} an iOS dev</p>
             <nav className="flex gap-4">
+              <Link href="/about" className="hover:underline">
+                About
+              </Link>
               <Link href="/privacy" className="hover:underline">
                 Privacy
               </Link>
