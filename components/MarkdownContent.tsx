@@ -123,7 +123,7 @@ export function MarkdownContent({
             );
           },
           pre: ({ children }) => (
-            <pre className="mt-4 overflow-x-auto rounded-xl border border-black/10 bg-[#f6f8fa] p-4 text-sm">
+            <pre className="mt-4 overflow-x-auto rounded-xl border border-black/10 bg-[#f6f8fa] dark:border-white/10 dark:bg-[#22272e] p-4 text-sm">
               {children}
             </pre>
           ),

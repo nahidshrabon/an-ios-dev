@@ -37,7 +37,23 @@ body {
   color: var(--foreground);
 }
 
-/* Code blocks: gray box from the <pre>, not the highlight theme. */
+/* Code blocks: the box comes from the <pre>, not the highlight theme. */
 pre code.hljs {
   background: transparent;
 }
+
+/* Dark mode: dark gray box with GitHub Dark Dimmed colors (xcode.css is light only). */
+.dark .hljs { color: #adbac7; }
+.dark .hljs-comment, .dark .hljs-quote, .dark .hljs-formula { color: #768390; }
+.dark .hljs-keyword, .dark .hljs-tag, .dark .hljs-doctag, .dark .hljs-selector-tag,
+.dark .hljs-template-variable { color: #f47067; }
+.dark .hljs-title, .dark .hljs-title.class_, .dark .hljs-class .hljs-title,
+.dark .hljs-type { color: #dcbdfb; }
+.dark .hljs-number, .dark .hljs-literal, .dark .hljs-attr, .dark .hljs-attribute,
+.dark .hljs-variable, .dark .hljs-meta, .dark .hljs-section, .dark .hljs-selector-id,
+.dark .hljs-selector-class { color: #6cb6ff; }
+.dark .hljs-string, .dark .hljs-code, .dark .hljs-regexp, .dark .hljs-link,
+.dark .hljs-meta .hljs-string { color: #96d0ff; }
+.dark .hljs-built_in, .dark .hljs-symbol, .dark .hljs-bullet { color: #f69d50; }
+.dark .hljs-name { color: #8ddb8c; }
+.dark .hljs-params, .dark .hljs-subst { color: #adbac7; }
