@@ -1,10 +1,10 @@
 ## 45.1 Why Views Over 300 Lines Become Unmaintainable
 
-A view that does too many jobs (loading data, fixing rules, formatting, layout) is hard to read, test, and change.
+A view that does too many jobs (loading data, checking business rules, formatting, layout) is hard to read, test, and change.
 
 "300 lines" is only a rough warning. The real problem is the number of jobs, not the number of lines. If you change one job, you can break another.
 
-When a view has many jobs, move each job to its own place.
+When a view has many jobs, move each job to its own place (see 45.2).
 
 ---
 
@@ -42,7 +42,7 @@ A view should not hold logic. Logic should not know about the screen. Every patt
 
 ## 45.3 MVVM with @Observable View Models
 
-MVVM (Model-View-ViewModel) adds a **view model**: a class that holds the data a view shows and does the work to get it. The view only draws the screen. In SwiftUI, view models use `@Observable` (section 25).
+MVVM (Model-View-ViewModel) adds a **view model**: a class that holds the data a view shows and asks for that data when needed. The view only draws the screen. In SwiftUI, view models use `@Observable` (section 25).
 
 ```swift
 @Observable
@@ -80,7 +80,9 @@ struct RecipeListView: View {
 }
 ```
 
-The view model loads the data, tracks loading, and handles errors. The view only shows `recipes` and `isLoading`, and calls `loadRecipes()` when the screen appears.
+To keep this example short, the view model calls `apiClient` directly. In 45.5 we replace it with a service.
+
+The view model asks for the data, tracks loading, and handles errors. The view only shows `recipes` and `isLoading`, and calls `loadRecipes()` when the screen appears.
 
 When a view creates its own view model, use `@State private var viewModel`. SwiftUI rebuilds views often, and `@State` keeps the same view model alive while the view is on screen. If another view passes the view model in, a plain `let` is enough.
 
@@ -129,7 +131,7 @@ final class DefaultRecipeService: RecipeService {
 
     func getRecipes() async throws -> [Recipe] {
         let remoteRecipes = try await apiClient.getRecipes()
-        // save remote data to the local database, then return it
+        // (simplified) save remote data to the local database, then return it
         return remoteRecipes
     }
 
@@ -155,7 +157,7 @@ struct RecipeDTO: Decodable {
     let cook_time_minutes: Int?
 }
 
-// Domain model: clean Swift, shaped for what the app needs
+// Domain model: clean Swift, shaped for what the app needs (same Recipe as 45.2)
 struct Recipe: Identifiable {
     let id: UUID
     var title: String
@@ -234,7 +236,7 @@ struct RecipeDetailView: View {
 
 Without an enum, you often have many separate properties (`isLoading`, `isEditing`, `isSaving`, `error`, `recipe`), and the view must work out which combination to show.
 
-With one enum, the state decides what to show. The view is a simple `switch` with one case per state, and Swift makes sure you handle every case (section 6).
+With one enum, the state decides what to show. The view is a simple `switch` with one case per state, and Swift makes sure you handle every case (section 6). Here the state lives in the view, but it can live in a view model too.
 
 ---
 
@@ -269,7 +271,7 @@ Profile/          (feature-specific)
 Shared/
   DesignSystem/    — design tokens, reusable SwiftUI components
   Networking/      — APIClient, Endpoint (section 40.1)
-  Persistence/     — SwiftData container setup, service protocols
+  Persistence/     — SwiftData container setup
   Extensions/      — small, general-purpose extensions
 ```
 
