@@ -1,15 +1,10 @@
 ## 45.1 Why Views Over 300 Lines Become Unmaintainable
 
-A SwiftUI view file that grows unchecked — mixing network calls, business logic, formatting, navigation decisions, and layout all in one `body` — becomes progressively harder to read, test, and safely modify, regardless of how clean any individual line of code is.
+A SwiftUI view that mixes network calls, business logic, formatting, and layout in one `body` gets harder to read, test, and change with every feature you add.
 
-```swift
-// A warning sign, not a hard rule: when a single View's body and its
-// directly-adjacent helper methods start doing meaningfully different
-// KINDS of work (fetching, transforming, formatting, laying out), that's
-// the signal to extract responsibilities — not merely to split by line count.
-```
+The "300 lines" figure is only a rough warning sign. The real problem is *mixed responsibilities*: a date format and a network retry change for different reasons, so touching one risks breaking the other.
 
-The "300 lines" figure itself is a rough heuristic, not a strict threshold — the real underlying problem isn't line count per se, it's *mixed responsibilities*: a view that both decides how to format a date for display and decides how to retry a failed network request is coupling two concerns that change for entirely different reasons and at entirely different rates. When a view accumulates enough of these unrelated concerns, every change (even a small formatting tweak) risks touching code involved in something completely unrelated, and every test of that view's logic requires standing up the entire tangled mess rather than testing each concern in isolation.
+When a view starts doing different kinds of work, extract those responsibilities instead of just splitting the file by line count.
 
 ---
 
