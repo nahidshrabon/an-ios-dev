@@ -1,10 +1,10 @@
 ## 45.1 Why Views Over 300 Lines Become Unmaintainable
 
-A SwiftUI view that mixes network calls, business logic, formatting, and layout in one `body` gets harder to read, test, and change with every feature you add.
+A view that does too many jobs (loading data, fixing rules, formatting, layout) is hard to read, test, and change.
 
-The "300 lines" figure is only a rough warning sign. The real problem is *mixed responsibilities*: a date format and a network retry change for different reasons, so touching one risks breaking the other.
+"300 lines" is only a rough warning. The real problem is the number of jobs, not the number of lines. If you change one job, you can break another.
 
-When a view starts doing different kinds of work, extract those responsibilities instead of just splitting the file by line count.
+When a view has many jobs, move each job to its own place.
 
 ---
 
