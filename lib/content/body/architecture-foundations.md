@@ -42,7 +42,7 @@ A view should not hold logic. Logic should not know about the screen. Every patt
 
 ## 45.3 MVVM with @Observable View Models
 
-MVVM (Model-View-ViewModel) introduces a dedicated "view model" object that holds a view's presentation-ready state and orchestrates the logic needed to produce it, letting the `View` itself stay focused purely on layout — modern SwiftUI MVVM is built naturally around `@Observable` (section 25).
+MVVM (Model-View-ViewModel) adds a **view model**: a class that holds the data a view shows and does the work to get it. The view only draws the screen. In SwiftUI, view models use `@Observable` (section 25).
 
 ```swift
 @Observable
@@ -80,33 +80,37 @@ struct RecipeListView: View {
 }
 ```
 
-The view model owns the async fetching logic, loading state, and error handling, exposing only already-prepared, display-ready state (`recipes`, `isLoading`) to the view — the view's `body` becomes almost entirely mechanical: lay out this data, call this method on this event, with essentially no independent judgment calls of its own. `@State private var viewModel` (holding the view model as reference-type state, since `@Observable` classes are reference types) is the standard modern pattern for a SwiftUI view owning its view model's lifetime.
+The view model loads the data, tracks loading, and handles errors. The view only shows `recipes` and `isLoading`, and calls `loadRecipes()` when the screen appears.
+
+When a view creates its own view model, use `@State private var viewModel`. SwiftUI rebuilds views often, and `@State` keeps the same view model alive while the view is on screen. If another view passes the view model in, a plain `let` is enough.
 
 ---
 
 ## 45.4 What Belongs in a View Model and What Doesn't
 
-A common MVVM mistake is either under-using the view model (leaving business logic scattered in the view) or over-using it (stuffing the view model with responsibilities that actually belong elsewhere, like raw network/persistence code) — drawing this boundary correctly is a genuine skill.
+A view model should prepare data for one screen and react to what the user does. It should not fetch or save data itself (network calls, database queries).
 
 ```swift
 @Observable
 final class RecipeListViewModel {
-    // BELONGS: presentation-ready state, orchestration of when to call services
+    // BELONGS: data for the screen, and deciding when to call the service
     private(set) var recipes: [Recipe] = []
-    private let recipeService: RecipeService // a service layer, not raw URLSession
+    private let recipeService: RecipeService
 
-    // DOESN'T BELONG: raw URLRequest construction, JSONDecoder calls —
-    // that's the service/repository layer's job (section 45.5), not the view model's
+    // DOESN'T BELONG: URLRequest, JSONDecoder, database queries.
+    // That is the service's job (45.5).
 }
 ```
 
-A useful test: a view model should generally *orchestrate* calls to lower-level services/repositories and shape their results into exactly what the view needs to display, but shouldn't itself contain raw `URLSession`/`JSONDecoder` calls, SwiftData query construction, or other genuinely low-level implementation details — those belong in a dedicated service or repository layer (45.5) that the view model depends on and coordinates, keeping the view model's own responsibility narrowly scoped to "prepare exactly what this screen needs to show, and react to what this screen's user does."
+Two mistakes to avoid. If the view model does too little, logic ends up in the view. If it does too much, it fills up with network and database code.
+
+A simple test: the view model calls services and shapes the result for the screen. It never calls `URLSession`, `JSONDecoder`, or SwiftData directly.
 
 ---
 
 ## 45.5 Service and Repository Layers
 
-A service (or repository) layer sits between view models and raw data sources (network, persistence), providing a clean, domain-focused interface that hides the messy implementation details of *how* data is actually fetched or stored.
+A **repository** hides where data is stored (network, database). A **service** can use repositories and add logic on top. Both sit between the view model and the data. In this course, `RecipeService` is simple, so it acts like a repository.
 
 ```swift
 protocol RecipeService {
@@ -125,7 +129,7 @@ final class DefaultRecipeService: RecipeService {
 
     func getRecipes() async throws -> [Recipe] {
         let remoteRecipes = try await apiClient.getRecipes()
-        // sync remote data into local SwiftData store, return local source of truth
+        // save remote data to the local database, then return it
         return remoteRecipes
     }
 
@@ -135,23 +139,23 @@ final class DefaultRecipeService: RecipeService {
 }
 ```
 
-This directly extends the API client protocol pattern from section 40.1 one layer further — where `APIClient` abstracted the raw networking details, `RecipeService` abstracts the higher-level question of "where recipes actually come from" (which might involve coordinating between a remote API and a local SwiftData cache), letting a view model depend only on the `RecipeService` protocol, entirely unaware of whether recipes ultimately come from a network call, a local database, or some combination of both.
+`APIClient` (section 40.1) hides the network details. `RecipeService` goes one step further: it hides *where* recipes come from (network, database, or both). The view model only knows the `RecipeService` protocol.
 
 ---
 
 ## 45.6 Mapping DTOs to Domain Models
 
-A DTO (Data Transfer Object — the shape of data as it comes over the network, matching a server's specific JSON structure) is often a poor fit to use directly as an app's internal domain model — an explicit mapping layer translates between the two, decoupling the app's internal design from the server's specific API shape.
+A **DTO** (Data Transfer Object) is data in the exact shape the server sends. Do not use it inside your app. Convert it to your own model (the domain model) first.
 
 ```swift
-// DTO: matches the server's exact JSON structure, including its quirks
+// DTO: matches the server's JSON exactly
 struct RecipeDTO: Decodable {
     let recipe_id: String
     let recipe_title: String
     let cook_time_minutes: Int?
 }
 
-// Domain model: clean, idiomatic Swift, shaped around what the APP needs
+// Domain model: clean Swift, shaped for what the app needs
 struct Recipe: Identifiable {
     let id: UUID
     var title: String
@@ -167,23 +171,25 @@ extension Recipe {
 }
 ```
 
-Without this mapping layer, a server's API quirks (snake_case field names, an optional field that should really have a sensible default, an ID represented as a string rather than a genuine `UUID`) leak directly into the app's internal model, and any change to the server's JSON shape would ripple out through every part of the app that touches that data — an explicit DTO-to-domain mapping step contains that impact to one well-defined translation boundary, letting the rest of the app work with a clean, idiomatic, server-shape-independent `Recipe` type.
+Without mapping, the server's odd choices leak into your app: snake_case names, optional fields, and an ID that is a string instead of a `UUID`. If the server changes its JSON, you would have to fix code everywhere.
+
+With mapping, only the `init(dto:)` code changes. The rest of the app uses the clean `Recipe`.
 
 ---
 
-## 45.7 Making Illegal States Unrepresentable
+## 45.7 Making Wrong States Impossible
 
-A recurring theme throughout this curriculum (first introduced with enums in section 6, and revisited for network loading states in section 39.9) — designing types so that invalid or contradictory combinations of data simply cannot be constructed, rather than relying on runtime checks or discipline to avoid them.
+Design your types so that wrong or mixed-up data cannot be created at all. This idea first appeared with enums (section 6) and loading states (section 39.9).
 
 ```swift
-// WORSE: independently-settable fields allow nonsensical combinations
+// WORSE: the fields are separate, so they can disagree
 struct BadRecipeUpload {
     var isUploading: Bool
     var uploadedURL: URL?
-    var uploadError: Error? // nothing prevents isUploading == true AND uploadedURL != nil simultaneously
+    var uploadError: Error? // nothing stops isUploading == true AND uploadedURL != nil
 }
 
-// BETTER: the type itself enforces exactly one valid state at a time
+// BETTER: only one state at a time
 enum RecipeUploadState {
     case idle
     case uploading(progress: Double)
@@ -192,13 +198,15 @@ enum RecipeUploadState {
 }
 ```
 
-The enum-based `RecipeUploadState` makes it structurally impossible to represent "currently uploading" and "already succeeded with a URL" simultaneously — there's no code path, however buggy, that could produce that contradictory combination, because the type system itself doesn't allow it. This is a genuinely different (and stronger) guarantee than "we're careful to always keep these flags in sync" — it's architectural discipline applied at the type-design level, and it's one of the single highest-leverage habits for reducing an entire category of bugs before they can even be written.
+With `RecipeUploadState`, "uploading" and "succeeded" cannot both be true. No code, even buggy code, can create that mix, because Swift does not allow it.
+
+This is stronger than "be careful to keep the flags in sync". The type itself prevents a whole group of bugs.
 
 ---
 
-## 45.8 Modeling Screen State as an Enum
+## 45.8 Using an Enum for Screen State
 
-Building directly on 45.7, an entire screen's overall state — not just one specific concern like an upload — is often best modeled as a single enum, extending the `LoadState` pattern introduced for networking (section 39.9) into a general architectural technique.
+Like 45.7, but for a whole screen: describe everything the screen can be doing with one enum. This extends the `LoadState` idea from section 39.9.
 
 ```swift
 enum RecipeDetailScreenState {
@@ -224,44 +232,50 @@ struct RecipeDetailView: View {
 }
 ```
 
-Rather than a view model exposing a scattering of independent `@Published`/`@Observable` properties (`isLoading`, `isEditing`, `isSaving`, `error`, `recipe`) that the view must manually reconcile into "what should actually be shown right now," a single state enum makes that reconciliation the type's own job — the view's `body` becomes a straightforward, exhaustive `switch` with one case per genuinely distinct screen state, and the compiler's exhaustiveness checking (recall `switch` over enums, section 6) guarantees every state is explicitly handled somewhere.
+Without an enum, you often have many separate properties (`isLoading`, `isEditing`, `isSaving`, `error`, `recipe`), and the view must work out which combination to show.
+
+With one enum, the state decides what to show. The view is a simple `switch` with one case per state, and Swift makes sure you handle every case (section 6).
 
 ---
 
-## 45.9 Folder and Group Structure That Scales
+## 45.9 Folder Structure That Scales
 
-How files are organized into folders/groups is a genuinely consequential architectural decision at scale — the two dominant approaches are organizing "by type" (all views together, all models together, all view models together) versus "by feature" (each feature's views, models, and view models grouped together).
+There are two main ways to organize files: **by type** (all views together, all models together) or **by feature** (everything for one feature together).
 
 ```plaintext
-By type (works fine for small apps, struggles as they grow):
+By type (fine for small apps, hard when they grow):
   Views/RecipeListView.swift, RecipeDetailView.swift, ProfileView.swift...
   ViewModels/RecipeListViewModel.swift, ProfileViewModel.swift...
   Models/Recipe.swift, User.swift...
 
-By feature (scales considerably better for larger apps):
+By feature (works better for big apps):
   Recipes/RecipeListView.swift, RecipeListViewModel.swift, Recipe.swift...
   Profile/ProfileView.swift, ProfileViewModel.swift, User.swift...
 ```
 
-Organizing "by type" means working on a single feature requires jumping between several distant folders for every related file, and the folders themselves grow unboundedly as the app grows, providing no natural way to see "everything related to recipes" at a glance. Organizing "by feature" instead groups everything relevant to one cohesive piece of app functionality together, which scales much better as an app grows to dozens of features, and naturally supports the kind of feature-level modularization (potentially even separate Swift packages per feature) that becomes increasingly valuable in larger codebases.
+By type: to work on one feature, you jump between many folders. The folders keep growing, and you can't see "everything about recipes" in one place.
+
+By feature: everything for one feature is together. This works better as the app grows, and it makes it easier to split features into separate Swift packages later.
 
 ---
 
-## 45.10 Choosing Where to Put Shared Logic
+## 45.10 Where to Put Shared Code
 
-Not everything belongs cleanly inside one feature folder — genuinely shared logic (a date formatter used everywhere, a design token system per section 32.14, a networking layer per section 40.1) needs a deliberate home distinct from any single feature, without becoming a disorganized dumping ground.
+Some code is used by many features, like a date formatter, design tokens (section 32.14), or the networking layer (section 40.1). Give it its own folder, and keep that folder tidy.
 
 ```plaintext
 Recipes/          (feature-specific)
 Profile/          (feature-specific)
 Shared/
-  DesignSystem/    — design tokens, reusable custom SwiftUI components
+  DesignSystem/    — design tokens, reusable SwiftUI components
   Networking/      — APIClient, Endpoint (section 40.1)
-  Persistence/     — shared SwiftData container setup, service protocols
-  Extensions/      — small, genuinely general-purpose Swift/SwiftUI extensions
+  Persistence/     — SwiftData container setup, service protocols
+  Extensions/      — small, general-purpose extensions
 ```
 
-A well-organized `Shared` (or `Core`/`Common`) area should hold things that are genuinely used across *multiple* features and have no natural single-feature home — the key discipline is resisting the temptation to put something there just because it's convenient, when it actually only serves one specific feature (which should keep it local to that feature's own folder instead). As an app and team grow, well-scoped shared modules like this are often exactly what eventually gets extracted into standalone Swift packages, letting different features (and even different apps within the same organization) depend on a stable, independently-versioned shared foundation.
+Put code in `Shared` (or `Core`/`Common`) only if **several** features use it. If only one feature uses it, keep it in that feature's folder. Do not use `Shared` as a dumping ground.
+
+Later, a well-kept `Shared` folder can become its own Swift package that many features, or even many apps, depend on.
 
 ---
 
@@ -269,13 +283,13 @@ A well-organized `Shared` (or `Core`/`Common`) area should hold things that are 
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| Root problem | Mixed responsibilities, not line count | Why large views become hard to maintain |
-| Foundational separation | Model / Logic / Presentation | The discipline underlying every specific pattern |
-| MVVM | `@Observable` view models | Views stay focused purely on layout |
-| View model scope | Orchestration, not raw implementation | What belongs vs. what belongs elsewhere |
-| Service/repository layer | Protocol-based data access abstraction | Hide "how" data is fetched/stored from view models |
-| DTO-to-domain mapping | Explicit translation boundary | Decouple app design from server API shape |
-| Illegal states | Enum-based, structurally-enforced validity | Make invalid combinations unconstructible |
-| Screen state modeling | Single enum per screen | Exhaustive, compiler-checked state handling |
-| Project structure | Organize by feature, not by type | Scales better as an app grows |
-| Shared code | Deliberate, disciplined `Shared`/`Core` area | Genuinely cross-feature logic only |
+| Big views | Too many jobs, not too many lines | Know why big views are hard to maintain |
+| Three parts | Model / Logic / Presentation | The base of every pattern |
+| MVVM | `@Observable` view models | Views only draw the screen |
+| View model scope | Prepare data, don't fetch it | Keep network and database code out |
+| Service / repository | Hide where data comes from | View models stay simple and testable |
+| DTO to domain model | Convert server data once | Server changes don't spread through the app |
+| Wrong states | Use enums, not separate flags | Mixed-up states can't exist |
+| Screen state | One enum per screen | The view is a simple `switch` |
+| Folders | Organize by feature, not by type | Easier to grow |
+| Shared code | A small `Shared` folder | Only code that several features use |

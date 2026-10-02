@@ -506,7 +506,7 @@ export const articles: Article[] = [
     slug: "architecture-foundations",
     title: "Architecture Foundations",
     description:
-      "Why large views become unmaintainable, separating model/logic/presentation, MVVM with @Observable, what belongs in a view model, service/repository layers, DTO-to-domain mapping, illegal states unrepresentable, screen state as an enum, and project structure that scales.",
+      "Why large views become unmaintainable, separating model/logic/presentation, MVVM with @Observable, what belongs in a view model, service/repository layers, DTO-to-domain mapping, making wrong states impossible, screen state as an enum, and project structure that scales.",
     tags: ["architecture", "mvvm"],
     publishedAt: "2026-08-16",
     get content() {
