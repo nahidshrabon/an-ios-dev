@@ -10,7 +10,7 @@ When a view has many jobs, move each job to its own place.
 
 ## 45.2 Separating Model, Logic, and Presentation
 
-Split your code into three parts: the **model** (the data), the **logic** (the rules), and the **presentation** (what the user sees).
+Split your code into three parts: the **model** (the data), the **logic** (what the app decides), and the **presentation** (what the user sees).
 
 ```swift
 // Model: only data
@@ -20,7 +20,7 @@ struct Recipe: Identifiable, Codable {
     var minutesToCook: Int
 }
 
-// Logic: rules, no UI
+// Logic: decisions, no UI
 struct RecipeValidator {
     static func isValid(_ recipe: Recipe) -> Bool {
         !recipe.title.isEmpty && recipe.minutesToCook > 0
@@ -36,7 +36,7 @@ struct RecipeRow: View {
 }
 ```
 
-A view should not hold rules. A rule should not know about the screen. Every pattern in sections 45–46 is just a way to connect these three parts.
+A view should not hold logic. Logic should not know about the screen. Every pattern in sections 45–46 is just a way to connect these three parts.
 
 ---
 
