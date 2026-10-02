@@ -10,7 +10,7 @@ export function QuizCodeBlock({ code }: { code: string }) {
       rehypePlugins={[[rehypeHighlight, { languages: { swift } }]]}
       components={{
         pre: ({ children }) => (
-          <pre className="mt-3 overflow-x-auto rounded-xl bg-[#0d1117] p-4 text-sm">
+          <pre className="mt-3 overflow-x-auto rounded-xl border border-black/10 bg-[#f6f8fa] p-4 text-sm">
             {children}
           </pre>
         ),

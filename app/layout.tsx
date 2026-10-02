@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
 import { getSiteUrl } from "@/lib/site";
-import "highlight.js/styles/github-dark.css";
+import "highlight.js/styles/github.css";
 import "./globals.css";
 
 const geistSans = Geist({
