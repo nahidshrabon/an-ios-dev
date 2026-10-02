@@ -13,7 +13,7 @@ export function ConditionalNav() {
   // than each component opening its own.
   // undefined = still checking, null = logged out, string = user's email
   const [userEmail, setUserEmail] = useState<string | null | undefined>(
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export function ConditionalNav() {
     pathname.startsWith("/quizzes") ||
     pathname.startsWith("/bookmarks") ||
     pathname.startsWith("/settings") ||
+    pathname.startsWith("/report") ||
     // About renders its own chrome: AppShell with a session, Nav without.
     // Deciding here instead would flash both while auth resolves.
     pathname.startsWith("/about")

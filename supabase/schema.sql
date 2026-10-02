@@ -83,3 +83,30 @@ create policy "insert own bookmarks" on public.bookmarks
   for insert with check (auth.uid() = user_id);
 create policy "delete own bookmarks" on public.bookmarks
   for delete using (auth.uid() = user_id);
+
+create table if not exists public.problem_reports (
+  id uuid primary key default gen_random_uuid(),
+  -- set null rather than cascade: a report stays useful after its author
+  -- deletes their account.
+  user_id uuid references auth.users(id) on delete set null,
+  email text,
+  category text not null check (category in ('bug', 'content', 'account', 'suggestion', 'other')),
+  page_url text check (char_length(page_url) <= 500),
+  message text not null check (char_length(message) between 10 and 2000),
+  status text not null default 'open' check (status in ('open', 'resolved')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_problem_reports_user_created
+  on public.problem_reports(user_id, created_at);
+
+alter table public.problem_reports enable row level security;
+
+create policy "insert own reports" on public.problem_reports
+  for insert with check (auth.uid() = user_id);
+-- Lets the submit action count a user's recent reports for rate limiting.
+create policy "select own reports" on public.problem_reports
+  for select using (auth.uid() = user_id);
+
+-- No update or delete policies: reports are triaged from the Supabase
+-- dashboard, which bypasses RLS.

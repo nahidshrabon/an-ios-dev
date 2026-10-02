@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Logomark } from "@/components/Logomark";
 import {
+  AlertIcon,
   BookmarkIcon,
   FlagIcon,
   InfoIcon,
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/bookmarks", label: "Bookmarks", Icon: BookmarkIcon },
   { href: "/settings", label: "Settings", Icon: SettingsIcon },
   { href: "/about", label: "About us", Icon: InfoIcon },
+  { href: "/report", label: "Report a problem", Icon: AlertIcon },
 ];
 
 export function AppShell({

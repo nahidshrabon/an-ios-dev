@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
+  AlertIcon,
   GitHubIcon,
   InfoIcon,
   StarIcon,
@@ -80,9 +82,12 @@ export default async function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-6 flex items-start gap-3 rounded-2xl border border-black/10 p-5 dark:border-white/10">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-          <InfoIcon className="size-5" />
+      <Link
+        href="/report"
+        className="group mt-6 flex items-center gap-3 rounded-2xl border border-black/10 p-5 transition hover:border-accent/40 hover:bg-accent/5 dark:border-white/10"
+      >
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+          <AlertIcon className="size-5" />
         </div>
         <div>
           <h3 className="font-heading font-medium">Found an issue?</h3>
@@ -90,7 +95,7 @@ export default async function AboutPage() {
             If you run into any issue, report it and I&apos;ll fix it.
           </p>
         </div>
-      </section>
+      </Link>
 
       <a
         href="https://github.com/nahidshrabon/an-ios-dev"
