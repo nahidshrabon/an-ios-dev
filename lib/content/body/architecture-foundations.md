@@ -10,24 +10,24 @@ When a view has many jobs, move each job to its own place.
 
 ## 45.2 Separating Model, Logic, and Presentation
 
-The foundational architectural move, underlying essentially every specific pattern covered in this and the next section, is separating three distinct concerns: the **model** (what the data *is*), business **logic** (what can be *done* with it and *when*), and **presentation** (how it's *displayed*).
+Split your code into three parts: the **model** (the data), the **logic** (the rules), and the **presentation** (what the user sees).
 
 ```swift
-// Model: pure data, no behavior about display or fetching
+// Model: only data
 struct Recipe: Identifiable, Codable {
     let id: UUID
     var title: String
     var minutesToCook: Int
 }
 
-// Logic: what can be done, independent of any specific UI
+// Logic: rules, no UI
 struct RecipeValidator {
     static func isValid(_ recipe: Recipe) -> Bool {
         !recipe.title.isEmpty && recipe.minutesToCook > 0
     }
 }
 
-// Presentation: purely about layout and display, given already-prepared data
+// Presentation: only layout
 struct RecipeRow: View {
     let recipe: Recipe
     var body: some View {
@@ -36,7 +36,7 @@ struct RecipeRow: View {
 }
 ```
 
-This separation isn't about following a specific named pattern (MVVM, MVC, or otherwise) — it's a more fundamental discipline that any well-organized pattern builds on top of: a `View` should generally not contain business rules like validation logic, and a validation function should generally have no idea it's ever going to be displayed on screen. Every architectural pattern discussed in sections 45–46 is essentially a different specific way of organizing and connecting these three already-separated concerns.
+A view should not hold rules. A rule should not know about the screen. Every pattern in sections 45–46 is just a way to connect these three parts.
 
 ---
 
