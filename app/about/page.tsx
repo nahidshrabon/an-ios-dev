@@ -51,54 +51,48 @@ export default async function AboutPage() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
       <PageHeader icon={InfoIcon} title="About us" />
 
-      <section className="mt-5 rounded-2xl border border-black/10 bg-gradient-to-br from-accent/10 via-transparent to-transparent p-5 sm:p-6 dark:border-white/10">
-        <div className="flex items-center gap-3">
-          <div
-            aria-hidden="true"
-            className="font-heading flex size-11 shrink-0 items-center justify-center rounded-full bg-accent font-semibold text-white shadow-sm"
-          >
-            NI
-          </div>
-          <div>
-            <p className="font-heading text-xs font-semibold uppercase tracking-wide text-accent">
-              Hello there
-            </p>
-            <h2 className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
-              I&apos;m Md. Nahidul Islam
-            </h2>
-          </div>
+      <section className="mt-5 flex items-start gap-3 rounded-2xl border border-black/10 p-4 dark:border-white/10">
+        <div
+          aria-hidden="true"
+          className="font-heading flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent"
+        >
+          NI
         </div>
+        <div className="min-w-0">
+          <h2 className="font-heading text-sm font-medium">
+            I&apos;m Md. Nahidul Islam
+          </h2>
+          <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
+            I built{" "}
+            <span className="font-heading font-semibold text-foreground">
+              an <span className="text-accent">iOS</span> dev
+            </span>{" "}
+            for my own use, as a place to read, track my progress, and practice
+            with quizzes.{" "}
+            <span className="font-medium text-foreground">
+              If it ends up helping you too, that&apos;s a bonus.
+            </span>
+          </p>
 
-        <p className="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-400">
-          I built{" "}
-          <span className="font-heading font-semibold text-foreground">
-            an <span className="text-accent">iOS</span> dev
-          </span>{" "}
-          for my own use, as a place to read, track my progress, and practice
-          with quizzes.{" "}
-          <span className="font-medium text-foreground">
-            If it ends up helping you too, that&apos;s a bonus.
-          </span>
-        </p>
-
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {LINKS.map(({ label, handle, href, external, Icon }) => (
-            <li key={label}>
-              <a
-                href={href}
-                aria-label={`${label}: ${handle}`}
-                {...(external && {
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                })}
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-black/10 bg-background px-3 text-sm transition-colors hover:border-accent/40 hover:bg-accent/5 dark:border-white/15"
-              >
-                <Icon className="size-4 text-accent" />
-                {handle}
-              </a>
-            </li>
-          ))}
-        </ul>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {LINKS.map(({ label, handle, href, external, Icon }) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  aria-label={`${label}: ${handle}`}
+                  {...(external && {
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  })}
+                  className="inline-flex h-9 items-center gap-2 rounded-full border border-black/10 bg-background px-3 text-sm transition-colors hover:border-accent/40 hover:bg-accent/5 dark:border-white/15"
+                >
+                  <Icon className="size-4 text-accent" />
+                  {handle}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
