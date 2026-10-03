@@ -198,12 +198,30 @@ Use closures for **small, narrow dependencies**. Use protocols for **larger serv
 
 ## 47.6 The Composition Root 🟡
 
-The **composition root** is the one place in your app where the real (concrete) dependencies are chosen and connected. It is usually near the app's entry point. Everything else just receives what it needs.
+Some words first. A **concrete type** is a real class, like `DefaultRecipeService`. An **abstraction** is a protocol, like `RecipeService`. Good code depends on protocols (47.4). But somewhere, someone must **create the real objects** and connect them. The question is where.
+
+**Without a composition root**, every place creates what it needs, and the choices are spread all over the app:
+
+```swift
+final class RecipeListViewModel {
+    // Creates its own real service
+    private let recipeService: RecipeService = DefaultRecipeService()
+}
+
+final class FavoritesViewModel {
+    // Creates its own, and maybe a different one
+    private let recipeService: RecipeService = CachingRecipeService()
+}
+```
+
+Now there is no single place to see or change which service the app uses. Each class decides for itself, and they may not agree. And we are back to the problem from 47.1: a test cannot replace them.
+
+**With a composition root**, one place creates the real objects and gives them to everyone else:
 
 ```swift
 @main
 struct RecipeApp: App {
-    // The composition root: the ONE place where concrete types are chosen
+    // The composition root: the ONE place where real types are chosen
     let recipeService: RecipeService = DefaultRecipeService()
     let apiClient: APIClient = DefaultAPIClient(baseURL: productionBaseURL)
 
@@ -215,9 +233,23 @@ struct RecipeApp: App {
 }
 ```
 
-Without a composition root, the choice "which `RecipeService` do we use?" can be spread all over the code. Each place might choose differently.
+The flow when the app starts:
 
-With one, **only this place knows the concrete types**. The rest of the app (view models, services) uses only protocols (47.4). If you want to change a real implementation, you change it in one known location. The root is usually the `App` type, or a small `AppDependencies` type that it owns.
+1. `RecipeApp` creates the real `DefaultRecipeService`.
+2. It gives the service to `RecipeListViewModel` through `init` (47.2).
+3. It gives the view model to `RecipeListView`.
+
+`RecipeListViewModel` only asks for a `RecipeService` (a protocol). It does not know, or care, that the real one is `DefaultRecipeService`.
+
+**Think of the wiring in a house.** All the cables are connected at one panel. The lamps and sockets don't decide where their power comes from. If you change the power source, you change it at the panel, and nothing else.
+
+**What you get:**
+
+- **One place to look and change.** To use another service, change one line in the root.
+- **Only the root knows real types.** View models and services use only protocols (47.4).
+- **Easy to swap for tests and previews.** A test or preview builds its own small "root" with fakes, and the rest of the code does not change.
+
+The root is usually the `App` type, as above, or a small `AppDependencies` type that the `App` owns.
 
 ---
 
