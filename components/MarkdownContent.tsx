@@ -27,6 +27,36 @@ function nodeText(node: ReactNode): string {
   return "";
 }
 
+const DIFFICULTY_LEVELS: Record<string, string> = {
+  "🟢": "Beginner",
+  "🟡": "Intermediate",
+  "🔴": "Advanced",
+};
+
+/** Turns a trailing difficulty mark in a heading into an element with a hover label. */
+function withDifficultyLabel(children: ReactNode): ReactNode {
+  const items = Array.isArray(children) ? [...children] : [children];
+  const last = items[items.length - 1];
+  if (typeof last !== "string") return children;
+  const trimmed = last.trimEnd();
+  const mark = [...trimmed].pop();
+  const level = mark ? DIFFICULTY_LEVELS[mark] : undefined;
+  if (!mark || !level) return children;
+  items[items.length - 1] = trimmed.slice(0, -mark.length).trimEnd();
+  items.push(
+    <span
+      key="difficulty"
+      role="img"
+      title={`Difficulty: ${level}`}
+      aria-label={`Difficulty: ${level}`}
+      className="cursor-help"
+    >
+      {mark}
+    </span>
+  );
+  return items;
+}
+
 export function MarkdownContent({
   content,
   articleSlug,
@@ -45,7 +75,7 @@ export function MarkdownContent({
               id={id}
               className="font-heading mt-10 flex items-center gap-2 text-xl font-semibold first:mt-0"
             >
-              {children}
+              {withDifficultyLabel(children)}
               {articleSlug &&
                 id &&
                 nodeText(children).trim().toLowerCase() !== "summary" && (
@@ -62,7 +92,7 @@ export function MarkdownContent({
               id={id}
               className="font-heading mt-8 flex items-center gap-2 text-lg font-medium"
             >
-              {children}
+              {withDifficultyLabel(children)}
               {articleSlug &&
                 id &&
                 nodeText(children).trim().toLowerCase() !== "summary" && (
