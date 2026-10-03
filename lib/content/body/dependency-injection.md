@@ -73,15 +73,36 @@ This fixes the problem from 47.1:
 
 ## 47.3 Environment-Based Injection in SwiftUI 🟡
 
-With initializer injection, a dependency must be passed through every view in between, even views that don't use it. This is called **prop drilling**. SwiftUI's `@Environment` avoids it: you put the dependency in once near the top, and any child view can read it.
+**The problem.** With initializer injection (47.2), a dependency must be passed through every view on the way down, even views that do not use it. This is called **prop drilling**:
 
 ```swift
-// 1. Define a key and a default value
+struct RootView: View {
+    let recipeService: RecipeService
+    var body: some View { RecipeListScreen(recipeService: recipeService) }
+}
+
+struct RecipeListScreen: View {
+    let recipeService: RecipeService          // only passes it along
+    var body: some View { RecipeRow(recipeService: recipeService) }
+}
+
+struct RecipeRow: View {
+    let recipeService: RecipeService          // finally uses it
+    // ...
+}
+```
+
+`RecipeListScreen` does not use the service. It only passes it down, and the longer the chain, the more extra code.
+
+**The solution.** SwiftUI's **environment** is a shared box of values that SwiftUI passes down the view tree for you. You put a value in once near the top, and any child view can take it out. Setting up your own value takes four steps:
+
+```swift
+// Step 1: a key. It gives the value a default.
 private struct RecipeServiceKey: EnvironmentKey {
     static let defaultValue: RecipeService = DefaultRecipeService()
 }
 
-// 2. Add the value to EnvironmentValues
+// Step 2: add a named slot to the environment: \.recipeService
 extension EnvironmentValues {
     var recipeService: RecipeService {
         get { self[RecipeServiceKey.self] }
@@ -89,18 +110,31 @@ extension EnvironmentValues {
     }
 }
 
-// 3. Inject it once, at the root
+// Step 3: put a value in, once, near the top
 ContentView().environment(\.recipeService, DefaultRecipeService())
 
-// 4. Read it in any child view, with no passing through other views
+// Step 4: read it in any child view, with no passing
 struct RecipeListView: View {
     @Environment(\.recipeService) private var recipeService
 }
 ```
 
+- **Steps 1 and 2** are setup. You write them once for each dependency. They create a slot named `\.recipeService`.
+- **Step 3** fills the slot. Every view below this point can read it.
+- **Step 4** reads the slot. The view in between never has to know about it.
+
+**The same swap as before.** To use a fake, put it in the slot instead. This is common in SwiftUI previews and tests:
+
+```swift
+#Preview {
+    RecipeListView()
+        .environment(\.recipeService, FakeRecipeService(returning: []))
+}
+```
+
 This works like `@Environment(\.modelContext)` for SwiftData (section 41.4).
 
-**The trade-off:** the dependency is less visible. Any child view can use an environment value, and the compiler does not show it in the views in between. So many teams use `@Environment` for a few dependencies that are needed almost everywhere, and use **initializer injection for a type's main dependencies**.
+**The trade-off:** the dependency is less visible. Any child view can use an environment value, and the views in between do not show it. So many teams use `@Environment` for a few dependencies that are needed almost everywhere, and use **initializer injection for a type's main dependencies**.
 
 ---
 
