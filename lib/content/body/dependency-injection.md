@@ -333,7 +333,22 @@ Here is how the three main techniques compare:
 | `@Environment` (47.3) | Read from the SwiftUI environment | SwiftUI views only | Dependency is less visible |
 | `swift-dependencies` (47.7) | `@Dependency` finds it | Any Swift code | A third-party library to add and learn |
 
-`swift-dependencies` is a middle way. It resolves dependencies without passing them through every `init`, like `@Environment`, but it works outside SwiftUI as well. It also swaps in `testValue` and `previewValue` for you, with no setup at each place of use.
+`swift-dependencies` is a middle way. It resolves dependencies without passing them through every `init`, like `@Environment`, but it works outside SwiftUI as well.
+
+**`@Dependency` looks a lot like `@Environment`.** Both have the same shape:
+
+| Part | `@Environment` (47.3) | `swift-dependencies` (47.7) |
+|---|---|---|
+| A key | `RecipeServiceKey: EnvironmentKey` | `RecipeServiceKey: DependencyKey` |
+| Default value | one `defaultValue` | `liveValue`, `testValue`, `previewValue` |
+| A named slot | `extension EnvironmentValues` | `extension DependencyValues` |
+| Read it | `@Environment(\.recipeService)` | `@Dependency(\.recipeService)` |
+
+You can think of `@Dependency` as an `@Environment` that has left the view tree. It is the same pattern, with three differences:
+
+1. **Where it works.** `@Environment` only works inside SwiftUI views, because the environment travels down the view tree. `@Dependency` works in any Swift code, like a plain view model class.
+2. **How the value gets there.** `@Environment` is passed down the view tree, and you set it with `.environment(...)` near the top. `@Dependency` is not passed down. It looks the value up in a global registry, so there is no "inject it once at the root" step.
+3. **Which value you get.** `@Environment` has one default, and you replace it yourself in each test or preview. `@Dependency` has three values, and it picks one by where the code is running, with no setup at each place of use.
 
 ---
 
