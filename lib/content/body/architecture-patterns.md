@@ -514,24 +514,59 @@ The flow:
 
 ## 46.11 SwiftUI-Native Navigation vs. Coordinators 🟡
 
-SwiftUI's own tools (`NavigationStack`, `navigationDestination(for:)`, `NavigationPath`, section 27) already separate what starts navigation from which screen comes next. So some teams ask if they still need a Coordinator.
+SwiftUI already has navigation tools that separate "what starts navigation" from "which screen comes next" (section 27). So some teams ask if they still need a Coordinator. Here are the three tools:
+
+- **`NavigationStack`:** a stack of screens, like `UINavigationController`.
+- **`NavigationPath`:** a list of the values that were pushed. Adding a value shows a new screen, and removing one goes back.
+- **`navigationDestination(for:)`:** says which screen to show for each type of value.
+
+You can keep the path in a small `@Observable` router. It plays the role of the coordinator:
 
 ```swift
-// SwiftUI-native: navigation state lives in a NavigationPath,
-// outside the screens, so no separate coordinator type is needed
 @Observable
 final class AppRouter {
-    var path = NavigationPath()
+    var path = NavigationPath()              // the screens pushed so far
 
     func showRecipeDetail(_ recipe: Recipe) {
-        path.append(recipe)
+        path.append(recipe)                  // adds a screen
     }
 }
 ```
 
-An `@Observable` router that holds a `NavigationPath` gives you most of the Coordinator's benefit with plain SwiftUI. Navigation is in one place and easy to test.
+The router is only data. These views connect it to the screens:
 
-What many teams do: SwiftUI's own navigation is enough for small and medium apps. A formal coordinator helps in large apps with complex flows, like an onboarding wizard that can start from several places.
+```swift
+struct RootView: View {
+    @State private var router = AppRouter()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            RecipeListView()
+                .navigationDestination(for: Recipe.self) { recipe in
+                    RecipeDetailView(recipe: recipe)   // the screen for a Recipe
+                }
+        }
+        .environment(router)                           // share the router with child views
+    }
+}
+
+struct RecipeListView: View {
+    @Environment(AppRouter.self) private var router
+    let recipes: [Recipe]
+
+    var body: some View {
+        List(recipes) { recipe in
+            Button(recipe.title) { router.showRecipeDetail(recipe) }   // only says what happened
+        }
+    }
+}
+```
+
+This is the same idea as 46.10: the list screen only says "a recipe was selected" (`router.showRecipeDetail`), and navigation is decided in one place. The difference is that SwiftUI shows the screen for you, so there is no `push` code. (`Recipe` must be `Hashable` to go in a `NavigationPath`.)
+
+It is also easy to test: call `router.showRecipeDetail(recipe)` and check that `router.path.count` is `1`.
+
+**What many teams do:** SwiftUI's own navigation is enough for small and medium apps. A formal coordinator helps in large apps with complex flows, like an onboarding wizard that can start from several places.
 
 ---
 
