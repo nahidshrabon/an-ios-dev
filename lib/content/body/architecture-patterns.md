@@ -581,39 +581,60 @@ struct ToggleFavoriteRecipeUseCase {
 
     func execute(_ recipe: Recipe) async throws {
         var updated = recipe
-        updated.isFavorite.toggle()
+        updated.isFavorite.toggle()           // (assumes Recipe has isFavorite)
         try await repository.save(updated)
     }
 }
+```
 
-// Compare: the same logic as a method on a service (45.5)
+A view model uses it by calling `execute`:
+
+```swift
+@Observable
+final class RecipeDetailViewModel {
+    private let toggleFavorite: ToggleFavoriteRecipeUseCase
+    let recipe: Recipe
+
+    func favoriteTapped() async {
+        try? await toggleFavorite.execute(recipe)
+    }
+}
+```
+
+Compare with the same logic as a method on a service (45.5):
+
+```swift
 extension RecipeService {
     func toggleFavorite(_ recipe: Recipe) async throws { /* ... */ }
 }
 ```
 
-**When it helps:** for complex business logic, each action is its own unit that you can test alone and reuse in many screens.
+**When it helps:** when an action has several steps (check rules, save, update other data) and many screens use it. The steps live in one small type that you can test alone and reuse everywhere.
 
-**When it hurts:** for simple CRUD actions, a type for every small action is more structure than the problem needs. This is the same trade-off as VIPER (46.3): rigor versus simplicity.
+**When it hurts:** when the action is simple, like create, read, update, or delete (CRUD). The example above is already this simple: the use case only calls the repository. A type for every small action is more structure than the problem needs. This is the same trade-off as VIPER (46.3): rigor versus simplicity.
 
 ---
 
 ## 46.13 Choosing an Architecture for Your Team Size 🟡
 
-**There is no single correct architecture.** The right choice depends on team size, app complexity, and how long the app must live. Choose on purpose, not because something is trending.
+**There is no single correct architecture.** The right choice depends on your situation, so choose on purpose, not because something is trending. Ask yourself:
 
-```plaintext
+- How many developers work on the app?
+- How complex are the business rules?
+- How long must the app live and keep changing?
+
 A rough guide, not a rule:
-- Solo dev / small app          → MVVM (45.3), little extra code
-- Small-medium team, growing    → MVVM + service layer (45.5) + light dependency injection (Section 47)
-- Large team, complex logic     → Clean Architecture (46.4) or TCA (46.7-46.9)
-- Many teams working in         → Modularization (Section 48) matters as much as the
-  parallel                        pattern, because module borders become team borders
-```
+
+| Your situation | A good choice |
+|---|---|
+| Solo developer, small app | MVVM (45.3), with little extra code |
+| Small or medium team, growing app | MVVM + a service layer (45.5) + light dependency injection (Section 47) |
+| Large team, complex business logic | Clean Architecture (46.4) or TCA (46.7 to 46.9) |
+| Many teams working in parallel | Modularization (Section 48): splitting the app into separate modules. Module borders become team borders, so this matters as much as the pattern. |
 
 Every pattern beyond the basic split into model, logic, and presentation (45.2) adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and **only pay off when the app or team is big enough**.
 
-**Choosing something too big for your app is a common mistake.** So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, and don't just pick the most talked-about pattern.
+**Choosing something too big for your app is a common mistake.** So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, start simple, and add structure when the app needs it. Don't just pick the most talked-about pattern.
 
 ---
 
