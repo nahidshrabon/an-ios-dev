@@ -241,6 +241,34 @@ The flow when the app starts:
 
 `RecipeListViewModel` only asks for a `RecipeService` (a protocol). It does not know, or care, that the real one is `DefaultRecipeService`.
 
+**Creating objects on demand.** The example above creates everything when the app starts, and some objects may never be used. Two decisions are separate: **which** real type to use (the root's job, in one place) and **when** to create it. You can create objects later, in two ways.
+
+**1. `lazy` properties:** the object is created the first time it is used.
+
+```swift
+final class AppDependencies {
+    lazy var apiClient: APIClient = DefaultAPIClient(baseURL: productionBaseURL)
+    lazy var recipeService: RecipeService = DefaultRecipeService()   // created on first use
+}
+```
+
+**2. Factory methods:** the root builds an object only when it is asked, for example when a screen opens.
+
+```swift
+extension AppDependencies {
+    func makeRecipeListViewModel() -> RecipeListViewModel {
+        RecipeListViewModel(recipeService: recipeService)   // created when requested
+    }
+}
+
+// In the app:
+RecipeListView(viewModel: dependencies.makeRecipeListViewModel())
+```
+
+The root still knows all the real types. It only creates them later. `lazy` needs a **class** like `AppDependencies`, not the `App` struct, because `lazy` changes the property on first use. `swift-dependencies` (47.7) already works this way: a value is only created when `@Dependency` is first used.
+
+Creating at launch is fine for small, cheap objects. On demand matters for **heavy** objects (a database, a large cache), objects that open connections, or ones that are rarely used.
+
 **Think of the wiring in a house.** All the cables are connected at one panel. The lamps and sockets don't decide where their power comes from. If you change the power source, you change it at the panel, and nothing else.
 
 **What you get:**
