@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AlertIcon } from "@/components/Icons";
 import { PageHeader } from "@/components/PageHeader";
+import { ReportHistory } from "@/components/ReportHistory";
 import { ReportProblemForm } from "@/components/ReportProblemForm";
 
 export const metadata: Metadata = { title: "Report a problem" };
@@ -23,6 +24,7 @@ export default async function ReportPage({
       <div className="mt-6">
         <ReportProblemForm initialPage={initialPage} />
       </div>
+      <ReportHistory />
     </div>
   );
 }

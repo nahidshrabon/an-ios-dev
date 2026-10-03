@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import {
   MESSAGE_MAX,
@@ -72,5 +73,6 @@ export async function submitReport(
     return { ok: false, error: "Couldn't send your report. Please try again." };
   }
 
+  revalidatePath("/report");
   return { ok: true };
 }

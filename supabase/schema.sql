@@ -110,3 +110,7 @@ create policy "select own reports" on public.problem_reports
 
 -- No update or delete policies: reports are triaged from the Supabase
 -- dashboard, which bypasses RLS.
+
+-- Written from the dashboard; shown to the reporter under their report.
+alter table public.problem_reports
+  add column if not exists reply text;
