@@ -33,54 +33,61 @@ export async function ReportHistory() {
     .order("created_at", { ascending: false })
     .returns<Report[]>();
 
-  if (error || !data || data.length === 0) return null;
+  if (error || !data) return null;
 
   return (
-    <section className="mt-10">
+    <section>
       <h2 className="font-heading text-sm font-semibold uppercase tracking-wide text-accent">
         Your reports
       </h2>
-      <ul className="mt-3 flex flex-col gap-3">
-        {data.map((report) => (
-          <li
-            key={report.id}
-            className="rounded-2xl border border-black/10 p-5 dark:border-white/10"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-heading text-sm font-medium">
-                {categoryLabel(report.category)}
-              </span>
-              <div className="flex items-center gap-3">
-                <time
-                  dateTime={report.created_at}
-                  className="text-xs text-zinc-500"
-                >
-                  {dateFormat.format(new Date(report.created_at))}
-                </time>
-                <StatusBadge status={report.status} />
+      {data.length === 0 ? (
+        <p className="mt-3 rounded-2xl border border-dashed border-black/15 p-5 text-sm text-zinc-500 dark:border-white/15">
+          Nothing yet. Reports you send will show up here, along with my
+          replies.
+        </p>
+      ) : (
+        <ul className="mt-3 flex flex-col gap-3">
+          {data.map((report) => (
+            <li
+              key={report.id}
+              className="rounded-2xl border border-black/10 p-5 dark:border-white/10"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-heading text-sm font-medium">
+                  {categoryLabel(report.category)}
+                </span>
+                <div className="flex items-center gap-3">
+                  <time
+                    dateTime={report.created_at}
+                    className="text-xs text-zinc-500"
+                  >
+                    {dateFormat.format(new Date(report.created_at))}
+                  </time>
+                  <StatusBadge status={report.status} />
+                </div>
               </div>
-            </div>
-            {report.page_url && (
-              <p className="mt-1 break-all text-xs text-zinc-500">
-                {report.page_url}
+              {report.page_url && (
+                <p className="mt-1 break-all text-xs text-zinc-500">
+                  {report.page_url}
+                </p>
+              )}
+              <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+                {report.message}
               </p>
-            )}
-            <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
-              {report.message}
-            </p>
-            {report.reply && (
-              <div className="mt-4 rounded-xl border-l-4 border-accent bg-accent/5 px-4 py-3">
-                <p className="font-heading text-xs font-semibold uppercase tracking-wide text-accent">
-                  Reply from Md. Nahidul Islam
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm">
-                  {report.reply}
-                </p>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              {report.reply && (
+                <div className="mt-4 rounded-xl border-l-4 border-accent bg-accent/5 px-4 py-3">
+                  <p className="font-heading text-xs font-semibold uppercase tracking-wide text-accent">
+                    Reply from Md. Nahidul Islam
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm">
+                    {report.reply}
+                  </p>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
