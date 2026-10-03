@@ -59,8 +59,11 @@ export default async function AboutPage() {
           NI
         </div>
         <div className="min-w-0">
-          <h2 className="font-heading text-sm font-medium">
-            I&apos;m Md. Nahidul Islam
+          <h2 className="font-heading text-sm text-zinc-600 dark:text-zinc-400">
+            I&apos;m{" "}
+            <span className="font-semibold text-foreground">
+              Md. Nahidul Islam
+            </span>
           </h2>
           <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
             I built{" "}
