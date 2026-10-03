@@ -1,5 +1,6 @@
-## 45.1 Why Views Over 300 Lines Become Unmaintainable
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
+## 45.1 Why Views Over 300 Lines Become Unmaintainable 🟢
 A view that does **too many jobs** (loading data, checking business rules, formatting, layout) is hard to read, test, and change.
 
 "300 lines" is only a rough warning. The real problem is **the number of jobs, not the number of lines**. If you change one job, you can break another.
@@ -8,8 +9,7 @@ When a view has many jobs, move each job to its own place (see 45.2).
 
 ---
 
-## 45.2 Separating Model, Logic, and Presentation
-
+## 45.2 Separating Model, Logic, and Presentation 🟢
 Split your code into three parts: the **model** (the data), the **logic** (what the app decides), and the **presentation** (what the user sees).
 
 ```swift
@@ -40,8 +40,7 @@ struct RecipeRow: View {
 
 ---
 
-## 45.3 MVVM with @Observable View Models
-
+## 45.3 MVVM with @Observable View Models 🟡
 MVVM (Model-View-ViewModel) adds a **view model**: a class that holds the data a view shows and asks for that data when needed. The view only draws the screen. In SwiftUI, view models use `@Observable` (section 25).
 
 ```swift
@@ -88,8 +87,7 @@ The view model asks for the data, tracks loading, and handles errors. The view o
 
 ---
 
-## 45.4 What Belongs in a View Model and What Doesn't
-
+## 45.4 What Belongs in a View Model and What Doesn't 🟡
 A view model should prepare data for one screen and react to what the user does. It should **not fetch or save data itself** (network calls, database queries).
 
 ```swift
@@ -110,8 +108,7 @@ Two mistakes to avoid. If the view model does too little, logic ends up in the v
 
 ---
 
-## 45.5 Service and Repository Layers
-
+## 45.5 Service and Repository Layers 🟡
 A **repository** hides where data is stored (network, database). A **service** can use repositories and add logic on top. Both sit between the view model and the data. In this course, `RecipeService` is simple, so it acts like a repository.
 
 ```swift
@@ -145,8 +142,7 @@ final class DefaultRecipeService: RecipeService {
 
 ---
 
-## 45.6 Mapping DTOs to Domain Models
-
+## 45.6 Mapping DTOs to Domain Models 🟡
 A **DTO** (Data Transfer Object) is data in the exact shape the server sends. Do not use it inside your app. Convert it to your own model (the domain model) first.
 
 ```swift
@@ -179,8 +175,7 @@ With mapping, **only the `init(dto:)` code changes**. The rest of the app uses t
 
 ---
 
-## 45.7 Making Wrong States Impossible
-
+## 45.7 Making Wrong States Impossible 🟡
 Design your types so that wrong or mixed-up data **cannot be created at all**. This idea first appeared with enums (section 6) and loading states (section 39.9).
 
 ```swift
@@ -206,8 +201,7 @@ This is stronger than "be careful to keep the flags in sync". **The type itself 
 
 ---
 
-## 45.8 Using an Enum for Screen State
-
+## 45.8 Using an Enum for Screen State 🟡
 Like 45.7 (making wrong states impossible), but for a whole screen: describe everything the screen can be doing with **one enum**. This extends the `LoadState` idea (section 39.9): one enum with loading, loaded, and error cases.
 
 ```swift
@@ -240,8 +234,7 @@ With one enum, the state decides what to show. The view is a simple `switch` wit
 
 ---
 
-## 45.9 Folder Structure That Scales
-
+## 45.9 Folder Structure That Scales 🟢
 There are two main ways to organize files: **by type** (all views together, all models together) or **by feature** (everything for one feature together).
 
 ```plaintext
@@ -261,8 +254,7 @@ By feature (works better for big apps):
 
 ---
 
-## 45.10 Where to Put Shared Code
-
+## 45.10 Where to Put Shared Code 🟢
 Some code is used by many features, like a date formatter, design tokens (section 32.14), or the networking layer (section 40.1). Give it its own folder, and keep that folder tidy.
 
 ```plaintext
