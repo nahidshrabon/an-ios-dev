@@ -178,18 +178,27 @@ func loadRecipesEffect(send: @escaping (RecipeAction) -> Void) async {
 }
 ```
 
-Something has to receive the actions, run the reducer, and start the effect. This is often called a **store**:
+The reducer is only a rule. Something has to use it. This is the **store**: an object that keeps the current state and does four jobs:
+
+1. It **holds the current state**.
+2. It **receives actions** from the view (with `send`).
+3. It **runs the reducer** with the current state and the action, and saves the new state.
+4. It **starts effects** and tells the view to redraw.
+
+Think of a vending machine. The reducer is the rule inside ("press B2 and pay, get a drink"). The store is the whole machine: it holds the items, takes your button press, applies the rule, and gives you the result.
+
+Here is a small store:
 
 ```swift
 @Observable
 final class RecipeStore {
-    private(set) var state = RecipeState()
+    private(set) var state = RecipeState()         // job 1: holds the state
 
     // The view calls this to send an action
-    func send(_ action: RecipeAction) {
-        reduce(state: &state, action: action)      // 1. the reducer changes the state
+    func send(_ action: RecipeAction) {            // job 2: receives actions
+        reduce(state: &state, action: action)      // job 3: runs the reducer
 
-        if case .loadButtonTapped = action {       // 2. start the effect for this action
+        if case .loadButtonTapped = action {       // job 4: starts the effect
             Task { await loadRecipesEffect(send: send) }
         }
     }
