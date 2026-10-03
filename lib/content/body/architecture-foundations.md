@@ -80,7 +80,7 @@ struct RecipeListView: View {
 }
 ```
 
-To keep this example short, the view model calls `apiClient` directly. In 45.5 we replace it with a service.
+To keep this example short, the view model calls `apiClient` directly. In 45.5 we replace it with a service, a type that gets the data for the view model.
 
 The view model asks for the data, tracks loading, and handles errors. The view only shows `recipes` and `isLoading`, and calls `loadRecipes()` when the screen appears.
 
@@ -208,7 +208,7 @@ This is stronger than "be careful to keep the flags in sync". The type itself pr
 
 ## 45.8 Using an Enum for Screen State
 
-Like 45.7, but for a whole screen: describe everything the screen can be doing with one enum. This extends the `LoadState` idea from section 39.9.
+Like 45.7 (making wrong states impossible), but for a whole screen: describe everything the screen can be doing with one enum. This extends the `LoadState` idea (section 39.9): one enum with loading, loaded, and error cases.
 
 ```swift
 enum RecipeDetailScreenState {

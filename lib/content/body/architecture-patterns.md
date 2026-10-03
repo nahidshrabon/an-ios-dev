@@ -11,7 +11,7 @@ class RecipeListViewController: UIViewController {
 }
 ```
 
-`UIViewController` is both the "controller" (it coordinates) and the "view" owner (it builds and manages the `UIView`s). Nothing stops it from also taking on networking and business logic. Without the separation from 45.2, it keeps growing.
+`UIViewController` is both the "controller" (it coordinates) and the "view" owner (it builds and manages the `UIView`s). Nothing stops it from also taking on networking and business logic. Without splitting code into model, logic, and presentation (45.2), it keeps growing.
 
 This is a gap in the pattern, not a mistake by developers. It is the reason the other patterns in this section exist.
 
@@ -95,7 +95,7 @@ Action → Reducer (new State from old State + Action) → State → View shows 
 
 Every change goes through the same step: `(State, Action) -> State`. This means you can list every way the state can change. It is like 45.7 (wrong states impossible), but for the *changes* between states.
 
-SwiftUI's `@State` and `@Observable` already work a little like this. The patterns in 46.6 to 46.9 make it strict.
+SwiftUI's `@State` and `@Observable` already work a little like this. The next four lessons (46.6 to 46.9) make it strict.
 
 ---
 
@@ -294,7 +294,7 @@ What many teams do: SwiftUI's own navigation is enough for small and medium apps
 
 ## 46.12 Use Cases and Interactors: Worth the Extra Code?
 
-A **use case** (called an "interactor" in VIPER, 46.3) is a small type for exactly one business action, like "mark a recipe as favorite". It goes one step beyond the service layer from 45.5.
+A **use case** (called an "interactor" in VIPER, 46.3) is a small type for exactly one business action, like "mark a recipe as favorite". It goes one step beyond a service, which puts many actions in one type (45.5).
 
 ```swift
 // A use case: does exactly one thing
@@ -327,13 +327,13 @@ There is no single correct architecture. The right choice depends on team size, 
 ```plaintext
 A rough guide, not a rule:
 - Solo dev / small app          → MVVM (45.3), little extra code
-- Small-medium team, growing    → MVVM + service layer (45.5) + light DI (Section 47)
+- Small-medium team, growing    → MVVM + service layer (45.5) + light dependency injection (Section 47)
 - Large team, complex logic     → Clean Architecture (46.4) or TCA (46.7-46.9)
 - Many teams working in         → Modularization (Section 48) matters as much as the
   parallel                        pattern, because module borders become team borders
 ```
 
-Every pattern after 45.2 adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and only pay off when the app or team is big enough.
+Every pattern beyond the basic split into model, logic, and presentation (45.2) adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and only pay off when the app or team is big enough.
 
 Choosing something too big for your app is a common mistake. So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, and don't just pick the most talked-about pattern.
 
