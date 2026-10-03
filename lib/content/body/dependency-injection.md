@@ -2,7 +2,24 @@
 
 ## 47.1 Why Singletons Hurt Testability 🟢
 
-A **dependency** is something a type needs to do its job. For example, a view model needs a service to load recipes. A **singleton** (like `NetworkService.shared`) is one global object that any code can reach from anywhere. It is convenient, but it makes code hard to test.
+A **dependency** is something a type needs to do its job. For example, a view model needs a service to load recipes. A **singleton** is a class that has **only one instance**, and that instance is global, so any code can reach it from anywhere. This is what a singleton looks like:
+
+```swift
+final class NetworkService {
+    static let shared = NetworkService()   // the one and only instance
+    private init() {}                      // nobody else can create another one
+
+    func fetchRecipes() async throws -> [Recipe] {
+        // real network call
+        []
+    }
+}
+
+// Any code can use it, from anywhere:
+let recipes = try await NetworkService.shared.fetchRecipes()
+```
+
+It is convenient, because you never have to pass it around. But it makes code hard to test:
 
 ```swift
 // PROBLEM: this view model secretly depends on one global object.
