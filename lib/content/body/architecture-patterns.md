@@ -220,29 +220,46 @@ A reducer must be pure, so it cannot wait for a server. Look at the code: on `.l
 
 ## 46.7 The Composable Architecture: @Reducer and @ObservableState
 
-**The Composable Architecture (TCA)** is a popular third-party library for the reducer/action/effect pattern (46.6). It uses macros (`@Reducer`, `@ObservableState`) to remove most of the boilerplate.
+**The Composable Architecture (TCA)** is a popular third-party library (a Swift package you add to your project). It gives you the pieces from 46.6 ready to use, so you don't write the store yourself. It uses macros (`@Reducer`, `@ObservableState`) to remove most of the repeated code.
+
+Here is how each piece from 46.6 looks in TCA:
+
+| In 46.6 (by hand) | In TCA |
+|---|---|
+| `RecipeState` | a `State` struct |
+| `RecipeAction` | an `Action` enum |
+| the `reduce` function | `Reduce { state, action in ... }` |
+| `loadRecipesEffect` | `.run { send in ... }`, returned by the reducer |
+| `RecipeStore` | `Store`, provided by TCA |
+
+The same recipe example in TCA:
 
 ```swift
 import ComposableArchitecture
 
 @Reducer
 struct RecipeFeature {
+    // The state: the data for this feature
     @ObservableState
     struct State {
         var recipes: [Recipe] = []
         var isLoading = false
     }
 
+    // The actions: everything that can happen
     enum Action {
         case loadButtonTapped
         case recipesLoaded([Recipe])
     }
 
+    // The reducer: how each action changes the state
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .loadButtonTapped:
                 state.isLoading = true
+                // Return an effect: call the network, then send a new action
+                // (recipeService is explained in 46.8)
                 return .run { send in
                     let recipes = try await recipeService.getRecipes()
                     await send(.recipesLoaded(recipes))
@@ -250,16 +267,33 @@ struct RecipeFeature {
             case .recipesLoaded(let recipes):
                 state.recipes = recipes
                 state.isLoading = false
-                return .none
+                return .none   // no effect needed
             }
         }
     }
 }
 ```
 
-`@Reducer` and `@ObservableState` are macros (section 13). They write the repeated code for you.
+The view reads the state from the store and sends actions to it:
 
-`.run { send in }` is how TCA runs effects. It is the same idea as `loadRecipesEffect` in 46.6, with less code. It is an `async` closure: it can `await` work and send the result back as a new action with `send`. It uses the concurrency tools from Part 2, not a new system.
+```swift
+struct RecipeView: View {
+    let store: StoreOf<RecipeFeature>
+
+    var body: some View {
+        VStack {
+            Button("Load recipes") { store.send(.loadButtonTapped) }
+            List(store.recipes) { Text($0.title) }
+        }
+    }
+}
+```
+
+**What changed from 46.6:**
+
+- **The reducer returns an effect.** In 46.6 the store decided to start the effect. In TCA, the reducer says which effect to start: `.run` starts one, and `.none` means no effect.
+- **`.run { send in }` is the same idea as `loadRecipesEffect`.** It is an `async` closure. It can `await` work, then send the result back as a new action with `send`. It uses the concurrency tools from Part 2, not a new system.
+- **The two macros write repeated code** (macros are in section 13). `@Reducer` connects your reducer to the store. `@ObservableState` makes the state observable, so the view redraws when it changes, like `@Observable`.
 
 ---
 
