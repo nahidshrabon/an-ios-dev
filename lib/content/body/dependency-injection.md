@@ -283,7 +283,9 @@ The root is usually the `App` type, as above, or a small `AppDependencies` type 
 
 ## 47.7 swift-dependencies and @Dependency 🟡
 
-**`swift-dependencies`** is a popular library for DI. TCA uses it too (the `@Dependency` from 46.8), but you can use it alone in any Swift project, including plain SwiftUI and MVVM apps.
+**`swift-dependencies`** is a popular **third-party** library for DI. It is not part of Apple's SDK. It is open source and made by Point-Free, the team behind TCA. You add it to your project as a Swift package (in Xcode: File → Add Package Dependencies).
+
+TCA uses it too (the `@Dependency` from 46.8), but you can use it alone in any Swift project, including plain SwiftUI and MVVM apps.
 
 ```swift
 import Dependencies
@@ -314,7 +316,7 @@ Here is how the three main techniques compare:
 |---|---|---|---|
 | Initializer injection (47.2) | Passed to `init` | Any Swift code | Every type in between must pass it along |
 | `@Environment` (47.3) | Read from the SwiftUI environment | SwiftUI views only | Dependency is less visible |
-| `swift-dependencies` (47.7) | `@Dependency` finds it | Any Swift code | An extra library to learn |
+| `swift-dependencies` (47.7) | `@Dependency` finds it | Any Swift code | A third-party library to add and learn |
 
 `swift-dependencies` is a middle way. It resolves dependencies without passing them through every `init`, like `@Environment`, but it works outside SwiftUI as well. It also swaps in `testValue` and `previewValue` for you, with no setup at each place of use.
 
