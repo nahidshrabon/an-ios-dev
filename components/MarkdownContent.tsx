@@ -33,7 +33,7 @@ const DIFFICULTY_LEVELS: Record<string, string> = {
   "🔴": "Advanced",
 };
 
-/** Turns a trailing difficulty mark in a heading into an element with a hover label. */
+/** Turns a trailing difficulty mark in a heading into an element with an instant hover/focus label. */
 function withDifficultyLabel(children: ReactNode): ReactNode {
   const items = Array.isArray(children) ? [...children] : [children];
   const last = items[items.length - 1];
@@ -46,12 +46,18 @@ function withDifficultyLabel(children: ReactNode): ReactNode {
   items.push(
     <span
       key="difficulty"
+      tabIndex={0}
       role="img"
-      title={`Difficulty: ${level}`}
       aria-label={`Difficulty: ${level}`}
-      className="cursor-help"
+      className="group relative cursor-help rounded outline-none focus-visible:ring-2 focus-visible:ring-black/30 dark:focus-visible:ring-white/30"
     >
       {mark}
+      <span
+        aria-hidden="true"
+        className="font-heading pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity duration-100 group-hover:opacity-100 group-focus:opacity-100 dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        {level}
+      </span>
     </span>
   );
   return items;
