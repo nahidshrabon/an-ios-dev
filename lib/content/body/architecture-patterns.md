@@ -69,7 +69,17 @@ It pays off on large teams with complex screens and complex business logic. For 
 
 ## 46.4 Clean Architecture Layers on iOS
 
-Clean Architecture is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS. On iOS it usually splits code into three layers: **Presentation** (what the user sees), **Domain** (the core of your app), and **Data** (how data is fetched or saved). It has one rule: "depends on" means "knows about", and the Domain layer must know about nothing else.
+Clean Architecture is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS.
+
+**An example, without iOS.** Think of an online shop with this rule: "an order over $50 ships for free". This is business logic. It stays true if the shop is a website or a phone app, and if the data is stored in one database or another.
+
+In a messy design, this rule is mixed into the screen code or the database code. If you change the database or redesign the screen, you must rewrite the rule too, and you may break it.
+
+Clean Architecture puts the rule in the centre and builds layers around it. The rule does not know about the screen, the database, or the framework. They know about the rule. So they can change, and the rule stays the same.
+
+**The one rule:** code in the centre must not know about code outside it. Outside code can know about the centre.
+
+**On iOS**, this usually becomes three layers: **Presentation** (what the user sees), **Domain** (the core of your app), and **Data** (how data is fetched or saved). "Depends on" means "knows about", and the Domain layer must know about nothing else.
 
 ```plaintext
 Presentation  (Views, ViewModels)         — knows about Domain
