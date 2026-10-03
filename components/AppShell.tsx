@@ -93,6 +93,11 @@ export function AppShell({
               an <span className="text-accent">iOS</span> dev
             </span>
           </Link>
+          {/* On its own row: the sidebar is too narrow for the name and the
+              toggle side by side. */}
+          <div className="mt-3">
+            <ThemeToggle />
+          </div>
         </div>
         <div className="mt-4 px-1">
           <SiteSearch className="w-full" />
@@ -119,12 +124,8 @@ export function AppShell({
               {email}
             </span>
           )}
-          {/* The theme toggle lives here rather than beside the brand: the
-              sidebar is too narrow for both on one row, and even here it
-              needs the slimmer px-2 to fit beside "Log out". */}
-          <div className="flex items-center justify-between gap-2 px-2">
+          <div className="px-3">
             <SignOutButton />
-            <ThemeToggle />
           </div>
         </div>
       </aside>
