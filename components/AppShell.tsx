@@ -83,15 +83,16 @@ export function AppShell({
 
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-black/10 px-4 py-6 dark:border-white/10 md:sticky md:top-0 md:flex md:h-screen">
-        <div className="flex items-center justify-between gap-2 px-2">
+        <div className="px-2">
           <Link
             href="/"
             className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
           >
             <Logomark className="size-6" />
-            Home
+            <span>
+              an <span className="text-accent">iOS</span> dev
+            </span>
           </Link>
-          <ThemeToggle />
         </div>
         <div className="mt-4 px-1">
           <SiteSearch className="w-full" />
@@ -118,8 +119,12 @@ export function AppShell({
               {email}
             </span>
           )}
-          <div className="px-3">
+          {/* The theme toggle lives here rather than beside the brand: the
+              sidebar is too narrow for both on one row, and even here it
+              needs the slimmer px-2 to fit beside "Log out". */}
+          <div className="flex items-center justify-between gap-2 px-2">
             <SignOutButton />
+            <ThemeToggle />
           </div>
         </div>
       </aside>
