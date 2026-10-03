@@ -517,7 +517,7 @@ export const articles: Article[] = [
     slug: "architecture-patterns",
     title: "Architecture Patterns",
     description:
-      "MVC, MVP, MVVM, VIPER, Clean Architecture, unidirectional data flow and the Composable Architecture, the Coordinator pattern vs. SwiftUI navigation, use cases, and choosing an architecture for your team size.",
+      "MVC, MVP, MVVM, VIPER, Clean Architecture, unidirectional data flow and the Composable Architecture, the Coordinator pattern vs. SwiftUI navigation, use cases, choosing an architecture for your team size, and a side-by-side comparison of all the patterns.",
     tags: ["architecture", "tca", "viper"],
     publishedAt: "2026-08-16",
     get content() {

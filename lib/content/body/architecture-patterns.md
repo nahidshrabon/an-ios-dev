@@ -649,6 +649,25 @@ Every pattern beyond the basic split into model, logic, and presentation (45.2) 
 
 ---
 
+## 46.14 Comparing the Architectures 🟡
+
+Here are all the patterns from this section side by side. Read the table together with 46.13, which helps you choose.
+
+| Architecture | Main idea | Strength | Cost | Best for |
+|---|---|---|---|---|
+| **MVC** (46.1) | A controller sits between the model and the view (UIKit's default) | Simple, built into UIKit | The view controller grows huge ("Massive View Controller") | Small UIKit apps and prototypes |
+| **MVP** (46.2) | A presenter pushes updates to the view | Easy to test with a fake view | A protocol and extra code for each screen | UIKit apps that want testable logic |
+| **MVVM** (45.3, 46.2) | A view model exposes state, and the view reads it | Little code, fits SwiftUI | View models can grow too big without a service layer | Most SwiftUI apps |
+| **VIPER** (46.3) | Five parts per screen: View, Interactor, Presenter, Entity, Router | Clear jobs, each part is easy to test | A lot of code, even for a simple screen | Large teams with complex screens |
+| **Clean Architecture** (46.4) | Layers (Presentation, Domain, Data), and Domain depends on nothing | Core logic is safe from tool changes | More types and layers to keep up | Complex business logic that must live a long time |
+| **Unidirectional flow / TCA** (46.5 to 46.9) | One state, actions, a reducer, and effects for outside work | Every state change can be listed, very testable | A learning curve and an extra library | Large teams, complex state, strong testing |
+
+**You can mix them.** For example, MVVM often lives in the Presentation layer of a Clean Architecture app, and a use case (46.12) can sit in the Domain layer.
+
+**Every row has the same trade-off:** more structure gives more rigor and testability, and costs more code. **Pick the lightest pattern that fits your team and app** (46.13).
+
+---
+
 ## Summary
 
 | Concept | Key Idea | Purpose |
@@ -665,3 +684,4 @@ Every pattern beyond the basic split into model, logic, and presentation (45.2) 
 | SwiftUI navigation | A router with `NavigationPath` | Often enough alone; coordinators for complex flows |
 | Use cases | One type per business action | Testable, but can be too much |
 | Choosing | Match the pattern to team and app size | No single correct choice |
+| Comparison | One table of all the patterns | See the strength, cost, and best use of each |
