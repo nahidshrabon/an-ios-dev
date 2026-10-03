@@ -293,6 +293,7 @@ import Dependencies
 private enum RecipeServiceKey: DependencyKey {
     static let liveValue: RecipeService = DefaultRecipeService()
     static let testValue: RecipeService = FakeRecipeService(returning: [])
+    static let previewValue: RecipeService = FakeRecipeService(returning: [sampleRecipe])
 }
 
 extension DependencyValues {
@@ -308,7 +309,21 @@ final class RecipeListViewModel {
 }
 ```
 
-You register one value for each situation: `liveValue` in the app, `testValue` in tests (and `previewValue` in SwiftUI previews). The library picks the right one automatically.
+**One dependency has three possible values.** You write all three once, in the key. The library gives the right one, depending on **where the code is running**:
+
+| Situation | What is happening | Value used |
+|---|---|---|
+| The real app | A user runs your app | `liveValue` |
+| A test | Your unit tests run | `testValue` |
+| A SwiftUI preview | Xcode shows the preview canvas | `previewValue` |
+
+The view model never says which one it wants. `@Dependency(\.recipeService)` is the same everywhere. What `recipeService` is depends on where the code runs:
+
+- **In the app:** it is `DefaultRecipeService`, so it calls the real network.
+- **In a test:** it is `FakeRecipeService(returning: [])`. The test uses no network, and you passed nothing.
+- **In a preview:** it is the fake with a sample recipe, so the canvas shows data with no internet.
+
+The library can tell by itself if it is running in a test or a preview. This is what "picks the right one automatically" means. With `@Environment` (47.3), you set the fake yourself in each preview or test. Here, you register the fakes once, and every test and preview gets them with no extra code.
 
 Here is how the three main techniques compare:
 
