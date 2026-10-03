@@ -11456,7 +11456,7 @@ struct UserProfileView: View {
   {
     id: "architecture-patterns-quiz",
     title: "Architecture Patterns Quiz",
-    description: "20 questions on Massive View Controller, MVP vs. MVVM, VIPER, Clean Architecture, one-way data flow and the Composable Architecture, the Coordinator pattern, use cases, and choosing an architecture for your team size.",
+    description: "20 questions on Massive View Controller, MVP vs. MVVM, VIPER, Clean Architecture, unidirectional data flow and the Composable Architecture, the Coordinator pattern, use cases, and choosing an architecture for your team size.",
     relatedArticleSlug: "architecture-patterns",
     questions: [
       {
@@ -11545,7 +11545,7 @@ struct UserProfileView: View {
       },
       {
         id: "q8",
-        prompt: "What does one-way data flow restrict?",
+        prompt: "What does unidirectional data flow restrict?",
         options: [
           { id: "a", text: "Which programming languages the app can use" },
           { id: "b", text: "It stops you from using `@Observable` or `@State`" },

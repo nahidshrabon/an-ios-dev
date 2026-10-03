@@ -112,15 +112,25 @@ The benefit: when you change a networking library or a database, only the Data l
 
 ---
 
-## 46.5 One-Way Data Flow
+## 46.5 Unidirectional Data Flow
 
-In **one-way (unidirectional) data flow**, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
+In **unidirectional (one-way) data flow**, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. It only sends actions, and a **reducer** is the one place that changes the state (more in 46.6). Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
 Action → Reducer (new State from old State + Action) → State → View shows State
    ↑                                                                          |
    └────────────────────── the user does something: new Action ──────────────┘
 ```
+
+**Example: a "Load recipes" button.** The state is `isLoading` and `recipes`.
+
+1. The user taps the button. The view does not change anything. It sends the action `.loadButtonTapped`.
+2. The reducer gets the action and the current state. It makes a new state: `isLoading` becomes `true`.
+3. SwiftUI sees the new state and redraws the screen with a spinner.
+4. When the recipes arrive, a new action, `.recipesLoaded`, goes to the reducer. The new state has the recipes and `isLoading` is `false`.
+5. The screen redraws again with the list.
+
+At every step, the view only *sends* actions and *shows* the state. The reducer is the only one that changes it.
 
 Every change goes through the same step: `(State, Action) -> State`. This means you can list every way the state can change. It is like 45.7 (wrong states impossible), but for the *changes* between states.
 
@@ -130,7 +140,7 @@ SwiftUI's `@State` and `@Observable` already work a little like this. The next f
 
 ## 46.6 Reducers, Actions, and Effects
 
-One-way data flow uses three ideas: **actions** (something happened, like a tap or a network response), **reducers** (pure functions that make the new state from the old state and an action), and **effects** (work that is not pure, like a network call, which sends a new action when it finishes).
+Unidirectional data flow uses three ideas: **actions** (something happened, like a tap or a network response), **reducers** (pure functions that make the new state from the old state and an action), and **effects** (work that is not pure, like a network call, which sends a new action when it finishes).
 
 ```swift
 enum RecipeAction {
@@ -376,7 +386,7 @@ Every pattern beyond the basic split into model, logic, and presentation (45.2) 
 | MVP vs. MVVM | Push (view reference) vs. pull (observed state) | Why MVVM fits SwiftUI |
 | VIPER | Five small parts per screen | Easy to test, but a lot of extra code |
 | Clean Architecture | Domain depends on nothing | Core logic is safe from tool changes |
-| One-way data flow | Action → Reducer → State → View | Every state change can be listed |
+| Unidirectional data flow | Action → Reducer → State → View | Every state change can be listed |
 | Reducers / actions / effects | Pure changes, impure work separate | Simple, testable core logic |
 | The Composable Architecture | `@Reducer`, `@ObservableState`, `.run`, `@Dependency` | Macro-powered version of the pattern |
 | TestStore | `send()` and `receive()` with exact state checks | Step-by-step feature tests |
