@@ -94,6 +94,8 @@ struct RecipeRow: View {
 
 `RecipeListScreen` does not use the service. It only passes it down, and the longer the chain, the more extra code.
 
+**Why the name?** The term comes from React (a JavaScript UI library), where values passed into a component are called **props**. Here, `recipeService` is the prop. The value has to go through every layer to reach the view that needs it, like a drill bit going down through layers of rock. That is "drilling".
+
 **The solution.** SwiftUI's **environment** is a shared box of values that SwiftUI passes down the view tree for you. You put a value in once near the top, and any child view can take it out. Setting up your own value takes four steps:
 
 ```swift
