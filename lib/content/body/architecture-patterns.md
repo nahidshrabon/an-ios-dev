@@ -1,6 +1,6 @@
 ## 46.1 MVC and Massive View Controller
 
-MVC (Model-View-Controller) is UIKit's original pattern. In practice, the "Controller" often takes on everything (networking, business logic, view setup). This is why it is nicknamed "Massive View Controller."
+**MVC (Model-View-Controller)** is UIKit's original pattern. In practice, the "Controller" often takes on everything (networking, business logic, view setup). This is why it is nicknamed **"Massive View Controller."**
 
 ```swift
 // MVC aims for a clean split, but UIViewController does two jobs,
@@ -11,7 +11,7 @@ class RecipeListViewController: UIViewController {
 }
 ```
 
-`UIViewController` is both the "controller" (it coordinates) and the "view" owner (it builds and manages the `UIView`s). Nothing stops it from also taking on networking and business logic. Without splitting code into model, logic, and presentation (45.2), it keeps growing.
+`UIViewController` is both the "controller" (it coordinates) and the "view" owner (it builds and manages the `UIView`s). **Nothing stops it from also taking on networking and business logic.** Without splitting code into model, logic, and presentation (45.2), it keeps growing.
 
 This is a gap in the pattern, not a mistake by developers. It is the reason the other patterns in this section exist.
 
@@ -19,7 +19,7 @@ This is a gap in the pattern, not a mistake by developers. It is the reason the 
 
 ## 46.2 MVP and MVVM Compared
 
-MVP (Model-View-Presenter) and MVVM both move logic out of the view into a separate object. They differ in how that object talks back to the view.
+**MVP (Model-View-Presenter)** and **MVVM** both move logic out of the view into a separate object. They differ in how that object talks back to the view.
 
 ```swift
 // MVP: the Presenter calls methods on the View (via a protocol)
@@ -50,7 +50,7 @@ Because the view model does not know the view exists, MVVM fits SwiftUI's state-
 
 ## 46.3 VIPER: Structure and Trade-offs
 
-VIPER (View, Interactor, Presenter, Entity, Router) splits one screen into five small parts. Each part has one job.
+**VIPER** (View, Interactor, Presenter, Entity, Router) splits one screen into five small parts. Each part has one job.
 
 ```swift
 // VIPER's five parts for one screen:
@@ -61,7 +61,7 @@ VIPER (View, Interactor, Presenter, Entity, Router) splits one screen into five 
 // Router     — navigation (which screen comes next)
 ```
 
-VIPER's strength is that each part has a clear job and can be tested on its own. The cost is extra code: even a simple screen needs five types wired together.
+VIPER's strength is that each part has a clear job and can be tested on its own. The cost is **extra code**: even a simple screen needs five types wired together.
 
 It pays off on large teams with complex screens and complex business logic. For small teams or simple screens it is too much. We come back to this in 46.13.
 
@@ -69,7 +69,7 @@ It pays off on large teams with complex screens and complex business logic. For 
 
 ## 46.4 Clean Architecture Layers on iOS
 
-Clean Architecture is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS.
+**Clean Architecture** is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS.
 
 **An example, without iOS.** Think of an online shop with this rule: "an order over $50 ships for free". This is business logic. It stays true if the shop is a website or a phone app, and if the data is stored in one database or another.
 
@@ -87,7 +87,7 @@ Domain        (Entities, Use Cases)       — knows about nothing
 Data          (Repositories, API clients) — knows about Domain
 ```
 
-The Domain layer holds entities (your core models, like `Recipe`) and use cases (single business actions, see 46.12). The view model needs recipes, and recipes come from the network (the Data layer). So how can Domain not know about Data? The Domain layer only *describes* what it needs, with a protocol. The Data layer does the real work.
+The Domain layer holds **entities** (your core models, like `Recipe`) and **use cases** (single business actions, see 46.12). The view model needs recipes, and recipes come from the network (the Data layer). So how can Domain not know about Data? The Domain layer only *describes* what it needs, with a protocol. The Data layer does the real work.
 
 ```swift
 // Domain layer: says WHAT it needs, not how to get it
@@ -104,7 +104,7 @@ final class NetworkRecipeRepository: RecipeRepository {
 }
 ```
 
-The protocol lives in Domain, so Data has to know about Domain, not the other way around. Domain never mentions `URLSession` or JSON. This turn-around is called dependency inversion (more in section 48.5).
+The protocol lives in Domain, so Data has to know about Domain, not the other way around. Domain never mentions `URLSession` or JSON. This turn-around is called **dependency inversion** (more in section 48.5).
 
 Think of a restaurant. The Domain is the menu: it says "we serve soup". The Data layer is the kitchen: it cooks the soup. The menu does not say which stove to use, so the kitchen can change its stove and the menu stays the same.
 
@@ -114,7 +114,7 @@ The benefit: when you change a networking library or a database, only the Data l
 
 ## 46.5 One-Way Data Flow
 
-In one-way (unidirectional) data flow, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
+In **one-way (unidirectional) data flow**, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
 Action → Reducer (new State from old State + Action) → State → View shows State
@@ -164,7 +164,7 @@ This makes the reducer easy to test, because it is just a plain function.
 
 ## 46.7 The Composable Architecture: @Reducer and @ObservableState
 
-The Composable Architecture (TCA) is a popular third-party library for the reducer/action/effect pattern (46.6). It uses macros (`@Reducer`, `@ObservableState`) to remove most of the boilerplate.
+**The Composable Architecture (TCA)** is a popular third-party library for the reducer/action/effect pattern (46.6). It uses macros (`@Reducer`, `@ObservableState`) to remove most of the boilerplate.
 
 ```swift
 import ComposableArchitecture
@@ -233,7 +233,7 @@ struct RecipeFeature {
 
 ## 46.9 The Composable Architecture: TestStore
 
-`TestStore` is TCA's testing tool. A test sends actions and checks exactly how the state changes at each step. This works because reducers are pure and predictable (46.6).
+**`TestStore`** is TCA's testing tool. A test sends actions and checks exactly how the state changes at each step. This works because reducers are pure and predictable (46.6).
 
 ```swift
 @Test
@@ -263,7 +263,7 @@ This gives a very exact, step-by-step test of a whole feature. It is possible be
 
 ## 46.10 The Coordinator Pattern
 
-The Coordinator pattern moves navigation (which screen comes next, and how it is shown) out of the screens into a separate coordinator object.
+The **Coordinator pattern** moves navigation (which screen comes next, and how it is shown) out of the screens into a separate coordinator object.
 
 ```swift
 protocol Coordinator: AnyObject {
@@ -351,7 +351,7 @@ extension RecipeService {
 
 ## 46.13 Choosing an Architecture for Your Team Size
 
-There is no single correct architecture. The right choice depends on team size, app complexity, and how long the app must live. Choose on purpose, not because something is trending.
+**There is no single correct architecture.** The right choice depends on team size, app complexity, and how long the app must live. Choose on purpose, not because something is trending.
 
 ```plaintext
 A rough guide, not a rule:
@@ -362,9 +362,9 @@ A rough guide, not a rule:
   parallel                        pattern, because module borders become team borders
 ```
 
-Every pattern beyond the basic split into model, logic, and presentation (45.2) adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and only pay off when the app or team is big enough.
+Every pattern beyond the basic split into model, logic, and presentation (45.2) adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and **only pay off when the app or team is big enough**.
 
-Choosing something too big for your app is a common mistake. So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, and don't just pick the most talked-about pattern.
+**Choosing something too big for your app is a common mistake.** So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, and don't just pick the most talked-about pattern.
 
 ---
 

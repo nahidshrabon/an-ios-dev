@@ -1,8 +1,8 @@
 ## 45.1 Why Views Over 300 Lines Become Unmaintainable
 
-A view that does too many jobs (loading data, checking business rules, formatting, layout) is hard to read, test, and change.
+A view that does **too many jobs** (loading data, checking business rules, formatting, layout) is hard to read, test, and change.
 
-"300 lines" is only a rough warning. The real problem is the number of jobs, not the number of lines. If you change one job, you can break another.
+"300 lines" is only a rough warning. The real problem is **the number of jobs, not the number of lines**. If you change one job, you can break another.
 
 When a view has many jobs, move each job to its own place (see 45.2).
 
@@ -36,7 +36,7 @@ struct RecipeRow: View {
 }
 ```
 
-A view should not hold logic. Logic should not know about the screen. Every pattern in sections 45–46 is just a way to connect these three parts.
+**A view should not hold logic. Logic should not know about the screen.** Every pattern in sections 45–46 is just a way to connect these three parts.
 
 ---
 
@@ -80,17 +80,17 @@ struct RecipeListView: View {
 }
 ```
 
-To keep this example short, the view model calls `apiClient` directly. In 45.5 we replace it with a service, a type that gets the data for the view model.
+To keep this example short, the view model calls `apiClient` directly. In 45.5 we replace it with a **service**, a type that gets the data for the view model.
 
 The view model asks for the data, tracks loading, and handles errors. The view only shows `recipes` and `isLoading`, and calls `loadRecipes()` when the screen appears.
 
-When a view creates its own view model, use `@State private var viewModel`. SwiftUI rebuilds views often, and `@State` keeps the same view model alive while the view is on screen. If another view passes the view model in, a plain `let` is enough.
+**When a view creates its own view model**, use `@State private var viewModel`. SwiftUI rebuilds views often, and `@State` keeps the same view model alive while the view is on screen. If another view passes the view model in, a plain `let` is enough.
 
 ---
 
 ## 45.4 What Belongs in a View Model and What Doesn't
 
-A view model should prepare data for one screen and react to what the user does. It should not fetch or save data itself (network calls, database queries).
+A view model should prepare data for one screen and react to what the user does. It should **not fetch or save data itself** (network calls, database queries).
 
 ```swift
 @Observable
@@ -106,7 +106,7 @@ final class RecipeListViewModel {
 
 Two mistakes to avoid. If the view model does too little, logic ends up in the view. If it does too much, it fills up with network and database code.
 
-A simple test: the view model calls services and shapes the result for the screen. It never calls `URLSession`, `JSONDecoder`, or SwiftData directly.
+**A simple test:** the view model calls services and shapes the result for the screen. It never calls `URLSession`, `JSONDecoder`, or SwiftData directly.
 
 ---
 
@@ -175,13 +175,13 @@ extension Recipe {
 
 Without mapping, the server's odd choices leak into your app: snake_case names, optional fields, and an ID that is a string instead of a `UUID`. If the server changes its JSON, you would have to fix code everywhere.
 
-With mapping, only the `init(dto:)` code changes. The rest of the app uses the clean `Recipe`.
+With mapping, **only the `init(dto:)` code changes**. The rest of the app uses the clean `Recipe`.
 
 ---
 
 ## 45.7 Making Wrong States Impossible
 
-Design your types so that wrong or mixed-up data cannot be created at all. This idea first appeared with enums (section 6) and loading states (section 39.9).
+Design your types so that wrong or mixed-up data **cannot be created at all**. This idea first appeared with enums (section 6) and loading states (section 39.9).
 
 ```swift
 // WORSE: the fields are separate, so they can disagree
@@ -202,13 +202,13 @@ enum RecipeUploadState {
 
 With `RecipeUploadState`, "uploading" and "succeeded" cannot both be true. No code, even buggy code, can create that mix, because Swift does not allow it.
 
-This is stronger than "be careful to keep the flags in sync". The type itself prevents a whole group of bugs.
+This is stronger than "be careful to keep the flags in sync". **The type itself prevents a whole group of bugs.**
 
 ---
 
 ## 45.8 Using an Enum for Screen State
 
-Like 45.7 (making wrong states impossible), but for a whole screen: describe everything the screen can be doing with one enum. This extends the `LoadState` idea (section 39.9): one enum with loading, loaded, and error cases.
+Like 45.7 (making wrong states impossible), but for a whole screen: describe everything the screen can be doing with **one enum**. This extends the `LoadState` idea (section 39.9): one enum with loading, loaded, and error cases.
 
 ```swift
 enum RecipeDetailScreenState {
@@ -255,9 +255,9 @@ By feature (works better for big apps):
   Profile/ProfileView.swift, ProfileViewModel.swift, User.swift...
 ```
 
-By type: to work on one feature, you jump between many folders. The folders keep growing, and you can't see "everything about recipes" in one place.
+**By type:** to work on one feature, you jump between many folders. The folders keep growing, and you can't see "everything about recipes" in one place.
 
-By feature: everything for one feature is together. This works better as the app grows, and it makes it easier to split features into separate Swift packages later.
+**By feature:** everything for one feature is together. This works better as the app grows, and it makes it easier to split features into separate Swift packages later.
 
 ---
 
@@ -275,7 +275,7 @@ Shared/
   Extensions/      — small, general-purpose extensions
 ```
 
-Put code in `Shared` (or `Core`/`Common`) only if **several** features use it. If only one feature uses it, keep it in that feature's folder. Do not use `Shared` as a dumping ground.
+Put code in `Shared` (or `Core`/`Common`) only if **several** features use it. If only one feature uses it, keep it in that feature's folder. **Do not use `Shared` as a dumping ground.**
 
 Later, a well-kept `Shared` folder can become its own Swift package that many features, or even many apps, depend on.
 
