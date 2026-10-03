@@ -477,11 +477,36 @@ final class RecipeFlowCoordinator: Coordinator {
 }
 ```
 
+Someone has to create the coordinator and call `start()`. This is the app's starting point, the `SceneDelegate`:
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+    var coordinator: RecipeFlowCoordinator?          // keep a strong reference
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        let navigationController = UINavigationController()
+        coordinator = RecipeFlowCoordinator(navigationController: navigationController)
+        coordinator?.start()                          // shows the first screen
+
+        window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = navigationController
+        window?.makeKeyAndVisible()
+    }
+}
+```
+
+Keep the `coordinator` property. Nothing else holds the coordinator, so without it the object would be freed right away and the buttons would stop working. A coordinator can also create and start another coordinator, for example a `ProfileCoordinator` when the user opens the profile.
+
 The flow:
 
-1. `start()` shows the list screen.
-2. The user taps a recipe, and the list screen calls `onRecipeSelected`.
-3. The coordinator's `showDetail(for:)` pushes the detail screen.
+1. The app starts, and the `SceneDelegate` creates the coordinator and calls `start()`.
+2. `start()` shows the list screen.
+3. The user taps a recipe, and the list screen calls `onRecipeSelected`.
+4. The coordinator's `showDetail(for:)` pushes the detail screen.
 
 **The screen only says what happened. The coordinator decides what happens next.** Screens become easier to reuse and test, and you can see the whole navigation flow in one place.
 
