@@ -68,10 +68,7 @@ export default async function AboutPage() {
               an <span className="text-accent">iOS</span> dev
             </span>{" "}
             for my own use, as a place to read, track my progress, and practice
-            with quizzes.{" "}
-            <span className="font-medium text-foreground">
-              If it ends up helping you too, that&apos;s a bonus.
-            </span>
+            with quizzes. If it ends up helping you too, that&apos;s a bonus.
           </p>
 
           <ul className="mt-3 flex flex-wrap gap-2">
