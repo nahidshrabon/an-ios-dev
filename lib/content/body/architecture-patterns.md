@@ -365,31 +365,51 @@ return .run { send in
 
 ## 46.9 The Composable Architecture: TestStore
 
-**`TestStore`** is TCA's testing tool. A test sends actions and checks exactly how the state changes at each step. This works because reducers are pure and predictable (46.6).
+**`TestStore`** is a store made for tests. It runs your reducer and effects like a normal store, but it checks **every step**: you must say what you expect, and the test fails if the real result is different. This works because reducers are pure and predictable (46.6), and because dependencies can be replaced (46.8).
+
+First, a fake service that returns fixed recipes, so the test needs no network:
+
+```swift
+struct FakeRecipeService: RecipeService {
+    let recipes: [Recipe]
+    func getRecipes() async throws -> [Recipe] { recipes }
+    func save(_ recipe: Recipe) async throws {}
+}
+```
+
+Now the test:
 
 ```swift
 @Test
 func loadingRecipesUpdatesState() async {
+    let testRecipe = Recipe(id: UUID(), title: "Test Recipe", minutesToCook: 5)
+
+    // A store for tests, with the fake service instead of the real one
     let store = TestStore(initialState: RecipeFeature.State()) {
         RecipeFeature()
     } withDependencies: {
-        $0.recipeService = .mock(returning: [Recipe(title: "Test Recipe")])
+        $0.recipeService = FakeRecipeService(recipes: [testRecipe])
     }
 
+    // Step 1: send an action, and say how the state should change
     await store.send(.loadButtonTapped) {
         $0.isLoading = true
     }
+
+    // Step 2: the effect finishes and sends .recipesLoaded. Say what changes.
     await store.receive(\.recipesLoaded) {
-        $0.recipes = [Recipe(title: "Test Recipe")]
+        $0.recipes = [testRecipe]
         $0.isLoading = false
     }
 }
 ```
 
-- `store.send(action) { }`: the closure describes the state change you expect. The test fails if the real state is different.
-- `store.receive(_:)`: checks that a specific action arrives next (usually from a finished effect), and what state change it causes.
+- **`store.send(action) { }`**: sends the action. Inside the closure, `$0` is the state *before* the action. Change it to what you expect *after*. The test fails if the real state is different.
+- **`store.receive(_:)`**: checks that a specific action arrives next, usually from a finished effect (here `.recipesLoaded`), and what state change it causes. If an action arrives and you do not check it, the test fails.
 
-This gives a very exact, step-by-step test of a whole feature. It is possible because of pure reducers and injectable dependencies (46.8).
+`TestStore` compares states, so `State` and `Recipe` must be `Equatable`.
+
+This gives a very exact, step-by-step test of a whole feature, with no real network.
 
 ---
 
