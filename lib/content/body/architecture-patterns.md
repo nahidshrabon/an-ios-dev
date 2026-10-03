@@ -69,17 +69,36 @@ It pays off on large teams with complex screens and complex business logic. For 
 
 ## 46.4 Clean Architecture Layers on iOS
 
-Clean Architecture splits code into layers with one rule: outer layers may depend on inner layers, never the other way around. On iOS this usually means three layers: Presentation, Domain, and Data.
+Clean Architecture splits code into three layers: **Presentation** (what the user sees), **Domain** (the core of your app), and **Data** (how data is fetched or saved). It has one rule: "depends on" means "knows about", and the Domain layer must know about nothing else.
 
 ```plaintext
-Presentation  (Views, ViewModels)         — depends on Domain
-Domain        (Entities, Use Cases)       — depends on nothing
-Data          (Repositories, API clients) — depends on Domain (implements its protocols)
+Presentation  (Views, ViewModels)         — knows about Domain
+Domain        (Entities, Use Cases)       — knows about nothing
+Data          (Repositories, API clients) — knows about Domain
 ```
 
-The surprising part: the Domain layer (your core business logic) depends on nothing. Instead, the Data layer depends on protocols that the Domain layer defines. This is dependency inversion (more in section 48.5).
+The view model needs recipes, and recipes come from the network (the Data layer). So how can Domain not know about Data? The Domain layer only *describes* what it needs, with a protocol. The Data layer does the real work.
 
-The benefit: when you change a networking library or a database, your most important logic is not affected.
+```swift
+// Domain layer: says WHAT it needs, not how to get it
+protocol RecipeRepository {
+    func getRecipes() async throws -> [Recipe]
+}
+
+// Data layer: does the real work and follows the Domain's protocol
+final class NetworkRecipeRepository: RecipeRepository {
+    func getRecipes() async throws -> [Recipe] {
+        // call the network, decode the JSON, convert DTOs to Recipe
+        []
+    }
+}
+```
+
+The protocol lives in Domain, so Data has to know about Domain, not the other way around. Domain never mentions `URLSession` or JSON. This turn-around is called dependency inversion (more in section 48.5).
+
+Think of a restaurant. The Domain is the menu: it says "we serve soup". The Data layer is the kitchen: it cooks the soup. The menu does not say which stove to use, so the kitchen can change its stove and the menu stays the same.
+
+The benefit: when you change a networking library or a database, only the Data layer changes. Your most important logic is not affected.
 
 ---
 
