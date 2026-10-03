@@ -69,7 +69,7 @@ It pays off on large teams with complex screens and complex business logic. For 
 
 ## 46.4 Clean Architecture Layers on iOS
 
-Clean Architecture splits code into three layers: **Presentation** (what the user sees), **Domain** (the core of your app), and **Data** (how data is fetched or saved). It has one rule: "depends on" means "knows about", and the Domain layer must know about nothing else.
+Clean Architecture is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS. On iOS it usually splits code into three layers: **Presentation** (what the user sees), **Domain** (the core of your app), and **Data** (how data is fetched or saved). It has one rule: "depends on" means "knows about", and the Domain layer must know about nothing else.
 
 ```plaintext
 Presentation  (Views, ViewModels)         — knows about Domain
@@ -77,7 +77,7 @@ Domain        (Entities, Use Cases)       — knows about nothing
 Data          (Repositories, API clients) — knows about Domain
 ```
 
-The view model needs recipes, and recipes come from the network (the Data layer). So how can Domain not know about Data? The Domain layer only *describes* what it needs, with a protocol. The Data layer does the real work.
+The Domain layer holds entities (your core models, like `Recipe`) and use cases (single business actions, see 46.12). The view model needs recipes, and recipes come from the network (the Data layer). So how can Domain not know about Data? The Domain layer only *describes* what it needs, with a protocol. The Data layer does the real work.
 
 ```swift
 // Domain layer: says WHAT it needs, not how to get it
@@ -104,7 +104,7 @@ The benefit: when you change a networking library or a database, only the Data l
 
 ## 46.5 One-Way Data Flow
 
-In one-way (unidirectional) data flow, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux made this popular on the web, and SwiftUI follows a similar idea.
+In one-way (unidirectional) data flow, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
 Action → Reducer (new State from old State + Action) → State → View shows State
