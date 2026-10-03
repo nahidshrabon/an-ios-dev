@@ -117,9 +117,9 @@ The benefit: when you change a networking library or a database, only the Data l
 In **unidirectional (one-way) data flow**, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. It only sends actions, and a **reducer** is the one place that changes the state (more in 46.6). Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
-Action → Reducer (new State from old State + Action) → State → View shows State
-   ↑                                                                          |
-   └────────────────────── the user does something: new Action ──────────────┘
+Action ──► Reducer ──► State ──► View
+  ▲                                │
+  └───── user does something ──────┘
 ```
 
 **Example: a "Load recipes" button.** The state is `isLoading` and `recipes`.
@@ -140,7 +140,11 @@ SwiftUI's `@State` and `@Observable` already work a little like this. The next f
 
 ## 46.6 Reducers, Actions, and Effects
 
-Unidirectional data flow uses three ideas: **actions** (something happened, like a tap or a network response), **reducers** (pure functions that make the new state from the old state and an action), and **effects** (work that is not pure, like a network call, which sends a new action when it finishes).
+Unidirectional data flow uses three ideas:
+
+- **Action:** a description of something that happened, like a button tap or a network response.
+- **Reducer:** a *pure* function that takes the old state and an action, and returns the new state. *Pure* means it only calculates: the same input always gives the same output, and it changes nothing outside.
+- **Effect:** work that is *not* pure, like a network call, a timer, or saving to a database. When an effect finishes, it sends a new action.
 
 ```swift
 enum RecipeAction {
@@ -166,9 +170,9 @@ func reduce(state: inout RecipeState, action: RecipeAction) {
 }
 ```
 
-A reducer is pure and has no side effects: the same state and action always give the same new state. Impure work (network calls, timers, `async`/`await` from Part 2) goes into effects, which send their result back as a new action like `.recipesLoaded`.
+A reducer must be pure, so it cannot wait for a server. Look at the code: on `.loadButtonTapped` it only sets `isLoading = true`, which is instant. An effect does the network call (this is the part that is not pure, and it can use `async`/`await` from Part 2). When the call finishes, the effect sends the action `.recipesLoaded`, and the reducer puts the recipes in the state.
 
-This makes the reducer easy to test, because it is just a plain function.
+**The reducer stays simple and predictable, and the messy work happens in effects.** This also makes the reducer easy to test, because it is just a plain function.
 
 ---
 
