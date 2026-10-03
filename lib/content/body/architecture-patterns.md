@@ -647,7 +647,7 @@ Every pattern beyond the basic split into model, logic, and presentation (45.2) 
 | VIPER | Five small parts per screen | Easy to test, but a lot of extra code |
 | Clean Architecture | Domain depends on nothing | Core logic is safe from tool changes |
 | Unidirectional data flow | Action → Reducer → State → View | Every state change can be listed |
-| Reducers / actions / effects | Pure changes, impure work separate | Simple, testable core logic |
+| Reducers / actions / effects / store | Pure reducer, effects for impure work, a store runs them | Simple, testable core logic |
 | The Composable Architecture | `@Reducer`, `@ObservableState`, `.run`, `@Dependency` | Macro-powered version of the pattern |
 | TestStore | `send()` and `receive()` with exact state checks | Step-by-step feature tests |
 | Coordinator | One object owns navigation | Screens don't decide what comes next |

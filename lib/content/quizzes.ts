@@ -11641,15 +11641,15 @@ struct UserProfileView: View {
       },
       {
         id: "q16",
-        prompt: "Why is `TestStore` called a payoff of TCA's design?",
+        prompt: "What does a store do in the reducer pattern?",
         options: [
-          { id: "a", text: "It has no connection to the rest of the design" },
-          { id: "b", text: "It works without any reducer logic at all" },
-          { id: "c", text: "TCA turns off all concurrency when you test" },
-          { id: "d", text: "Reducers are pure and dependencies are injected" },
+          { id: "a", text: "It draws the user interface on the screen for you" },
+          { id: "b", text: "It saves the state to disk after every action" },
+          { id: "c", text: "It builds the network request for every effect" },
+          { id: "d", text: "It holds the state, runs the reducer, starts effects" },
         ],
         correctOptionId: "d",
-        explanation: "Exact, repeatable tests are only possible because reducers are pure and dependencies can be replaced.",
+        explanation: "The store keeps the current state. It receives actions, runs the reducer to get the new state, and starts the effects. In TCA you don't write a store: TCA provides one.",
       },
       {
         id: "q17",
@@ -11677,15 +11677,15 @@ struct UserProfileView: View {
       },
       {
         id: "q19",
-        prompt: "When is a formal coordinator most useful in SwiftUI?",
+        prompt: "When is a use case worth the extra code?",
         options: [
-          { id: "a", text: "Never, because SwiftUI navigation is always enough" },
-          { id: "b", text: "Only when the app has fewer than three screens" },
-          { id: "c", text: "For complex flows, like a multi-step onboarding" },
-          { id: "d", text: "Only when the app is built for watchOS only" },
+          { id: "a", text: "Always, for every action in the app" },
+          { id: "b", text: "Never, because a service can do the same job" },
+          { id: "c", text: "When an action has many steps and many screens use it" },
+          { id: "d", text: "Only when the app uses VIPER or Clean Architecture" },
         ],
         correctOptionId: "c",
-        explanation: "A flow that can start from several places (like an onboarding wizard) is easier to manage with one clear, testable owner.",
+        explanation: "Use cases help when an action has several steps and many screens share it. For simple create, read, update, or delete actions, they are more structure than needed.",
       },
       {
         id: "q20",
