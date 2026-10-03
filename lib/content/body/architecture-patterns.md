@@ -1,28 +1,28 @@
-## 46.1 MVC and What "Massive View Controller" Really Means
+## 46.1 MVC and Massive View Controller
 
-MVC (Model-View-Controller) is UIKit's original, framework-blessed pattern — but in practice, the "Controller" in Apple's MVC often ends up absorbing nearly everything (networking, business logic, view configuration), earning it the derisive nickname "Massive View Controller."
+MVC (Model-View-Controller) is UIKit's original pattern. In practice, the "Controller" often takes on everything (networking, business logic, view setup). This is why it is nicknamed "Massive View Controller."
 
 ```swift
-// The MVC pattern intends a clean three-way split, but UIKit's
-// UIViewController conflates "coordinates the view" with "IS the view's
-// owner and lifecycle," making it an easy dumping ground in practice:
+// MVC aims for a clean split, but UIViewController does two jobs,
+// so it becomes a dumping ground:
 class RecipeListViewController: UIViewController {
-    // Model, networking, business logic, AND view configuration
-    // all commonly end up here without deliberate discipline
+    // Model, networking, business logic, AND view setup
+    // all end up here without discipline
 }
 ```
 
-The core structural problem is that Apple's `UIViewController` sits at the intersection of "Controller" (orchestration) and "View" (owns and configures the actual `UIView` hierarchy) — nothing about the framework itself prevents a view controller from also absorbing networking and business logic, so without the kind of deliberate separation discussed in section 45.2, a view controller naturally accretes more and more responsibility over an app's lifetime. Understanding *why* this happens (a structural gap in the pattern's UIKit implementation, not a personal failing) is what motivated essentially every alternative pattern covered in the rest of this section.
+`UIViewController` is both the "controller" (it coordinates) and the "view" owner (it builds and manages the `UIView`s). Nothing stops it from also taking on networking and business logic. Without the separation from 45.2, it keeps growing.
+
+This is a gap in the pattern, not a mistake by developers. It is the reason the other patterns in this section exist.
 
 ---
 
 ## 46.2 MVP and MVVM Compared
 
-MVP (Model-View-Presenter) and MVVM (Model-View-ViewModel) both extract orchestration logic out of the view/view-controller into a separate object — their key structural difference is in how that object communicates back to the view.
+MVP (Model-View-Presenter) and MVVM both move logic out of the view into a separate object. They differ in how that object talks back to the view.
 
 ```swift
-// MVP: the Presenter holds an explicit reference to the View (often via
-// protocol) and calls methods on it directly to update the UI
+// MVP: the Presenter calls methods on the View (via a protocol)
 protocol RecipeListView: AnyObject {
     func display(recipes: [Recipe])
 }
@@ -34,66 +34,74 @@ final class RecipeListPresenter {
     }
 }
 
-// MVVM: the ViewModel exposes observable state; the View reads it,
-// with no reference back to the view at all (as seen throughout section 45.3)
+// MVVM: the ViewModel exposes state; it has no reference to the View (45.3)
 @Observable final class RecipeListViewModel {
     private(set) var recipes: [Recipe] = []
     func loadRecipes() async { recipes = (try? await service.getRecipes()) ?? [] }
 }
 ```
 
-In MVP, the presenter actively "pushes" updates by calling methods on an explicit view reference (typically via a protocol, to keep it testable without a real UI) — in MVVM, the view model has no reference to the view at all, and instead exposes observable state that the view "pulls" from whenever it needs to render, with the observation framework (`@Observable`, section 25) handling the actual update propagation. MVVM's decoupling (the view model genuinely doesn't know a view exists) is what makes it fit so naturally with SwiftUI's declarative, state-driven rendering model, which is why MVVM (rather than MVP) has become the dominant pattern in modern SwiftUI codebases.
+- **MVP:** the presenter holds a reference to the view (usually through a protocol) and *pushes* updates by calling its methods.
+- **MVVM:** the view model has no reference to the view. It exposes observable state, and the view *pulls* it when it draws. `@Observable` (section 25) sends the updates.
+
+Because the view model does not know the view exists, MVVM fits SwiftUI's state-driven style well. That is why MVVM, not MVP, is the most common pattern in modern SwiftUI apps.
 
 ---
 
 ## 46.3 VIPER: Structure and Trade-offs
 
-VIPER (View, Interactor, Presenter, Entity, Router) takes separation of concerns considerably further than MVC/MVP/MVVM, splitting a single screen's logic into five distinct, narrowly-scoped components, each with one clear responsibility.
+VIPER (View, Interactor, Presenter, Entity, Router) splits one screen into five small parts. Each part has one job.
 
 ```swift
-// VIPER's five components for a single screen, roughly:
-// View       — passive, displays what the Presenter tells it to
+// VIPER's five parts for one screen:
+// View       — shows what the Presenter tells it to
 // Interactor — business logic, talks to services/repositories
-// Presenter  — mediates between View and Interactor, formats data for display
-// Entity     — plain data/model objects
-// Router     — owns navigation logic (which screen comes next, and how)
+// Presenter  — connects View and Interactor, formats data for display
+// Entity     — plain data objects
+// Router     — navigation (which screen comes next)
 ```
 
-VIPER's genuine strength is testability and single-responsibility clarity taken to its logical extreme — each of the five pieces can be tested in near-total isolation, and any individual piece's responsibility is unambiguous. Its well-documented trade-off is ceremony: even a simple screen requires creating and wiring together five separate types, which for a small team or a straightforward CRUD-style screen can feel like substantial boilerplate relative to the actual complexity being managed — VIPER tends to pay off specifically on large teams building complex screens with genuinely intricate business logic, and to feel like overkill elsewhere, a tension revisited directly in 46.13.
+VIPER's strength is that each part has a clear job and can be tested on its own. The cost is extra code: even a simple screen needs five types wired together.
+
+It pays off on large teams with complex screens and complex business logic. For small teams or simple screens it is too much. We come back to this in 46.13.
 
 ---
 
 ## 46.4 Clean Architecture Layers on iOS
 
-Clean Architecture (originally a general software architecture philosophy, not iOS-specific) organizes code into concentric layers with a strict dependency rule: outer layers may depend on inner layers, but inner layers must never depend on outer ones — on iOS, this typically manifests as Presentation, Domain, and Data layers.
+Clean Architecture splits code into layers with one rule: outer layers may depend on inner layers, never the other way around. On iOS this usually means three layers: Presentation, Domain, and Data.
 
 ```plaintext
-Presentation layer  (Views, ViewModels)         — depends on Domain
-Domain layer        (Entities, Use Cases)       — depends on NOTHING else
-Data layer          (Repositories, API clients) — depends on Domain (implements its protocols)
+Presentation  (Views, ViewModels)         — depends on Domain
+Domain        (Entities, Use Cases)       — depends on nothing
+Data          (Repositories, API clients) — depends on Domain (implements its protocols)
 ```
 
-The crucial, somewhat counterintuitive rule is that the Domain layer — the app's actual core business logic and entities — has zero dependencies on either Presentation or Data; instead, the Data layer depends on (and implements) protocols *defined by* the Domain layer, a specific application of dependency inversion (previewed further in section 48.5) that keeps the app's most important logic completely insulated from framework and infrastructure churn (a new networking library, a new persistence framework) that would otherwise ripple inward and destabilize the core business rules.
+The surprising part: the Domain layer (your core business logic) depends on nothing. Instead, the Data layer depends on protocols that the Domain layer defines. This is dependency inversion (more in section 48.5).
+
+The benefit: when you change a networking library or a database, your most important logic is not affected.
 
 ---
 
-## 46.5 Unidirectional Data Flow Explained
+## 46.5 One-Way Data Flow
 
-Unidirectional data flow is an architectural philosophy (popularized by Redux in the web world, and echoed in SwiftUI's own core design) where state changes always follow one strict, predictable direction: an action triggers a state update, which triggers a UI re-render — never the reverse, and never a UI directly mutating state out-of-band.
+In one-way (unidirectional) data flow, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. Redux made this popular on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
-Action → Reducer (computes new State from old State + Action) → State → View renders State
+Action → Reducer (new State from old State + Action) → State → View shows State
    ↑                                                                          |
-   └──────────────────────── user interaction triggers a new Action ─────────┘
+   └────────────────────── the user does something: new Action ──────────────┘
 ```
 
-This unidirectional cycle is deliberately more restrictive than allowing a view to mutate arbitrary state directly wherever convenient — every single state change must flow through the same well-defined `(State, Action) -> State` transformation, which makes the entire set of ways state can change enumerable and auditable, in the same spirit as making illegal states unrepresentable (section 45.7) but applied to the *transitions* between states rather than just the states themselves. SwiftUI's own `@State`/`@Observable`-driven re-rendering already embodies a milder version of this philosophy; the patterns covered next (46.6–46.9) make it fully explicit and rigorously enforced.
+Every change goes through the same step: `(State, Action) -> State`. This means you can list every way the state can change. It is like 45.7 (wrong states impossible), but for the *changes* between states.
+
+SwiftUI's `@State` and `@Observable` already work a little like this. The patterns in 46.6 to 46.9 make it strict.
 
 ---
 
 ## 46.6 Reducers, Actions, and Effects
 
-Formalizing unidirectional data flow requires three specific concepts: **actions** (a description of something that happened — a button tap, a network response arriving), **reducers** (pure functions computing new state from old state plus an action), and **effects** (the mechanism for handling anything that isn't a pure computation, like a network call, which produces further actions once it completes).
+One-way data flow uses three ideas: **actions** (something happened, like a tap or a network response), **reducers** (pure functions that make the new state from the old state and an action), and **effects** (work that is not pure, like a network call, which sends a new action when it finishes).
 
 ```swift
 enum RecipeAction {
@@ -110,8 +118,8 @@ func reduce(state: inout RecipeState, action: RecipeAction) {
     switch action {
     case .loadButtonTapped:
         state.isLoading = true
-        // triggers an EFFECT elsewhere that will eventually feed back
-        // a .recipesLoaded action once the network call completes
+        // an EFFECT runs elsewhere and later sends
+        // .recipesLoaded when the network call finishes
     case .recipesLoaded(let recipes):
         state.recipes = recipes
         state.isLoading = false
@@ -119,13 +127,15 @@ func reduce(state: inout RecipeState, action: RecipeAction) {
 }
 ```
 
-The reducer itself is deliberately pure and synchronous — given the same state and action, it always produces the same new state, with no side effects of its own — while genuinely impure work (network calls, timers, anything involving `async`/`await`, Part 2) is pushed out into a separate "effect" mechanism that eventually feeds its result back in as a *new* action (like `.recipesLoaded`), keeping the reducer itself trivially testable as a plain, deterministic function.
+A reducer is pure and has no side effects: the same state and action always give the same new state. Impure work (network calls, timers, `async`/`await` from Part 2) goes into effects, which send their result back as a new action like `.recipesLoaded`.
+
+This makes the reducer easy to test, because it is just a plain function.
 
 ---
 
 ## 46.7 The Composable Architecture: @Reducer and @ObservableState
 
-The Composable Architecture (TCA) is a popular third-party Swift library implementing the reducer/action/effect pattern (46.6) with SwiftUI-native ergonomics, using macros (`@Reducer`, `@ObservableState`) to minimize the boilerplate that a hand-rolled implementation of 46.6's pattern would otherwise require.
+The Composable Architecture (TCA) is a popular third-party library for the reducer/action/effect pattern (46.6). It uses macros (`@Reducer`, `@ObservableState`) to remove most of the boilerplate.
 
 ```swift
 import ComposableArchitecture
@@ -162,13 +172,15 @@ struct RecipeFeature {
 }
 ```
 
-`@Reducer` and `@ObservableState` are Swift macros (recall macros, section 13) that generate the substantial conformance boilerplate a from-scratch TCA-style implementation would otherwise require, while `.run { send in }` is TCA's structured-concurrency-native mechanism for effects — an `async` closure that can `await` genuinely asynchronous work and feed results back in as new actions via `send`, directly building on Part 2's concurrency foundations rather than introducing a separate, competing concurrency model.
+`@Reducer` and `@ObservableState` are macros (section 13). They write the repeated code for you.
+
+`.run { send in }` is how TCA runs effects. It is an `async` closure: it can `await` work and send the result back as a new action with `send`. It uses the concurrency tools from Part 2, not a new system.
 
 ---
 
 ## 46.8 The Composable Architecture: Effects and Dependencies
 
-TCA effects are explicitly designed to be testable and cancellable, and TCA's dependency system (closely related to `swift-dependencies`, previewed further in section 47.7) provides a structured way to inject and override the external services an effect depends on.
+TCA effects are easy to test and cancel. TCA also has a dependency system (like `swift-dependencies`, see section 47.7) to inject the services an effect uses.
 
 ```swift
 @Reducer
@@ -184,13 +196,15 @@ struct RecipeFeature {
         .cancellable(id: CancelID.loadRecipes)
 ```
 
-`@Dependency(\.recipeService)` injects the actual service implementation used by an effect, and because this dependency is resolvable and overridable per-context (production, tests, SwiftUI previews), the exact same reducer code can run against a real network-backed service in production and a fully controlled fake in tests, without any conditional logic inside the reducer itself. `.cancellable(id:)` ties an effect's lifetime to a specific identifier, letting a subsequent action (or the feature going away) cleanly cancel an in-flight effect — directly built on Swift's structured concurrency cancellation (section 18, and echoed in section 40.4's `.task(id:)` discussion).
+`@Dependency(\.recipeService)` gives the effect its service. You can replace it for production, tests, and previews, so the same reducer uses a real service in the app and a fake one in tests, with no `if` checks inside the reducer.
+
+`.cancellable(id:)` ties an effect to an id, so a later action (or the feature going away) can cancel it. This uses Swift's cancellation (section 18, and `.task(id:)` in section 40.4).
 
 ---
 
 ## 46.9 The Composable Architecture: TestStore
 
-`TestStore` is TCA's dedicated testing tool, letting a test send a sequence of actions and assert exactly how state changed at each step — a direct, natural consequence of the reducer pattern's deliberate purity and determinism (46.6).
+`TestStore` is TCA's testing tool. A test sends actions and checks exactly how the state changes at each step. This works because reducers are pure and predictable (46.6).
 
 ```swift
 @Test
@@ -211,13 +225,16 @@ func loadingRecipesUpdatesState() async {
 }
 ```
 
-`store.send(action) { }` asserts the exact state mutation expected from that specific action (failing the test if the actual resulting state doesn't match what the trailing closure describes), and `store.receive(_:)` asserts that a specific action is expected to arrive next (typically from a completed effect) and what state change it should produce — this gives remarkably precise, step-by-step verification of an entire feature's behavior, a level of testing rigor that's a direct payoff of the architecture's insistence on pure, deterministic reducers and explicit, injectable dependencies (46.8).
+- `store.send(action) { }`: the closure describes the state change you expect. The test fails if the real state is different.
+- `store.receive(_:)`: checks that a specific action arrives next (usually from a finished effect), and what state change it causes.
+
+This gives a very exact, step-by-step test of a whole feature. It is possible because of pure reducers and injectable dependencies (46.8).
 
 ---
 
 ## 46.10 The Coordinator Pattern
 
-The Coordinator pattern extracts navigation logic — deciding which screen comes next, and how it's presented — out of individual views/view controllers entirely, into a dedicated coordinator object responsible for orchestrating an app's (or a specific flow's) overall navigation.
+The Coordinator pattern moves navigation (which screen comes next, and how it is shown) out of the screens into a separate coordinator object.
 
 ```swift
 protocol Coordinator: AnyObject {
@@ -246,18 +263,19 @@ final class RecipeFlowCoordinator: Coordinator {
 }
 ```
 
-Without a coordinator, a view controller typically needs direct knowledge of exactly which specific view controller comes next and how to construct/present it — coupling that view controller's code to the details of app-wide navigation flow. With a coordinator, `RecipeListViewController` merely reports "a recipe was selected" (via the `onRecipeSelected` closure) without any awareness of what screen, if any, should follow — the coordinator alone owns that navigation decision, making individual screens more reusable and testable in isolation, and making an app's overall navigation flow auditable from one central place rather than scattered across many view controllers.
+Without a coordinator, a view controller must know which screen comes next and how to build it. That ties it to the app's navigation.
+
+With a coordinator, `RecipeListViewController` only says "a recipe was selected" (through `onRecipeSelected`). The coordinator decides what happens next. Screens become easier to reuse and test, and you can see the whole navigation flow in one place.
 
 ---
 
 ## 46.11 SwiftUI-Native Navigation vs. Coordinators
 
-SwiftUI's own navigation tools (`NavigationStack`, value-based `navigationDestination(for:)`, `NavigationPath` — section 27) already provide much of the Coordinator pattern's core benefit (decoupling "what triggers navigation" from "what screen comes next") natively, which has led to real debate about whether a separate Coordinator layer is still warranted in SwiftUI-first codebases.
+SwiftUI's own tools (`NavigationStack`, `navigationDestination(for:)`, `NavigationPath`, section 27) already separate what starts navigation from which screen comes next. So some teams ask if they still need a Coordinator.
 
 ```swift
 // SwiftUI-native: navigation state lives in a NavigationPath,
-// external to any individual screen's own view — already achieves much
-// of a coordinator's decoupling, without a separate coordinator type
+// outside the screens, so no separate coordinator type is needed
 @Observable
 final class AppRouter {
     var path = NavigationPath()
@@ -268,16 +286,18 @@ final class AppRouter {
 }
 ```
 
-An `@Observable` router/coordinator object holding a `NavigationPath` (as shown) captures much of the Coordinator pattern's benefit using purely SwiftUI-native building blocks — navigation decisions are centralized and testable, without needing UIKit-era coordinator machinery. The practical guidance many teams converge on: SwiftUI's native navigation tools are often sufficient on their own for small-to-medium apps, while a more formal, dedicated Coordinator-style object becomes more valuable specifically for large apps with complex, cross-cutting navigation flows (like a multi-step onboarding wizard that can be entered from several different places) that benefit from one clearly centralized, testable owner of that specific flow's logic.
+An `@Observable` router that holds a `NavigationPath` gives you most of the Coordinator's benefit with plain SwiftUI. Navigation is in one place and easy to test.
+
+What many teams do: SwiftUI's own navigation is enough for small and medium apps. A formal coordinator helps in large apps with complex flows, like an onboarding wizard that can start from several places.
 
 ---
 
-## 46.12 Use Cases and Interactors: Value vs. Ceremony
+## 46.12 Use Cases and Interactors: Worth the Extra Code?
 
-A "use case" (or "interactor," in VIPER's terminology, 46.3) is a small, single-purpose type representing exactly one specific piece of business logic (e.g., "mark a recipe as favorite") — a further refinement beyond the general service/repository layer from section 45.5, and one whose value-versus-overhead trade-off is genuinely debatable depending on context.
+A **use case** (called an "interactor" in VIPER, 46.3) is a small type for exactly one business action, like "mark a recipe as favorite". It goes one step beyond the service layer from 45.5.
 
 ```swift
-// A single-purpose use case, doing exactly one thing
+// A use case: does exactly one thing
 struct ToggleFavoriteRecipeUseCase {
     let repository: RecipeRepository
 
@@ -288,33 +308,34 @@ struct ToggleFavoriteRecipeUseCase {
     }
 }
 
-// Contrast: the same logic as just a method on a broader service (section 45.5)
+// Compare: the same logic as a method on a service (45.5)
 extension RecipeService {
     func toggleFavorite(_ recipe: Recipe) async throws { /* ... */ }
 }
 ```
 
-The use-case pattern's genuine value is at scale: when business logic is complex enough that each individual operation benefits from being its own independently-testable, independently-composable unit (and potentially reused across multiple different screens/features), dedicated use case types earn their keep. Its potential downside is ceremony for its own sake — for straightforward CRUD-style operations, wrapping every single simple action in its own dedicated type can add more structural overhead than the actual complexity being managed justifies, echoing VIPER's same fundamental tension (46.3) between rigor and appropriately-scoped simplicity.
+**When it helps:** for complex business logic, each action is its own unit that you can test alone and reuse in many screens.
+
+**When it hurts:** for simple CRUD actions, a type for every small action is more structure than the problem needs. This is the same trade-off as VIPER (46.3): rigor versus simplicity.
 
 ---
 
-## 46.13 Choosing an Architecture for a Given Team Size
+## 46.13 Choosing an Architecture for Your Team Size
 
-There is no single "correct" architecture — the right choice is genuinely dependent on team size, app complexity, and how long the codebase needs to remain maintainable, and this section's closing guidance is to make that trade-off deliberately rather than by default or by following whatever's currently trending.
+There is no single correct architecture. The right choice depends on team size, app complexity, and how long the app must live. Choose on purpose, not because something is trending.
 
 ```plaintext
-Rough, non-prescriptive guidance:
-- Solo dev / small app, short lifespan  → MVVM (45.3), minimal ceremony
-- Small-medium team, growing app        → MVVM + service layer (45.5) + light DI (Section 47)
-- Large team, complex business logic    → Clean Architecture layers (46.4) or TCA (46.7-46.9),
-                                           justified by the genuine testing/scaling payoff
-- Very large team, many independent
-  feature teams working in parallel     → Modularization (Section 48) becomes as important
-                                           as the pattern itself, since module boundaries
-                                           enforce team boundaries
+A rough guide, not a rule:
+- Solo dev / small app          → MVVM (45.3), little extra code
+- Small-medium team, growing    → MVVM + service layer (45.5) + light DI (Section 47)
+- Large team, complex logic     → Clean Architecture (46.4) or TCA (46.7-46.9)
+- Many teams working in         → Modularization (Section 48) matters as much as the
+  parallel                        pattern, because module borders become team borders
 ```
 
-The recurring theme across this entire section is that every pattern beyond the foundational separation from section 45.2 trades additional structure and ceremony for additional rigor, testability, and scalability — VIPER's five components, Clean Architecture's strict layering, TCA's reducer/effect/dependency machinery all cost real, upfront implementation effort that only pays for itself once an app or team reaches sufficient scale and complexity to actually need it. Picking an architecture that's more elaborate than a given app currently warrants is a genuine, common mistake, just as real as picking one too simple for a rapidly-growing, multi-team codebase — the skill is honestly assessing where a specific project actually sits on that spectrum, not defaulting to whichever pattern is most discussed online.
+Every pattern after 45.2 adds structure and code in return for more rigor, testability, and scale. VIPER's five parts, Clean Architecture's layers, and TCA's reducers all cost effort up front, and only pay off when the app or team is big enough.
+
+Choosing something too big for your app is a common mistake. So is choosing something too small for a fast-growing, multi-team app. Be honest about where your project is, and don't just pick the most talked-about pattern.
 
 ---
 
@@ -322,15 +343,15 @@ The recurring theme across this entire section is that every pattern beyond the 
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| MVC's real failure mode | `UIViewController` conflates roles | Why "Massive View Controller" happens structurally |
-| MVP vs. MVVM | Push (explicit view reference) vs. pull (observed state) | Why MVVM fits SwiftUI's declarative model naturally |
-| VIPER | Five narrowly-scoped components per screen | Maximal testability at the cost of ceremony |
-| Clean Architecture | Domain has zero outward dependencies | Insulates core business logic from infrastructure churn |
-| Unidirectional data flow | Action → Reducer → State → View, one direction only | Makes all state transitions enumerable and auditable |
-| Reducers/actions/effects | Pure state transitions + isolated impure work | Deterministic, testable core logic |
-| The Composable Architecture | `@Reducer`, `@ObservableState`, `.run`, `@Dependency` | SwiftUI-native, macro-powered implementation of the pattern |
-| TestStore | `store.send()`/`.receive()` with exact state assertions | Precise, step-by-step feature testing |
-| Coordinator pattern | Dedicated navigation-owning object | Decouples screens from navigation decisions |
-| SwiftUI-native navigation | `NavigationPath`-based router | Often sufficient alone; formal coordinators for complex flows |
-| Use cases/interactors | One type per single business operation | Independent testability vs. ceremony trade-off |
-| Choosing an architecture | Match rigor to actual team/app scale | No universally "correct" choice; a deliberate trade-off |
+| MVC | `UIViewController` does two jobs | Why "Massive View Controller" happens |
+| MVP vs. MVVM | Push (view reference) vs. pull (observed state) | Why MVVM fits SwiftUI |
+| VIPER | Five small parts per screen | Easy to test, but a lot of extra code |
+| Clean Architecture | Domain depends on nothing | Core logic is safe from tool changes |
+| One-way data flow | Action → Reducer → State → View | Every state change can be listed |
+| Reducers / actions / effects | Pure changes, impure work separate | Simple, testable core logic |
+| The Composable Architecture | `@Reducer`, `@ObservableState`, `.run`, `@Dependency` | Macro-powered version of the pattern |
+| TestStore | `send()` and `receive()` with exact state checks | Step-by-step feature tests |
+| Coordinator | One object owns navigation | Screens don't decide what comes next |
+| SwiftUI navigation | A router with `NavigationPath` | Often enough alone; coordinators for complex flows |
+| Use cases | One type per business action | Testable, but can be too much |
+| Choosing | Match the pattern to team and app size | No single correct choice |
