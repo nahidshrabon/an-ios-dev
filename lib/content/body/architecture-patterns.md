@@ -308,25 +308,58 @@ struct RecipeView: View {
 
 ## 46.8 The Composable Architecture: Effects and Dependencies
 
-TCA effects are easy to test and cancel. TCA also has a dependency system (like `swift-dependencies`, see section 47.7) to inject the services an effect uses.
+TCA gives effects two helpers: **dependencies** (the things an effect needs from outside, like `RecipeService`) and **cancelling** (stopping an effect that is still running).
+
+**Dependencies.** If the reducer creates the real `RecipeService` itself, every test would call the real network. Instead, the reducer asks TCA for the service with `@Dependency`. This is dependency injection (like `swift-dependencies`, see section 47.7).
 
 ```swift
 @Reducer
 struct RecipeFeature {
+    // Ask TCA for the service. Do not create it here.
     @Dependency(\.recipeService) var recipeService
 
-    // ...
-    case .loadButtonTapped:
-        return .run { send in
-            let recipes = try await recipeService.getRecipes()
-            await send(.recipesLoaded(recipes))
-        }
-        .cancellable(id: CancelID.loadRecipes)
+    // ... State, Action, and body as in 46.7 ...
+    // Inside the reducer:
+    // case .loadButtonTapped:
+    //     return .run { send in
+    //         let recipes = try await recipeService.getRecipes()
+    //         await send(.recipesLoaded(recipes))
+    //     }
+}
 ```
 
-`@Dependency(\.recipeService)` gives the effect its service. You can replace it for production, tests, and previews, so the same reducer uses a real service in the app and a fake one in tests, with no `if` checks inside the reducer.
+TCA gives the reducer the **real** service in the app, and a **fake** one in tests and previews. The reducer code is the same in every case, with no `if` checks inside it.
 
-`.cancellable(id:)` ties an effect to an id, so a later action (or the feature going away) can cancel it. This uses Swift's cancellation (section 18, and `.task(id:)` in section 40.4).
+You register the real service once, so TCA knows what to give:
+
+```swift
+extension DependencyValues {
+    var recipeService: RecipeService {
+        get { self[RecipeServiceKey.self] }
+        set { self[RecipeServiceKey.self] = newValue }
+    }
+}
+
+private enum RecipeServiceKey: DependencyKey {
+    // The real service (setup not shown)
+    static let liveValue: RecipeService = DefaultRecipeService(/* ... */)
+}
+```
+
+**Cancelling.** Imagine the user taps "Load recipes" twice. Now two network calls run, and the old one might finish last and replace newer data. `.cancellable(id:)` gives the effect a name, so a new effect with the same name can cancel the old one.
+
+```swift
+enum CancelID { case loadRecipes }
+
+// In the reducer:
+return .run { send in
+    let recipes = try await recipeService.getRecipes()
+    await send(.recipesLoaded(recipes))
+}
+.cancellable(id: CancelID.loadRecipes, cancelInFlight: true)
+```
+
+`cancelInFlight: true` means: if an effect with this id is still running, cancel it first. A feature going away also cancels its effects. This uses Swift's cancellation (section 18, and `.task(id:)` in section 40.4).
 
 ---
 
