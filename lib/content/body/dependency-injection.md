@@ -1,11 +1,12 @@
-## 47.1 Why Singletons Hurt Testability
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A singleton (`SomeService.shared`) is globally accessible, convenient to reach for from anywhere — and precisely because of that global reachability, it's genuinely difficult to substitute with a test double, since every piece of code that reaches for `.shared` is implicitly, invisibly coupled to that one specific global instance.
+## 47.1 Why Singletons Hurt Testability 🟢
+
+A **dependency** is something a type needs to do its job. For example, a view model needs a service to load recipes. A **singleton** (like `NetworkService.shared`) is one global object that any code can reach from anywhere. It is convenient, but it makes code hard to test.
 
 ```swift
-// PROBLEM: RecipeListViewModel is invisibly coupled to a specific global
-// instance — there's no way to substitute a fake service for testing
-// without actually modifying NetworkService.shared itself
+// PROBLEM: this view model secretly depends on one global object.
+// There is no way to give it a fake service in a test.
 final class RecipeListViewModel {
     func loadRecipes() async {
         let recipes = try? await NetworkService.shared.fetchRecipes()
@@ -13,13 +14,19 @@ final class RecipeListViewModel {
 }
 ```
 
-The core problem isn't that singletons are inherently "bad" as a general concept — it's that reaching for a globally-accessible instance from deep inside a type's implementation makes that dependency invisible from the outside (nothing in `RecipeListViewModel`'s public interface reveals it depends on `NetworkService`) and therefore impossible to substitute without actually mutating shared global state, which is fragile, hard to reason about, and can cause tests to interfere with each other if run concurrently or in different orders. This single problem — hidden, unsubstitutable dependencies — is what every technique in the rest of this section directly addresses.
+Singletons are not "bad" by themselves. The problem is **hidden dependencies**:
+
+- **Hidden:** nothing in `RecipeListViewModel`'s interface says it needs `NetworkService`. You only find out by reading the code inside.
+- **Impossible to replace:** a test would call the real network, unless you change the shared global object itself.
+- **Fragile:** shared global state can make tests affect each other, especially when they run at the same time or in a different order.
+
+**Everything else in this section solves this one problem:** dependencies that are hidden and can't be replaced. The solution is called **dependency injection (DI)**: give a type its dependencies from outside, instead of letting it reach for them.
 
 ---
 
-## 47.2 Initializer Injection
+## 47.2 Initializer Injection 🟢
 
-The most direct, foundational DI technique: pass an object's dependencies into its initializer, making them an explicit, visible part of its public interface rather than something it reaches for internally.
+The simplest form of DI: **pass the dependencies into the initializer**. They become a visible, required part of the type's interface.
 
 ```swift
 final class RecipeListViewModel {
@@ -34,23 +41,30 @@ final class RecipeListViewModel {
     }
 }
 
-// Production: RecipeListViewModel(recipeService: DefaultRecipeService())
-// Testing:    RecipeListViewModel(recipeService: FakeRecipeService(returning: [...]))
+// In the app:  RecipeListViewModel(recipeService: DefaultRecipeService())
+// In a test:   RecipeListViewModel(recipeService: FakeRecipeService(returning: [...]))
 ```
 
-This is the single most important shift from 47.1's problem: `recipeService` is now a visible, required parameter of `RecipeListViewModel.init`, meaning anyone reading the type's public interface immediately sees exactly what it depends on, and any caller — production code or a test — can supply whatever conforming implementation is appropriate for that context, with no need to mutate shared global state at all. Nearly every other DI technique in this section is, at its core, a variation or refinement of this same fundamental idea.
+This fixes the problem from 47.1:
+
+- **Visible:** anyone who reads `init` sees what the view model depends on.
+- **Replaceable:** the app passes the real service, and a test passes a fake one. No global state changes.
+
+**Almost every other DI technique in this section is a variation of this idea.**
 
 ---
 
-## 47.3 Environment-Based Injection in SwiftUI
+## 47.3 Environment-Based Injection in SwiftUI 🟡
 
-SwiftUI's own `@Environment` system provides a framework-native mechanism for injecting dependencies implicitly down a view hierarchy, avoiding the need to manually thread a dependency through every intermediate view's initializer.
+With initializer injection, a dependency must be passed through every view in between, even views that don't use it. This is called **prop drilling**. SwiftUI's `@Environment` avoids it: you put the dependency in once near the top, and any child view can read it.
 
 ```swift
+// 1. Define a key and a default value
 private struct RecipeServiceKey: EnvironmentKey {
     static let defaultValue: RecipeService = DefaultRecipeService()
 }
 
+// 2. Add the value to EnvironmentValues
 extension EnvironmentValues {
     var recipeService: RecipeService {
         get { self[RecipeServiceKey.self] }
@@ -58,32 +72,36 @@ extension EnvironmentValues {
     }
 }
 
-// Injected once, at the root:
+// 3. Inject it once, at the root
 ContentView().environment(\.recipeService, DefaultRecipeService())
 
-// Read anywhere in the hierarchy without manual threading:
+// 4. Read it in any child view, with no passing through other views
 struct RecipeListView: View {
     @Environment(\.recipeService) private var recipeService
 }
 ```
 
-This is a genuinely different mechanism from initializer injection (47.2) — rather than every intermediate view needing to accept and pass along a dependency it doesn't itself use (a pattern sometimes called "prop drilling"), `@Environment` lets a dependency be injected once near the root and read directly by any descendant that actually needs it, similar in spirit to how `@Environment(\.modelContext)` (section 41.4) delivers SwiftData's context without manual threading. The trade-off is that a dependency's requirement becomes less visible at a glance (any descendant view can silently depend on an environment value with no compiler-enforced declaration at intermediate levels), which is why many teams reserve `@Environment`-based injection for a smaller set of genuinely widely-needed dependencies, preferring explicit initializer injection for a type's primary, defining dependencies.
+This works like `@Environment(\.modelContext)` for SwiftData (section 41.4).
+
+**The trade-off:** the dependency is less visible. Any child view can use an environment value, and the compiler does not show it in the views in between. So many teams use `@Environment` for a few dependencies that are needed almost everywhere, and use **initializer injection for a type's main dependencies**.
 
 ---
 
-## 47.4 Protocol Abstractions for Swappable Services
+## 47.4 Protocols for Swappable Services 🟡
 
-Injecting a *protocol* type (rather than a concrete class) is what actually makes substitution possible — this is the same pattern seen throughout the curriculum (`APIClient`, section 40.1; `RecipeService`, section 45.5), formalized here as the general DI technique it represents.
+To replace a dependency, the type must depend on a **protocol**, not on a concrete class. We have used this idea before (`APIClient` in section 40.1, `RecipeService` in section 45.5). This is the general technique behind it.
 
 ```swift
 protocol RecipeService {
     func getRecipes() async throws -> [Recipe]
 }
 
+// The real one
 final class DefaultRecipeService: RecipeService {
     func getRecipes() async throws -> [Recipe] { /* real network call */ [] }
 }
 
+// A fake one for tests: returns fixed data, no network
 final class FakeRecipeService: RecipeService {
     let recipesToReturn: [Recipe]
     init(returning recipes: [Recipe]) { recipesToReturn = recipes }
@@ -91,41 +109,48 @@ final class FakeRecipeService: RecipeService {
 }
 ```
 
-Combined with initializer injection (47.2), depending on a protocol rather than a concrete type is what makes the substitution actually meaningful — a `RecipeListViewModel` that requires a concrete `DefaultRecipeService` can only ever be given exactly that one implementation, while one that requires the `RecipeService` protocol can be given any conforming type, including test-only fakes that return canned, deterministic data with no real network calls involved at all.
+Together with initializer injection (47.2), this is what makes swapping possible:
+
+- A view model that needs a concrete `DefaultRecipeService` can only ever use that one class.
+- A view model that needs the `RecipeService` **protocol** can use any type that follows it, including a **fake** (also called a test double) that returns fixed data with no network.
 
 ---
 
-## 47.5 Closure-Based Dependencies Instead of Protocols
+## 47.5 Closure-Based Dependencies Instead of Protocols 🟡
 
-For a dependency with just one or two methods, a plain closure (or a struct bundling a few closures) can serve the same substitution purpose as a full protocol, with less ceremony — a lighter-weight alternative worth knowing about even though protocols remain the more common default.
+For a dependency with only one or two methods, a **closure** (or a struct that holds closures) can replace a protocol with less code. Protocols are still the common choice, but this is a good lighter option.
 
 ```swift
-// Protocol-based (more ceremony, but conventional and discoverable)
+// With a protocol: more code, but familiar
 protocol RecipeFetcher {
     func fetch() async throws -> [Recipe]
 }
 
-// Closure-based (less ceremony, especially for a single-method dependency)
+// With a closure: less code, good for one method
 struct RecipeFetching {
     var fetch: () async throws -> [Recipe]
 }
 
 let production = RecipeFetching(fetch: { try await apiClient.getRecipes() })
-let testing = RecipeFetching(fetch: { [Recipe(title: "Test")] })
+let testing = RecipeFetching(fetch: {
+    [Recipe(id: UUID(), title: "Test", minutesToCook: 5)]
+})
 ```
 
-A struct wrapping one or more closures achieves the exact same substitutability as a protocol with one or more methods, but without needing a separate named conforming type for every variant (production, test, preview) — this pattern is central to `swift-dependencies`' design (47.7) and is worth recognizing as a legitimate, lighter alternative to protocols specifically for smaller, narrowly-scoped dependencies, even though protocols remain the more broadly conventional and often more discoverable default for larger service interfaces.
+A struct of closures can be swapped just like a protocol, but you don't need a separate named type for every version (production, test, preview). This idea is central to `swift-dependencies` (47.7).
+
+Use closures for **small, narrow dependencies**. Use protocols for **larger service interfaces**, where they are easier to find and read.
 
 ---
 
-## 47.6 The Composition Root
+## 47.6 The Composition Root 🟡
 
-The "composition root" is the single, specific place in an app where all the concrete dependency implementations are actually chosen and wired together — typically near the app's entry point — keeping that decision-making out of the rest of the codebase entirely.
+The **composition root** is the one place in your app where the real (concrete) dependencies are chosen and connected. It is usually near the app's entry point. Everything else just receives what it needs.
 
 ```swift
 @main
 struct RecipeApp: App {
-    // The composition root: THE ONE place concrete types are chosen
+    // The composition root: the ONE place where concrete types are chosen
     let recipeService: RecipeService = DefaultRecipeService()
     let apiClient: APIClient = DefaultAPIClient(baseURL: productionBaseURL)
 
@@ -137,13 +162,15 @@ struct RecipeApp: App {
 }
 ```
 
-Without a clear composition root, decisions like "which concrete `RecipeService` implementation do we actually use" can end up scattered throughout the codebase, each call site independently choosing (and potentially inconsistently choosing) a concrete type — centralizing this decision in one place (typically the `App` type itself, or a small dedicated `AppDependencies` type it owns) means the rest of the codebase, all the way down through view models and services, deals exclusively in protocol types (47.4) and never itself decides which concrete implementation to instantiate, keeping that one significant decision auditable from a single, well-known location.
+Without a composition root, the choice "which `RecipeService` do we use?" can be spread all over the code. Each place might choose differently.
+
+With one, **only this place knows the concrete types**. The rest of the app (view models, services) uses only protocols (47.4). If you want to change a real implementation, you change it in one known location. The root is usually the `App` type, or a small `AppDependencies` type that it owns.
 
 ---
 
-## 47.7 swift-dependencies and @Dependency
+## 47.7 swift-dependencies and @Dependency 🟡
 
-`swift-dependencies` is a popular, standalone Swift library (also used internally by TCA, section 46.8) providing a structured, `@Dependency`-based system for declaring, injecting, and overriding dependencies — usable independently of TCA in any Swift codebase, including plain SwiftUI/MVVM apps.
+**`swift-dependencies`** is a popular library for DI. TCA uses it too (the `@Dependency` from 46.8), but you can use it alone in any Swift project, including plain SwiftUI and MVVM apps.
 
 ```swift
 import Dependencies
@@ -162,53 +189,68 @@ extension DependencyValues {
 
 final class RecipeListViewModel {
     @Dependency(\.recipeService) var recipeService
-    // no initializer parameter needed — @Dependency resolves it automatically
+    // no initializer parameter: @Dependency finds the service for you
 }
 ```
 
-`swift-dependencies` sits conceptually between manual initializer injection (47.2, maximally explicit but requiring every intermediate type to thread dependencies through) and SwiftUI's `@Environment` (47.3, implicit but SwiftUI-only) — it provides environment-like implicit resolution (no need to manually pass dependencies through every initializer) while working in any Swift context (view models, services, even non-SwiftUI code), with built-in, first-class support for swapping in `testValue` automatically within a test context, and `previewValue` within SwiftUI previews, without any manual setup at each individual call site.
+You register one value for each situation: `liveValue` in the app, `testValue` in tests (and `previewValue` in SwiftUI previews). The library picks the right one automatically.
+
+Here is how the three main techniques compare:
+
+| Technique | How it gets the dependency | Works in | Downside |
+|---|---|---|---|
+| Initializer injection (47.2) | Passed to `init` | Any Swift code | Every type in between must pass it along |
+| `@Environment` (47.3) | Read from the SwiftUI environment | SwiftUI views only | Dependency is less visible |
+| `swift-dependencies` (47.7) | `@Dependency` finds it | Any Swift code | An extra library to learn |
+
+`swift-dependencies` is a middle way. It resolves dependencies without passing them through every `init`, like `@Environment`, but it works outside SwiftUI as well. It also swaps in `testValue` and `previewValue` for you, with no setup at each place of use.
 
 ---
 
-## 47.8 Injecting a Clock for Deterministic Time
+## 47.8 Injecting a Clock to Control Time 🟡
 
-Time itself is a dependency — code that calls `Date()` directly, or uses `Task.sleep()` with a real-world duration, is difficult to test deterministically, since a test can't easily "wait" for a real 30-second timeout or reliably control exactly what "now" is at assertion time.
+**Time is a dependency too.** Code that calls `Date()` or `Task.sleep()` directly is hard to test. A test can't wait a real 30 seconds for a timeout, and it can't control what "now" is when it checks the result.
 
 ```swift
-protocol Clock {
+// A small clock for this lesson (Swift also has its own Clock protocol)
+protocol AppClock {
     func now() -> Date
     func sleep(for duration: Duration) async throws
 }
 
-struct SystemClock: Clock {
+// The real clock, used in the app
+struct SystemClock: AppClock {
     func now() -> Date { Date() }
     func sleep(for duration: Duration) async throws { try await Task.sleep(for: duration) }
 }
 
-final class TestClock: Clock {
+// A fake clock, used in tests
+final class TestClock: AppClock {
     var currentTime: Date
     init(currentTime: Date) { self.currentTime = currentTime }
     func now() -> Date { currentTime }
-    func sleep(for duration: Duration) async throws { /* advance currentTime instantly, no real delay */ }
+    func sleep(for duration: Duration) async throws { /* move currentTime forward at once, no real waiting */ }
 }
 ```
 
-By depending on an injected `Clock` protocol rather than calling `Date()`/`Task.sleep()` directly, a test can substitute a `TestClock` that reports a fixed, controllable "now" and resolves `sleep(for:)` instantly rather than actually waiting — this is precisely the technique that makes it practical to write a fast, deterministic test for time-dependent logic (like the exponential backoff retry pattern from section 40.3, or a cache expiration check from 43.12) without the test itself needing to run for the same real-world duration as the production code it's testing.
+If the code uses an injected clock instead of `Date()` and `Task.sleep()`, a test can use `TestClock`. It reports a fixed "now", and `sleep(for:)` finishes at once.
+
+This makes fast, repeatable tests possible for time-based code, like the retry with exponential backoff from section 40.3, or a cache expiry check from section 43.12. The test does not need to run as long as the real code would.
 
 ---
 
 ## 47.9 Concurrency-Aware Dependency Design 🔴
 
-Injected dependencies used from concurrent contexts must themselves be designed with Swift's concurrency safety model (Part 2) in mind — a naively-designed dependency protocol can become a source of data races or `Sendable` conformance friction once actually used across actor boundaries.
+Dependencies are often used from several tasks at the same time. So they must be safe for Swift's concurrency rules (Part 2). A badly designed dependency can cause **data races** (two tasks changing the same data at once) or `Sendable` errors.
 
 ```swift
-// A dependency protocol designed with concurrency safety in mind:
+// A dependency designed for concurrency: it must be Sendable
 protocol RecipeService: Sendable {
     func getRecipes() async throws -> [Recipe]
 }
 
-// If the concrete implementation holds mutable state, it needs its own
-// isolation strategy — an actor is often the right choice:
+// If the real implementation keeps changing data (like a cache),
+// protect that data. An actor is often a good choice:
 actor CachingRecipeService: RecipeService {
     private var cache: [Recipe] = []
     func getRecipes() async throws -> [Recipe] {
@@ -219,7 +261,12 @@ actor CachingRecipeService: RecipeService {
 }
 ```
 
-Marking the `RecipeService` protocol itself as `Sendable` (recall `Sendable`, section 20) is a deliberate design choice communicating "any conforming implementation must be safe to use across concurrency domains" — for a stateless implementation this is trivial, but for one that holds mutable internal state (like a caching layer), that state needs its own isolation strategy, with an `actor`-based implementation (as shown) being a natural, common choice, directly connecting this section's dependency injection principles back to the structured concurrency and actor isolation material from Part 2.
+**Marking the protocol `Sendable`** (section 20) says: "any type that follows this must be safe to use from many tasks at once."
+
+- **No changing data (stateless):** this is easy, and nothing more is needed.
+- **Changing data (like a cache):** the data needs protection. An **`actor`** makes sure only one task at a time touches it, as in `CachingRecipeService`.
+
+This connects DI back to the actor and structured concurrency lessons in Part 2.
 
 ---
 
@@ -227,12 +274,12 @@ Marking the `RecipeService` protocol itself as `Sendable` (recall `Sendable`, se
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| The core problem | Hidden, unsubstitutable global dependencies | Why singletons undermine testability |
-| Foundational technique | Constructor parameters | Explicit, visible, substitutable dependencies |
-| SwiftUI-native injection | `@Environment`, custom `EnvironmentKey` | Implicit injection without manual threading |
-| Substitutability | Depend on protocols, not concrete types | What actually enables swapping implementations |
-| Lighter alternative | Closure/struct-based dependencies | Less ceremony for small, narrowly-scoped dependencies |
-| Centralized decision-making | The composition root | One place where concrete types are chosen |
-| Structured DI library | `swift-dependencies`, `@Dependency` | Implicit resolution usable beyond SwiftUI/TCA |
-| Deterministic testing | Injected `Clock` protocol | Fast, controllable tests for time-dependent logic |
-| Safety under concurrency | `Sendable` dependencies, actor-based implementations | Avoid data races when dependencies cross concurrency domains |
+| The problem | Hidden dependencies you can't replace | Why singletons make testing hard |
+| Initializer injection | Pass dependencies to `init` | Visible and replaceable |
+| `@Environment` | Put it in once, read it in any child view | No prop drilling, but SwiftUI only |
+| Protocols | Depend on a protocol, not a class | Lets you swap the real and fake versions |
+| Closures | A struct of closures | Less code for small dependencies |
+| Composition root | One place chooses the real types | The rest of the app only sees protocols |
+| `swift-dependencies` | `@Dependency` with live and test values | Works anywhere, and swaps for tests |
+| Clock | Inject time instead of `Date()` | Fast, repeatable time tests |
+| Concurrency | `Sendable` and actors | Avoid data races |

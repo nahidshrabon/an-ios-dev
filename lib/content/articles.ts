@@ -528,7 +528,7 @@ export const articles: Article[] = [
     slug: "dependency-injection",
     title: "Dependency Injection",
     description:
-      "Why singletons hurt testability, initializer and @Environment-based injection, protocol and closure-based abstractions, the composition root, swift-dependencies, injecting a Clock for deterministic tests, and concurrency-aware dependency design.",
+      "Why singletons hurt testing, initializer and @Environment injection, protocols and closures, the composition root, swift-dependencies, injecting a Clock to control time, and concurrency-safe dependencies.",
     tags: ["architecture", "dependency-injection", "testing"],
     publishedAt: "2026-08-16",
     get content() {
