@@ -562,7 +562,18 @@ struct RecipeListView: View {
 }
 ```
 
-This is the same idea as 46.10: the list screen only says "a recipe was selected" (`router.showRecipeDetail`), and navigation is decided in one place. The difference is that SwiftUI shows the screen for you, so there is no `push` code. (`Recipe` must be `Hashable` to go in a `NavigationPath`.)
+This is the same idea as 46.10: the list screen only says "a recipe was selected" (`router.showRecipeDetail`), and navigation is decided in one place. The difference is that SwiftUI shows the screen for you, so there is no `push` code.
+
+**What happens when the user taps a recipe:**
+
+1. `router.showRecipeDetail(recipe)` adds the recipe to `path`.
+2. `AppRouter` is `@Observable`, and `NavigationStack` is connected to `router.path`, so SwiftUI sees that the path changed.
+3. `NavigationStack` sees that a `Recipe` was added, and looks for `navigationDestination(for: Recipe.self)`.
+4. It finds the destination that returns `RecipeDetailView(recipe: recipe)`, and the detail screen slides in.
+
+Going back works the other way. When the user taps Back, SwiftUI removes the last value from `path`. In code, `router.path.removeLast()` does the same.
+
+So `showRecipeDetail` does not show a screen. It only changes data, and SwiftUI shows the screen for that data. (`Recipe` must be `Hashable` to go in a `NavigationPath`.)
 
 It is also easy to test: call `router.showRecipeDetail(recipe)` and check that `router.path.count` is `1`.
 
