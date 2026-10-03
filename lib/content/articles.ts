@@ -539,7 +539,7 @@ export const articles: Article[] = [
     slug: "modularization",
     title: "Modularization",
     description:
-      "When to split an app into modules, local Swift packages, feature module boundaries, the interface/implementation split, module-level dependency inversion, the package access level, circular dependencies, linking trade-offs, and Tuist/Bazel tooling.",
+      "When to split an app into modules, local Swift packages, feature module boundaries, interface and implementation modules, module-level dependency inversion, the package access level, circular dependencies, linking trade-offs, and Tuist and Bazel.",
     tags: ["architecture", "modularization", "swift-package-manager"],
     publishedAt: "2026-08-16",
     get content() {
