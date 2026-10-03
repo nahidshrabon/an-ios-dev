@@ -1,6 +1,7 @@
 **Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
 ## 46.1 MVC and Massive View Controller 🟡
+
 **MVC (Model-View-Controller)** is UIKit's original pattern. In practice, the "Controller" often takes on everything (networking, business logic, view setup). This is why it is nicknamed **"Massive View Controller."**
 
 ```swift
@@ -19,6 +20,7 @@ This is a gap in the pattern, not a mistake by developers. It is the reason the 
 ---
 
 ## 46.2 MVP and MVVM Compared 🟡
+
 **MVP (Model-View-Presenter)** and **MVVM** both move logic out of the view into a separate object. They differ in how that object talks back to the view.
 
 ```swift
@@ -49,6 +51,7 @@ Because the view model does not know the view exists, MVVM fits SwiftUI's state-
 ---
 
 ## 46.3 VIPER: Structure and Trade-offs 🟡
+
 **VIPER** (View, Interactor, Presenter, Entity, Router) splits one screen into five small parts. Each part has one job.
 
 ```swift
@@ -67,6 +70,7 @@ It pays off on large teams with complex screens and complex business logic. For 
 ---
 
 ## 46.4 Clean Architecture Layers on iOS 🔴
+
 **Clean Architecture** is a way to organize code so that your core business logic does not depend on the UI, the database, or any framework. Robert C. Martin ("Uncle Bob") made it popular, and it is not specific to iOS.
 
 **An example, without iOS.** Think of an online shop with this rule: "an order over $50 ships for free". This is business logic. It stays true if the shop is a website or a phone app, and if the data is stored in one database or another.
@@ -111,6 +115,7 @@ The benefit: when you change a networking library or a database, only the Data l
 ---
 
 ## 46.5 Unidirectional Data Flow 🟡
+
 In **unidirectional (one-way) data flow**, state always changes in one direction: an action updates the state, and the state updates the screen. The screen never changes state directly. It only sends actions, and a **reducer** is the one place that changes the state (more in 46.6). Redux (a popular JavaScript state library) made this common on the web, and SwiftUI follows a similar idea.
 
 ```plaintext
@@ -136,6 +141,7 @@ SwiftUI's `@State` and `@Observable` already work a little like this. The next f
 ---
 
 ## 46.6 Reducers, Actions, and Effects 🔴
+
 Unidirectional data flow uses three ideas:
 
 - **Action:** a description of something that happened, like a button tap or a network response.
@@ -224,6 +230,7 @@ A reducer must be pure, so it cannot wait for a server. Look at the code: on `.l
 ---
 
 ## 46.7 The Composable Architecture: @Reducer and @ObservableState 🔴
+
 **The Composable Architecture (TCA)** is a popular third-party library (a Swift package you add to your project). It gives you the pieces from 46.6 ready to use, so you don't write the store yourself. It uses macros (`@Reducer`, `@ObservableState`) to remove most of the repeated code.
 
 Here is how each piece from 46.6 looks in TCA:
@@ -302,6 +309,7 @@ struct RecipeView: View {
 ---
 
 ## 46.8 The Composable Architecture: Effects and Dependencies 🔴
+
 TCA gives effects two helpers: **dependencies** (the things an effect needs from outside, like `RecipeService`) and **cancelling** (stopping an effect that is still running).
 
 **Dependencies.** If the reducer creates the real `RecipeService` itself, every test would call the real network. Instead, the reducer asks TCA for the service with `@Dependency`. This is dependency injection (like `swift-dependencies`, see section 47.7).
@@ -358,6 +366,7 @@ return .run { send in
 ---
 
 ## 46.9 The Composable Architecture: TestStore 🔴
+
 **`TestStore`** is a store made for tests. It runs your reducer and effects like a normal store, but it checks **every step**: you must say what you expect, and the test fails if the real result is different. This works because reducers are pure and predictable (46.6), and because dependencies can be replaced (46.8).
 
 First, a fake service that returns fixed recipes, so the test needs no network:
@@ -407,7 +416,36 @@ This gives a very exact, step-by-step test of a whole feature, with no real netw
 ---
 
 ## 46.10 The Coordinator Pattern 🟡
-The **Coordinator pattern** moves navigation (which screen comes next, and how it is shown) out of the screens into a separate coordinator object.
+
+In an app with many screens, something must decide which screen comes next. If every screen decides for itself, the screens become tied together. The **Coordinator pattern** moves that decision (which screen comes next, and how it is shown) out of the screens and into a separate **coordinator** object.
+
+**Without a coordinator**, the list screen builds and shows the next screen itself:
+
+```swift
+class RecipeListViewController: UIViewController {
+    func didSelect(_ recipe: Recipe) {
+        // The list screen knows about the detail screen
+        let detailVC = RecipeDetailViewController(recipe: recipe)
+        navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+```
+
+Now the list screen depends on the detail screen. You can't reuse the list in another flow that opens a different screen, and changing the navigation means editing the screens.
+
+**With a coordinator**, the screen only reports what happened:
+
+```swift
+class RecipeListViewController: UIViewController {
+    var onRecipeSelected: ((Recipe) -> Void)?   // the coordinator sets this
+
+    func didSelect(_ recipe: Recipe) {
+        onRecipeSelected?(recipe)               // only says "a recipe was selected"
+    }
+}
+```
+
+The coordinator decides what happens next:
 
 ```swift
 protocol Coordinator: AnyObject {
@@ -415,6 +453,8 @@ protocol Coordinator: AnyObject {
 }
 
 final class RecipeFlowCoordinator: Coordinator {
+    // A UINavigationController is a stack of screens.
+    // "Push" puts a new screen on top.
     private let navigationController: UINavigationController
 
     init(navigationController: UINavigationController) {
@@ -423,6 +463,7 @@ final class RecipeFlowCoordinator: Coordinator {
 
     func start() {
         let listVC = RecipeListViewController()
+        // [weak self] avoids a memory leak (the coordinator and the screen holding each other)
         listVC.onRecipeSelected = { [weak self] recipe in
             self?.showDetail(for: recipe)
         }
@@ -436,13 +477,18 @@ final class RecipeFlowCoordinator: Coordinator {
 }
 ```
 
-Without a coordinator, a view controller must know which screen comes next and how to build it. That ties it to the app's navigation.
+The flow:
 
-With a coordinator, `RecipeListViewController` only says "a recipe was selected" (through `onRecipeSelected`). The coordinator decides what happens next. Screens become easier to reuse and test, and you can see the whole navigation flow in one place.
+1. `start()` shows the list screen.
+2. The user taps a recipe, and the list screen calls `onRecipeSelected`.
+3. The coordinator's `showDetail(for:)` pushes the detail screen.
+
+**The screen only says what happened. The coordinator decides what happens next.** Screens become easier to reuse and test, and you can see the whole navigation flow in one place.
 
 ---
 
 ## 46.11 SwiftUI-Native Navigation vs. Coordinators 🟡
+
 SwiftUI's own tools (`NavigationStack`, `navigationDestination(for:)`, `NavigationPath`, section 27) already separate what starts navigation from which screen comes next. So some teams ask if they still need a Coordinator.
 
 ```swift
@@ -465,6 +511,7 @@ What many teams do: SwiftUI's own navigation is enough for small and medium apps
 ---
 
 ## 46.12 Use Cases and Interactors: Worth the Extra Code? 🟡
+
 A **use case** (called an "interactor" in VIPER, 46.3) is a small type for exactly one business action, like "mark a recipe as favorite". It goes one step beyond a service, which puts many actions in one type (45.5).
 
 ```swift
@@ -492,6 +539,7 @@ extension RecipeService {
 ---
 
 ## 46.13 Choosing an Architecture for Your Team Size 🟡
+
 **There is no single correct architecture.** The right choice depends on team size, app complexity, and how long the app must live. Choose on purpose, not because something is trending.
 
 ```plaintext
