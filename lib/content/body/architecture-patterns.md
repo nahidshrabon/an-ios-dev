@@ -161,8 +161,7 @@ func reduce(state: inout RecipeState, action: RecipeAction) {
     switch action {
     case .loadButtonTapped:
         state.isLoading = true
-        // an EFFECT runs elsewhere and later sends
-        // .recipesLoaded when the network call finishes
+        // the store (below) starts the effect that calls the network
     case .recipesLoaded(let recipes):
         state.recipes = recipes
         state.isLoading = false
@@ -170,7 +169,50 @@ func reduce(state: inout RecipeState, action: RecipeAction) {
 }
 ```
 
-A reducer must be pure, so it cannot wait for a server. Look at the code: on `.loadButtonTapped` it only sets `isLoading = true`, which is instant. An effect does the network call (this is the part that is not pure, and it can use `async`/`await` from Part 2). When the call finishes, the effect sends the action `.recipesLoaded`, and the reducer puts the recipes in the state.
+Here is the effect. It is not pure: it calls the network, then sends a new action when the call finishes.
+
+```swift
+func loadRecipesEffect(send: @escaping (RecipeAction) -> Void) async {
+    let recipes = (try? await recipeService.getRecipes()) ?? []
+    send(.recipesLoaded(recipes))
+}
+```
+
+Something has to receive the actions, run the reducer, and start the effect. This is often called a **store**:
+
+```swift
+@Observable
+final class RecipeStore {
+    private(set) var state = RecipeState()
+
+    // The view calls this to send an action
+    func send(_ action: RecipeAction) {
+        reduce(state: &state, action: action)      // 1. the reducer changes the state
+
+        if case .loadButtonTapped = action {       // 2. start the effect for this action
+            Task { await loadRecipesEffect(send: send) }
+        }
+    }
+}
+```
+
+The view only sends actions:
+
+```swift
+Button("Load recipes") { store.send(.loadButtonTapped) }
+```
+
+The whole flow, step by step:
+
+1. The button calls `store.send(.loadButtonTapped)`.
+2. The store runs the reducer, and `isLoading` becomes `true`.
+3. The store sees that this action needs an effect, and starts `loadRecipesEffect`.
+4. The effect waits for the network, then calls `send(.recipesLoaded(recipes))`.
+5. That goes through the same `send`, and the reducer puts the recipes in the state.
+
+The store is the part TCA writes for you (46.7).
+
+A reducer must be pure, so it cannot wait for a server. Look at the code: on `.loadButtonTapped` it only sets `isLoading = true`, which is instant. The effect does the network call (this is the part that is not pure, and it uses `async`/`await` from Part 2).
 
 **The reducer stays simple and predictable, and the messy work happens in effects.** This also makes the reducer easy to test, because it is just a plain function.
 
@@ -217,7 +259,7 @@ struct RecipeFeature {
 
 `@Reducer` and `@ObservableState` are macros (section 13). They write the repeated code for you.
 
-`.run { send in }` is how TCA runs effects. It is an `async` closure: it can `await` work and send the result back as a new action with `send`. It uses the concurrency tools from Part 2, not a new system.
+`.run { send in }` is how TCA runs effects. It is the same idea as `loadRecipesEffect` in 46.6, with less code. It is an `async` closure: it can `await` work and send the result back as a new action with `send`. It uses the concurrency tools from Part 2, not a new system.
 
 ---
 
