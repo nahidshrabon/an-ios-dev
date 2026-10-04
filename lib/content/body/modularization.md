@@ -72,6 +72,23 @@ let package = Package(
 )
 ```
 
+**Package, target, and product.** These three words are easy to mix up. A **package** is a container, and a **target** is a unit of code inside it. One package has one or more targets.
+
+```plaintext
+RecipeFeature (package)               ← the container, with one Package.swift
+ ├─ target: RecipeFeature             ← a module: Sources/RecipeFeature/
+ ├─ target: RecipeFeatureTests        ← a test target: Tests/RecipeFeatureTests/
+ └─ product: library "RecipeFeature"  ← what the package offers to others
+```
+
+| Term | What it is | In the code above |
+|---|---|---|
+| **Package** | The container: one folder with one `Package.swift` | `name: "RecipeFeature"` |
+| **Target** | A unit of code that is built. A target that compiles Swift code becomes a **module**. | `.target(name: "RecipeFeature", ...)` |
+| **Product** | What the package **shows to the outside**. Others can only use targets that are in a product. | `.library(name: "RecipeFeature", targets: ["RecipeFeature"])` |
+
+You write `import RecipeFeature`. The name after `import` is the **target (module) name**, not the package name. They are often the same, as here, but they don't have to be. A package can hold several targets, and each one is its own module. For example, one package could have a `NetworkingInterface` target and a `NetworkingImplementation` target (the split from 48.4).
+
 What each part means:
 
 - **`name`:** the name of the package.
