@@ -5,7 +5,7 @@
 Two words first:
 
 - **Target:** a set of source files plus build settings that Xcode builds into **one product**. The product can be an app, a framework, a library, an app extension (like a widget), or a test bundle. One Xcode project can have several targets, for example the app, its unit tests, and a widget.
-- **Module:** a group of code with its own boundary and name. Other code can use it with `import`. A target that builds a framework or library is a module.
+- **Module:** a group of Swift code with its own boundary and name. **A target that compiles Swift code produces one module.** Other targets can `import` it if it builds a **library or framework**. App, extension, and test targets also produce modules, but they are not meant to be imported by other targets.
 
 By default, all your app's code is in **one target**, so it is one big module. **Modularization** means splitting it into several separate modules, usually as separate Swift packages.
 
