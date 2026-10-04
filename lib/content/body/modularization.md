@@ -38,6 +38,20 @@ The "by feature" folders from 45.9 are the natural first step. They already grou
 
 A **local Swift package** lives inside your app's repository (not published anywhere else). You add it in Xcode with File → Add Package Dependencies → Add Local. It has its own `Package.swift` file that describes it.
 
+**Why use one?** A local package is the **simplest way to create a real module**, and you need modules to get the benefits from 48.1.
+
+1. **A real boundary.** Code in other targets can only see its `public` types (48.3). Folders cannot give you this.
+2. **Written, checked dependencies.** `Package.swift` lists what the package needs. If the code imports something that is not listed, the build fails. So the dependency graph (48.5 to 48.7) stays visible and cannot grow by accident.
+3. **It builds and tests on its own.** You can build and test one package without building the whole app. This gives faster feedback, and it is how modularization helps build times.
+4. **A plain text file.** The other way, adding framework targets to the `.xcodeproj`, changes a hard-to-read project file that causes merge conflicts (see 48.10). `Package.swift` is a small Swift file you can read, compare, and merge.
+5. **Light to create and move.** There are no framework settings, signing, or embedding steps. You can reuse the package in another app later.
+
+| Way to make a module | Good | Not so good |
+|---|---|---|
+| Folders in one target | No setup | No boundary, no separate builds |
+| Framework target in the `.xcodeproj` | Works in older projects | More settings, hard-to-merge project file |
+| **Local Swift package** | Simple, readable, enforced boundaries | One small extra file per module |
+
 ```swift
 // Packages/RecipeFeature/Package.swift
 // swift-tools-version: 6.0
