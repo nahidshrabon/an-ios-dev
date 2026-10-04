@@ -68,6 +68,29 @@ What each part means:
 
 For Xcode, a local package works almost the same as a package from a Git URL. The difference is that its source is in your repository, and you edit it together with the app. This makes local packages a good fit for splitting up one app, not for publishing separate, versioned code.
 
+**How one target uses another.** Say your app is target A, and you have two library targets, B and C. Code in A cannot see B or C automatically, because each target is built separately. You need three steps:
+
+1. **Add the dependency.** In Xcode, select target A → General → *Frameworks, Libraries, and Embedded Content*, and add B and C. Inside a Swift package, add them to the target's `dependencies` in `Package.swift`, as `RecipeFeature` does above with `SharedModels`.
+2. **Import the module** in the files that need it:
+
+```swift
+import B
+import C
+```
+
+3. **Make the types `public`** in B and C. After `import B`, A can only see B's `public` types (or `package` types, see 48.6). Internal types stay hidden.
+
+```plaintext
+A (app)  ──depends on──►  B (library)
+   │
+   └──────depends on──►  C (library)
+```
+
+Two rules to remember:
+
+- **The direction matters.** If A depends on B, then B must not depend on A, or you get a circular dependency (48.7).
+- **Only libraries and frameworks can be imported.** You cannot import an app, an app extension (like a widget), or a test target from another target.
+
 The `dependencies` lists form the **module dependency graph**: who depends on whom. More on this in 48.5 to 48.7.
 
 ---
