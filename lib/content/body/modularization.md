@@ -2,7 +2,12 @@
 
 ## 48.1 When to Split an App into Modules 🟢
 
-A **module** is a group of code with its own boundary. Other code can use it with `import`. By default, your whole app is one big module (one **target**, the unit that Xcode builds). **Modularization** means splitting it into several separate modules, usually as separate Swift packages.
+Two words first:
+
+- **Target:** a set of source files plus build settings that Xcode builds into **one product**. The product can be an app, a framework, a library, an app extension (like a widget), or a test bundle. One Xcode project can have several targets, for example the app, its unit tests, and a widget.
+- **Module:** a group of code with its own boundary and name. Other code can use it with `import`. A target that builds a framework or library is a module.
+
+By default, all your app's code is in **one target**, so it is one big module. **Modularization** means splitting it into several separate modules, usually as separate Swift packages.
 
 ```plaintext
 Before: one target          After: several modules
