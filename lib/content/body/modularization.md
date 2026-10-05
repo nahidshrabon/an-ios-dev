@@ -130,11 +130,31 @@ The `dependencies` lists form the **module dependency graph**: who depends on wh
 
 A **feature module** is one piece of app functionality (recipes, profile, settings) as its own Swift package. The module boundary is what makes the "by feature" idea from 45.9 real, with the compiler checking it instead of only a folder habit.
 
+Inside, a feature module holds everything for that feature. But from outside, **it shows only a small part**:
+
+```plaintext
+RecipeFeature (module)
+ ├─ RecipeListView.swift       ← public: the screen other modules can use
+ ├─ RecipeListViewModel.swift  ← internal: hidden
+ ├─ RecipeRowView.swift        ← internal: hidden
+ └─ RecipeRowFormatter.swift   ← internal: hidden
+```
+
+The visible part is the module's **public API**: what other modules are allowed to use. Everything else is a private detail that you can change freely.
+
 ```swift
-// RecipeFeature module's public API:
+// RecipeFeature module
 public struct RecipeListView: View {
-    public init(viewModel: RecipeListViewModel) { self.viewModel = viewModel }
-    // ...
+    @State private var viewModel: RecipeListViewModel     // internal: hidden
+
+    // The dependencies come in through the public init (see 47.2)
+    public init(recipeService: RecipeService) {
+        _viewModel = State(initialValue: RecipeListViewModel(recipeService: recipeService))
+    }
+
+    public var body: some View {
+        // ...
+    }
 }
 
 // Not marked `public` = invisible outside this module.
@@ -142,16 +162,23 @@ public struct RecipeListView: View {
 struct RecipeRowFormatter { /* internal, not exposed */ }
 ```
 
+Two things to notice:
+
+- **You must write `public` yourself.** Inside a module, everything is `internal` by default. Even a `public` struct needs a `public init` and `public var body`. Without them, other modules can't create the view.
+- **The view model is hidden.** The public init takes the service, not the view model. So `RecipeListViewModel` can change or be renamed without breaking any other module.
+
 From another module, you see only what is `public`:
 
 ```swift
 import RecipeFeature
 
-RecipeListView(viewModel: viewModel)   // OK: it is public
-RecipeRowFormatter()                    // ERROR: it is internal to RecipeFeature
+RecipeListView(recipeService: service)   // OK: it is public
+RecipeRowFormatter()                      // ERROR: it is internal to RecipeFeature
 ```
 
 This is **stronger than folders**. In one target, code in a different folder can still use any other type, and only habit stops you. In a separate module, only `public` types (or `package` types, see 48.6) are visible at all, so **details cannot leak across the boundary by accident**.
+
+**Keep the public API small.** Everything you make `public` is a promise: other modules may depend on it, so changing it can break them. Make `public` only what other modules really need, and keep the rest hidden.
 
 ---
 
