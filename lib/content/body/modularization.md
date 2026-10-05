@@ -344,6 +344,28 @@ Before `package` existed, splitting code into several targets had an awkward cho
 
 A **circular dependency** is when Module A depends on Module B, and Module B depends on Module A (directly or through other modules). Swift's build system **refuses to build it**: it has no valid order, because each module needs the other to exist first.
 
+**How it happens, step by step.** Say your app has two features:
+
+1. `ProfileFeature` shows a user. It needs nothing from `RecipeFeature`.
+2. Later, the profile screen should list the user's recipes. So `ProfileFeature` adds `RecipeFeature` as a dependency. This is reasonable.
+3. Later still, a recipe screen should show its author with a link to the profile. So `RecipeFeature` adds `ProfileFeature` as a dependency. This also looks reasonable.
+
+Now each one depends on the other:
+
+```swift
+// ProfileFeature/Package.swift
+.target(name: "ProfileFeature", dependencies: ["RecipeFeature"])
+
+// RecipeFeature/Package.swift
+.target(name: "RecipeFeature", dependencies: ["ProfileFeature"])   // cycle!
+```
+
+The build fails with an error about a cyclic dependency.
+
+Each change looked fine on its own. **Cycles usually appear slowly, not on purpose.**
+
+**The fix:** find the exact piece that causes the cycle, and move it into a new, lower-level shared module. Here, both features only need a small `UserSummary` model (a name and an id):
+
 ```plaintext
 The problem:  FeatureA ◄──► FeatureB     (FeatureA imports FeatureB, and FeatureB
                                          imports FeatureA: the build fails with
@@ -354,9 +376,24 @@ The fix:      FeatureA ──► SharedModule ◄── FeatureB
                neither feature depends on the other anymore)
 ```
 
-Cycles usually appear slowly, not on purpose. Feature A first has no need for Feature B. Later, a small and reasonable change adds a dependency one way. Later still, the other way is added too, and now there is a cycle.
+```swift
+// New module: SharedModels
+public struct UserSummary: Identifiable, Sendable {
+    public let id: UUID
+    public var name: String
+    public init(id: UUID, name: String) { self.id = id; self.name = name }
+}
 
-The usual fix is always the same: **find the exact piece that causes the cycle and move it into a new, lower-level shared module.** This is the same rule as 45.10: shared code gets its own place.
+// Both features now depend on SharedModels, and not on each other
+.target(name: "ProfileFeature", dependencies: ["SharedModels"]),
+.target(name: "RecipeFeature", dependencies: ["SharedModels"]),
+```
+
+**If one feature really needs to open the other's screen**, use the interface idea from 48.4 and 48.5: depend on a protocol or a closure in the shared module, and let the app connect the two. For example, `RecipeFeature` can call an `onAuthorTapped` closure, and the app decides to open the profile.
+
+**How to spot cycles early:** the build error tells you there is a cycle. A graph view of your modules (for example `tuist graph`, 48.11) shows them before they cause trouble.
+
+This is the same rule as 45.10: shared code gets its own place.
 
 ---
 
