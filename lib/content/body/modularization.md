@@ -295,6 +295,47 @@ In `Package.swift`, the arrows are just dependency lists:
 .target(name: "App", dependencies: ["AppFeature", "NetworkingImplementation"]),
 ```
 
+**How does the implementation depend on the interface?** It imports the interface module and follows its protocol. The compiler needs to know what the protocol is, so it must see the interface.
+
+```swift
+// NetworkingInterface module: only the protocol
+public protocol NetworkClient {
+    func fetch(_ url: URL) async throws -> Data
+}
+```
+
+```swift
+// NetworkingImplementation module: the real code
+import NetworkingInterface          // 1. it imports the interface
+
+public struct URLSessionNetworkClient: NetworkClient {   // 2. it follows the protocol
+    public init() {}
+
+    public func fetch(_ url: URL) async throws -> Data {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return data
+    }
+}
+```
+
+The dependency shows up in three places: `import NetworkingInterface`, the `: NetworkClient` conformance, and the `dependencies: ["NetworkingInterface"]` line in `Package.swift`. If you forget the last one, the `import` fails to build.
+
+The interface does **not** depend on the implementation. It knows nothing about `URLSession` or any real code. That one-way link is what makes the arrow point up.
+
+`AppFeature` sees only the protocol, and the app connects the real one:
+
+```swift
+// In AppFeature: imports the interface, not the implementation
+import NetworkingInterface
+
+struct RecipeLoader {
+    let client: NetworkClient       // any type that follows the protocol
+}
+
+// In the app (composition root): gives it the real one
+RecipeLoader(client: URLSessionNetworkClient())
+```
+
 This is the same principle you already saw for single types (protocols in 47.4) and for layers (Clean Architecture in 46.4). Here it works on **whole modules**.
 
 The result is the same too: a module that depends only on an interface can be built, tested, and understood without knowing which real implementation will be used later. For example, you can test `AppFeature` with a fake networking object, without building any real networking code.
