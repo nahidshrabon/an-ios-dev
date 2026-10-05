@@ -184,7 +184,13 @@ This is **stronger than folders**. In one target, code in a different folder can
 
 ## 48.4 Interface and Implementation Modules 🔴
 
-A more advanced technique splits one feature into two modules:
+**The problem.** Say `ProfileFeature` needs to show recipes. If it depends on the whole `RecipeFeature` module, it also gets everything that module depends on (networking, database), and it must be rebuilt every time anything in `RecipeFeature` changes.
+
+```plaintext
+ProfileFeature ──► RecipeFeature ──► Networking, Database, ...
+```
+
+**The solution.** A more advanced technique splits one feature into two modules:
 
 - an **interface module**: only protocols and public types, with no real code
 - an **implementation module**: the real code
@@ -212,14 +218,37 @@ public struct DefaultRecipeService: RecipeService {
 Who depends on whom:
 
 ```plaintext
-ProfileFeature ──────────► RecipeFeatureInterface ◄────────── RecipeFeatureImplementation
- (needs recipes)            (small, stable)                    (networking, database...)
+                  RecipeFeatureInterface        (protocols and public types)
+                   ▲                  ▲
+                   │                  │
+        ProfileFeature      RecipeFeatureImplementation   (networking, database...)
+                   ▲                  ▲
+                   └───────  App  ────┘
+          (creates the real service and passes it in)
 ```
 
-`ProfileFeature` needs recipes, but it only knows the small interface. This gives two benefits:
+`ProfileFeature` knows only the interface. The app is the only place that knows both sides:
+
+```swift
+// ProfileFeature: imports only the interface
+import RecipeFeatureInterface
+
+public struct ProfileView: View {
+    public init(recipeService: RecipeService) { /* ... */ }
+}
+
+// App (the composition root, see 47.6): the only place that knows both
+import RecipeFeatureImplementation
+
+ProfileView(recipeService: DefaultRecipeService())
+```
+
+This gives two benefits:
 
 - **Faster builds.** If the implementation changes but the interface does not, modules like `ProfileFeature` don't need to be rebuilt.
 - **Easy swapping.** You can use a different implementation, like a test-only one, without changing the code that uses it.
+
+**The cost:** every feature now needs two modules and more wiring. So use this only when the faster builds and the freedom to swap are worth it, usually on large teams. That is why this lesson is marked 🔴.
 
 This is the same idea as dependency inversion in Clean Architecture (46.4), applied to whole modules.
 
