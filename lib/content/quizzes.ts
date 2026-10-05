@@ -12049,7 +12049,7 @@ struct UserProfileView: View {
           { id: "d", text: "Visible in the same package, hidden from outsiders" },
         ],
         correctOptionId: "d",
-        explanation: "`internal` hides a symbol from your other modules, and `public` shows it to everyone. `package` lets your own modules share it while outside users cannot see it.",
+        explanation: "`internal` hides a symbol from your other targets, and `public` shows it to everyone. `package` lets targets in the same package share it, while outside users cannot see it.",
       },
       {
         id: "q9",
