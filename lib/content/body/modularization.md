@@ -303,15 +303,24 @@ The result is the same too: a module that depends only on an interface can be bu
 
 ## 48.6 The package Access Level 🟡
 
-Swift has an access level called **`package`**. It sits between `internal` and `public`. A `package` symbol is visible to **other modules in the same package or repository**, but not to outside users.
+Swift (5.9 and later) has an access level called **`package`**. It sits between `internal` and `public`. A `package` symbol is visible to **other targets in the same Swift package** (the same `Package.swift`), but not to anything outside that package.
+
+Say one package has two targets: `RecipeStorage` and `RecipeFeature`.
 
 ```swift
-// Visible to any module in the same package collection,
-// but not part of the package's public API
-package struct InternalRecipeCache {
+// In target RecipeStorage
+package struct RecipeCache {
     package func store(_ recipe: Recipe) { /* ... */ }
 }
+
+// In target RecipeFeature (same package): OK
+import RecipeStorage
+let cache = RecipeCache()
+
+// In the app (outside the package): ERROR, it cannot see RecipeCache
 ```
+
+`RecipeCache` is shared inside the package, but it is **not part of the package's public API**.
 
 Here are all the access levels, from most hidden to most open:
 
@@ -320,12 +329,14 @@ Here are all the access levels, from most hidden to most open:
 | `private` | Only inside the same declaration (and its extensions in the same file) |
 | `fileprivate` | Only in the same file |
 | `internal` (default) | Only in the same module |
-| `package` | Any module in the same package or repository |
+| `package` | Any target in the same Swift package |
 | `public` | Everyone, including outside code |
 
-Before `package` existed, modularizing an app had an awkward choice. `internal` hid something from other modules in your own app too. `public` showed it to everyone, including outside users if you ever published the package.
+Before `package` existed, splitting code into several targets had an awkward choice. `internal` hid something from the other targets in your own package. `public` showed it to everyone, including outside users if you ever published the package.
 
-`package` fills the gap: your own modules can share details with each other, while those details stay hidden from outside users. This matters more as the number of modules grows.
+`package` fills the gap: targets in one package can share details with each other, while those details stay hidden from outside users. This matters more as the number of targets grows.
+
+**One thing to know:** `package` works **inside one package only**. If each feature is its own separate local package (as in 48.2), they do not share `package` symbols. To use `package` across features, put those targets in the **same** package.
 
 ---
 
@@ -478,7 +489,7 @@ It helps companies with huge, multi-team, multi-platform codebases, where even T
 | Feature module | Only `public` is visible outside | The compiler protects boundaries, not just folders |
 | Interface and implementation | A small interface module and a larger real one | Lean graphs and swappable implementations |
 | Module dependency inversion | Basic modules define the protocols | The same idea as 46.4 and 47.4, for modules |
-| `package` access | Visible in the package, hidden outside | A middle level between `internal` and `public` |
+| `package` access | Visible in the same package, hidden outside | A middle level between `internal` and `public` |
 | Circular dependencies | The build fails with a cycle | Move shared code into a lower-level module |
 | Linking | Static (faster launch) vs. dynamic (faster rebuilds) | Choose by module count and goals |
 | Mergeable libraries | Dynamic for development, merged for release | The best of both linking types |
