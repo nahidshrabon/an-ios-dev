@@ -256,22 +256,48 @@ This is the same idea as dependency inversion in Clean Architecture (46.4), appl
 
 ## 48.5 Dependency Inversion Between Modules 🔴
 
-At module level, **dependency inversion** means the more basic module defines the protocols (the abstractions), and the other modules depend on those, instead of a high-level module depending directly on a low-level implementation module.
+48.4 showed **how** to split a feature into an interface and an implementation. This lesson explains the **rule behind it**, which has a name: dependency inversion.
+
+Start with two kinds of modules:
+
+- **High-level module:** your app's own logic, like `AppFeature`. It decides what should happen.
+- **Low-level module:** a technical detail, like `NetworkingImplementation`. It does the work (HTTP, JSON, database).
+
+**Normally**, the high-level module depends directly on the low-level one. The arrow points from the logic down to the detail:
 
 ```plaintext
 WITHOUT inversion:
   AppFeature ──► NetworkingImplementation
   (AppFeature is tied to how networking is built)
+```
 
+**With inversion**, you add a small interface module. `AppFeature` depends on the **interface**, and the **implementation also depends on the interface**:
+
+```plaintext
 WITH inversion:
   AppFeature ──► NetworkingInterface ◄── NetworkingImplementation
   (AppFeature knows only the protocol. The real implementation is
    connected in the composition root, 47.6, without AppFeature knowing.)
 ```
 
+**Why "inversion"?** Look at the arrow from `NetworkingImplementation`. Before, the detail was something the logic pointed *to*. Now the detail points *up* to the interface, so **the arrow is flipped**. The low-level module now follows the rules that the high-level side needs, instead of the other way around.
+
+In `Package.swift`, the arrows are just dependency lists:
+
+```swift
+// AppFeature depends only on the interface
+.target(name: "AppFeature", dependencies: ["NetworkingInterface"]),
+
+// The implementation also depends on the interface (and its own tools)
+.target(name: "NetworkingImplementation", dependencies: ["NetworkingInterface"]),
+
+// The app depends on both, and connects them (the composition root)
+.target(name: "App", dependencies: ["AppFeature", "NetworkingImplementation"]),
+```
+
 This is the same principle you already saw for single types (protocols in 47.4) and for layers (Clean Architecture in 46.4). Here it works on **whole modules**.
 
-The result is the same too: a module that depends only on an interface can be built, tested, and understood without knowing which real implementation will be used later.
+The result is the same too: a module that depends only on an interface can be built, tested, and understood without knowing which real implementation will be used later. For example, you can test `AppFeature` with a fake networking object, without building any real networking code.
 
 ---
 
