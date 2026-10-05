@@ -399,10 +399,10 @@ This is the same rule as 45.10: shared code gets its own place.
 
 ## 48.8 Static vs. Dynamic Linking Trade-offs 🟡
 
-**Linking** means joining compiled code into your app. A module can be linked in two ways:
+**Linking** means joining the compiled code of your modules into one app. A module can be linked in two ways:
 
-- **Static library:** its compiled code is **copied into the app** when you build.
-- **Dynamic library (framework):** its code stays in a **separate file** that loads when the app runs.
+- **Static library:** its compiled code is **copied into the app** when you build. Think of ingredients cooked into the dish.
+- **Dynamic library (framework):** its code stays in a **separate file** inside the app, and it is loaded when the app starts. Think of an ingredient served on the side.
 
 ```swift
 // In Package.swift, choose the type:
@@ -414,8 +414,10 @@ This is the same rule as 45.10: shared code gets its own place.
 | | Static | Dynamic |
 |---|---|---|
 | App launch | Faster (nothing extra to load) | A little slower (each framework is loaded) |
-| App size | Can be bigger, if several modules copy the same code | Smaller (one shared copy) |
+| App size | Can be bigger, if several parts copy the same code | Smaller (one shared copy) |
 | Incremental builds | Slower (more to relink) | Faster (only the changed framework) |
+
+**When dynamic helps:** if the app and another product, like a widget, both use the same module, static linking can put a copy in each. A dynamic framework gives one shared copy.
 
 For most apps with a moderate number of modules, **static linking** is a sensible default, and it is what Swift Package Manager usually uses when you don't choose. Dynamic linking matters more for very large module counts (48.12), where static linking's build time and size costs start to add up.
 
@@ -423,7 +425,12 @@ For most apps with a moderate number of modules, **static linking** is a sensibl
 
 ## 48.9 Mergeable Libraries 🔴
 
-**Mergeable libraries** are a newer Xcode feature. They let dynamic frameworks be **merged into the main app** for release builds. The goal is to get the best of both linking types: the fast incremental builds of dynamic linking while you develop, and the speed of a single binary (like static linking) for the app you ship.
+48.8 looks like a choice between two things:
+
+- **Static:** better at runtime, but slower to build while you develop.
+- **Dynamic:** faster to build, but slower at runtime.
+
+**Mergeable libraries** are a newer Xcode feature (Xcode 15 and later) that lets you **skip that choice**. Dynamic frameworks can be **merged into the main app** for release builds.
 
 ```plaintext
 Development builds: modules are linked dynamically
@@ -432,15 +439,18 @@ Release builds:      mergeable libraries are merged into one binary
                      → the same launch speed as static linking
 ```
 
-48.8 looked like a choice between two things: static (better at runtime, slower to build) or dynamic (faster to build, slower at runtime). Mergeable libraries say you don't have to pick one for the whole project. You use dynamic while developing, and static-like for what users get.
+You get the best of both:
 
-This is useful for large apps with many modules, where both build time and launch time matter a lot.
+- **While you develop:** only the module you changed needs to be relinked, so builds are fast.
+- **For the app you ship:** everything is merged into one binary, so users get fast launch times.
+
+This is useful for large apps with many modules, where both build time and launch time matter a lot. You turn it on in Xcode's build settings, not in your Swift code.
 
 ---
 
 ## 48.10 Tuist: Swift-Defined Projects 🟡
 
-**Tuist** is a popular third-party tool. It **generates your Xcode project** from a description written in Swift, so you don't edit the `.xcodeproj` file by hand. This makes large projects with many modules easier to maintain.
+**Tuist** is a popular **third-party** tool. It **generates your Xcode project** from a description written in Swift, so you don't edit the `.xcodeproj` file by hand. This makes large projects with many modules easier to maintain.
 
 ```swift
 // Project.swift (Tuist's project description, written in Swift)
@@ -454,9 +464,17 @@ let project = Project(
 )
 ```
 
+The workflow:
+
+1. You describe targets and dependencies in `Project.swift` (plain Swift).
+2. You run `tuist generate`.
+3. Tuist creates the `.xcodeproj` for you, and you open it in Xcode as usual.
+
 **Why?** A `.xcodeproj` file is a complex, hard-to-read format. Merging changes to it is painful when many people edit it. It is the same kind of problem as the Interface Builder merge conflicts in 35.4, but for project settings instead of screens.
 
-With Tuist, the description is normal Swift code. You can read it, compare it, and merge it like any other source file. The real `.xcodeproj` is **generated** from it as a build step, so it is no longer the source of truth that people edit and merge.
+With Tuist, the description is normal Swift code. You can read it, compare it, and merge it like any other source file. The `.xcodeproj` is **generated** from it, so it is no longer the source of truth that people edit and merge.
+
+**The cost:** it is one more tool for your team to learn and keep working. It pays off mostly on large projects with many modules and many contributors.
 
 ---
 
@@ -474,6 +492,8 @@ tuist build          — build using saved binaries for unchanged modules,
                        and compile only what changed
 ```
 
+An example: you change one line in `RecipeFeature`. Without caching, the build may recompile many modules. With caching, only `RecipeFeature` (and the modules that depend on it) are compiled, and the rest come from the cache.
+
 **Caching** cuts the build time that made the linking trade-offs in 48.8 matter. If an unchanged module can be reused from the cache, much of static linking's slow-build downside goes away in practice.
 
 **Graph analysis** helps you find circular dependencies (48.7) and unwanted coupling. You can see and check the real structure, instead of keeping a growing web of modules in your head.
@@ -483,6 +503,16 @@ tuist build          — build using saved binaries for unchanged modules,
 ## 48.12 Managing a 50+ Module Build Graph 🔴
 
 With 50 or more modules (common at large companies), managing the module graph becomes **its own job**. You need good tools (like Tuist), rules about which layers may depend on which, and regular cleanup so the graph does not turn into a tangle.
+
+A typical **layer rule** looks like this (an arrow means "may depend on"):
+
+```plaintext
+Feature modules  ──►  Domain modules  ──►  Shared / Core modules
+(screens)             (business logic)      (models, utilities)
+
+Not allowed:  a Feature module depending on another Feature module,
+              or any module depending on a layer above it.
+```
 
 ```plaintext
 At this size, teams usually need:
@@ -500,7 +530,7 @@ The hard part is not one technique from this section. It is that **without const
 
 ## 48.13 Bazel for Very Large iOS Codebases 🔴
 
-**Bazel** is Google's open-source build system. Some of the largest iOS codebases (often one repository shared by iOS, Android, web, and backend) use it **instead of Xcode's own build system**. It gives up Xcode's simplicity in return for reliable, repeatable builds and caching that scale far beyond what Swift Package Manager or Tuist handle comfortably.
+**Bazel** is Google's open-source build system. Some of the largest iOS codebases use it **instead of Xcode's own build system**. They are often a **monorepo**: one repository shared by iOS, Android, web, and backend code. Bazel gives up Xcode's simplicity in return for reliable, repeatable builds and caching that scale far beyond what Swift Package Manager or Tuist handle comfortably.
 
 ```python
 # BUILD.bazel (Bazel's project format, written in Starlark, not Swift)
@@ -511,7 +541,7 @@ swift_library(
 )
 ```
 
-What makes Bazel special is **hermetic, reproducible builds** with very fine-grained caching, down to single compilation units. The cache can be shared across a whole company's build servers, not just one developer's laptop.
+What makes Bazel special is **hermetic, reproducible builds**. *Hermetic* means a build depends only on its declared inputs, so the same inputs always give the same result, on any machine. This allows very fine-grained caching, down to single compilation units. The cache can be shared across a whole company's build servers, not just one developer's laptop.
 
 It helps companies with huge, multi-team, multi-platform codebases, where even Tuist with Xcode starts to struggle. **It adds real complexity and moves you away from Apple's tools.** So it is only worth it at that scale. A typical app, even a fairly large one, does not need it.
 
