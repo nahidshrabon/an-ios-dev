@@ -649,7 +649,7 @@ export const articles: Article[] = [
     slug: "foundation-models",
     title: "Foundation Models",
     description:
-      "Apple's on-device LLM: availability checks, LanguageModelSession, instructions vs. prompts, context windows, streaming, @Generable/@Guide guided generation, tool calling, multimodal prompts, cloud routing to Claude and Gemini, latency budgeting, guardrails, prompt injection defense, and LoRA adapters.",
+      "Apple's on-device LLM: checking availability, sessions, instructions and prompts, context windows, streaming, @Generable and @Guide, tools, images, cloud routing to Claude and Gemini, warm-up, guardrails, prompt injection, and LoRA adapters.",
     tags: ["ai", "foundation-models", "on-device"],
     publishedAt: "2026-08-16",
     get content() {

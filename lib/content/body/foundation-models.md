@@ -1,22 +1,27 @@
-## 58.1 What the Foundation Models Framework Is
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Foundation Models exposes Apple's on-device large language model directly to third-party apps — the same foundational model class powering system features like Writing Tools, now available for any app to build custom AI-powered functionality against, running entirely on-device with no network dependency or per-request API cost.
+## 58.1 What the Foundation Models Framework Is 🟢
+
+**Foundation Models** gives your app direct access to Apple's **on-device large language model (LLM)**. It is the same kind of model behind system features like Writing Tools. It runs fully on the device.
 
 ```swift
 import FoundationModels
 
-// The framework provides direct access to Apple's on-device LLM,
-// distinct from cloud-based APIs like Claude's or OpenAI's —
-// no network round-trip, no API key, no per-token billing.
+// One import. No network, no API key, no cost per request.
 ```
 
-Running entirely on-device is the framework's defining characteristic, with real consequences beyond just "no network needed" — it means genuinely private processing of user content (nothing sent to a server, relevant given the sensitivity concerns discussed for the Translation framework in section 57.15), zero marginal cost per request, and availability without connectivity, though also a smaller, less broadly capable model than large cloud-hosted alternatives, a trade-off explored further through the `LanguageModel` protocol's cloud-routing capability in 58.15.
+What "on-device" means for you:
+
+- **Private:** the user's text never leaves the device.
+- **Free:** there is no cost per request.
+- **Offline:** it works without internet.
+- **Smaller model:** it is less capable than big cloud models. Lesson 58.15 shows how to use a cloud model when you need more power.
 
 ---
 
-## 58.2 Checking SystemLanguageModel Availability
+## 58.2 Checking SystemLanguageModel Availability 🟢
 
-Before using the on-device model, an app must check `SystemLanguageModel.default.availability`, since availability depends on device capability (Apple Intelligence-eligible hardware), whether the feature is enabled in Settings, and whether the model is still downloading.
+The model is not always available. It depends on the device, a setting the user controls, and whether the model has finished downloading. **Always check first.**
 
 ```swift
 import FoundationModels
@@ -32,13 +37,32 @@ func checkAvailability() -> Bool {
 }
 ```
 
-Unlike a cloud API where availability is essentially a network connectivity question, on-device model availability depends on several genuinely distinct conditions (hardware eligibility, a user-controlled system setting, and download completion state) — well-designed apps check this explicitly and provide a sensible fallback or explanation UI rather than assuming the model is always present, since a non-trivial fraction of devices and configurations will genuinely lack availability.
+In a SwiftUI view, show a fallback when it is not available:
+
+```swift
+struct AssistantView: View {
+    var body: some View {
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            ChatView()
+        case .unavailable:
+            ContentUnavailableView(
+                "AI is not available",
+                systemImage: "sparkles",
+                description: Text("Turn on Apple Intelligence in Settings, or use a supported device.")
+            )
+        }
+    }
+}
+```
+
+**Never assume the model is there.** Many devices and settings will not have it.
 
 ---
 
-## 58.3 Your First LanguageModelSession
+## 58.3 Your First LanguageModelSession 🟢
 
-`LanguageModelSession` is the core interaction object — created once and then used to send one or more prompts, maintaining conversation context across turns within the same session, analogous to a chat conversation's continuity.
+A **`LanguageModelSession`** is how you talk to the model. You create it once and send prompts to it. It **remembers the conversation**.
 
 ```swift
 import FoundationModels
@@ -50,13 +74,25 @@ func firstSession() async throws -> String {
 }
 ```
 
-A single `LanguageModelSession` instance is meant to be reused across a multi-turn interaction rather than recreated per prompt — each `respond(to:)` call within the same session has access to the accumulated conversation history, meaning follow-up prompts can naturally reference earlier turns ("make the second one shorter") the same way a human conversation would, without the app needing to manually resend prior context each time.
+Reuse the same session for a conversation. A follow-up can refer to the earlier answer:
+
+```swift
+let session = LanguageModelSession()
+
+let first = try await session.respond(to: "Suggest three names for a recipe-sharing app.")
+let second = try await session.respond(to: "Make the second one shorter.")   // knows what "second one" means
+```
+
+If you create a new session for each prompt, the model forgets everything.
 
 ---
 
-## 58.4 Instructions vs Prompts
+## 58.4 Instructions vs Prompts 🟢
 
-`LanguageModelSession` distinguishes between *instructions* (a system-level, persistent behavioral framing set once at session creation, not directly visible to the end user) and *prompts* (the actual per-turn user input) — a distinction directly analogous to a system prompt versus user messages in cloud LLM APIs.
+A session has two kinds of input:
+
+- **Instructions:** rules you set **once**, when you create the session. The user does not see them. This is like a "system prompt".
+- **Prompts:** the **user's input** for each turn.
 
 ```swift
 let session = LanguageModelSession(instructions: """
@@ -68,13 +104,15 @@ let session = LanguageModelSession(instructions: """
 let response = try await session.respond(to: "How do I make a basic vinaigrette?")
 ```
 
-Keeping instructions and prompts separate lets an app establish stable, consistent behavioral rules (tone, format constraints, domain framing) once, independent of whatever specific content the user later provides — this separation also has security relevance (58.18), since instructions set by the app are trusted, while prompts may contain untrusted user or external content that shouldn't be able to override the app's own behavioral framing.
+Keep them separate. Instructions set the tone and the rules. Prompts carry the content.
+
+It also matters for **security** (58.18): your instructions are trusted, but a prompt can contain untrusted text that should never be able to override them.
 
 ---
 
-## 58.5 Managing the Context Window
+## 58.5 Managing the Context Window 🟡
 
-Like all LLMs, the on-device model has a finite context window — a maximum amount of accumulated conversation history and content it can consider at once — and a session approaching this limit requires explicit handling, since exceeding it produces an error rather than silently truncating.
+The model can only remember a limited amount of text. This limit is called the **context window**. If a session goes over it, you get an **error**. The text is not cut quietly.
 
 ```swift
 func respondWithContextCheck(session: LanguageModelSession, prompt: String) async throws -> String {
@@ -88,13 +126,25 @@ func respondWithContextCheck(session: LanguageModelSession, prompt: String) asyn
 }
 ```
 
-Because the on-device model's context window is meaningfully smaller than many cloud models' windows (a direct consequence of running within on-device resource constraints), long-running conversational features need a real strategy for this limit — commonly, summarizing and carrying forward only the essential prior context into a fresh session once the limit is approached, rather than assuming a conversation can grow unbounded.
+A common fix: **summarize, then start a new session** with the summary.
+
+```swift
+// 1. Ask the old session for a short summary
+let summary = try await oldSession.respond(to: "Summarize our conversation in 3 sentences.")
+
+// 2. Start a new session that begins with that summary
+let newSession = LanguageModelSession(instructions: """
+    You are a recipe assistant. Summary of the conversation so far: \(summary.content)
+    """)
+```
+
+The on-device window is smaller than most cloud models', so long chats need a plan for this.
 
 ---
 
-## 58.6 Streaming Responses to the UI
+## 58.6 Streaming Responses to the UI 🟡
 
-`session.streamResponse(to:)` returns an `AsyncSequence` of incrementally generated content (recall AsyncSequence from section 21, also seen powering `Transaction.updates` in section 56.4), letting a UI display generated text progressively as it's produced rather than waiting for the complete response.
+`session.streamResponse(to:)` gives you the answer **piece by piece**, as an `AsyncSequence` (section 21). Show the text as it grows, instead of waiting for the whole answer.
 
 ```swift
 func streamToUI(session: LanguageModelSession, prompt: String) async throws {
@@ -106,13 +156,35 @@ func streamToUI(session: LanguageModelSession, prompt: String) async throws {
 }
 ```
 
-Streaming is particularly important for on-device generation's user experience, since even fast on-device inference takes a perceptible amount of time for longer responses — showing text appear progressively (mirroring the perceived-responsiveness benefit of streaming API responses generally) keeps the interface feeling alive and responsive rather than presenting a blank, frozen state until the entire response is ready.
+In a SwiftUI view:
+
+```swift
+struct StreamingView: View {
+    @State private var text = ""
+    let session = LanguageModelSession()
+
+    var body: some View {
+        VStack {
+            Text(text)
+            Button("Ask") {
+                Task {
+                    for try await partial in session.streamResponse(to: "Tell me about pasta.") {
+                        text = partial.content
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+Even fast on-device generation takes a moment. Streaming keeps the screen alive instead of showing a blank space.
 
 ---
 
-## 58.7 Guided Generation with @Generable
+## 58.7 Guided Generation with @Generable 🟡
 
-The `@Generable` macro lets a Swift type describe a structured output shape the model should conform to — rather than parsing free-form text output, the framework directly returns a populated instance of the type, with the model's generation itself constrained to match the type's shape.
+Instead of asking for text and parsing it, use **`@Generable`**. You describe the shape you want as a Swift type, and the model returns **a filled-in value of that type**.
 
 ```swift
 @Generable
@@ -130,13 +202,22 @@ func generateRecipe(session: LanguageModelSession) async throws -> RecipeSuggest
 }
 ```
 
-This is a genuinely significant improvement over the older pattern of prompting a model to "return JSON matching this schema" and then hoping the output parses correctly — `@Generable` constrains the model's actual generation process to conform to the type's structure, eliminating the class of bugs where a model's free-form output almost, but not quite, matches the expected format.
+Use it like any Swift value:
+
+```swift
+let recipe = try await generateRecipe(session: session)
+print(recipe.name)                 // "Garlic Butter Spaghetti"
+print(recipe.cookTimeMinutes)      // 15
+print(recipe.ingredients.count)    // 5
+```
+
+The old way was "return JSON that looks like this" and hope it parses. **`@Generable` shapes the generation itself**, so the output always fits the type.
 
 ---
 
-## 58.8 @Guide for Constraining Output
+## 58.8 @Guide for Constraining Output 🟡
 
-Beyond `@Generable`'s structural shape, the `@Guide` macro attached to individual properties provides finer-grained constraints and hints — a natural-language description, a numeric range, a regex pattern, or an enumeration of allowed values — shaping what the model generates for that specific field.
+`@Guide` goes on a single property and gives the model **finer rules**: a description, a number range, or a list of allowed values.
 
 ```swift
 @Generable
@@ -148,13 +229,21 @@ struct MealPlan {
 }
 ```
 
-`@Guide`'s constraints operate during generation itself, not as post-hoc validation — specifying `.anyOf(["easy", "medium", "hard"])` genuinely constrains what the model can produce for that field, similarly to how `AppEnum` (recall section 51.4) constrains App Intents parameters to a fixed set of valid values, meaningfully reducing the likelihood of receiving an out-of-range or unexpected value that downstream code would then need to defensively handle.
+The rules apply **while the model generates**. They are not a check afterward. So `.anyOf(["easy", "medium", "hard"])` means the model can only produce one of those three values.
+
+```swift
+let plan = try await session.respond(to: "Plan a family dinner.", generating: MealPlan.self).content
+print(plan.difficulty)   // always "easy", "medium", or "hard"
+print(plan.servings)     // always 1 to 6
+```
+
+This is like `AppEnum` for App Intents (section 51.4): a fixed set of valid values. It means less code to handle strange values.
 
 ---
 
-## 58.9 PartiallyGenerated and Progressive Rendering
+## 58.9 PartiallyGenerated and Progressive Rendering 🟡
 
-When streaming a `@Generable` type's output, each incremental update arrives as a `PartiallyGenerated` version of the type, where properties may be `nil` or incomplete until the model has generated enough content to populate them — letting a UI progressively render structured content field by field as it becomes available.
+When you stream a `@Generable` type, each update is a **`PartiallyGenerated`** version of it. Some properties are still `nil` until the model has produced them. You can show the fields **one by one** as they arrive.
 
 ```swift
 func streamStructured(session: LanguageModelSession, prompt: String) async throws {
@@ -168,13 +257,22 @@ func streamStructured(session: LanguageModelSession, prompt: String) async throw
 }
 ```
 
-This combines the responsiveness benefit of streaming (58.6) with the structural safety of guided generation (58.7) — a UI can display a recipe's name as soon as it's generated, then progressively fill in the ingredient list as more of the structured output arrives, rather than needing to choose between structured output and progressive display, which earlier free-text-only streaming approaches would have forced.
+In a view, the name appears first, then the list fills in:
+
+```swift
+VStack(alignment: .leading) {
+    Text(currentName ?? "Thinking…").font(.title)
+    ForEach(currentIngredients, id: \.self) { Text("• \($0)") }
+}
+```
+
+This gives you both the speed of streaming (58.6) and the safety of a typed result (58.7).
 
 ---
 
-## 58.10 Tool Calling: The Tool Protocol
+## 58.10 Tool Calling: The Tool Protocol 🟡
 
-The `Tool` protocol lets a `LanguageModelSession` call into app-defined Swift functions during generation — the model itself decides when a tool call is needed (e.g., to look up live data it couldn't otherwise know), and the framework handles invoking the app's implementation and feeding the result back into the model's generation.
+A **tool** is a Swift function the model can **call by itself** while it answers. Use it when the model needs data it does not have, like live weather. You write the tool with the **`Tool`** protocol. The model decides when to call it. The framework runs your code and gives the result back to the model.
 
 ```swift
 struct WeatherTool: Tool {
@@ -195,13 +293,20 @@ struct WeatherTool: Tool {
 let session = LanguageModelSession(tools: [WeatherTool()])
 ```
 
-This tool-calling pattern is conceptually similar to `AppIntent`'s parameter-driven execution model (section 51.1) — both involve the system (Siri or, here, the language model) deciding when and how to invoke app-defined functionality based on structured arguments — but here the caller deciding when invocation is needed is the language model itself, reasoning about whether it needs external information to properly answer a given prompt.
+Then you just ask:
+
+```swift
+let answer = try await session.respond(to: "Should I bring an umbrella in London today?")
+// The model calls WeatherTool(city: "London"), reads the result, then answers.
+```
+
+It is like an `AppIntent` (section 51.1): code that runs from structured arguments. The difference is that here **the model** decides when to call it.
 
 ---
 
-## 58.11 Tool Calling: Multi-Step Loops
+## 58.11 Tool Calling: Multi-Step Loops 🟡
 
-For prompts requiring several pieces of information gathered sequentially (or where one tool's result informs what to look up next), the session can invoke multiple tools across several steps within resolving a single `respond(to:)` call, with the model reasoning iteratively about what additional information it still needs.
+Some questions need **several tools in a row**. The model can call more than one tool, and use one result to choose the next call. All of this happens inside **one** `respond(to:)` call.
 
 ```plaintext
 // A prompt like "What's the weather where my next calendar event is?" might trigger:
@@ -211,13 +316,20 @@ For prompts requiring several pieces of information gathered sequentially (or wh
 // All orchestrated automatically within one `session.respond(to:)` call.
 ```
 
-This multi-step orchestration happening automatically, without the app needing to manually sequence tool calls itself, is a meaningful capability — the model's own reasoning determines the necessary sequence of tool invocations to fully answer a compound prompt, similar in spirit to how `LongRunningIntent` (section 51.11) handles extended execution, but here the multi-step nature is driven by the model's reasoning process rather than a fixed, predetermined intent flow.
+In code, you only give the session the tools:
+
+```swift
+let session = LanguageModelSession(tools: [CalendarTool(), WeatherTool()])
+let answer = try await session.respond(to: "What's the weather where my next event is?")
+```
+
+You do **not** write the steps yourself. The model works out the order. This is different from `LongRunningIntent` (section 51.11), where the steps are fixed.
 
 ---
 
-## 58.12 Multimodal Prompts with Images (iOS 27)
+## 58.12 Multimodal Prompts with Images (iOS 27) 🟡
 
-Building on the framework's initial text-only capability, iOS 27 extends `LanguageModelSession` prompts to accept image input alongside text — letting the model reason jointly about visual and textual content within a single prompt.
+In iOS 27, a prompt can include **an image together with text**. The model reasons about both.
 
 ```swift
 func describeImage(session: LanguageModelSession, image: CGImage, question: String) async throws -> String {
@@ -229,13 +341,19 @@ func describeImage(session: LanguageModelSession, image: CGImage, question: Stri
 }
 ```
 
-Multimodal prompting opens up genuinely new use cases beyond text-only interaction — asking questions about a photo's content, generating a description for accessibility purposes, or combining a captured receipt image (recall `AVCapturePhotoOutput` from section 55.5) with a text prompt asking the model to extract and structure the receipt's line items, unifying capabilities that previously would have required separate, specialized frameworks.
+New things you can build:
+
+- Ask questions about a photo.
+- Write a description of an image for accessibility.
+- Take a photo of a receipt (see section 55.5 for capturing photos) and ask the model to list the items.
+
+Before, each of these needed a separate framework.
 
 ---
 
-## 58.13 Vision Framework Tools for the Model (iOS 27)
+## 58.13 Vision Framework Tools for the Model (iOS 27) 🟡
 
-Complementing direct multimodal image input, iOS 27 also provides Vision framework capabilities exposed as callable tools the model can invoke during generation — letting the model request specific, structured visual analysis (like text recognition or object detection, covered more fully in section 60) as part of its own reasoning process.
+In iOS 27, the model can also use **Vision framework features as tools** (section 60). The model decides when it needs a specific job, like reading text in an image.
 
 ```swift
 struct TextRecognitionTool: Tool {
@@ -254,13 +372,16 @@ struct TextRecognitionTool: Tool {
 }
 ```
 
-This pairs the general tool-calling infrastructure from 58.10 with Vision-specific capability, letting the model itself decide when a task genuinely calls for structured visual analysis (as opposed to just describing an image holistically via direct multimodal input, 58.12) — a natural complement to Vision's own modern Swift API, covered directly in section 60.1.
+This is the same tool idea as 58.10, with a Vision job inside. Compare it with 58.12:
+
+- **Direct image input (58.12):** the model looks at the whole image.
+- **A Vision tool (this lesson):** the model asks for one exact job, like "read the text".
 
 ---
 
-## 58.14 The LanguageModel Protocol Abstraction (iOS 27)
+## 58.14 The LanguageModel Protocol Abstraction (iOS 27) 🟡
 
-The `LanguageModel` protocol abstracts over different underlying model backends — the on-device `SystemLanguageModel` being one conformer — letting app code written against the protocol interchangeably target different models without being tightly coupled to the on-device model specifically.
+In iOS 27, the **`LanguageModel`** protocol describes any model backend. `SystemLanguageModel` (the on-device model) follows it. So do cloud models (58.15). If your code uses the protocol, you can switch models without rewriting it.
 
 ```swift
 protocol LanguageModel {
@@ -272,13 +393,13 @@ protocol LanguageModel {
 // the protocol can work with either without structural changes.
 ```
 
-This abstraction is what makes the cloud-routing capability in 58.15 practical — because app code is written against the `LanguageModel` protocol rather than directly against `SystemLanguageModel`, swapping which underlying model actually handles a given request (on-device for speed/privacy, cloud for greater capability) becomes a configuration concern rather than requiring separate, parallel implementations for each backend.
+This is the **same idea as dependency injection** (section 47): depend on a protocol, not on one concrete class. Which model handles a request becomes a setting, not a second copy of your code.
 
 ---
 
-## 58.15 Routing to Cloud Models: Claude and Gemini (iOS 27)
+## 58.15 Routing to Cloud Models: Claude and Gemini (iOS 27) 🟡
 
-Building on the `LanguageModel` protocol abstraction (58.14), iOS 27 supports routing certain requests to cloud-hosted models (including Claude and Gemini) when a task's complexity genuinely exceeds what the smaller on-device model can handle well, while still defaulting to on-device processing for speed, privacy, and offline availability where sufficient.
+In iOS 27, requests can be **routed to a cloud model** (including Claude and Gemini) when the task is too hard for the small on-device model. By default the on-device model is still used, for speed, privacy, and offline use.
 
 ```swift
 // Conceptually: a session or request can be configured to route to a
@@ -287,13 +408,21 @@ Building on the `LanguageModel` protocol abstraction (58.14), iOS 27 supports ro
 let session = LanguageModelSession(model: .cloudRouted(.claude))
 ```
 
-This hybrid approach directly addresses the capability trade-off noted back in 58.1 — rather than forcing a binary choice between a smaller, private, always-available on-device model and a larger, more capable cloud model, an app can route intelligently based on task complexity, reserving cloud routing (with its associated network dependency and different privacy posture) specifically for cases where the on-device model's smaller capacity would genuinely be insufficient.
+You no longer have to choose only one of the two trade-offs from 58.1:
+
+| | On-device | Cloud |
+|---|---|---|
+| Speed and offline | Yes | Needs network |
+| Privacy | Stays on device | Sent to a server |
+| Power | Smaller | Larger |
+
+Use the cloud only for tasks that need the extra power.
 
 ---
 
 ## 58.16 Session Warm-Up and Latency Budgeting 🔴
 
-Because on-device model inference has real, non-trivial latency (loading model weights, running generation), performance-sensitive features can pre-warm a session ahead of when it's actually needed, and should account for generation latency as an explicit part of a feature's overall latency budget rather than treating it as instantaneous.
+The first request can be slow, because the model must load. **Warm up the session** before the user needs it. Also count generation time as part of your feature's total time. It is not instant.
 
 ```swift
 func prewarmSession() -> LanguageModelSession {
@@ -307,13 +436,32 @@ func prewarmSession() -> LanguageModelSession {
 }
 ```
 
-This latency-budgeting discipline echoes similar concerns raised for background task budgets (section 49.5) and widget reload budgets (section 52.3) — on-device inference, while free of network latency, is not instantaneous, and a feature that presents an AI-powered interaction should account for this cost explicitly (through pre-warming, streaming for perceived responsiveness, or setting appropriate loading-state expectations) rather than assuming generation completes essentially immediately.
+Warm it up when the screen appears, before the user types:
+
+```swift
+struct ChatScreen: View {
+    @State private var session = LanguageModelSession()
+
+    var body: some View {
+        ChatView(session: session)
+            .task { _ = try? await session.respond(to: "Hello") }   // warm up
+    }
+}
+```
+
+Three ways to make it feel fast:
+
+- **Warm up** the session early.
+- **Stream** the answer (58.6).
+- **Show a loading state** so the user knows something is happening.
+
+This is the same idea as the time limits for background tasks (section 49.5) and widget reloads (section 52.3).
 
 ---
 
-## 58.17 Guardrails and Refusal Handling
+## 58.17 Guardrails and Refusal Handling 🟡
 
-The on-device model includes built-in guardrails against generating harmful, inappropriate, or policy-violating content, and a session's response can reflect a refusal — apps must handle this refusal case explicitly rather than assuming every prompt produces a usable, on-topic response.
+The model has built-in **guardrails**. If a request is harmful or not allowed, it can **refuse**. Your app must handle that. Do not assume every prompt gives a good answer.
 
 ```swift
 func respondSafely(session: LanguageModelSession, prompt: String) async throws -> String {
@@ -326,13 +474,24 @@ func respondSafely(session: LanguageModelSession, prompt: String) async throws -
 }
 ```
 
-Guardrails exist as a genuine safety layer independent of whatever the app's own instructions (58.4) specify — even a carefully crafted system instruction can't override the model's built-in refusal behavior for genuinely inappropriate content, and well-built apps handle the refusal path gracefully (with an appropriate user-facing message) rather than treating it as an unexpected error condition or crashing on unhandled output.
+Show the message in the UI:
+
+```swift
+@State private var reply = ""
+
+Button("Send") {
+    Task { reply = (try? await respondSafely(session: session, prompt: input)) ?? "Something went wrong." }
+}
+Text(reply)
+```
+
+Guardrails are **separate from your instructions** (58.4). Even good instructions cannot turn them off. Treat a refusal as a normal case, with a friendly message, and not as a crash.
 
 ---
 
 ## 58.18 Prompt Injection Defense for User Content 🔴
 
-When a prompt incorporates untrusted external content (text from a web page, a document, or other user-generated input), that content could contain adversarial instructions attempting to override the app's own behavioral framing — a class of vulnerability called prompt injection, requiring deliberate defensive design.
+Sometimes you put **untrusted text** in a prompt: a web page, a document, or a message. That text can contain **hidden instructions** that try to take over the model. This attack is called **prompt injection**.
 
 ```swift
 // Vulnerable: directly interpolating untrusted content as if it were trusted instruction
@@ -346,13 +505,19 @@ let session = LanguageModelSession(instructions: """
 let saferPrompt = "Text to summarize: \(untrustedWebContent)"
 ```
 
-This directly builds on the instructions-vs-prompts distinction from 58.4 — because instructions are meant to be trusted and prompts may contain untrusted content, defensive prompt design deliberately keeps untrusted external content within the prompt (clearly framed as data to process) and never elevates it into the instructions, reducing (though not entirely eliminating) the risk that adversarial content embedded in, say, a scraped web page could hijack the model's behavior.
+The rules:
+
+- Put **your rules** in the **instructions** (58.4). They are trusted.
+- Put **untrusted text** in the **prompt**, and say clearly that it is only data.
+- **Never** put untrusted text into the instructions.
+
+This lowers the risk, but it **does not remove it**. Do not let the model take serious actions (like deleting data) only because of text it read.
 
 ---
 
 ## 58.19 Adapters and LoRA Fine-Tuning 🔴
 
-For specialized use cases where the base on-device model's general capability isn't sufficiently tailored, adapters (using techniques like LoRA — Low-Rank Adaptation) allow a lightweight, additional fine-tuning layer to be trained and applied on top of the base model, specializing its behavior for a specific domain without needing to train an entirely new model from scratch.
+Sometimes the general model is not tailored enough for your topic. An **adapter** is a small extra layer, trained on your examples, that you put on top of the model. A common method is **LoRA** (Low-Rank Adaptation). You do not train a whole new model.
 
 ```swift
 // Conceptually: an adapter is trained offline (using Apple's provided tooling)
@@ -360,7 +525,12 @@ For specialized use cases where the base on-device model's general capability is
 let session = LanguageModelSession(adapter: myDomainAdapter)
 ```
 
-LoRA-style adaptation is meaningfully more efficient than full model fine-tuning — training only a small number of additional, low-rank parameters layered on top of the frozen base model, rather than updating the entire model's weights — making it practical for individual apps to genuinely specialize the on-device model's behavior (for a specific writing style, domain vocabulary, or task format) without the computational cost a full fine-tuning process would require.
+LoRA is much cheaper than full fine-tuning:
+
+- It trains only a **small number of extra values**.
+- The big base model stays **frozen** (unchanged).
+
+So an app can adapt the model to a writing style, special vocabulary, or an output format, without the cost of training a new model.
 
 ---
 
@@ -368,22 +538,22 @@ LoRA-style adaptation is meaningfully more efficient than full model fine-tuning
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Framework foundation | Foundation Models, on-device LLM | Private, cost-free, offline-capable AI |
-| Availability | `SystemLanguageModel.default.availability` | Handles hardware/settings/download gating |
-| Core session | `LanguageModelSession` | Multi-turn, context-preserving interaction |
-| Behavioral framing | Instructions vs. prompts | Trusted app rules vs. per-turn user input |
-| Context limits | `GenerationError.exceededContextWindowSize` | Finite context window handling |
-| Responsiveness | `streamResponse(to:)` | Progressive, incremental output display |
-| Structured output | `@Generable` | Type-constrained generation, no manual parsing |
-| Field-level constraints | `@Guide` | Descriptions, ranges, and allowed-value sets |
-| Streaming structure | `PartiallyGenerated` | Progressive rendering of structured fields |
-| External capability | `Tool` protocol | Model-initiated calls into app functions |
-| Compound reasoning | Multi-step tool loops | Automatic, sequential multi-tool orchestration |
-| Visual input | Multimodal prompts, `ImageContent` | Joint text/image reasoning (iOS 27) |
-| Visual tools | Vision-backed `Tool` conformers | Model-invoked structured visual analysis |
-| Backend abstraction | `LanguageModel` protocol | Interchangeable model backends |
-| Hybrid capability | Cloud routing (Claude, Gemini) | On-device default, cloud for complex tasks |
-| Perceived speed | Session pre-warming | Explicit latency budgeting for inference |
-| Safety | Guardrail refusal handling | Built-in protection independent of app instructions |
-| Security | Prompt injection defense | Isolating untrusted content from trusted instructions |
-| Specialization | LoRA adapters | Lightweight, efficient domain fine-tuning |
+| Foundation Models | On-device LLM | Private, free, offline AI |
+| Availability | `SystemLanguageModel.default.availability` | Check device, setting, and download |
+| Session | `LanguageModelSession` | A conversation that remembers context |
+| Instructions vs. prompts | `instructions:` and `respond(to:)` | Trusted rules vs. user input |
+| Context window | `exceededContextWindowSize` | Summarize and start a new session |
+| Streaming | `streamResponse(to:)` | Show the answer as it grows |
+| Structured output | `@Generable` | Get a typed Swift value, no parsing |
+| Field rules | `@Guide` | Descriptions, ranges, allowed values |
+| Streaming structure | `PartiallyGenerated` | Show fields one by one |
+| Tools | `Tool` protocol | The model calls your code |
+| Multi-step tools | Several tools in one call | The model plans the order |
+| Images | `ImageContent` (iOS 27) | Text and image together |
+| Vision tools | Vision-backed `Tool` (iOS 27) | The model asks for exact visual jobs |
+| Model abstraction | `LanguageModel` (iOS 27) | Switch models without rewriting code |
+| Cloud routing | Claude and Gemini (iOS 27) | On-device first, cloud for hard tasks |
+| Speed | Session warm-up | Count latency, make it feel fast |
+| Safety | `guardrailViolation` | Handle refusals nicely |
+| Security | Prompt injection defense | Keep untrusted text out of instructions |
+| Specialization | LoRA adapters | A small, cheap fine-tune |
