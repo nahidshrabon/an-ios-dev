@@ -14,9 +14,11 @@ export function Nav({ userEmail }: { userEmail: string | null | undefined }) {
     <header className="border-b border-black/10 dark:border-white/10">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
+          {/* When the row is tight the search bar gives way, not the name:
+              wrapping it would make the header taller. */}
           <Link
             href="/"
-            className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
+            className="font-heading inline-flex shrink-0 items-center gap-2 font-semibold tracking-tight"
           >
             <Logomark className="size-7" />
             <span className="hidden sm:inline">
@@ -45,7 +47,9 @@ export function Nav({ userEmail }: { userEmail: string | null | undefined }) {
                 className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
                 <DashboardIcon className="size-4 text-accent" />
-                <span className="hidden sm:inline">Dashboard</span>
+                {/* Below md the search bar is just its icon and can't give
+                    way, so there's no room for this beside the theme switch. */}
+                <span className="hidden md:inline">Dashboard</span>
               </Link>
               <SignOutButton />
             </>
