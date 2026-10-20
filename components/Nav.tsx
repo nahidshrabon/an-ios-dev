@@ -26,7 +26,9 @@ export function Nav({ userEmail }: { userEmail: string | null | undefined }) {
           <SiteSearch className="md:w-44" />
         </div>
         <nav className="flex shrink-0 items-center gap-3 text-sm sm:gap-6">
-          <ThemeToggle />
+          {/* Phones follow the system theme: there's no room for the switch
+              without the nav sliding over the logo and search. */}
+          <ThemeToggle className="max-sm:hidden" />
           <Link
             href="/articles"
             aria-label="Articles"
@@ -39,10 +41,11 @@ export function Nav({ userEmail }: { userEmail: string | null | undefined }) {
             <>
               <Link
                 href="/roadmap"
+                aria-label="Dashboard"
                 className="font-heading inline-flex items-center gap-1.5 hover:underline"
               >
                 <DashboardIcon className="size-4 text-accent" />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </Link>
               <SignOutButton />
             </>
