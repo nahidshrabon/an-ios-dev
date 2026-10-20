@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 // Handles the redirect back from Google OAuth, email confirmation links, and
 // password reset links. Two exchange styles are supported:
@@ -58,15 +59,7 @@ export async function GET(request: Request) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const errorCode = searchParams.get("error_code");
-
-  // Only let internal, single-slash paths built from an unambiguous character
-  // set through — never `//host`, `/\host`, or an absolute URL, which would
-  // turn the link into an open redirect.
-  const rawNext = searchParams.get("next");
-  const next =
-    rawNext && /^\/(?![/\\])[A-Za-z0-9\-._~/]*$/.test(rawNext)
-      ? rawNext
-      : "/roadmap";
+  const next = safeNextPath(searchParams.get("next"));
 
   const supabase = await createClient();
 

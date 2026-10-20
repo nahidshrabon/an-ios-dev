@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/OAuthButtons";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 export default function LoginPage() {
   return (
@@ -17,7 +18,8 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/roadmap";
+  // Validated: router.push follows an absolute or //host URL off-site.
+  const next = safeNextPath(searchParams.get("next"));
   const urlError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
