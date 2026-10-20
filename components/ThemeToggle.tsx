@@ -48,9 +48,31 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
+// Where the choice lives when the browser blocks storage (Safari's "Block
+// All Cookies", per-site cookie blocks): there even reading localStorage
+// throws. It then lasts until the page reloads.
+let unstoredTheme: Theme = "system";
+
 function readTheme(): Theme {
-  const stored = localStorage.getItem("theme");
-  return stored === "light" || stored === "dark" ? stored : "system";
+  try {
+    const stored = localStorage.getItem("theme");
+    return stored === "light" || stored === "dark" ? stored : "system";
+  } catch {
+    return unstoredTheme;
+  }
+}
+
+function storeTheme(theme: Theme) {
+  // "system" is stored as absence, matching what the layout script expects.
+  try {
+    if (theme === "system") {
+      localStorage.removeItem("theme");
+    } else {
+      localStorage.setItem("theme", theme);
+    }
+  } catch {
+    unstoredTheme = theme;
+  }
 }
 
 /** The server can't know the stored choice; it assumes "system". */
@@ -72,12 +94,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   }, [theme]);
 
   function select(next: Theme) {
-    // "system" is stored as absence, matching what the layout script expects.
-    if (next === "system") {
-      localStorage.removeItem("theme");
-    } else {
-      localStorage.setItem("theme", next);
-    }
+    storeTheme(next);
     applyTheme(next);
     emit();
   }
