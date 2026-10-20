@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
+import { Nav } from "@/components/Nav";
 import { PathnameTracker } from "@/components/PathnameTracker";
 import { getSiteUrl } from "@/lib/site";
 import "highlight.js/styles/xcode.css";
@@ -90,7 +91,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <PathnameTracker />
-        <Suspense fallback={null}>
+        {/* ConditionalNav reads search params, so prerendered pages put this
+            fallback in their HTML and render the real nav on the client. It
+            matches what ConditionalNav shows before auth resolves; with no
+            fallback the header would only pop in once JS loads, pushing the
+            page down. Routes that hide the nav are all dynamic, so they
+            never show it. */}
+        <Suspense fallback={<Nav userEmail={undefined} />}>
           <ConditionalNav />
         </Suspense>
         <div className="flex flex-1 flex-col">{children}</div>
