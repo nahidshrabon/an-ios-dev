@@ -4,6 +4,7 @@ import type { MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeftIcon } from "@/components/Icons";
+import { cameFrom } from "@/components/PathnameTracker";
 
 export function ArticleBackLink() {
   const router = useRouter();
@@ -15,15 +16,19 @@ export function ArticleBackLink() {
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     // Modifier clicks (open in new tab, etc.) fall through to the plain
-    // href. A normal click uses real browser back navigation instead of a
-    // fresh push, so the previous page's scroll position is restored.
+    // href. So does a reader who didn't come straight from that page — a
+    // direct visit, where Back would leave the site, or "Next up" from
+    // another article, where it would land on that article. Otherwise a
+    // normal click uses real browser back navigation instead of a fresh
+    // push, so the previous page's scroll position is restored.
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
       event.metaKey ||
       event.ctrlKey ||
       event.shiftKey ||
-      event.altKey
+      event.altKey ||
+      !cameFrom(href)
     ) {
       return;
     }

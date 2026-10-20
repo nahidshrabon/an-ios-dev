@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono, Literata } from "next/font/google";
 import { ConditionalNav } from "@/components/ConditionalNav";
+import { PathnameTracker } from "@/components/PathnameTracker";
 import { getSiteUrl } from "@/lib/site";
 import "highlight.js/styles/xcode.css";
 import "./globals.css";
@@ -88,6 +89,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <PathnameTracker />
         <Suspense fallback={null}>
           <ConditionalNav />
         </Suspense>
