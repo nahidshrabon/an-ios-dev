@@ -67,10 +67,19 @@ export function SiteSearch({ className = "" }: { className?: string }) {
   // ⌘K / Ctrl+K is an accelerator only — the visible bar is the real entry point.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        openSearch();
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.key.toLowerCase() !== "k" ||
+        // AppShell renders a search in both its mobile bar and its sidebar
+        // and hides one with CSS. Only a visible one answers, and only the
+        // first to see the event, so the shortcut never stacks two dialogs.
+        event.defaultPrevented ||
+        triggerRef.current?.getClientRects().length === 0
+      ) {
+        return;
       }
+      event.preventDefault();
+      openSearch();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
