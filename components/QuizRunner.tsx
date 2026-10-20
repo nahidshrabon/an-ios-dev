@@ -17,22 +17,32 @@ export function QuizRunner({
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
 
   async function handleSubmit() {
     setSubmitting(true);
+    setSubmitFailed(false);
 
-    // Graded on the server, which holds the answer key; this component never
-    // sees it until the result comes back.
-    const submitted = await submitQuizAttempt(
-      quiz.id,
-      quiz.questions.map((question) => question.id),
-      answers
-    );
+    try {
+      // Graded on the server, which holds the answer key; this component
+      // never sees it until the result comes back.
+      const submitted = await submitQuizAttempt(
+        quiz.id,
+        quiz.questions.map((question) => question.id),
+        answers
+      );
 
-    setResult(submitted);
-    setSubmitting(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      setResult(submitted);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      // No result to show without the server, so keep the answers and let
+      // the reader submit again.
+      console.error("[quiz] submit failed:", error);
+      setSubmitFailed(true);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (result) {
@@ -55,6 +65,15 @@ export function QuizRunner({
         <p className="font-article mt-2 text-zinc-600 dark:text-zinc-400">
           {quiz.description}
         </p>
+        {!result.saved && (
+          <p
+            role="status"
+            className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:bg-amber-400/10 dark:text-amber-400"
+          >
+            Couldn&apos;t save this attempt, so it won&apos;t count toward
+            your progress. Your graded answers are below.
+          </p>
+        )}
 
         <div className="mt-8 flex flex-col gap-6">
           {quiz.questions.map((question, i) => {
@@ -234,6 +253,12 @@ export function QuizRunner({
       >
         {submitting ? "Submitting…" : "Submit"}
       </button>
+      {submitFailed && (
+        <p role="alert" className="mt-3 text-sm text-red-600">
+          Couldn&apos;t submit your answers. Check your connection and try
+          again.
+        </p>
+      )}
 
       <div className="mt-8">
         <Link

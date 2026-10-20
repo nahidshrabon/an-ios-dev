@@ -11,6 +11,8 @@ export type QuizResult = {
   graded: GradedAnswer[];
   /** Released only with the result, never with the questions. */
   answerKey: Record<string, { correctOptionId: string; explanation: string }>;
+  /** False when the attempt wasn't recorded; the grading still stands. */
+  saved: boolean;
 };
 
 /**
@@ -55,10 +57,13 @@ export async function submitQuizAttempt(
 
   const score = graded.filter((answer) => answer.correct).length;
 
+  // Not saved also covers a session that expired mid-quiz: the reader still
+  // gets their result, and is told it won't count toward their progress.
+  let saved = false;
   const { userId } = await getAuthenticatedUser();
   if (userId) {
     const supabase = await createClient();
-    await supabase.from("quiz_attempts").insert({
+    const { error } = await supabase.from("quiz_attempts").insert({
       user_id: userId,
       quiz_id: quiz.id,
       score,
@@ -66,9 +71,14 @@ export async function submitQuizAttempt(
       answers: graded,
     });
 
-    revalidatePath("/quizzes");
-    revalidatePath("/roadmap");
+    if (error) {
+      console.error("[quiz] saving attempt failed:", error);
+    } else {
+      saved = true;
+      revalidatePath("/quizzes");
+      revalidatePath("/roadmap");
+    }
   }
 
-  return { score, total: asked.length, graded, answerKey };
+  return { score, total: asked.length, graded, answerKey, saved };
 }
