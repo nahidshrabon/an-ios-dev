@@ -90,6 +90,16 @@ export async function GET(request: Request) {
     // verifier cookie isn't here. The specific reason is logged server-side
     // for diagnosis; users get the actionable summary without the raw error.
     console.error("[auth/callback] exchangeCodeForSession failed:", error);
+    // The different-browser case gets its own message: there is no resend
+    // button to point at, and Supabase verified the email before redirecting
+    // here, so a new account is already confirmed and just needs a login.
+    if (error.code === "pkce_code_verifier_not_found") {
+      return redirectResponse(
+        `/login?error=${encodeURIComponent(
+          "That link was opened in a different browser than the one it was requested from. If you were confirming a new account, it's confirmed — just log in. If you were resetting your password, request a new link and open it in this browser."
+        )}`
+      );
+    }
     return redirectResponse(
       `/login?error=${encodeURIComponent(
         "That link couldn't be verified. It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser."
