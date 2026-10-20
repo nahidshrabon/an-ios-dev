@@ -40,10 +40,15 @@ export async function updateSession(request: NextRequest) {
   const { data, error } = await supabase.auth.getClaims();
   const definitelyLoggedOut = error === null && !data?.claims;
 
+  // Keep in step with the matcher in proxy.ts. A gated route missing here
+  // still reaches the app layout's own check, but that redirects to a bare
+  // /login, so the reader loses their destination.
   const isGatedRoute =
     request.nextUrl.pathname.startsWith("/roadmap") ||
     request.nextUrl.pathname.startsWith("/quizzes") ||
-    request.nextUrl.pathname.startsWith("/bookmarks");
+    request.nextUrl.pathname.startsWith("/bookmarks") ||
+    request.nextUrl.pathname.startsWith("/settings") ||
+    request.nextUrl.pathname.startsWith("/report");
 
   if (isGatedRoute && definitelyLoggedOut) {
     const url = request.nextUrl.clone();

@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
 // Next.js 16 renamed middleware.ts to proxy.ts; this refreshes the Supabase
-// session cookie and gates the authenticated /roadmap and /quizzes routes.
+// session cookie and gates the authenticated routes listed in the matcher.
 //
 // Scoped to the gated routes only — public pages (/, /articles, auth forms)
 // have no need for a session check here and shouldn't have their load time
