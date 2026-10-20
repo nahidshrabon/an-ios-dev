@@ -9,6 +9,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -16,9 +17,10 @@ export default function SignupPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setAlreadyRegistered(false);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -27,6 +29,18 @@ export default function SignupPage() {
     });
 
     setLoading(false);
+
+    // With email confirmation on, Supabase doesn't say an address is taken:
+    // it answers like a new sign-up, but the user has no identities and no
+    // email is sent. (With phone confirmation off it errors instead.) This
+    // is common after first signing up with Google or GitHub.
+    if (
+      error?.code === "user_already_exists" ||
+      data.user?.identities?.length === 0
+    ) {
+      setAlreadyRegistered(true);
+      return;
+    }
 
     if (error) {
       setError(error.message);
@@ -94,6 +108,19 @@ export default function SignupPage() {
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {alreadyRegistered && (
+          <p className="text-sm text-red-600">
+            This email already has an account.{" "}
+            <Link href="/login" className="underline">
+              Log in
+            </Link>{" "}
+            instead, or{" "}
+            <Link href="/reset-password" className="underline">
+              reset your password
+            </Link>{" "}
+            if you signed up with Google or GitHub and never set one.
+          </p>
+        )}
 
         <button
           type="submit"
