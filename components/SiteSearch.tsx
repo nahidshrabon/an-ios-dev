@@ -16,7 +16,10 @@ let inflight: Promise<SearchEntry[]> | null = null;
 function loadIndex(): Promise<SearchEntry[]> {
   if (cachedIndex) return Promise.resolve(cachedIndex);
   inflight ??= fetch("/api/search-index")
-    .then((res) => res.json() as Promise<SearchEntry[]>)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Search index request failed: ${res.status}`);
+      return res.json() as Promise<SearchEntry[]>;
+    })
     .then((data) => {
       cachedIndex = data;
       return data;
@@ -33,6 +36,7 @@ export function SiteSearch({ className = "" }: { className?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState<SearchEntry[] | null>(cachedIndex);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [activeArticle, setActiveArticle] = useState(0);
   const [activeHeading, setActiveHeading] = useState(0);
@@ -42,10 +46,23 @@ export function SiteSearch({ className = "" }: { className?: string }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // A failure isn't cached: reopening search or "Try again" fetches afresh.
+  // Resolves at once if another search on the page already loaded it.
+  const fetchIndex = useCallback(() => {
+    setLoadFailed(false);
+    loadIndex().then(setIndex, () => setLoadFailed(true));
+  }, []);
+
   const openSearch = useCallback(() => {
     setOpen(true);
-    if (!cachedIndex) void loadIndex().then(setIndex);
-  }, []);
+    if (!index) fetchIndex();
+  }, [index, fetchIndex]);
+
+  function retryLoad() {
+    fetchIndex();
+    // The button is about to unmount; keep focus inside the dialog.
+    inputRef.current?.focus();
+  }
 
   // ⌘K / Ctrl+K is an accelerator only — the visible bar is the real entry point.
   useEffect(() => {
@@ -241,7 +258,18 @@ export function SiteSearch({ className = "" }: { className?: string }) {
                 </button>
               </div>
 
-              {!index ? (
+              {loadFailed ? (
+                <div className="px-4 py-8 text-center text-sm text-zinc-500">
+                  <p role="alert">Search couldn&apos;t load.</p>
+                  <button
+                    type="button"
+                    onClick={retryLoad}
+                    className="font-heading mt-2 font-medium text-accent hover:underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : !index ? (
                 <p className="px-4 py-8 text-center text-sm text-zinc-500">
                   Loading…
                 </p>
