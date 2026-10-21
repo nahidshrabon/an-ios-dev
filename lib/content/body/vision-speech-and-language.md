@@ -1,6 +1,12 @@
-## 60.1 Vision Framework: The Modern Swift API
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Vision provides a broad suite of computer vision capabilities — text/object/face detection, image similarity, and more — through a consistent request/handler pattern: an `ImageRequestHandler` processes an image against one or more request types, each producing structured, typed observations.
+## 60.1 Vision Framework: The Modern Swift API 🟢
+
+**Vision** lets your app understand images: find text, faces, barcodes, and more. Every job follows the **same pattern**:
+
+1. Make a **handler** for an image.
+2. Make a **request** for what you want (text, faces, and so on).
+3. **Perform** the request. You get typed **observations** back.
 
 ```swift
 import Vision
@@ -12,13 +18,21 @@ func performVisionRequest(on cgImage: CGImage) async throws -> [Observation] {
 }
 ```
 
-This modern, `async`/`await`-native Swift API represents a meaningful simplification over Vision's older `VNImageRequestHandler`/`VNRequest` completion-handler-based pattern — consistent with the broader platform-wide shift toward async/await seen throughout this curriculum (StoreKit's product fetching in section 56.2, PhotoKit's continuation-wrapped calls in section 55.2), Vision's modern API lets a single `await handler.perform(request)` call replace what previously required delegate or completion-handler boilerplate.
+This modern API uses `async`/`await`. One `await handler.perform(request)` replaces the old `VNImageRequestHandler` and `VNRequest` code that needed completion handlers. Other frameworks moved the same way (StoreKit in section 56.2, PhotoKit in section 55.2).
+
+To use it, swap the request type:
+
+```swift
+let textRequest = RecognizeTextRequest()          // find text
+let barcodeRequest = DetectBarcodesRequest()      // find barcodes
+let faceRequest = DetectFaceRectanglesRequest()   // find faces
+```
 
 ---
 
-## 60.2 Text Recognition and OCR
+## 60.2 Text Recognition and OCR 🟢
 
-`RecognizeTextRequest` performs optical character recognition on an image, returning recognized text strings along with their bounding boxes and confidence scores — the same underlying capability that could power a Vision-backed tool exposed to Foundation Models (recall section 58.13's `TextRecognitionTool` example).
+**OCR** (optical character recognition) reads text from an image. `RecognizeTextRequest` returns the text, where it is, and how sure Vision is. The same job can become a tool for Foundation Models (the `TextRecognitionTool` in 58.13).
 
 ```swift
 func recognizeText(in cgImage: CGImage) async throws -> [String] {
@@ -29,13 +43,27 @@ func recognizeText(in cgImage: CGImage) async throws -> [String] {
 }
 ```
 
-`topCandidates(1)` reflects that OCR is inherently probabilistic — for any given piece of recognized text, Vision can return multiple candidate interpretations ranked by confidence, and requesting just the top candidate is the common case, though an app dealing with genuinely ambiguous or low-quality source images (like a blurry photographed receipt) might reasonably inspect several candidates or confidence scores before committing to a single interpretation.
+Use it from a view model:
+
+```swift
+@Observable
+final class ScannerViewModel {
+    var lines: [String] = []
+
+    func scan(_ image: UIImage) async {
+        guard let cgImage = image.cgImage else { return }
+        lines = (try? await recognizeText(in: cgImage)) ?? []
+    }
+}
+```
+
+`topCandidates(1)` asks for the **best guess**. OCR is never certain, so Vision can give several guesses, ranked by confidence. For a blurry receipt, you could look at more than one.
 
 ---
 
-## 60.3 Barcode and QR Detection
+## 60.3 Barcode and QR Detection 🟢
 
-`DetectBarcodesRequest` locates and decodes barcodes and QR codes within an image, returning both the decoded payload string and the code's position within the image — commonly paired with live camera frame processing (recall `AVCaptureVideoDataOutput`, section 55.7) for real-time scanning experiences.
+`DetectBarcodesRequest` finds barcodes and QR codes, and gives you the **text inside** and **where** each one is.
 
 ```swift
 func detectBarcodes(in cgImage: CGImage) async throws -> [String] {
@@ -46,13 +74,26 @@ func detectBarcodes(in cgImage: CGImage) async throws -> [String] {
 }
 ```
 
-Pairing barcode detection with `AVCaptureVideoDataOutput`'s continuous frame stream is what enables a live, real-time scanning experience (rather than requiring the user to manually capture a still photo of a barcode first) — each incoming frame from the capture pipeline can be fed directly into a Vision barcode request, with detected results processed and acted upon as soon as a valid code appears in frame.
+Use the result:
+
+```swift
+let codes = try await detectBarcodes(in: cgImage)
+if let first = codes.first {
+    print("Scanned: \(first)")        // for example a URL or a product number
+}
+```
+
+For **live scanning**, feed each frame from the camera into the same request. The camera side uses `AVCaptureVideoDataOutput` (section 55.7). The user does not need to take a photo first.
 
 ---
 
-## 60.4 Face and Body Detection
+## 60.4 Face and Body Detection 🟡
 
-Vision's face detection (`DetectFaceRectanglesRequest`, `DetectFaceLandmarksRequest`) and body detection (`DetectHumanBodyPoseRequest`) locate faces and body poses within an image, returning bounding boxes, facial landmarks, or a full set of body joint positions, depending on the specific request type used.
+Vision can find **faces** and **body poses**:
+
+- `DetectFaceRectanglesRequest`: a box around each face (fast).
+- `DetectFaceLandmarksRequest`: points for eyes, nose, and mouth.
+- `DetectHumanBodyPoseRequest`: positions of the body's joints.
 
 ```swift
 func detectFaces(in cgImage: CGImage) async throws -> [CGRect] {
@@ -63,13 +104,29 @@ func detectFaces(in cgImage: CGImage) async throws -> [CGRect] {
 }
 ```
 
-The distinction between simple rectangle detection and full landmark/pose detection reflects a real granularity trade-off — bounding box detection alone is sufficient and faster for a use case like "how many faces are in this photo," while landmark or full body pose detection (returning individual facial feature points or joint positions) is necessary for more sophisticated use cases like applying a filter aligned to specific facial features or building a fitness app that analyzes exercise form.
+A `boundingBox` is **normalized** (values from 0 to 1) and its origin is the **bottom-left**. To draw it on the image, convert it:
+
+```swift
+func imageRect(for box: CGRect, imageWidth w: CGFloat, imageHeight h: CGFloat) -> CGRect {
+    CGRect(
+        x: box.minX * w,
+        y: (1 - box.maxY) * h,        // flip the y axis
+        width: box.width * w,
+        height: box.height * h
+    )
+}
+```
+
+Pick by need:
+
+- **How many faces are in the photo?** Rectangles are enough, and faster.
+- **A filter on the eyes, or checking exercise form?** You need landmarks or body pose.
 
 ---
 
-## 60.5 Image Feature Prints and Similarity
+## 60.5 Image Feature Prints and Similarity 🟡
 
-`GenerateImageFeaturePrintRequest` produces a compact, numeric embedding representing an image's visual content — two images with similar visual content produce feature prints with a small computed distance between them, enabling similarity search and near-duplicate detection without needing to compare raw pixel data directly.
+A **feature print** is a short list of numbers that describes what an image looks like. Two images that look alike have feature prints that are **close**. This lets you find similar or duplicate images without comparing pixels.
 
 ```swift
 func computeSimilarity(imageA: CGImage, imageB: CGImage) async throws -> Float {
@@ -82,13 +139,21 @@ func computeSimilarity(imageA: CGImage, imageB: CGImage) async throws -> Float {
 }
 ```
 
-This feature-print-based similarity approach conceptually parallels the embeddings-and-similarity pattern also seen in Natural Language for text (60.9) — in both cases, complex, high-dimensional content (an image's visual appearance, or a piece of text's meaning) is reduced to a compact numeric representation specifically designed so that semantic or visual similarity translates into small computed distances between representations, enabling efficient similarity search across large collections.
+Read the result:
+
+```swift
+let distance = try await computeSimilarity(imageA: photo1, imageB: photo2)
+// A small number means the images look alike. A big number means they are different.
+let isDuplicate = distance < 0.5   // choose your own limit by testing
+```
+
+This is the same idea as text embeddings in 60.9: turn something complex into numbers, so that **"similar" means "close"**.
 
 ---
 
-## 60.6 Document and Rectangle Detection
+## 60.6 Document and Rectangle Detection 🟡
 
-`DetectDocumentSegmentationRequest` and `DetectRectanglesRequest` locate document-like or general rectangular shapes within an image (like a piece of paper or a whiteboard captured at an angle), returning the shape's corner points — the foundation for document-scanning features that correct perspective distortion.
+`DetectDocumentSegmentationRequest` and `DetectRectanglesRequest` find **paper or other rectangles** in an image, even when the photo is taken at an angle. They return the **corner points**.
 
 ```swift
 func detectDocument(in cgImage: CGImage) async throws -> [VNPoint] {
@@ -99,13 +164,19 @@ func detectDocument(in cgImage: CGImage) async throws -> [VNPoint] {
 }
 ```
 
-Detecting a document's four corners is specifically what enables the classic "scan a document" feature seen in Notes and dedicated scanner apps — once the corner points are known, a perspective-correction transform can warp the photographed, angled document into a clean, rectangular, top-down view, a substantially better result than simply cropping the original photo without correcting for the camera's actual viewing angle.
+This is how "scan a document" works in the Notes app:
+
+1. Find the **four corners** of the paper.
+2. Use a **perspective correction** to straighten the photo.
+3. Show a clean, flat, top-down page.
+
+This is much better than only cropping the photo, because cropping does not fix the camera angle.
 
 ---
 
-## 60.7 SpeechAnalyzer and SpeechTranscriber
+## 60.7 SpeechAnalyzer and SpeechTranscriber 🟡
 
-`SpeechAnalyzer`, paired with `SpeechTranscriber`, provides on-device speech-to-text transcription — a modernized, more flexible replacement for the older `SFSpeechRecognizer` API, supporting both file-based and live, streaming audio transcription.
+`SpeechAnalyzer` with `SpeechTranscriber` turns **speech into text**, on the device. It replaces the older `SFSpeechRecognizer`, and works with both audio files and live audio.
 
 ```swift
 import Speech
@@ -124,13 +195,23 @@ func transcribeAudio(from url: URL) async throws -> String {
 }
 ```
 
-Running transcription entirely on-device (rather than requiring an uploaded audio file processed by a cloud speech-to-text service) provides the same privacy and offline-availability benefits already discussed for on-device translation (57.15) and Foundation Models (58.1) — genuinely sensitive audio content, like a private voice memo or a confidential meeting recording, never needs to leave the device for transcription to succeed.
+Use it:
+
+```swift
+let text = try await transcribeAudio(from: voiceMemoURL)
+print(text)   // "Remember to buy flour and eggs."
+```
+
+It runs **on the device**, so it is private and works offline. A private voice memo or a confidential meeting never has to be uploaded. This is the same benefit as on-device translation (57.15) and Foundation Models (58.1).
 
 ---
 
-## 60.8 Natural Language: Tokenization and Tagging
+## 60.8 Natural Language: Tokenization and Tagging 🟢
 
-The Natural Language framework's `NLTokenizer` splits text into words, sentences, or paragraphs according to language-aware rules, while `NLTagger` assigns linguistic tags (part of speech, named entities like people or places, language identification) to tokens within text.
+The **Natural Language** framework works with text:
+
+- **`NLTokenizer`:** splits text into words, sentences, or paragraphs, using the rules of the language.
+- **`NLTagger`:** puts a label on each piece, like noun or verb, a person's name, or a place.
 
 ```swift
 import NaturalLanguage
@@ -149,13 +230,35 @@ func tagPartsOfSpeech(in text: String) -> [(String, String)] {
 }
 ```
 
-`NLTokenizer`'s language-aware splitting is a meaningfully more robust foundation than naive whitespace-based splitting — many languages don't use whitespace to separate words at all (a challenge that would defeat a simple `.split(separator: " ")` approach entirely), and even for languages that do, correctly handling punctuation, contractions, and sentence boundaries requires genuine linguistic awareness rather than simple character-based rules.
+Splitting into sentences:
+
+```swift
+func sentences(in text: String) -> [String] {
+    let tokenizer = NLTokenizer(unit: .sentence)
+    tokenizer.string = text
+    var result: [String] = []
+    tokenizer.enumerateTokens(in: text.startIndex..<text.endIndex) { range, _ in
+        result.append(String(text[range]))
+        return true
+    }
+    return result
+}
+```
+
+Detecting the language:
+
+```swift
+let language = NLLanguageRecognizer.dominantLanguage(for: "Bonjour tout le monde")
+print(language?.rawValue ?? "unknown")   // "fr"
+```
+
+**Why not just split on spaces?** Many languages do not use spaces between words. And even in English, punctuation, contractions, and sentence ends need real language rules. `NLTokenizer` knows them.
 
 ---
 
-## 60.9 Natural Language: Embeddings and Similarity
+## 60.9 Natural Language: Embeddings and Similarity 🟡
 
-`NLEmbedding` provides pre-trained word and sentence embeddings — numeric vector representations of text meaning, where semantically similar words or sentences produce vectors with small computed distances between them, enabling similarity search, clustering, or "find related content" features.
+`NLEmbedding` has ready-made **embeddings**: lists of numbers that capture the **meaning** of a word or sentence. Words with similar meaning are **close**. Use it for "related items" and similarity search.
 
 ```swift
 func findSimilarWords(to word: String) -> [(String, Double)] {
@@ -164,13 +267,23 @@ func findSimilarWords(to word: String) -> [(String, Double)] {
 }
 ```
 
-This mirrors the image feature print similarity pattern from 60.5, applied here to text instead of images — both techniques reduce complex, high-dimensional content to a compact vector representation specifically designed so that semantic similarity corresponds to small distances between vectors, and both enable practical features like "find related items" without requiring an app to implement or train its own custom embedding model from scratch.
+Compare two sentences:
+
+```swift
+if let embedding = NLEmbedding.sentenceEmbedding(for: .english) {
+    let near = embedding.distance(between: "I love pasta", and: "I enjoy spaghetti")
+    let far = embedding.distance(between: "I love pasta", and: "The train is late")
+    print(near, far)   // near is smaller than far
+}
+```
+
+This is the same idea as image feature prints (60.5), but for text. And you do not need to train your own model.
 
 ---
 
-## 60.10 Sound Analysis Basics
+## 60.10 Sound Analysis Basics 🟡
 
-The Sound Analysis framework (`SNAudioStreamAnalyzer` with a `SNClassifySoundRequest`) classifies sounds within an audio stream against a built-in taxonomy of everyday sounds (a dog barking, a doorbell, applause, and hundreds of other categories) — distinct from ShazamKit's specific song-matching purpose (section 55.15), Sound Analysis identifies general sound *categories* rather than matching against a specific catalog of known songs.
+**Sound Analysis** (`SNAudioStreamAnalyzer` with `SNClassifySoundRequest`) tells you **what kind of sound** it hears: a dog barking, a doorbell, applause, and hundreds more.
 
 ```swift
 import SoundAnalysis
@@ -183,13 +296,31 @@ func classifySound(from buffer: AVAudioPCMBuffer) throws {
 }
 ```
 
-The distinction from ShazamKit is worth being precise about — Sound Analysis answers "what kind of sound is this" (a dog barking, glass breaking, a smoke alarm) using a general classification taxonomy, useful for accessibility features (alerting a deaf user to important environmental sounds) or ambient context awareness, while ShazamKit answers the narrower, different question of "what specific song is this," matched against a catalog of known audio fingerprints.
+The results come to an **observer**:
+
+```swift
+final class SoundObserver: NSObject, SNResultsObserving {
+    func request(_ request: SNRequest, didProduce result: SNResult) {
+        guard let result = result as? SNClassificationResult,
+              let best = result.classifications.first else { return }
+        print(best.identifier, best.confidence)   // for example "dog_bark", 0.93
+    }
+}
+```
+
+**Not the same as ShazamKit** (section 55.15):
+
+| | Sound Analysis | ShazamKit |
+|---|---|---|
+| Question | "What kind of sound is this?" | "Which song is this?" |
+| Example | A dog barking, glass breaking | "Bohemian Rhapsody" |
+| Good for | Accessibility, ambient context | Music recognition |
 
 ---
 
-## 60.11 Image Playground and Genmoji APIs 🟠
+## 60.11 Image Playground and Genmoji APIs 🟡
 
-Image Playground provides a system-integrated API for generating images from a text description or existing photo, presented through a standard system UI sheet (`ImagePlaygroundViewController` or a SwiftUI equivalent), while Genmoji extends similar generative capability specifically to creating custom, personalized emoji-like images.
+**Image Playground** makes images from a text description or a photo. It shows in a **standard system sheet**. **Genmoji** does the same for custom emoji-like images.
 
 ```swift
 import ImagePlayground
@@ -205,7 +336,7 @@ struct GenerateImageButton: View {
 }
 ```
 
-Like the other generative capabilities covered in this Part, Image Playground's generation runs through Apple's on-device (or hybrid) generative pipeline via a standardized system UI, rather than requiring an app to integrate a third-party image generation API directly — this provides a consistent, system-standard generation experience across apps, similar in spirit to how `SubscriptionStoreView` (section 56.6) provides consistent, standard purchase UI rather than each app building custom presentation from scratch.
+You do not connect to a third-party image service. Apple's system handles the generation, on the device or in a hybrid way, and shows one **consistent** screen across all apps. It is like `SubscriptionStoreView` (section 56.6), which gives a standard purchase screen instead of one you build yourself.
 
 ---
 
@@ -213,15 +344,15 @@ Like the other generative capabilities covered in this Part, Image Playground's 
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Modern Vision API | `ImageRequestHandler`, async requests | Unified, async/await computer vision access |
-| OCR | `RecognizeTextRequest` | Text extraction with candidates and confidence |
-| Code scanning | `DetectBarcodesRequest` | Barcode/QR detection, often paired with live capture |
-| Face/body analysis | `DetectFaceRectanglesRequest`, body pose requests | Bounding boxes, landmarks, and joint positions |
-| Visual similarity | `GenerateImageFeaturePrintRequest` | Compact embeddings for image similarity search |
-| Document scanning | `DetectDocumentSegmentationRequest` | Corner detection for perspective correction |
-| Speech to text | `SpeechAnalyzer`, `SpeechTranscriber` | On-device, streaming-capable transcription |
-| Text segmentation | `NLTokenizer` | Language-aware word/sentence/paragraph splitting |
-| Linguistic tagging | `NLTagger` | Part of speech, named entities, language ID |
-| Text similarity | `NLEmbedding` | Word/sentence vector embeddings for similarity |
-| Ambient sound ID | `SNClassifySoundRequest` | General sound category classification |
-| Generative imagery | Image Playground, Genmoji | System-integrated, on-device image generation |
+| Vision pattern | `ImageRequestHandler`, async requests | Handler, request, observations |
+| OCR | `RecognizeTextRequest` | Read text, with candidates and confidence |
+| Barcodes | `DetectBarcodesRequest` | Read barcodes and QR codes |
+| Faces and bodies | `DetectFaceRectanglesRequest`, body pose | Boxes, landmarks, joints |
+| Image similarity | `GenerateImageFeaturePrintRequest` | Close numbers mean similar images |
+| Document scanning | `DetectDocumentSegmentationRequest` | Find corners, straighten the page |
+| Speech to text | `SpeechAnalyzer`, `SpeechTranscriber` | On-device transcription |
+| Splitting text | `NLTokenizer` | Words and sentences, by language rules |
+| Tagging text | `NLTagger` | Parts of speech, names, language |
+| Text similarity | `NLEmbedding` | Close vectors mean similar meaning |
+| Sound categories | `SNClassifySoundRequest` | What kind of sound it is |
+| Generated images | Image Playground, Genmoji | System image generation |
