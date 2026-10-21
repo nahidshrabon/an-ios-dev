@@ -1,11 +1,24 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/OAuthButtons";
+import { rememberNextPath, safeNextPath } from "@/lib/safe-redirect";
 
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
+  const nextQuery = searchParams.has("next") ? `?next=${next}` : "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +60,9 @@ export default function SignupPage() {
       return;
     }
 
+    // The confirmation link lands on /auth/callback with no ?next=, so
+    // opening it in this browser goes on to where the reader was headed.
+    rememberNextPath(next);
     setSubmitted(true);
   }
 
@@ -69,7 +85,7 @@ export default function SignupPage() {
       <h1 className="font-heading text-2xl font-semibold tracking-tight">Sign up</h1>
 
       <div className="mt-8">
-        <OAuthButtons />
+        <OAuthButtons next={next} />
       </div>
 
       <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
@@ -111,7 +127,7 @@ export default function SignupPage() {
         {alreadyRegistered && (
           <p className="text-sm text-red-600">
             This email already has an account.{" "}
-            <Link href="/login" className="underline">
+            <Link href={`/login${nextQuery}`} className="underline">
               Log in
             </Link>{" "}
             instead, or{" "}
@@ -133,7 +149,7 @@ export default function SignupPage() {
 
       <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
         Already have an account?{" "}
-        <Link href="/login" className="underline">
+        <Link href={`/login${nextQuery}`} className="underline">
           Log in
         </Link>
       </p>

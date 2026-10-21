@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GitHubIcon } from "@/components/Icons";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { rememberNextPath } from "@/lib/safe-redirect";
 
 type Provider = "github";
 
@@ -11,14 +12,13 @@ const PROVIDERS: { id: Provider; label: string; Icon: typeof GitHubIcon }[] = [
   { id: "github", label: "Continue with GitHub", Icon: GitHubIcon },
 ];
 
-// Deliberately does NOT forward a ?next= param through redirectTo. Every
-// call site here wants /roadmap anyway (the login page's own default and
-// /auth/callback's fallback both already resolve there), and a callback URL
+// Deliberately does NOT forward `next` through redirectTo: a callback URL
 // carrying its own nested query string is one more thing that has to survive
-// unmangled through Supabase's redirect-URL matching and the full
-// provider round trip. Keeping this URL as plain as possible removes a
-// variable that isn't earning its keep.
-export function OAuthButtons() {
+// unmangled through Supabase's redirect-URL matching and the full provider
+// round trip. It goes in a short-lived cookie that /auth/callback reads
+// instead (rememberNextPath). Google needs neither, since its sign-in
+// finishes on this page.
+export function OAuthButtons({ next }: { next?: string }) {
   const [loadingProvider, setLoadingProvider] = useState<Provider | null>(
     null
   );
@@ -29,6 +29,7 @@ export function OAuthButtons() {
     setError(null);
 
     const redirectTo = new URL("/auth/callback", window.location.origin);
+    rememberNextPath(next);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -46,7 +47,7 @@ export function OAuthButtons() {
 
   return (
     <div className="flex flex-col gap-3">
-      <GoogleSignInButton />
+      <GoogleSignInButton next={next} />
       {PROVIDERS.map(({ id, label, Icon }) => (
         <button
           key={id}

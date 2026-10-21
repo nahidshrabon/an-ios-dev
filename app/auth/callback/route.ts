@@ -1,8 +1,13 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { safeNextPath } from "@/lib/safe-redirect";
+import {
+  NEXT_PATH_COOKIE,
+  NEXT_PATH_COOKIE_PATH,
+  safeNextPath,
+} from "@/lib/safe-redirect";
 
-// Handles the redirect back from Google OAuth, email confirmation links, and
+// Handles the redirect back from GitHub OAuth, email confirmation links, and
 // password reset links. Two exchange styles are supported:
 //
 //   ?token_hash=<hash>&type=<type>  — works in any browser / on any device
@@ -63,7 +68,16 @@ export async function GET(request: Request) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const errorCode = searchParams.get("error_code");
-  const next = safeNextPath(searchParams.get("next"));
+
+  // ?next= wins (the password-reset link sets it); otherwise the destination
+  // remembered when a GitHub or email sign-up started. Cleared either way,
+  // so it can't steer a later sign-in.
+  const cookieStore = await cookies();
+  const rememberedNext = cookieStore.get(NEXT_PATH_COOKIE)?.value;
+  if (rememberedNext !== undefined) {
+    cookieStore.delete({ name: NEXT_PATH_COOKIE, path: NEXT_PATH_COOKIE_PATH });
+  }
+  const next = safeNextPath(searchParams.get("next") ?? rememberedNext);
 
   const supabase = await createClient();
 

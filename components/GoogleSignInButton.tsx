@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 type CredentialResponse = { credential: string };
 
@@ -57,7 +58,7 @@ async function generateNonce(): Promise<[raw: string, hashed: string]> {
 // GitHub. Google issues the token to this origin directly, so the handshake
 // never passes through the Supabase project's domain — which is what Google
 // would otherwise name on its consent screen.
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ next }: { next?: string }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export function GoogleSignInButton() {
           return;
         }
 
-        router.push("/roadmap");
+        router.push(safeNextPath(next));
         router.refresh();
       },
     });
@@ -99,7 +100,7 @@ export function GoogleSignInButton() {
       shape: "pill",
       width: 336,
     });
-  }, [router]);
+  }, [next, router]);
 
   return (
     <>
