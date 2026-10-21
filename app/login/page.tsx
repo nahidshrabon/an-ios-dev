@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState, type FormEvent } from "react";
+import { use, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/OAuthButtons";
 import { safeNextPath } from "@/lib/safe-redirect";
@@ -27,21 +27,35 @@ const CALLBACK_ERRORS = new Map([
   ["auth_failed", "Could not authenticate"],
 ]);
 
-export default function LoginPage() {
+// The searchParams prop rather than useSearchParams: on this otherwise
+// static page the hook left the whole form out of the server HTML, so it
+// only appeared once JS loaded. The prop renders the page per request instead.
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
+}) {
+  const { next, error } = use(searchParams);
   return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
+    <LoginForm
+      rawNext={typeof next === "string" ? next : undefined}
+      errorCode={typeof error === "string" ? error : undefined}
+    />
   );
 }
 
-function LoginForm() {
+function LoginForm({
+  rawNext,
+  errorCode,
+}: {
+  rawNext?: string;
+  errorCode?: string;
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   // Validated: router.push follows an absolute or //host URL off-site.
-  const next = safeNextPath(searchParams.get("next"));
-  const nextQuery = searchParams.has("next") ? `?next=${next}` : "";
-  const urlError = CALLBACK_ERRORS.get(searchParams.get("error") ?? "") ?? null;
+  const next = safeNextPath(rawNext);
+  const nextQuery = rawNext !== undefined ? `?next=${next}` : "";
+  const urlError = CALLBACK_ERRORS.get(errorCode ?? "") ?? null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

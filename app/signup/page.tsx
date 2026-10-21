@@ -1,24 +1,26 @@
 "use client";
 
-import { Suspense, useState, type FormEvent } from "react";
+import { use, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/OAuthButtons";
 import { rememberNextPath, safeNextPath } from "@/lib/safe-redirect";
 
-export default function SignupPage() {
-  return (
-    <Suspense>
-      <SignupForm />
-    </Suspense>
-  );
+// The searchParams prop rather than useSearchParams: on this otherwise
+// static page the hook left the whole form out of the server HTML, so it
+// only appeared once JS loaded. The prop renders the page per request instead.
+export default function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const { next } = use(searchParams);
+  return <SignupForm rawNext={typeof next === "string" ? next : undefined} />;
 }
 
-function SignupForm() {
-  const searchParams = useSearchParams();
-  const next = safeNextPath(searchParams.get("next"));
-  const nextQuery = searchParams.has("next") ? `?next=${next}` : "";
+function SignupForm({ rawNext }: { rawNext?: string }) {
+  const next = safeNextPath(rawNext);
+  const nextQuery = rawNext !== undefined ? `?next=${next}` : "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
