@@ -53,6 +53,10 @@ function redirectResponse(path: string) {
   );
 }
 
+// Failures send /login a short ?error= code, never the message itself. The
+// login page looks each code up in its own list (CALLBACK_ERRORS) and shows
+// nothing for any other value, so a crafted /login?error= link can't put its
+// own words on the real login page.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
@@ -87,17 +91,9 @@ export async function GET(request: Request) {
     // button to point at, and Supabase verified the email before redirecting
     // here, so a new account is already confirmed and just needs a login.
     if (error.code === "pkce_code_verifier_not_found") {
-      return redirectResponse(
-        `/login?error=${encodeURIComponent(
-          "That link was opened in a different browser than the one it was requested from. If you were confirming a new account, it's confirmed — just log in. If you were resetting your password, request a new link and open it in this browser."
-        )}`
-      );
+      return redirectResponse("/login?error=link_other_browser");
     }
-    return redirectResponse(
-      `/login?error=${encodeURIComponent(
-        "That link couldn't be verified. It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser."
-      )}`
-    );
+    return redirectResponse("/login?error=link_invalid");
   }
 
   // Email scanners (e.g. Gmail's link-safety prefetch) sometimes visit
@@ -105,14 +101,8 @@ export async function GET(request: Request) {
   // If that happened, the account is usually already confirmed — the code
   // just isn't valid for a second use.
   if (errorCode === "otp_expired") {
-    return redirectResponse(
-      `/login?error=${encodeURIComponent(
-        "That link was already used (often by your email app scanning it for safety). If you just signed up, your email is likely already confirmed — try logging in."
-      )}`
-    );
+    return redirectResponse("/login?error=link_used");
   }
 
-  return redirectResponse(
-    `/login?error=${encodeURIComponent("Could not authenticate")}`
-  );
+  return redirectResponse("/login?error=auth_failed");
 }

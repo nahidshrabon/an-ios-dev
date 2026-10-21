@@ -7,6 +7,26 @@ import { createClient } from "@/lib/supabase/client";
 import { OAuthButtons } from "@/components/OAuthButtons";
 import { safeNextPath } from "@/lib/safe-redirect";
 
+// The messages behind the ?error= codes that /auth/callback sends. The text
+// is never read from the URL: any other value shows nothing, so a crafted
+// /login?error= link can't put its own words on the real login page. A Map,
+// not an object, so "constructor" or "__proto__" can't match a prototype key.
+const CALLBACK_ERRORS = new Map([
+  [
+    "link_other_browser",
+    "That link was opened in a different browser than the one it was requested from. If you were confirming a new account, it's confirmed — just log in. If you were resetting your password, request a new link and open it in this browser.",
+  ],
+  [
+    "link_invalid",
+    "That link couldn't be verified. It may have expired or already been used, or it was opened in a different browser than the one you requested it from. Request a new link and open it in the same browser.",
+  ],
+  [
+    "link_used",
+    "That link was already used (often by your email app scanning it for safety). If you just signed up, your email is likely already confirmed — try logging in.",
+  ],
+  ["auth_failed", "Could not authenticate"],
+]);
+
 export default function LoginPage() {
   return (
     <Suspense>
@@ -20,7 +40,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   // Validated: router.push follows an absolute or //host URL off-site.
   const next = safeNextPath(searchParams.get("next"));
-  const urlError = searchParams.get("error");
+  const urlError = CALLBACK_ERRORS.get(searchParams.get("error") ?? "") ?? null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
