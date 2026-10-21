@@ -124,6 +124,22 @@ config = cto.OptimizationConfig(
 compressed_model = cto.palettize_weights(mlmodel, config)
 ```
 
+**How palettization works.** Think of a GIF with only 256 colors: each pixel stores a number that points into a small palette. A model does the same with its weights:
+
+```plaintext
+Original weights:   0.8123   0.8109   -0.3342   0.8130
+Palette:            [0] 0.812    [1] -0.334
+Stored indexes:     0        0         1         0
+```
+
+1. **Group** weights that are close together.
+2. **Pick one value** for each group. These values are the **palette**.
+3. **Store a small index** for each weight, not the full number.
+
+`nbits=4` means a palette of 2⁴ = **16 values**. Each weight becomes a 4-bit index instead of 16 bits, so the weights take about **4 times less space**. Fewer bits give a smaller model, but each weight is rounded more.
+
+Compared with quantization, the palette values come **from your own data** and are not evenly spaced.
+
 Quantization looks like this:
 
 ```python
