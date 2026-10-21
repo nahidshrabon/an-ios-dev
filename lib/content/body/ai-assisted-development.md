@@ -1,6 +1,8 @@
-## 61.1 Xcode 27 Coding Intelligence Overview
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Xcode 27 integrates AI-assisted coding directly into the IDE — inline code completion, chat-based code generation and editing, and agentic capability for multi-file changes, all accessible without leaving Xcode, building on the same on-device/cloud model landscape introduced for apps in Part 8 (Foundation Models, section 58; cloud routing, section 58.15).
+## 61.1 Xcode 27 Coding Intelligence Overview 🟢
+
+Xcode 27 has **AI help built into the editor**. It uses the same on-device and cloud models as in Part 8 (Foundation Models in section 58, and cloud routing in 58.15).
 
 ```swift
 // Xcode's coding intelligence surfaces through several distinct interaction modes:
@@ -9,13 +11,19 @@ Xcode 27 integrates AI-assisted coding directly into the IDE — inline code com
 // - Agentic editing: multi-file changes planned and executed with review before applying
 ```
 
-This integration reflects a real shift in how iOS development itself is practiced — rather than treating AI assistance as an external tool bolted onto the workflow (a separate chat window, a browser tab), Xcode 27 treats it as a first-class part of the IDE, with context about the actual project (its files, types, and build state) available to the assistant in a way an external, disconnected tool wouldn't have.
+| Mode | What it does |
+|---|---|
+| **Inline completion** | Suggests code as you type |
+| **Chat** | A panel where you ask questions or request changes |
+| **Agentic editing** | Plans and makes changes in several files, and you review them first |
+
+The big difference from a separate chat window or a browser tab: **Xcode knows your project**. The assistant can see your files, your types, and your build state.
 
 ---
 
-## 61.2 Choosing a Model: On-Device vs Claude vs Gemini
+## 61.2 Choosing a Model: On-Device vs Claude vs Gemini 🟢
 
-Xcode's coding intelligence, like the app-facing Foundation Models framework covered in section 58.15, supports routing between the on-device model and cloud-hosted models (Claude, Gemini) — with the right choice depending on task complexity, privacy sensitivity of the code involved, and whether network connectivity is available.
+Like Foundation Models (58.15), Xcode can use the **on-device model** or a **cloud model** (Claude or Gemini). The right choice depends on three things: how hard the task is, how private the code is, and whether you have a network.
 
 ```swift
 // Model selection considerations for development tasks:
@@ -25,13 +33,20 @@ Xcode's coding intelligence, like the app-facing Foundation Models framework cov
 //   architectural suggestions, or generating substantial new functionality
 ```
 
-This mirrors the exact hybrid trade-off discussed for in-app AI features in section 58.15, but applied here to the development process itself — a quick local variable rename or small completion is well within an on-device model's capability, while planning a genuinely complex multi-file refactor or generating a new feature's architecture benefits from a larger cloud model's greater reasoning capacity, with the choice of which to use for a given task being a real, situational decision rather than a fixed default.
+| | On-device | Cloud (Claude, Gemini) |
+|---|---|---|
+| Speed | Fast | Needs network |
+| Privacy | Code stays on your Mac | Code is sent to a server |
+| Offline | Works | Does not work |
+| Good for | A rename, a small completion, sensitive code | A big multi-file refactor, a new feature design |
+
+It is the same trade-off as for in-app AI. It is **a choice for each task**, not a fixed setting.
 
 ---
 
-## 61.3 Agentic Workflows: Planning and Multi-File Edits
+## 61.3 Agentic Workflows: Planning and Multi-File Edits 🟡
 
-Agentic coding workflows go beyond single-file suggestions — given a higher-level goal ("add a dark mode toggle to settings and persist the preference"), an agent can plan a sequence of changes across multiple files, execute them, and present the result for review before changes are actually applied.
+An **agent** can do more than complete one line. You give a **goal** ("add a dark mode toggle to settings and save it"), and it **plans and changes several files**. You review the result before it is applied.
 
 ```swift
 // A typical agentic workflow for a stated goal proceeds through phases:
@@ -41,13 +56,38 @@ Agentic coding workflows go beyond single-file suggestions — given a higher-le
 // 4. Iteration: feedback on the review can trigger further refinement
 ```
 
-The planning phase is what meaningfully distinguishes agentic workflows from simple autocomplete — rather than suggesting the next few tokens at the cursor, the agent reasons about the goal's full scope (which might span a SwiftUI view, a persisted `@AppStorage` property, and a settings model type) and proposes a coordinated set of changes across all the relevant files, with the review step remaining an essential human checkpoint before those changes are actually accepted.
+For the dark mode goal, the changes could be small edits in two files:
+
+```swift
+// SettingsView.swift: a toggle that saves the choice
+struct SettingsView: View {
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
+    var body: some View {
+        Form {
+            Toggle("Dark mode", isOn: $isDarkMode)
+        }
+    }
+}
+
+// RootView.swift: apply the choice to the whole app
+struct RootView: View {
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
+    var body: some View {
+        ContentView()
+            .preferredColorScheme(isDarkMode ? .dark : nil)
+    }
+}
+```
+
+**Planning** is what makes an agent different from autocomplete. It thinks about the whole goal (a view, a saved setting, and where it is used) and proposes **changes that fit together**. The **review step** is still yours. Read the diff before you accept it.
 
 ---
 
-## 61.4 Generating SwiftUI Views with the Agent
+## 61.4 Generating SwiftUI Views with the Agent 🟡
 
-A common, concrete agentic use case is generating a new SwiftUI view from a natural-language description or a reference design — the agent produces working Swift code conforming to `View`, informed by the project's existing style conventions and available design system components where present.
+A common use: **describe a screen in words**, and the agent writes the SwiftUI view. It tries to follow your project's style and your design components.
 
 ```swift
 // Example prompt: "Create a card view showing a recipe's photo, title, and cook time"
@@ -73,13 +113,29 @@ struct RecipeCardView: View {
 }
 ```
 
-Generated SwiftUI code still warrants the same review discipline as any other AI-generated code (61.10, 61.11) — even a plausible-looking, compiling view can embed subtly wrong assumptions (an incorrect aspect ratio, a missed accessibility label, or state management that doesn't match the rest of the app's actual architecture from section 45), so treating generated views as a solid first draft to review and adapt, not a finished, unreviewed deliverable, remains the right posture.
+It compiles and looks right, but **review it** like any AI code (61.10, 61.11). Things to check:
+
+```swift
+// A reviewed version: one accessibility description and a clear shape
+VStack(alignment: .leading) {
+    // ... image, title, time ...
+}
+.accessibilityElement(children: .combine)             // read as one item
+.accessibilityLabel("\(recipe.title), \(recipe.cookTimeMinutes) minutes")
+.clipShape(RoundedRectangle(cornerRadius: 12))
+```
+
+- **Does it match the app?** For example, the state management should follow the architecture from section 45.
+- **Accessibility:** labels, and text that grows with Dynamic Type.
+- **Details:** a wrong aspect ratio, a missing placeholder, or a hardcoded size.
+
+Treat the result as a **good first draft**, not a finished view.
 
 ---
 
-## 61.5 Localizing String Catalogs with AI
+## 61.5 Localizing String Catalogs with AI 🟡
 
-AI assistance can meaningfully speed up localization work against a project's String Catalog (recall section 71's broader localization coverage) — suggesting translations for new or changed strings across an app's supported languages, with a human translator or reviewer still expected to verify quality and cultural appropriateness before shipping.
+AI can **draft translations** for your **String Catalog** (more in section 71). It speeds up the first pass, but a **person who knows the language should review** the result before you ship.
 
 ```swift
 // String Catalog entries can be AI-drafted, e.g. for a new string:
@@ -88,13 +144,34 @@ AI assistance can meaningfully speed up localization work against a project's St
 // pending human review before being considered final.
 ```
 
-AI-drafted translations are best understood as accelerating the *first pass* of localization work, not replacing the review step entirely — machine-suggested translations can miss cultural nuance, incorrect register (too formal or too casual for the target context), or simply produce a technically correct but unnatural-sounding phrase, meaning a human reviewer with genuine fluency in the target language remains an important part of a quality localization pipeline.
+A String Catalog file (`.xcstrings`) is JSON. An AI draft can be marked as **needing review**:
+
+```json
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Add to Favorites": {
+      "localizations": {
+        "fr": {
+          "stringUnit": { "state": "needs_review", "value": "Ajouter aux favoris" }
+        },
+        "es": {
+          "stringUnit": { "state": "needs_review", "value": "Añadir a favoritos" }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
+```
+
+Why a person still checks: a machine translation can miss **culture** (a joke or a symbol), use the wrong **tone** (too formal or too casual), or be correct but **sound unnatural**. Mark AI drafts as needs review, and change them to translated only after a human checks them.
 
 ---
 
-## 61.6 Xcode Tool Plugins 🟠
+## 61.6 Xcode Tool Plugins 🔴
 
-Xcode tool plugins let an AI coding assistant call out to external tools and services during a coding session — running a linter, querying a database schema, or fetching documentation from an external source — extending the assistant's capability beyond what it can determine from the project's own files alone.
+**Tool plugins** let the AI assistant **call outside tools** during a session: run a linter, ask a database about its schema, or fetch documentation. The assistant then knows more than your project files alone can tell it.
 
 ```swift
 // Conceptually similar to how Foundation Models' Tool protocol (section 58.10)
@@ -103,13 +180,19 @@ Xcode tool plugins let an AI coding assistant call out to external tools and ser
 // e.g., a plugin that runs `swiftlint` and feeds results back into the conversation.
 ```
 
-This tool-plugin extensibility directly parallels the `Tool` protocol pattern from Foundation Models (58.10) — in both cases, the model's own reasoning process is augmented with the ability to call out to external, developer-defined functionality when its built-in knowledge alone isn't sufficient, whether that's an app-facing language model needing live weather data or a coding assistant needing to actually run a linter against the current codebase rather than guessing at style violations.
+It is the same idea as the **`Tool` protocol** in Foundation Models (58.10):
+
+| | Foundation Models `Tool` | Xcode tool plugin |
+|---|---|---|
+| Who calls it | The language model in your app | The coding assistant in Xcode |
+| Example | Get live weather | Run `swiftlint` |
+| Why | The model lacks live data | The assistant should run the linter, not guess |
 
 ---
 
-## 61.7 Using Claude Code in an iOS Repo
+## 61.7 Using Claude Code in an iOS Repo 🟡
 
-Claude Code, as a terminal-based agentic coding tool, can work directly within an iOS repository — reading Swift source files, running `xcodebuild` or `swift test` to verify changes, and making coordinated edits across a project, operating alongside (or independently of) Xcode's own integrated coding intelligence.
+**Claude Code** is an AI coding agent that runs in the **terminal**. In an iOS repo, it can read your Swift files, make edits across the project, and **run real commands** like `xcodebuild` and `swift test` to check its own work. You can use it next to Xcode's own AI, or instead of it.
 
 ```bash
 # Claude Code can invoke standard iOS tooling directly from the terminal:
@@ -118,13 +201,25 @@ swift build
 swift test
 ```
 
-Because Claude Code operates through the terminal and standard command-line tooling rather than being embedded in Xcode's UI specifically, it's well suited to tasks that benefit from running real build/test commands as part of its own verification loop — making a change, then actually running `swift test` to confirm the change didn't break anything, rather than relying solely on static reasoning about whether code is likely correct.
+Start it in your project folder:
+
+```bash
+cd MyApp
+claude                                     # start an interactive session
+claude -p "Run the tests and fix any failing ones"    # one task, then exit
+```
+
+An example prompt:
+
+> Add a favorites toggle to `RecipeDetailView`. Follow the existing MVVM style. Then run `swift test` and fix any failures.
+
+Because it works through **normal command-line tools**, it can **make a change, then run the tests** to see if the change really works, instead of only guessing that the code is correct.
 
 ---
 
-## 61.8 Writing a CLAUDE.md for Your Project
+## 61.8 Writing a CLAUDE.md for Your Project 🟡
 
-A `CLAUDE.md` file at a repository's root gives Claude Code persistent, project-specific context — architectural conventions, build/test commands, coding style preferences, and anything else that would otherwise need to be re-explained at the start of every session.
+A **`CLAUDE.md`** file in your repository's root gives Claude Code **lasting facts about your project**: how to build and test, your architecture, and your style. Without it, you would repeat them at the start of every session.
 
 ```plaintext
 # CLAUDE.md example structure for an iOS project
@@ -134,7 +229,7 @@ A `CLAUDE.md` file at a repository's root gives Claude Code persistent, project-
 - Test: `swift test` (unit tests use Swift Testing, see section 65)
 
 ## Architecture
-- MVVM with `@Observable` view models (see section 46.3)
+- MVVM with `@Observable` view models (see section 45.3)
 - Dependency injection via a shared `Dependencies` container (section 47)
 
 ## Conventions
@@ -142,13 +237,19 @@ A `CLAUDE.md` file at a repository's root gives Claude Code persistent, project-
 - New views go in `Sources/Views/`, grouped by feature
 ```
 
-A well-maintained `CLAUDE.md` meaningfully reduces the amount of context an agent needs to be given manually in each new session — much like how well-chosen `AppIntent` instructions or Foundation Models session instructions (recall the instructions-vs-prompts distinction, section 58.4) establish stable, persistent framing once rather than repeating it per interaction, a good `CLAUDE.md` establishes the project's stable facts once, letting each individual coding session focus on the specific task at hand.
+Tips:
+
+- **Create a first draft** with the `/init` command inside Claude Code, then edit it.
+- **Import other files** with `@path`. For example, a line `@AGENTS.md` pulls that file in, so you keep one source of truth.
+- **Keep it short and specific.** Commands, rules, and where things live. Not long essays.
+
+It works like the **instructions** of a Foundation Models session (58.4): you set stable rules once, so each session can focus on the task.
 
 ---
 
-## 61.9 MCP Servers for iOS Workflows 🟠
+## 61.9 MCP Servers for iOS Workflows 🔴
 
-Model Context Protocol (MCP) servers extend an AI coding assistant's reach into external systems and services relevant to iOS development — a server exposing App Store Connect data, a design tool's component library, or project management issue tracking — giving the assistant structured access to information beyond the local filesystem.
+**MCP** (Model Context Protocol) is a **standard way to connect an AI assistant to outside systems**. An **MCP server** can give the assistant things like App Store Connect data, a design tool's components, or your issue tracker. These are things the local files do not have.
 
 ```swift
 // Conceptually: an MCP server for iOS workflows might expose tools like:
@@ -159,13 +260,32 @@ Model Context Protocol (MCP) servers extend an AI coding assistant's reach into 
 // external context directly into its reasoning and code generation.
 ```
 
-MCP servers generalize the tool-calling pattern seen throughout this Part (Foundation Models' `Tool` protocol in 58.10, Xcode tool plugins in 61.6) to a broader, standardized protocol for connecting an AI assistant to external systems — rather than each tool integration being bespoke, MCP provides a common interface, meaning a single coding assistant can potentially work with any MCP-compatible service relevant to an iOS team's actual workflow, from crash reporting to project management.
+In Claude Code, you add a server with one command:
+
+```bash
+claude mcp add --transport http crash-reports https://example.com/mcp
+```
+
+Or you list it in a `.mcp.json` file at the repo root, so the whole team shares it:
+
+```json
+{
+  "mcpServers": {
+    "crash-reports": {
+      "type": "http",
+      "url": "https://example.com/mcp"
+    }
+  }
+}
+```
+
+MCP **generalizes tool calling** (Foundation Models' `Tool` in 58.10 and Xcode tool plugins in 61.6) into one **common protocol**. You do not need a custom link for each tool. One assistant can work with any MCP service, from crash reports to project management.
 
 ---
 
-## 61.10 Reviewing AI-Generated Swift for Concurrency Bugs
+## 61.10 Reviewing AI-Generated Swift for Concurrency Bugs 🟡
 
-AI-generated Swift code, however plausible-looking, requires the same careful scrutiny around concurrency correctness (recall Swift's strict concurrency checking and actor isolation from Part 2) that any human-written code would — generated code can compile cleanly while still containing genuine data races, incorrect actor isolation assumptions, or unsafe `@unchecked Sendable` usage that only manifests as a bug under real concurrent execution.
+AI code can look right and compile, but still have **concurrency bugs** (Part 2): data races, wrong actor assumptions, or unsafe `@unchecked Sendable`. The bug only appears when the code really runs on several threads.
 
 ```swift
 // AI-generated code that compiles but may hide a concurrency bug:
@@ -180,13 +300,32 @@ class Cache {
 // only ever mutated from one isolation context, or does that assumption not hold?
 ```
 
-This concern echoes a general theme from this curriculum's concurrency material (Part 2) — Swift's compiler-enforced concurrency checking catches many, but not all, classes of concurrency bugs, and AI-generated code is not exempt from the same careful reasoning about actor isolation, `Sendable` conformance, and genuine thread-safety that any other code requires; a generated `class` that should really have been an `actor`, for instance, might compile without any strict-concurrency warnings while still harboring a real race condition.
+A safer version makes it an **actor**, so only one task touches the data at a time:
+
+```swift
+actor Cache {
+    private var storage: [String: Data] = [:]
+
+    func store(_ data: Data, for key: String) {
+        storage[key] = data              // safe: the actor allows one caller at a time
+    }
+
+    func data(for key: String) -> Data? {
+        storage[key]
+    }
+}
+
+// Callers use await:
+await cache.store(data, for: "recipe-1")
+```
+
+The compiler catches many concurrency bugs, but **not all**. A generated `class` that should be an `actor` can compile with no warning and still have a real race. Ask about **actor isolation**, **`Sendable`**, and **thread safety**, as you would for any code.
 
 ---
 
-## 61.11 Reviewing AI-Generated Swift for Retain Cycles
+## 61.11 Reviewing AI-Generated Swift for Retain Cycles 🟡
 
-Generated code involving closures capturing `self` (a common pattern in completion handlers, `Timer` callbacks, or Combine/async sequences) needs the same `[weak self]` scrutiny as any hand-written closure — an AI assistant generating plausible-looking code doesn't automatically avoid retain cycles unless explicitly reasoning about the object graph's actual lifetime.
+A closure that captures `self` can **keep the object alive** and leak memory. This is common in callbacks, `Timer`, and observers. AI code does not avoid it unless it thinks about how long each object lives.
 
 ```swift
 // AI-generated code that compiles fine but introduces a retain cycle:
@@ -203,13 +342,34 @@ class ViewModel {
 // this closure's entire lifetime, or should this capture be [weak self]?
 ```
 
-Retain cycles are a genuinely easy category of bug for generated code to introduce invisibly, since a strong `self` capture inside a closure compiles without any warning and often "works" in casual testing (the closure fires, the callback runs) while still silently leaking memory — reviewing generated closures specifically for capture semantics, just as one would for hand-written code, remains an essential step rather than an optional one.
+The fix: capture `self` **weakly**, and keep the observer token so you can remove it:
+
+```swift
+class ViewModel {
+    var onUpdate: (() -> Void)?
+    private var observer: NSObjectProtocol?
+
+    func startObserving() {
+        observer = NotificationCenter.default.addObserver(
+            forName: .someEvent, object: nil, queue: .main
+        ) { [weak self] _ in            // weak: the closure does not keep self alive
+            self?.onUpdate?()
+        }
+    }
+
+    deinit {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+    }
+}
+```
+
+This bug is easy to miss. A strong `self` **compiles with no warning** and often "works" in a quick test, while it quietly leaks memory. **Always review the captures** in generated closures.
 
 ---
 
-## 61.12 Keeping Secrets and Proprietary Code Out of AI Tools
+## 61.12 Keeping Secrets and Proprietary Code Out of AI Tools 🟡
 
-Using AI coding tools, particularly cloud-routed ones, raises a genuine data-handling question: what code and data is actually being sent to the assistant, and under what data retention and training-use policies — a concern that applies with particular weight to API keys, credentials, and genuinely proprietary or sensitive source code.
+When you use AI tools, especially cloud ones, ask: **what code and data is sent, and what happens to it?** (How long is it kept? Is it used for training?) This matters most for **API keys, passwords, and private source code**.
 
 ```swift
 // Practical mitigations:
@@ -220,7 +380,31 @@ Using AI coding tools, particularly cloud-routed ones, raises a genuine data-han
 //   for whichever AI tools are in use, rather than assuming a default is safe
 ```
 
-This concern directly parallels the app-facing prompt injection and privacy discussions from section 58 (guardrails, 58.17; prompt injection defense, 58.18) but from the opposite direction — there, the concern was untrusted content influencing the model; here, the concern is sensitive project content being sent *to* a cloud-routed model in the first place, making it worth deliberately choosing on-device routing or excluding certain files/directories from an AI tool's context when working with genuinely sensitive material.
+**1. Keep secrets out of source.** Put them in a file that is not committed (and not read by the AI):
+
+```plaintext
+# Secrets.xcconfig  (listed in .gitignore)
+API_KEY = your-key-here
+```
+
+```swift
+// Read it at runtime, from Info.plist (which gets the value from the xcconfig)
+let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String
+```
+
+**2. Tell the AI tool not to read them.** In Claude Code, a `.claude/settings.json` file can block files:
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./Secrets.xcconfig)"]
+  }
+}
+```
+
+**3. Choose on-device routing** (61.2) for very sensitive modules.
+
+This is the **opposite direction** of the risks in section 58 (guardrails in 58.17 and prompt injection in 58.18). There, untrusted content influenced the model. Here, your **sensitive content is sent to** a cloud model in the first place. So choose on-device, or exclude files from the AI's context.
 
 ---
 
@@ -228,15 +412,15 @@ This concern directly parallels the app-facing prompt injection and privacy disc
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| IDE integration | Xcode 27 coding intelligence | AI assistance as a first-class, project-aware IDE feature |
-| Model routing | On-device vs. Claude vs. Gemini | Matching model capability/privacy to task complexity |
-| Multi-file changes | Agentic planning, execution, review | Coordinated changes across files with a human checkpoint |
-| View generation | Agent-generated SwiftUI | A reviewable first draft, not an unreviewed deliverable |
-| Localization | AI-drafted String Catalog translations | Accelerated first pass, still requiring human review |
-| Tool extensibility | Xcode tool plugins | External tool calls during a coding session |
-| Terminal-based agent | Claude Code | Verifies changes via real build/test command execution |
-| Persistent context | `CLAUDE.md` | Stable project facts established once, not per session |
-| Standardized integration | MCP servers | Structured, protocol-based access to external iOS-relevant systems |
-| Concurrency review | Actor isolation, `Sendable` scrutiny | Generated code isn't exempt from real concurrency correctness |
-| Memory review | Retain cycle / capture semantics scrutiny | Generated closures need the same `[weak self]` care |
-| Data handling | Secrets and proprietary code exclusion | Deliberate routing/exclusion for sensitive material |
+| Xcode intelligence | AI in the IDE, aware of your project | Completion, chat, and agentic editing |
+| Model choice | On-device vs. Claude vs. Gemini | Match power and privacy to the task |
+| Agents | Plan, edit several files, you review | Coordinated changes with a human check |
+| Generated views | SwiftUI from a description | A first draft that you review |
+| Localization | AI-drafted String Catalog entries | A fast first pass, human review |
+| Tool plugins | The assistant calls outside tools | Run a linter, not guess |
+| Claude Code | A terminal agent | Runs real build and test commands |
+| `CLAUDE.md` | Project facts, written once | Less repeating in each session |
+| MCP servers | A standard link to outside systems | Crash reports, designs, issues |
+| Concurrency review | Actors and `Sendable` | Compiling code can still race |
+| Retain cycle review | `[weak self]` in closures | Compiling code can still leak |
+| Secrets | Keep keys out of source and out of the AI's reach | Protect keys and private code |
