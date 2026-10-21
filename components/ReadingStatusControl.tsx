@@ -10,7 +10,7 @@ export function ReadingStatusControl({
   className?: string;
   hideSignupPrompt?: boolean;
 }) {
-  const { userId, isRead, toggleRead } = useReadingStatusContext();
+  const { userId, isRead, saveFailed, toggleRead } = useReadingStatusContext();
 
   if (userId === undefined) {
     return null;
@@ -33,7 +33,11 @@ export function ReadingStatusControl({
   return (
     <label
       className={`font-heading inline-flex cursor-pointer items-center gap-2 text-sm font-medium ${
-        isRead ? "text-emerald-600 dark:text-emerald-400" : ""
+        saveFailed
+          ? "text-red-600"
+          : isRead
+            ? "text-emerald-600 dark:text-emerald-400"
+            : ""
       } ${className ?? ""}`}
     >
       <input
@@ -42,7 +46,11 @@ export function ReadingStatusControl({
         onChange={toggleRead}
         className="size-5 shrink-0 self-center accent-emerald-600 dark:accent-emerald-400"
       />
-      {isRead ? "Read" : "Mark as read"}
+      {saveFailed
+        ? "Couldn't save. Try again."
+        : isRead
+          ? "Read"
+          : "Mark as read"}
     </label>
   );
 }

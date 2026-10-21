@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -20,6 +21,8 @@ type ReadingStatusContextValue = {
   // once the article's status is known)
   userId: string | null | undefined;
   isRead: boolean;
+  // True for a few seconds after a click's save failed and was reverted.
+  saveFailed: boolean;
   toggleRead: () => Promise<void>;
 };
 
@@ -47,6 +50,10 @@ export function ReadingStatusProvider({
   const [supabase] = useState(() => createClient());
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [status, setStatus] = useState<ReadingStatus>("unread");
+  const [saveFailed, setSaveFailed] = useState(false);
+  // Clicks during a save are ignored: reverting a failed save to the status
+  // before its click is only right if no later click is still in flight.
+  const saving = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -97,17 +104,37 @@ export function ReadingStatusProvider({
     };
   }, [articleSlug, supabase]);
 
+  useEffect(() => {
+    if (!saveFailed) return;
+    const timer = setTimeout(() => setSaveFailed(false), 4000);
+    return () => clearTimeout(timer);
+  }, [saveFailed]);
+
   const isRead = status === "read";
 
   async function toggleRead() {
-    if (!userId) return;
+    if (!userId || saving.current) return;
+    saving.current = true;
+    const previous = status;
     const next: ReadingStatus = isRead ? "unread" : "read";
     setStatus(next);
-    await updateReadingStatus(articleSlug, next);
+    setSaveFailed(false);
+
+    const result = await updateReadingStatus(articleSlug, next).catch(() => ({
+      ok: false as const,
+    }));
+
+    saving.current = false;
+    if (!result.ok) {
+      setStatus(previous);
+      setSaveFailed(true);
+    }
   }
 
   return (
-    <ReadingStatusContext.Provider value={{ userId, isRead, toggleRead }}>
+    <ReadingStatusContext.Provider
+      value={{ userId, isRead, saveFailed, toggleRead }}
+    >
       {children}
     </ReadingStatusContext.Provider>
   );
