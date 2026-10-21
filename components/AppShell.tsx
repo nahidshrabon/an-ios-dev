@@ -51,10 +51,13 @@ export function AppShell({
           <div className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10 md:hidden">
             <Link
               href="/"
+              aria-label="Home"
               className="font-heading inline-flex items-center gap-2 font-semibold tracking-tight"
             >
               <Logomark className="size-6" />
-              Home
+              {/* Under 23rem the word doesn't fit beside search, the theme
+                  switch and Log out. The switch stays: phones have no other. */}
+              <span className="hidden min-[23rem]:inline">Home</span>
             </Link>
             <div className="flex items-center gap-3">
               <SiteSearch />
