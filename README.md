@@ -13,14 +13,15 @@ Articles and quiz content are hardcoded in `lib/content/` — only reading progr
 ## Local development
 
 1. Copy `.env.example` to `.env.local` and fill in your Supabase project URL + anon key.
-2. Install dependencies and run the dev server:
+2. Create the tables and row-level security policies: open your project's SQL Editor (Project > SQL Editor > New query), paste in all of `supabase/schema.sql`, and run it. It's safe to run again later to pick up schema changes.
+3. Install dependencies and run the dev server:
 
    ```bash
    npm install
    npm run dev
    ```
 
-3. Open [http://localhost:3000](http://localhost:3000).
+4. Open [http://localhost:3000](http://localhost:3000).
 
 ## Project structure
 

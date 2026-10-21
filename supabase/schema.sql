@@ -1,4 +1,9 @@
 -- Run this in the Supabase SQL Editor (Project > SQL Editor > New query) after creating the project.
+--
+-- Safe to re-run, e.g. to pick up changes added later: tables, indexes and
+-- columns use "if not exists", and each policy is dropped before it's
+-- recreated. The editor runs the file as one transaction, so a statement
+-- that fails rolls back everything before it.
 
 create table if not exists public.reading_progress (
   user_id uuid references auth.users(id) on delete cascade not null,
@@ -35,31 +40,42 @@ alter table public.reading_progress enable row level security;
 alter table public.quiz_attempts enable row level security;
 alter table public.roadmap_progress enable row level security;
 
+drop policy if exists "select own progress" on public.reading_progress;
 create policy "select own progress" on public.reading_progress
   for select using (auth.uid() = user_id);
+drop policy if exists "upsert own progress" on public.reading_progress;
 create policy "upsert own progress" on public.reading_progress
   for insert with check (auth.uid() = user_id);
+drop policy if exists "update own progress" on public.reading_progress;
 create policy "update own progress" on public.reading_progress
   for update using (auth.uid() = user_id);
+drop policy if exists "delete own progress" on public.reading_progress;
 create policy "delete own progress" on public.reading_progress
   for delete using (auth.uid() = user_id);
 
+drop policy if exists "select own attempts" on public.quiz_attempts;
 create policy "select own attempts" on public.quiz_attempts
   for select using (auth.uid() = user_id);
+drop policy if exists "insert own attempts" on public.quiz_attempts;
 create policy "insert own attempts" on public.quiz_attempts
   for insert with check (auth.uid() = user_id);
+drop policy if exists "delete own attempts" on public.quiz_attempts;
 create policy "delete own attempts" on public.quiz_attempts
   for delete using (auth.uid() = user_id);
 
 -- No update policy on quiz_attempts: past attempts can be cleared (e.g. via
 -- a progress reset) but not edited in place.
 
+drop policy if exists "select own roadmap progress" on public.roadmap_progress;
 create policy "select own roadmap progress" on public.roadmap_progress
   for select using (auth.uid() = user_id);
+drop policy if exists "upsert own roadmap progress" on public.roadmap_progress;
 create policy "upsert own roadmap progress" on public.roadmap_progress
   for insert with check (auth.uid() = user_id);
+drop policy if exists "update own roadmap progress" on public.roadmap_progress;
 create policy "update own roadmap progress" on public.roadmap_progress
   for update using (auth.uid() = user_id);
+drop policy if exists "delete own roadmap progress" on public.roadmap_progress;
 create policy "delete own roadmap progress" on public.roadmap_progress
   for delete using (auth.uid() = user_id);
 
@@ -77,10 +93,13 @@ create index if not exists idx_bookmarks_user on public.bookmarks(user_id);
 
 alter table public.bookmarks enable row level security;
 
+drop policy if exists "select own bookmarks" on public.bookmarks;
 create policy "select own bookmarks" on public.bookmarks
   for select using (auth.uid() = user_id);
+drop policy if exists "insert own bookmarks" on public.bookmarks;
 create policy "insert own bookmarks" on public.bookmarks
   for insert with check (auth.uid() = user_id);
+drop policy if exists "delete own bookmarks" on public.bookmarks;
 create policy "delete own bookmarks" on public.bookmarks
   for delete using (auth.uid() = user_id);
 
@@ -102,9 +121,11 @@ create index if not exists idx_problem_reports_user_created
 
 alter table public.problem_reports enable row level security;
 
+drop policy if exists "insert own reports" on public.problem_reports;
 create policy "insert own reports" on public.problem_reports
   for insert with check (auth.uid() = user_id);
 -- Lets the submit action count a user's recent reports for rate limiting.
+drop policy if exists "select own reports" on public.problem_reports;
 create policy "select own reports" on public.problem_reports
   for select using (auth.uid() = user_id);
 
