@@ -1,24 +1,31 @@
-## 59.1 What Core ML Does and When to Use It
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Core ML runs a pre-trained (or on-device-trained) machine learning model efficiently on Apple hardware — distinct from Foundation Models' general-purpose, pre-built language model (section 58), Core ML is the framework of choice when an app needs a *custom* model for a specific, often narrower task (image classification, a custom recommendation model, a domain-specific prediction task).
+## 59.1 What Core ML Does and When to Use It 🟢
+
+**Core ML** runs a **trained machine learning model** on Apple hardware. Use it when you need a **custom model** for one narrow job, like classifying images or predicting something from your own data.
+
+Compare it with Foundation Models (section 58):
+
+| | Foundation Models | Core ML |
+|---|---|---|
+| Model | One general language model, ready to use | Your own model, for one task |
+| Training | None | You train it, or get a model |
+| Good for | Chat, summaries, text tasks | Classification, prediction, custom detection |
 
 ```swift
 import CoreML
 
-// Core ML is appropriate when:
-// - You have (or can obtain/train) a model for a specific task not covered by
-//   a general-purpose framework like Foundation Models or Vision
-// - You need full control over model architecture and training data
-// - The task is narrow and well-defined (classification, regression, custom detection)
+// Use Core ML when:
+// - You need a model for a specific task that general frameworks don't cover
+// - You want full control over the model and its training data
+// - The task is narrow and clear (classification, regression, custom detection)
 ```
-
-The distinction from Foundation Models matters for architectural decision-making — Foundation Models provides a single, general-purpose, ready-to-use language model with no training required, while Core ML is the right tool when an app's needs are genuinely custom (a specific classification task trained on domain-specific data that no general-purpose model would know) and a bespoke model, either trained in-house or sourced from elsewhere, is the more appropriate fit.
 
 ---
 
-## 59.2 Adding a Core ML Model to a Project
+## 59.2 Adding a Core ML Model to a Project 🟢
 
-A trained model, packaged as an `.mlmodel` or `.mlpackage` file, is added directly to an Xcode project — Xcode automatically generates a strongly-typed Swift interface class matching the model's inputs and outputs, letting the model be used with ordinary, type-safe Swift code rather than manual tensor manipulation.
+Drag a trained model file (`.mlmodel` or `.mlpackage`) into Xcode. Xcode **writes a Swift class for you**, with typed inputs and outputs. You never touch raw tensors.
 
 ```swift
 // After dragging RecipeClassifier.mlpackage into the project,
@@ -26,13 +33,19 @@ A trained model, packaged as an `.mlmodel` or `.mlpackage` file, is added direct
 let model = try RecipeClassifier(configuration: MLModelConfiguration())
 ```
 
-This automatic code generation is a significant developer-experience advantage — rather than manually constructing input tensors and parsing raw output tensors, the generated interface exposes properly typed Swift properties matching the model's actual defined inputs and outputs, making integrating a Core ML model feel similar to calling any other strongly-typed Swift API rather than working with a lower-level machine learning runtime directly.
+It feels like calling any other Swift API:
+
+```swift
+let input = RecipeClassifierInput(ingredientList: "flour, eggs, milk")   // typed input
+let output = try model.prediction(input: input)
+print(output.cuisineType)                                                 // typed output
+```
 
 ---
 
-## 59.3 Making a Prediction
+## 59.3 Making a Prediction 🟡
 
-Once a model is loaded, `prediction(input:)` (or the generated convenience initializer's direct method) runs inference synchronously against a given input, returning a strongly-typed output matching the model's defined output schema.
+`prediction(input:)` runs the model and returns a typed output.
 
 ```swift
 func classifyRecipe(ingredients: [String]) throws -> String {
@@ -43,13 +56,27 @@ func classifyRecipe(ingredients: [String]) throws -> String {
 }
 ```
 
-Because `prediction(input:)` runs synchronously and can take meaningful time for larger models, it's standard practice to run predictions off the main thread (via a background `Task` or dispatch queue) for anything beyond trivially small, fast models — a direct parallel to the general principle of keeping expensive, blocking work off the main thread, consistent with concerns raised throughout this curriculum around UI responsiveness.
+It runs **synchronously** and can be slow for big models. **Keep it off the main thread**, or the screen freezes:
+
+```swift
+@Observable
+final class ClassifierViewModel {
+    var cuisine = ""
+
+    func classify(_ ingredients: [String]) async {
+        let result = try? await Task.detached {          // runs in the background
+            try classifyRecipe(ingredients: ingredients)
+        }.value
+        cuisine = result ?? "Unknown"                    // update the UI after
+    }
+}
+```
 
 ---
 
-## 59.4 Converting Models with coremltools
+## 59.4 Converting Models with coremltools 🟡
 
-Models trained in other frameworks (PyTorch, TensorFlow, scikit-learn) are converted into Core ML's `.mlmodel`/`.mlpackage` format using Apple's `coremltools` Python package — a separate, offline conversion step performed before the model is ever added to an Xcode project.
+Most models are trained in **PyTorch** or **TensorFlow**. To use them, you **convert** them to Core ML first, with Apple's Python package **`coremltools`**. You do this once, offline, **before** you add the model to Xcode.
 
 ```python
 # Python, using coremltools — not Swift, but a necessary step before Swift integration:
@@ -62,13 +89,31 @@ mlmodel = ct.convert(
 mlmodel.save("MyModel.mlpackage")
 ```
 
-This conversion step is a genuinely necessary bridge, since the vast majority of published machine learning models and research are trained using PyTorch or TensorFlow, not Core ML's native format directly — `coremltools` translates a model's architecture and trained weights into Core ML's format, which is what then makes the model usable within the strongly-typed, Xcode-integrated workflow described in 59.2.
+A fuller PyTorch example:
+
+```python
+import torch
+import coremltools as ct
+
+model.eval()                                           # 1. put the model in inference mode
+example = torch.rand(1, 3, 224, 224)                   # 2. an example input
+traced = torch.jit.trace(model, example)               # 3. record the model's steps
+
+mlmodel = ct.convert(
+    traced,
+    inputs=[ct.TensorType(name="image", shape=example.shape)],
+)
+mlmodel.save("MyModel.mlpackage")                      # 4. add this file to Xcode (59.2)
+```
 
 ---
 
-## 59.5 Quantization and Palettization
+## 59.5 Quantization and Palettization 🟡
 
-Quantization reduces a model's numeric precision (e.g., converting 32-bit floating point weights to 8-bit integers), while palettization clusters weight values into a smaller lookup table of representative values — both techniques substantially shrink a model's file size and can improve inference speed, generally at some cost to prediction accuracy.
+Both make a model **smaller** (and often faster), but may make it a bit **less accurate**.
+
+- **Quantization:** uses less precise numbers. For example, 32-bit decimals become 8-bit integers.
+- **Palettization:** groups similar weights and stores a small lookup table of values.
 
 ```python
 import coremltools.optimize.coreml as cto
@@ -79,13 +124,24 @@ config = cto.OptimizationConfig(
 compressed_model = cto.palettize_weights(mlmodel, config)
 ```
 
-This size/accuracy trade-off is a real, consequential decision for on-device deployment — a full-precision model might be prohibitively large for an app bundle or for reasonable download size, while an overly aggressive compression could meaningfully degrade prediction quality, meaning the right level of quantization/palettization requires actually measuring accuracy impact against the target task's specific tolerance for error, not simply applying maximum compression by default.
+Quantization looks like this:
+
+```python
+import coremltools.optimize.coreml as cto
+
+config = cto.OptimizationConfig(
+    global_config=cto.OpLinearQuantizerConfig(mode="linear_symmetric")
+)
+smaller_model = cto.linear_quantize_weights(mlmodel, config)
+```
+
+**Always measure the accuracy** after compressing. A full-size model can be too big for an app. But too much compression can hurt the results, so do not just use the maximum.
 
 ---
 
-## 59.6 Compute Units: CPU, GPU, Neural Engine
+## 59.6 Compute Units: CPU, GPU, Neural Engine 🟡
 
-`MLModelConfiguration.computeUnits` controls which hardware Core ML is permitted to use for inference — CPU only, CPU and GPU, or all available compute units including the Neural Engine (Apple's dedicated ML accelerator) — with Core ML automatically choosing the most efficient available unit per operation unless explicitly restricted.
+`MLModelConfiguration.computeUnits` says **which hardware** Core ML may use. The **Neural Engine** is Apple's chip made for machine learning.
 
 ```swift
 let config = MLModelConfiguration()
@@ -93,13 +149,20 @@ config.computeUnits = .all // let Core ML choose CPU, GPU, or Neural Engine per 
 let model = try RecipeClassifier(configuration: config)
 ```
 
-Leaving `computeUnits` at `.all` (the default) is generally the right choice for most apps, letting Core ML's own scheduling intelligently select the fastest available option per operation — explicitly restricting to `.cpuOnly` is occasionally useful for specific debugging or consistency needs (like ensuring identical numeric results across runs, since GPU/Neural Engine execution can introduce minor floating-point differences), but sacrifices real performance in the general case.
+| Setting | Uses |
+|---|---|
+| `.all` (default) | CPU, GPU, and Neural Engine. Core ML chooses. |
+| `.cpuAndGPU` | CPU and GPU only |
+| `.cpuAndNeuralEngine` | CPU and Neural Engine only |
+| `.cpuOnly` | CPU only |
+
+**Leave it on `.all`** for most apps. Use `.cpuOnly` only for special cases, like debugging, or when you need the same numbers on every run. The GPU and Neural Engine can give tiny floating-point differences. `.cpuOnly` is usually slower.
 
 ---
 
-## 59.7 The Core ML Performance Report
+## 59.7 The Core ML Performance Report 🟡
 
-Xcode's Core ML model viewer includes a performance report tool that runs a model against actual target devices (physical or simulated), showing per-operation latency and which compute unit actually executed each operation — surfacing bottlenecks and unexpected compute unit assignment before a model ships.
+Xcode can **run your model on a real device** and show how long each step takes, and **which chip ran it**. This is the **performance report**.
 
 ```plaintext
 // Not a Swift API — accessed via Xcode's Core ML model inspector:
@@ -108,13 +171,21 @@ Xcode's Core ML model viewer includes a performance report tool that runs a mode
 // latency and actual compute unit assignment (CPU/GPU/ANE).
 ```
 
-This visibility into *actual* compute unit assignment (as opposed to just the `.all` configuration's aspirational intent from 59.6) is genuinely valuable, since certain operations within a model architecture may not actually be supported by the Neural Engine and silently fall back to CPU or GPU execution — the performance report is how a developer discovers this kind of unexpected fallback and its latency impact before the model ships in a production build.
+Steps:
+
+1. Click your `.mlpackage` in Xcode.
+2. Open the **Performance** tab.
+3. Pick a device, and run the report.
+4. Look at each layer's time, and which chip (CPU, GPU, or Neural Engine) ran it.
+
+Why this matters: `.all` only says Core ML **may** use the Neural Engine. Some steps are not supported there, and they quietly run on the CPU or GPU instead. The report shows this, so you can find the slow parts **before you ship**.
 
 ---
 
 ## 59.8 MLTensor and Stateful Models 🔴
 
-`MLTensor` provides a Swift-native, differentiable-computation-friendly tensor type for more direct, flexible model interaction beyond the strongly-typed generated interface, while stateful models (introduced for capabilities like efficient multi-turn transformer inference) maintain internal state across successive prediction calls rather than treating each call as fully independent.
+- **`MLTensor`:** a Swift type for working with tensors directly, when the generated class is not flexible enough.
+- **Stateful models:** a model that **remembers state** between predictions. Each call does not start from zero.
 
 ```swift
 // Stateful models avoid recomputing shared context on every call —
@@ -125,13 +196,15 @@ let output1 = try model.prediction(input: input1, using: state)
 let output2 = try model.prediction(input: input2, using: state) // benefits from prior state
 ```
 
-Stateful model support addresses a genuine efficiency gap for certain model architectures (particularly transformer-based models processing sequential input) — without statefulness, each prediction call would need to recompute shared context from scratch, while a stateful model can carry forward relevant internal computation across calls, directly analogous to the efficiency benefit of session-based conversation continuity seen in Foundation Models (58.3), but implemented here at Core ML's lower, more general level.
+Why it helps: for models like transformers that read a sequence, the model would otherwise redo the shared work on every call. With state, it **keeps that work** and only does the new part.
+
+It works like a `LanguageModelSession`, which keeps the conversation between turns (section 58.3). Here it is done at Core ML's lower level.
 
 ---
 
 ## 59.9 Create ML for On-Device Training 🔴
 
-Create ML provides both a standalone macOS app and a Swift framework for training Core ML models directly — including genuinely on-device (or on-Mac) training for tasks like personalizing a model to an individual user's own data, without that data ever needing to leave the device to a cloud training pipeline.
+**Create ML** trains Core ML models. It comes as a Mac app and as a **Swift framework**. You can even train on the user's own data **without sending it anywhere**.
 
 ```swift
 import CreateML
@@ -142,13 +215,20 @@ func trainClassifier(trainingData: MLDataTable) throws -> MLClassifier {
 }
 ```
 
-On-device training's privacy advantage directly parallels the on-device inference advantages already discussed for Foundation Models (58.1) and Translation (57.15) — a model that personalizes itself to a specific user's data (like learning that user's personal handwriting style for improved recognition, or their specific usage patterns) can do so entirely locally, without that potentially sensitive personal training data ever needing to be transmitted to an external training service.
+The data is a table, and one column is the answer you want to predict:
+
+```swift
+let data = try MLDataTable(contentsOf: URL(fileURLWithPath: "recipes.csv"))   // columns: ingredients, label
+let classifier = try trainClassifier(trainingData: data)
+```
+
+**The privacy benefit** is the same as for on-device inference (58.1). A model that learns one user's habits, like their handwriting, can train **fully on the device**. Their personal data never goes to a training server.
 
 ---
 
 ## 59.10 The Core AI Framework for Custom Local Models (iOS 27) 🔴
 
-iOS 27 introduces the Core AI framework, providing infrastructure for running custom local models (beyond the single general-purpose Foundation Models LLM) with tighter platform integration than raw Core ML alone — appropriate for apps needing more specialized on-device model capability than the general-purpose Foundation Models framework provides, but with more platform-level support than assembling a fully custom Core ML pipeline from scratch.
+iOS 27 adds the **Core AI** framework. It is for running **your own local models** with more platform support than raw Core ML.
 
 ```plaintext
 // Conceptually: Core AI sits between Foundation Models' general-purpose LLM
@@ -156,13 +236,21 @@ iOS 27 introduces the Core AI framework, providing infrastructure for running cu
 // toolkit for teams building specialized, custom local model experiences.
 ```
 
-This positions Core AI as filling a genuine gap in the on-device AI framework landscape — Foundation Models covers the general-purpose, ready-to-use LLM case well, while Core ML provides maximum flexibility at the cost of more implementation responsibility, and Core AI's tighter platform integration is aimed at teams whose needs sit meaningfully between those two extremes, needing custom model capability without building every piece of supporting infrastructure themselves.
+Where it fits:
+
+| | Foundation Models | **Core AI** | Core ML |
+|---|---|---|---|
+| Model | One ready-made LLM | Your own local models | Your own model |
+| Platform support | Most | **Some** | Least (you build the rest) |
+| Flexibility | Least | Middle | Most |
+
+Choose Core AI when you need more than the one general LLM, but you do not want to build all the supporting parts around Core ML yourself.
 
 ---
 
 ## 59.11 MLX on Apple Silicon 🔴
 
-MLX is an open-source array/machine-learning framework, developed by Apple, specifically optimized for Apple silicon's unified memory architecture — distinct from Core ML's inference-focused, production-app-integration design, MLX is more commonly used for research, experimentation, and training workloads that benefit from Apple silicon's specific memory architecture advantages.
+**MLX** is an open-source machine learning framework from Apple. It is built for Apple silicon's **unified memory**, where the CPU and GPU share the same memory.
 
 ```python
 # MLX (Python, though Swift bindings also exist) —
@@ -173,7 +261,15 @@ a = mx.array([1, 2, 3])
 b = a * 2  # operations leverage Apple silicon's unified memory directly
 ```
 
-MLX and Core ML serve genuinely different primary purposes despite both targeting Apple hardware — Core ML is the production-oriented, app-integration-focused framework covered throughout the rest of this section (strongly-typed Swift interfaces, Xcode integration, deployment-ready compression tooling), while MLX is more commonly reached for during research, prototyping, and training phases, with converted or exported models then potentially deployed via Core ML for actual production app integration.
+MLX and Core ML have **different jobs**:
+
+| | MLX | Core ML |
+|---|---|---|
+| Main use | Research, trying ideas, training | Running models in a shipping app |
+| Language | Mostly Python (Swift bindings exist) | Swift, with Xcode integration |
+| Extras | Fast experiments on a Mac | Typed classes, compression tools |
+
+A common path: **experiment and train with MLX**, then **export the model and deploy it with Core ML** in your app.
 
 ---
 
@@ -181,14 +277,14 @@ MLX and Core ML serve genuinely different primary purposes despite both targetin
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Core ML's role | Custom, narrow-task models | Distinct from Foundation Models' general-purpose LLM |
-| Project integration | `.mlpackage`, generated Swift class | Strongly-typed, Xcode-integrated model interface |
-| Inference | `model.prediction(input:)` | Synchronous prediction, best run off the main thread |
-| Format conversion | `coremltools` (Python) | Converts PyTorch/TensorFlow models to Core ML format |
-| Size reduction | Quantization, palettization | Smaller models, with an accuracy trade-off |
-| Hardware targeting | `MLModelConfiguration.computeUnits` | CPU/GPU/Neural Engine selection |
-| Performance diagnosis | Xcode Core ML performance report | Per-operation latency and actual compute unit assignment |
-| Efficient sequential inference | `MLTensor`, stateful models | Carries state across prediction calls |
-| Private personalization | Create ML | On-device model training without data leaving the device |
-| Middle-ground tooling | Core AI framework (iOS 27) | Specialized local models with platform integration |
-| Research/training | MLX | Apple-silicon-optimized array/ML framework |
+| Core ML's role | Custom models for narrow tasks | Different from the one general LLM in section 58 |
+| Adding a model | `.mlpackage`, a generated Swift class | Typed, Xcode-integrated interface |
+| Predicting | `model.prediction(input:)` | Run it off the main thread |
+| Converting | `coremltools` (Python) | Turn PyTorch or TensorFlow models into Core ML |
+| Making it smaller | Quantization, palettization | Smaller model, check the accuracy |
+| Hardware | `MLModelConfiguration.computeUnits` | Choose CPU, GPU, or Neural Engine |
+| Finding slow parts | Xcode performance report | Per-layer time and the chip that ran it |
+| Sequences | `MLTensor`, stateful models | Keep state between predictions |
+| Private training | Create ML | Train on the device, data stays there |
+| Middle option | Core AI (iOS 27) | Custom local models with platform help |
+| Research | MLX | Fast experiments and training on Apple silicon |
