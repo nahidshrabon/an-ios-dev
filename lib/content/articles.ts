@@ -836,7 +836,7 @@ export const articles: Article[] = [
     slug: "code-quality-tooling",
     title: "Code Quality Tooling",
     description:
-      "SwiftLint setup and rules, SwiftFormat/swift-format, writing custom lint rules, Periphery for dead code detection, Danger-Swift for PR automation, warnings-as-errors policy, and Sourcery for code generation.",
+      "Tools that keep code clean: SwiftLint and custom rules, SwiftFormat and swift-format, Periphery for dead code, Danger-Swift for pull requests, warnings-as-errors, and Sourcery for generated code.",
     tags: ["tooling", "swiftlint", "code-quality"],
     publishedAt: "2026-08-16",
     get content() {

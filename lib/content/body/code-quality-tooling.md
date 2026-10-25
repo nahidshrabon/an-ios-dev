@@ -1,6 +1,8 @@
-## 75.1 SwiftLint Setup and Rules
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-SwiftLint statically analyzes Swift source code against a configurable set of style and best-practice rules — from simple formatting conventions to genuinely substantive checks (force-unwrap usage, recall section 68.9's force-unwrap crash discussion; excessive function complexity) — configured via a `.swiftlint.yml` file and typically integrated as a Run Script build phase (recall section 72.5) or Git pre-commit hook (section 74.8).
+## 75.1 SwiftLint Setup and Rules 🟢
+
+**SwiftLint** checks your Swift code against **rules**: style rules, and also real safety checks like force-unwraps (section 68.9) or functions that are too complex. You configure it in a **`.swiftlint.yml`** file.
 
 ```plaintext
 # .swiftlint.yml
@@ -12,13 +14,43 @@ opt_in_rules:
 line_length: 120
 ```
 
-SwiftLint's rule configurability is a genuine strength worth using deliberately rather than accepting defaults uncritically — a rule set that's too permissive misses genuinely valuable checks (like flagging force-unwraps, directly relevant to the crash class discussed in section 68.9), while a rule set that's too strict or pedantic (flagging purely stylistic preferences a team doesn't actually care about) trains developers to routinely ignore or disable lint warnings entirely, undermining the tool's value for the genuinely important checks it could otherwise be catching.
+Install and run it:
+
+```bash
+brew install swiftlint
+swiftlint                  # report problems
+swiftlint --fix            # fix the ones that can be fixed automatically
+```
+
+Choose which folders it checks:
+
+```plaintext
+# .swiftlint.yml
+included:
+  - Sources
+excluded:
+  - Sources/Generated
+```
+
+Turn a rule off for **one line** when you have a good reason:
+
+```swift
+// swiftlint:disable:next force_unwrapping
+let url = URL(string: "https://example.com")!     // a constant we know is valid
+```
+
+Run it on every build with a Run Script phase (section 72.5), or before each commit with a Git hook (section 74.8).
+
+**Choose your rules on purpose.** Too few, and you miss real problems like force-unwraps. Too many picky style rules, and people start **ignoring all warnings**, including the important ones.
 
 ---
 
-## 75.2 SwiftFormat and swift-format
+## 75.2 SwiftFormat and swift-format 🟢
 
-SwiftFormat (a popular third-party tool) and `swift-format` (Apple's own official formatter) both automatically reformat Swift source code to a consistent style — distinct from SwiftLint's detect-and-report approach, formatters directly rewrite code to conform, eliminating entire categories of style debate and manual formatting effort.
+A **formatter rewrites your code** into one consistent style. There are two common ones:
+
+- **SwiftFormat:** a popular third-party tool.
+- **swift-format:** Apple's official formatter. It comes with the Swift 6 toolchain.
 
 ```bash
 swift-format format --in-place MyFile.swift
@@ -26,13 +58,41 @@ swift-format format --in-place MyFile.swift
 swiftformat MyFile.swift
 ```
 
-The distinction between a linter (SwiftLint, detecting issues) and a formatter (SwiftFormat/`swift-format`, automatically fixing style) matters for how each tool is best integrated into a workflow — automatic formatting is well suited to running unconditionally on every save or commit (since there's no judgment call involved, just consistent style application), while linting's more substantive checks (like flagging a genuinely risky force-unwrap) benefit from being surfaced for actual developer review and judgment rather than being silently auto-fixed, since not every lint violation has one unambiguous, automatically-correct resolution.
+Format a whole folder, or only check without changing anything:
+
+```bash
+swift format --in-place --recursive Sources      # swift-format, via the swift command
+swiftformat .                                    # SwiftFormat, the whole project
+swiftformat . --lint                             # only report, change nothing (good for CI)
+```
+
+Each tool reads a config file in your project:
+
+```plaintext
+# .swiftformat  (SwiftFormat)
+--indent 4
+--maxwidth 120
+```
+
+```bash
+swift format dump-configuration > .swift-format    # swift-format: create a config file to edit
+```
+
+**Linter vs. formatter:**
+
+| | Linter (SwiftLint) | Formatter |
+|---|---|---|
+| What it does | Finds and reports problems | Rewrites the code |
+| Needs judgment? | Often (is this force-unwrap safe?) | No, it only applies a style |
+| When to run | Show the problems to a developer | Automatically, on save or commit |
+
+A formatter ends **style debates**: nobody argues about spaces when a tool decides.
 
 ---
 
-## 75.3 Writing Custom Lint Rules 🟠
+## 75.3 Writing Custom Lint Rules 🟡
 
-Beyond SwiftLint's substantial built-in rule set, custom rules (configured via regex-based custom rule definitions, or genuinely more sophisticated rules written as a SwiftLint plugin) let a team encode project-specific conventions that no general-purpose linter would know to check — enforcing a team's own particular architectural patterns or naming conventions automatically.
+**Custom rules** check your **own team's conventions**, which no general tool knows about. The simplest kind is a **regex** in `.swiftlint.yml`.
 
 ```yaml
 custom_rules:
@@ -42,13 +102,30 @@ custom_rules:
     severity: warning
 ```
 
-Custom rules genuinely extend a linter's value beyond generic Swift style concerns into a team's own specific, agreed-upon architectural discipline — a rule flagging direct `URLSession` usage within a `View` type, for instance, encodes and automatically enforces the same view/view-model separation principle discussed throughout this curriculum's architecture material (recall section 45-46), turning what would otherwise be a purely manual code review concern (something a reviewer has to remember to check for every single PR) into an automatically, consistently enforced project convention.
+Another example: block `print` in app code, so logs go through your logger:
+
+```yaml
+custom_rules:
+  no_print:
+    regex: '\bprint\('
+    message: "Use Logger instead of print (see section 80)"
+    severity: warning
+    included: "Sources/.*\\.swift"
+```
+
+When it matches, SwiftLint shows the message like any other warning:
+
+```plaintext
+RecipeListView.swift:42:9: warning: Views should not make direct network calls; use a view model (see section 45)
+```
+
+The benefit: a rule from your architecture (like "views do not call the network", sections 45 and 46) is **checked automatically on every change**. Reviewers no longer have to remember it for every pull request.
 
 ---
 
-## 75.4 Periphery for Dead Code Detection 🟠
+## 75.4 Periphery for Dead Code Detection 🟡
 
-Periphery statically analyzes a Swift project to identify genuinely unused code — declarations (functions, properties, types) that are never actually referenced anywhere in the codebase — a distinct concern from SwiftLint's style/convention focus, specifically targeting code that could be safely removed entirely.
+**Periphery** finds **unused code**: functions, properties, and types that nothing uses. SwiftLint checks style. Periphery finds code you can **delete**.
 
 ```bash
 periphery scan --project MyApp.xcodeproj --schemes MyApp
@@ -56,13 +133,32 @@ periphery scan --project MyApp.xcodeproj --schemes MyApp
 # "Function 'calculateLegacyDiscount()' is unused"
 ```
 
-Dead code accumulates in most real, actively-developed codebases over time — a feature gets removed but a helper function it once used gets accidentally left behind, or an experiment gets abandoned leaving orphaned code — and beyond simple codebase tidiness, genuinely unused code carries real, ongoing costs: it adds unnecessary compile time, creates confusion for developers wondering whether a still-present function is actually still relevant, and occasionally represents a genuine, unnoticed security or correctness liability if it's dead precisely because it was quietly broken and nobody noticed since nothing actually calls it.
+The first time, let it ask you questions and save the answers:
+
+```bash
+brew install periphery
+periphery scan --setup          # asks for the project and schemes, then saves .periphery.yml
+periphery scan                  # later runs use the saved settings
+```
+
+Keep code that only other modules use, or mark one declaration on purpose:
+
+```bash
+periphery scan --retain-public   # do not report public code (useful for packages)
+```
+
+```swift
+// periphery:ignore
+func debugOnlyHelper() { }       // kept on purpose
+```
+
+**Why dead code matters:** a feature is removed but its helper is left behind, or an experiment is abandoned. Unused code costs **build time**, **confuses** people ("is this still used?"), and can hide **bugs** nobody notices because nothing calls it.
 
 ---
 
-## 75.5 Danger-Swift for PR Automation 🟠
+## 75.5 Danger-Swift for PR Automation 🟡
 
-Danger-Swift automates common, repetitive pull request review tasks — checking that a PR includes an updated changelog entry, warning if a PR is unusually large (making it genuinely harder to review thoroughly), or flagging when source changes lack corresponding test changes — running as part of CI and posting its findings as automated PR comments.
+**Danger-Swift** runs in CI and checks **simple pull request rules** automatically, then posts **comments on the PR**. For example: is the PR too big? Did the changelog change? Did code change without tests?
 
 ```swift
 // Dangerfile.swift
@@ -79,13 +175,32 @@ if !danger.git.modifiedFiles.contains("CHANGELOG.md") {
 }
 ```
 
-Automating these specific checks via Danger-Swift frees human reviewers to focus their genuinely limited review time and attention on the things automation fundamentally can't evaluate — actual code correctness, architectural fit, and design quality — rather than spending that same limited attention manually verifying purely mechanical, rule-based concerns (did the changelog get updated, is this PR suspiciously large) that a script can check faster, more consistently, and without the risk of a human reviewer simply forgetting to check for a specific, easily-overlooked concern.
+Check that code changes come with tests:
+
+```swift
+let changedSource = danger.git.modifiedFiles.contains { $0.hasPrefix("Sources/") }
+let changedTests = danger.git.modifiedFiles.contains { $0.hasPrefix("Tests/") }
+
+if changedSource && !changedTests {
+    warn("Source changed, but no tests changed. Should there be a test?")
+}
+```
+
+`warn` only comments. `fail` blocks the PR:
+
+```swift
+fail("Please add a description to this PR.")
+```
+
+In CI, run it with `danger-swift ci`.
+
+**Why:** reviewers have limited time. Let a script check the **mechanical** things, so people can focus on what only people can judge: correctness, design, and fit.
 
 ---
 
-## 75.6 Warnings-as-Errors Policy
+## 75.6 Warnings-as-Errors Policy 🟢
 
-A warnings-as-errors policy (`SWIFT_TREAT_WARNINGS_AS_ERRORS` build setting) converts compiler warnings into build-breaking errors, forcing warnings to be addressed immediately rather than accumulating silently and indefinitely in a codebase, though this policy carries a genuine trade-off worth considering deliberately rather than adopting reflexively.
+With **warnings-as-errors**, every compiler warning **fails the build**. Warnings can no longer pile up and be ignored.
 
 ```plaintext
 // Build setting: SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
@@ -93,13 +208,31 @@ A warnings-as-errors policy (`SWIFT_TREAT_WARNINGS_AS_ERRORS` build setting) con
 // now fails the build entirely rather than merely being noted
 ```
 
-The genuine trade-off here is real and worth weighing deliberately — warnings-as-errors keeps a codebase genuinely warning-free (since warnings can't be silently ignored and accumulate the way they otherwise tend to), but it can also block a build entirely due to a warning from a third-party dependency that's genuinely outside the team's own control to fix, meaning teams adopting this policy typically need a clear, explicit mechanism (like a targeted, well-documented `@available`-based suppression or a specific, scoped compiler flag exception) for handling exactly this kind of externally-sourced, unfixable-by-the-team warning without either abandoning the policy entirely or being permanently blocked by it.
+A common setup: keep warnings normal on your Mac, but **fail in CI**:
+
+```bash
+xcodebuild -scheme MyApp build SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+```
+
+Or set it only for **your own targets** in an `.xcconfig` file (section 72.4):
+
+```plaintext
+// App.xcconfig
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+```
+
+**The trade-off:**
+
+- **Good:** the codebase stays free of warnings.
+- **Risk:** a warning in a **third-party dependency** that you cannot fix could block your build.
+
+So plan for it: apply the rule to **your targets only**, and decide in advance how to handle a warning that is outside your control.
 
 ---
 
-## 75.7 Sourcery for Code Generation 🟠
+## 75.7 Sourcery for Code Generation 🟡
 
-Sourcery generates Swift source code automatically from templates applied against a project's existing code (using Swift's own reflection-like metadata, examining actual types, protocols, and their members) — appropriate for eliminating genuinely repetitive, mechanically-derivable boilerplate that would otherwise need to be manually written and kept in sync by hand for every relevant type.
+**Sourcery** generates Swift code from **templates**, based on the types already in your project. Use it for **repetitive code that follows directly from a type**, like mocks for tests.
 
 ```swift
 // Sourcery template (simplified concept): generate a mock conforming to any protocol
@@ -112,7 +245,30 @@ protocol UserServicing {
 // with recording/stubbing support, without a developer manually writing that mock (recall 65.14/66.1)
 ```
 
-Sourcery's genuine value is specifically for boilerplate that's mechanically derivable from a type's own existing structure (like automatically generating a mock conforming to any protocol tagged for mocking, directly connecting to the mock/test-double material from sections 65.14 and 66.1) — rather than a developer manually writing and then remembering to keep a hand-written mock synchronized with a protocol's actual method signatures every time the protocol changes, Sourcery regenerates that mechanically-derivable boilerplate automatically and consistently from the protocol's current, actual definition, eliminating an entire class of "the mock is now out of sync with the real protocol" bugs.
+Run it from the command line, or as a build step:
+
+```bash
+sourcery --sources Sources --templates Templates --output Sources/Generated
+```
+
+The generated mock could look like this:
+
+```swift
+// Sources/Generated/AutoMockable.generated.swift
+final class MockUserServicing: UserServicing {
+    var fetchUserCallCount = 0
+    var fetchUserReturnValue: User!
+
+    func fetchUser(id: String) async throws -> User {
+        fetchUserCallCount += 1
+        return fetchUserReturnValue
+    }
+}
+```
+
+**Why:** a hand-written mock (sections 65.14 and 66.1) goes **out of sync** when the protocol changes. Sourcery **regenerates it** from the current protocol, so they always match.
+
+Today, **Swift macros** (section 13) can also generate some of this code, directly in the compiler, without a separate tool.
 
 ---
 
@@ -120,10 +276,10 @@ Sourcery's genuine value is specifically for boilerplate that's mechanically der
 
 | Concept | Key Tool | Purpose |
 |---|---|---|
-| Style/convention detection | SwiftLint | Configurable static analysis, from style to substantive checks |
-| Automatic reformatting | SwiftFormat, `swift-format` | Eliminates style debate via direct code rewriting |
-| Project-specific rules | Custom SwiftLint rules | Automated enforcement of a team's own architectural conventions |
-| Unused code detection | Periphery | Surfaces genuinely dead code and its ongoing costs |
-| PR automation | Danger-Swift | Frees human review time for judgment-requiring concerns |
-| Warning discipline | Warnings-as-errors | Prevents silent warning accumulation, with a real trade-off |
-| Boilerplate elimination | Sourcery | Mechanically-derived code generation, kept in sync automatically |
+| Linting | SwiftLint | Find style problems and real risks |
+| Formatting | SwiftFormat, `swift-format` | Rewrite code into one style |
+| Team rules | Custom SwiftLint rules | Check your own conventions automatically |
+| Dead code | Periphery | Find code you can delete |
+| PR automation | Danger-Swift | Let a script check the simple PR rules |
+| Warnings | Warnings-as-errors | No pile of ignored warnings |
+| Code generation | Sourcery | Generated code that stays in sync |
