@@ -869,7 +869,7 @@ export const articles: Article[] = [
     slug: "app-store",
     title: "App Store",
     description:
-      "Creating an app record, metadata/keywords/ASO, screenshots and app previews, the privacy manifest, required reason APIs, privacy nutrition labels, TestFlight testing, submitting for review, App Review Guidelines that matter most, handling rejection, phased release, responding to reviews, custom product pages/A/B testing, and app size limits.",
+      "Getting an app into the App Store: the app record, ASO, screenshots, the privacy manifest and required reason APIs, privacy labels, TestFlight, submitting and review, rejections, phased release, rating prompts, product pages, and app size.",
     tags: ["app-store", "app-review", "testflight"],
     publishedAt: "2026-08-16",
     get content() {

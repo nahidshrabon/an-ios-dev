@@ -1,6 +1,8 @@
-## 78.1 App Store Connect: Creating an App Record
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-An app record in App Store Connect (created before any build can be uploaded) establishes the app's bundle identifier, primary language, and SKU — a one-time setup step that must precede any TestFlight upload or App Store submission, connecting the app's App ID (recall section 77.1) to an actual App Store Connect presence.
+## 78.1 App Store Connect: Creating an App Record 🟢
+
+Before you can upload any build, create an **app record** in App Store Connect. It connects your App ID (section 77.1) to a real App Store presence.
 
 ```plaintext
 // App Store Connect app record setup requires:
@@ -10,13 +12,29 @@ An app record in App Store Connect (created before any build can be uploaded) es
 // - App name (subject to App Store-wide uniqueness and character limits)
 ```
 
-Creating this record correctly and early matters because several other pieces of this section's workflow depend on it existing first — TestFlight testing (78.7), metadata configuration (78.2), and privacy label declaration (78.6) all require an established app record to attach to, making this genuinely the first, foundational step in the entire App Store submission pipeline rather than something that can be deferred until immediately before an actual submission.
+In App Store Connect: **Apps → + → New App**, then fill in the fields above. Fastlane can also create it:
+
+```bash
+fastlane produce \
+  --app_identifier com.example.recipeshare \
+  --app_name "RecipeShare" \
+  --sku recipeshare-001
+```
+
+**Do this first.** TestFlight (78.7), metadata (78.2), and privacy labels (78.6) all attach to this record.
 
 ---
 
-## 78.2 Metadata, Keywords, and ASO Basics
+## 78.2 Metadata, Keywords, and ASO Basics 🟢
 
-App Store Optimization (ASO) — improving an app's discoverability through its store listing — depends heavily on metadata choices: the app name and subtitle (both weighted heavily in App Store search), a keyword field (invisible to users but indexed for search), and a description (less search-weighted, but critical for conversion once a user actually views the listing).
+**App Store Optimization (ASO)** means making your app **easy to find** and **tempting to download**. It depends a lot on your metadata:
+
+| Field | Limit | Search weight | Users see it? |
+|---|---|---|---|
+| App name | 30 characters | High | Yes |
+| Subtitle | 30 characters | High | Yes |
+| Keywords | 100 characters | Indexed | **No** |
+| Description | 4,000 characters | Low | Yes |
 
 ```plaintext
 // Representative ASO-relevant metadata fields:
@@ -26,13 +44,26 @@ App Store Optimization (ASO) — improving an app's discoverability through its 
 // Description: longer-form, less search-weighted, but conversion-critical
 ```
 
-Understanding which metadata fields actually influence search ranking versus which primarily influence conversion (a user deciding to download after already finding the listing) is genuinely important for allocating limited character budgets wisely — name and subtitle carry substantial search weight and should be chosen with actual keyword research in mind, while the description, though not heavily search-weighted, is where the actual persuasive case for downloading the app needs to be made once a user has already found the listing through search or browsing.
+Keep metadata in text files, and upload it with Fastlane's `deliver`:
+
+```plaintext
+fastlane/metadata/en-US/name.txt          RecipeShare
+fastlane/metadata/en-US/subtitle.txt      Share & Discover Recipes
+fastlane/metadata/en-US/keywords.txt      recipe,cooking,meal plan,food
+fastlane/metadata/en-US/description.txt   (the long text)
+```
+
+```bash
+fastlane deliver --skip_binary_upload --skip_screenshots
+```
+
+**Name and subtitle help people find you.** Choose them with keyword research. **The description helps people decide** once they see your page, so that is where you persuade.
 
 ---
 
-## 78.3 Screenshots and App Previews
+## 78.3 Screenshots and App Previews 🟢
 
-Screenshots (static images) and app previews (short video clips) are among the most conversion-critical elements of an App Store listing, since they're often the first genuinely substantive content a prospective user actually sees — required across the device size categories an app supports, with content ideally showing the app's real, actual functionality rather than purely abstract marketing imagery.
+**Screenshots** (images) and **app previews** (short videos) are often the **first real thing** people see. Show your **real app**, not only marketing art.
 
 ```plaintext
 // Screenshot best practices:
@@ -42,13 +73,32 @@ Screenshots (static images) and app previews (short video clips) are among the m
 // - Order matters: the first 2-3 screenshots receive disproportionate attention
 ```
 
-The direct connection to section 71.14's App Store metadata localization discussion is worth making explicit — screenshots showing genuinely localized in-app content (not just translated captions overlaid on English-language UI) provide meaningfully more accurate, trustworthy insight into what a non-English-speaking user would actually experience using the app, making localized screenshots a genuinely important, often-overlooked complement to text metadata localization for markets where the underlying app UI itself is properly localized.
+Generate screenshots automatically from a UI test, with Fastlane's `snapshot`:
+
+```swift
+// In a UI test (see section 67)
+func testScreenshots() {
+    let app = XCUIApplication()
+    setupSnapshot(app)
+    app.launch()
+
+    snapshot("01-RecipeList")
+    app.buttons["Pasta"].tap()
+    snapshot("02-RecipeDetail")
+}
+```
+
+```bash
+fastlane snapshot      # runs the test in every language and device you set up
+```
+
+This also makes **localized screenshots** easy (section 71.14). A Spanish user should see the app **in Spanish**, not English UI with a translated caption.
 
 ---
 
-## 78.4 Privacy Manifest (PrivacyInfo.xcprivacy)
+## 78.4 Privacy Manifest (PrivacyInfo.xcprivacy) 🟡
 
-The privacy manifest (`PrivacyInfo.xcprivacy`) is a required, structured declaration of an app's (and its dependencies') actual data collection practices and use of "required reason" APIs (78.5) — Apple aggregates declarations from an app and all its SPM/CocoaPods dependencies into a combined manifest, with missing or inaccurate declarations blocking submission.
+The **privacy manifest** (`PrivacyInfo.xcprivacy`) declares **what data your app collects**, and which **"required reason" APIs** it uses (78.5). Apple **combines** the manifests from your app and **all its dependencies**. Missing or wrong declarations **block submission**.
 
 ```xml
 <!-- PrivacyInfo.xcprivacy (simplified) -->
@@ -63,13 +113,37 @@ The privacy manifest (`PrivacyInfo.xcprivacy`) is a required, structured declara
 </array>
 ```
 
-The requirement that dependencies also declare their own privacy manifests is a genuinely significant supply-chain transparency mechanism — because a third-party SPM package (recall the dependency evaluation discussion from section 73.7) might itself collect data or use required reason APIs the app's own developer isn't even directly aware of, Apple's aggregation of manifests across the entire dependency tree surfaces this otherwise-invisible data practice, meaning app developers now have a genuine, structural incentive to actually understand what their dependencies are doing with data, not just what their own first-party code does.
+A fuller entry says whether you track, and **why** you collect the data:
+
+```xml
+<key>NSPrivacyTracking</key>
+<false/>
+<key>NSPrivacyCollectedDataTypes</key>
+<array>
+    <dict>
+        <key>NSPrivacyCollectedDataType</key>
+        <string>NSPrivacyCollectedDataTypeEmailAddress</string>
+        <key>NSPrivacyCollectedDataTypeLinked</key>
+        <true/>
+        <key>NSPrivacyCollectedDataTypeTracking</key>
+        <false/>
+        <key>NSPrivacyCollectedDataTypePurposes</key>
+        <array>
+            <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+        </array>
+    </dict>
+</array>
+```
+
+To see the **combined result** for your app and its packages: in Xcode's Organizer, right-click an archive and choose **Generate Privacy Report**.
+
+**Why dependencies matter:** a third-party package (section 73.7) may collect data you do not know about. Because Apple combines all manifests, you now have to **know what your dependencies do** with data, not only your own code.
 
 ---
 
-## 78.5 Required Reason APIs
+## 78.5 Required Reason APIs 🟡
 
-Required reason APIs are a specific, enumerated set of APIs (certain file timestamp APIs, certain system boot time APIs, and others) that, due to their historical use for cross-app user tracking/fingerprinting, now require an app to declare a specific, approved reason for using them within the privacy manifest (78.4) — using one of these APIs without a valid declared reason causes App Store submission rejection.
+Some APIs were used in the past to **fingerprint** devices (identify them without permission). Apple now requires an **approved reason** for using them, in the privacy manifest (78.4). Without one, **the submission is rejected**.
 
 ```xml
 <key>NSPrivacyAccessedAPITypes</key>
@@ -83,13 +157,34 @@ Required reason APIs are a specific, enumerated set of APIs (certain file timest
 </array>
 ```
 
-This requirement reflects Apple's attempt to close a genuinely real privacy loophole that existed even without any explicit user-facing permission prompt — certain APIs (like precise file modification timestamps) could historically be used to fingerprint a device or correlate user identity across different apps without ever triggering a permission dialog a user would actually see, and requiring an explicit, Apple-vetted, legitimate reason for using these specific APIs is a structural mechanism for preventing this particular category of invisible, non-consensual tracking that a traditional runtime permission prompt (like camera or location access) was never designed to address.
+The categories include:
+
+| Category | Example APIs |
+|---|---|
+| File timestamp | A file's creation or modification date |
+| System boot time | `ProcessInfo.processInfo.systemUptime` |
+| Disk space | Free space on the device |
+| Active keyboards | The list of installed keyboards |
+| User defaults | `UserDefaults` |
+
+**Almost every app uses `UserDefaults`**, so most apps need this entry:
+
+```xml
+<dict>
+    <key>NSPrivacyAccessedAPIType</key>
+    <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+    <key>NSPrivacyAccessedAPITypeReasons</key>
+    <array><string>CA92.1</string></array>   <!-- reading and writing your own app's data -->
+</dict>
+```
+
+**Why:** these APIs could identify a device **without any permission prompt**. A prompt (like for the camera) cannot catch that, so Apple asks for a valid reason instead.
 
 ---
 
-## 78.6 Privacy Nutrition Labels
+## 78.6 Privacy Nutrition Labels 🟢
 
-Privacy nutrition labels (distinct from the Accessibility Nutrition Labels discussed in section 70.18) declare, on an app's App Store listing, what data the app collects and how it's used (linked to the user's identity, used for tracking, and so on) — configured in App Store Connect based on the app's actual, accurate data practices.
+**Privacy nutrition labels** show, on your App Store page, **what data you collect and how you use it**. You fill them in App Store Connect. (They are different from Accessibility Nutrition Labels, section 70.18.)
 
 ```plaintext
 // Privacy label categories developers declare accuracy for:
@@ -98,13 +193,28 @@ Privacy nutrition labels (distinct from the Accessibility Nutrition Labels discu
 // - Data Not Linked to You (collected but not tied to identity)
 ```
 
-Accurate privacy label declaration carries genuine weight beyond a simple compliance checkbox, directly paralleling the Accessibility Nutrition Label discussion from section 70.18 — a user deciding whether to download an app can use these labels to make an informed decision about an app's actual data practices before ever installing it, meaning inaccurate labels (whether through carelessness or deliberate misrepresentation) undermine genuine user trust and decision-making in the exact same way inaccurate accessibility declarations would, and Apple has taken enforcement action against apps found to have submitted knowingly inaccurate privacy labels.
+| Category | Meaning | Example |
+|---|---|---|
+| Data Used to Track You | Shared with other companies to track the user | An ad network's identifier |
+| Data Linked to You | Connected to the user's identity | The email address of an account |
+| Data Not Linked to You | Collected, but not tied to the user | Anonymous crash counts |
+
+Make the labels **match your privacy manifest** (78.4) and what your app really does.
+
+Users read these labels **before they download**. Wrong labels break their trust, and Apple has taken action against apps with knowingly false labels.
 
 ---
 
-## 78.7 TestFlight Internal and External Testing
+## 78.7 TestFlight Internal and External Testing 🟢
 
-TestFlight supports two distinct testing tiers — internal testing (up to 100 members of the development team, builds available immediately without Apple review) and external testing (up to 10,000 testers via public or private links, requiring a brief Apple Beta App Review before the build becomes available to external testers) — appropriate for progressively wider pre-release validation.
+**TestFlight** has two kinds of testing:
+
+| | Internal | External |
+|---|---|---|
+| Who | Your team (up to 100 people) | Anyone you invite (up to 10,000) |
+| Apple review | None, builds are available right away | A short Beta App Review first |
+| Invite | Team members in App Store Connect | Email, or a public link |
+| Good for | Fast daily testing | Wider testing before release |
 
 ```plaintext
 // Internal testing: immediate availability, team members only, no Apple review required
@@ -112,13 +222,25 @@ TestFlight supports two distinct testing tiers — internal testing (up to 100 m
 //                    supports much larger tester groups, including public link-based enrollment
 ```
 
-The distinction between these two tiers reflects a genuine, deliberate trade-off between speed and reach — internal testing's immediate availability (no review wait) makes it appropriate for the fast, frequent iteration a development team needs during active work, while external testing's broader reach (up to 10,000 testers) makes it appropriate for genuinely representative, broader pre-release validation before a full App Store release, at the cost of the Beta App Review step (though this review is typically considerably faster and less strict than full App Store review, 78.9).
+With Fastlane, upload and send to an external group:
+
+```ruby
+upload_to_testflight(
+  groups: ["Beta Testers"],
+  distribute_external: true,
+  changelog: "New: save recipes offline. Please test the Favorites screen."
+)
+```
+
+The `changelog` becomes **"What to Test"**, so testers know what to look at.
+
+**Speed vs. reach:** use internal testing for quick checks while you work. Use external testing for **bigger, more realistic** testing before the App Store release. Beta App Review is usually faster and lighter than the full review (78.9).
 
 ---
 
-## 78.8 Submitting for Review
+## 78.8 Submitting for Review 🟢
 
-Submitting a build for App Store review (via App Store Connect or the App Store Connect API, recall section 76.11) requires a complete set of metadata (78.2), screenshots (78.3), privacy declarations (78.4-78.6), and a fully processed, uploaded build — after which the app enters Apple's review queue, with review typically completing within roughly 24-48 hours, though this can genuinely vary.
+To submit, you need **complete metadata** (78.2), **screenshots** (78.3), **privacy declarations** (78.4 to 78.6), and a **processed build**. Then the app goes into Apple's review queue. Review often takes about **24 to 48 hours**, but it varies.
 
 ```plaintext
 // Pre-submission checklist:
@@ -128,13 +250,30 @@ Submitting a build for App Store review (via App Store Connect or the App Store 
 // - Export compliance information provided (if the app uses encryption)
 ```
 
-Genuinely thorough pre-submission preparation directly reduces the risk of an avoidable rejection (78.10) — many rejections stem not from an app's actual functionality being problematic, but from incomplete or inconsistent metadata, missing privacy declarations, or export compliance information not being properly provided, meaning a careful pre-submission review against this kind of checklist is a genuinely worthwhile investment that can meaningfully reduce the number of review cycles a submission actually requires before approval.
+**Export compliance:** if your app only uses standard encryption like HTTPS, add this key to `Info.plist`, so you are not asked on every upload:
+
+```xml
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+```
+
+Submit with Fastlane:
+
+```ruby
+deliver(
+  submit_for_review: true,
+  automatic_release: false,          # you choose when it goes live after approval
+  force: true                         # skip the HTML preview
+)
+```
+
+Many rejections are **not about the app itself**. They come from missing metadata, missing privacy details, or export compliance. A careful checklist means **fewer review rounds**.
 
 ---
 
-## 78.9 App Review Guidelines: The Parts That Matter
+## 78.9 App Review Guidelines: The Parts That Matter 🟢
 
-Apple's App Review Guidelines cover extensive ground, but certain categories account for a disproportionate share of actual rejections in practice — crashes and bugs (the most basic, avoidable category), incomplete metadata, privacy declaration issues (78.4-78.6), design that's confusingly similar to system UI, and guideline violations around specific functionality categories (in-app purchase requirements for digital goods, for instance).
+Apple's App Review Guidelines are long, but **most rejections come from a few areas**. Check these carefully before every submission:
 
 ```plaintext
 // Disproportionately common rejection categories worth extra pre-submission scrutiny:
@@ -144,13 +283,29 @@ Apple's App Review Guidelines cover extensive ground, but certain categories acc
 // - Privacy declaration inaccuracy or incompleteness (78.4-78.6)
 ```
 
-This isn't a claim that the rest of the guidelines don't matter, but rather a practical, experience-based observation about where rejection risk actually concentrates — a team's pre-submission review time is generally better spent double-checking these specific, disproportionately common categories thoroughly rather than spreading equal, shallow attention across every single guideline uniformly, since the actual empirical distribution of real-world rejections skews heavily toward this particular, learnable set of concerns.
+Two more that catch many teams:
+
+- **Login required, but no demo account.** If reviewers must sign in, give a working demo account in **App Review Information**.
+- **Digital goods without in-app purchase.** Selling digital content usually requires Apple's in-app purchase (section 56).
+
+```plaintext
+App Review Information
+  Sign-in required:  Yes
+  User name:         review@example.com
+  Password:          (a working demo password)
+  Notes:             Tap "Pantry" to see the barcode scanner. It needs a product barcode.
+```
+
+The rest of the guidelines still matter. But your review time is best spent on **where most real rejections happen**.
 
 ---
 
-## 78.10 Handling a Rejection
+## 78.10 Handling a Rejection 🟢
 
-A rejection includes a specific guideline reference and reviewer notes explaining the concern — the appropriate response depends on whether the concern reflects a genuine issue (fix it, then resubmit) or a misunderstanding (respond via the Resolution Center with clarifying information, or request an appeal), with reviewers sometimes lacking full context a developer can genuinely provide to resolve a misunderstanding-based rejection without needing an actual code change.
+A rejection names a **guideline** and includes the **reviewer's notes**. Decide which case it is:
+
+- **A real problem** (a bug, missing functionality): **fix it and resubmit**.
+- **A misunderstanding** (the reviewer misread how a feature works): **reply in the Resolution Center** with more context, or **appeal**.
 
 ```plaintext
 // Rejection response decision:
@@ -159,13 +314,25 @@ A rejection includes a specific guideline reference and reviewer notes explainin
 //   → respond via Resolution Center with clarifying context, or request an appeal
 ```
 
-Recognizing that not every rejection requires an actual code change is a genuinely important, practical insight — a reviewer evaluating potentially thousands of apps has necessarily limited time to understand every submission's full context, and a rejection stemming from a genuine misunderstanding of a feature's actual purpose can sometimes be resolved simply by providing clarifying information through the Resolution Center, considerably faster than an unnecessary code change and resubmission cycle for a concern that was never actually a genuine violation in the first place.
+A clear, polite reply for a misunderstanding:
+
+```plaintext
+Hello, thank you for the review.
+
+The location permission is used only for the "Nearby Stores" feature (Pantry tab →
+"Find nearby"). It is requested when the user taps that button, not at launch.
+A short screen recording is attached showing the flow.
+
+Thank you!
+```
+
+**Not every rejection needs a code change.** Reviewers see many apps and have little time. Good context can solve a misunderstanding much faster than an unnecessary code change.
 
 ---
 
-## 78.11 Phased Release and Staged Rollout
+## 78.11 Phased Release and Staged Rollout 🟢
 
-Phased release gradually rolls out a new App Store version to an increasing percentage of existing users over roughly a week (rather than immediately to 100% of the existing install base) — letting a team catch a genuinely serious issue (a crash, a critical bug) affecting only a small percentage of users before it reaches the app's entire user base.
+**Phased release** gives a new version to **more and more existing users over 7 days**, instead of everyone at once. If a serious bug appears, only a **small group** is affected, and you can **pause**.
 
 ```plaintext
 // Phased release schedule (approximate, automatic):
@@ -179,13 +346,24 @@ Phased release gradually rolls out a new App Store version to an increasing perc
 // (Rollout can be paused at any point if a serious issue is discovered)
 ```
 
-Phased release directly extends the same measure-before-full-commitment risk-management principle discussed for performance regression budgets (section 69.19) and merge queues (section 76.15), applied here to the actual, final release process — rather than a genuinely serious bug immediately affecting 100% of the user base the instant a new version releases, phased release provides a real opportunity to catch and pause on such an issue while it's still affecting only a small percentage of users, considerably limiting the actual real-world impact of a release that turns out to have a serious, unanticipated problem.
+Turn it on with Fastlane when you submit:
+
+```ruby
+deliver(submit_for_review: true, phased_release: true)
+```
+
+New users and people who update by hand can still get the version right away. The phases only apply to **automatic updates**.
+
+This is the same idea as performance budgets (section 69.19) and merge queues (section 76.15): **limit the damage** before you fully commit.
 
 ---
 
-## 78.12 Responding to Reviews and Ratings Prompts
+## 78.12 Responding to Reviews and Ratings Prompts 🟢
 
-Developers can respond publicly to App Store reviews (visible to all users viewing that review), while `SKStoreReviewController`/`RequestReview` (the API for prompting an in-app rating request) is subject to Apple's own strict guidelines around request frequency and appropriate timing — both genuinely distinct concerns from the App Review process (78.8-78.10) despite the similar terminology.
+Two different things:
+
+- **Replying to reviews:** you can reply publicly to App Store reviews, in App Store Connect.
+- **Asking for a rating:** the `requestReview` API shows Apple's rating prompt inside your app.
 
 ```swift
 import StoreKit
@@ -198,13 +376,39 @@ requestReview()
 // frequency limits — an app cannot force the prompt to appear on every single call
 ```
 
-The system-controlled nature of `requestReview()` is a genuinely important detail worth understanding — unlike a fully custom, in-app-built rating prompt an app could show as frequently as it wanted, calling the system API doesn't guarantee the actual prompt appears every time, since iOS itself enforces frequency limits behind the scenes, meaning a well-designed app calls `requestReview()` at contextually appropriate moments (like after a clearly positive interaction) and trusts the system to actually decide whether showing the prompt at that specific moment is appropriate, rather than assuming every call produces a visible prompt.
+A good pattern: ask **after a happy moment**, and **not too often**:
+
+```swift
+struct RecipeSavedView: View {
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage("savedRecipeCount") private var savedCount = 0
+    @AppStorage("lastReviewRequestVersion") private var lastVersion = ""
+
+    func recipeSaved() {
+        savedCount += 1
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        if savedCount >= 3 && lastVersion != version {   // after 3 saves, once per version
+            requestReview()
+            lastVersion = version
+        }
+    }
+
+    var body: some View {
+        Button("Save Recipe") { recipeSaved() }
+    }
+}
+```
+
+**The system decides** if the prompt really appears. It is shown at most a few times a year, so a call does not guarantee a prompt. Never show your own fake rating dialog instead.
 
 ---
 
-## 78.13 Custom Product Pages and A/B Testing Listings 🟠
+## 78.13 Custom Product Pages and A/B Testing Listings 🟡
 
-Custom product pages let a developer create additional, alternative App Store listing variants (different screenshots, preview videos, or promotional text) targetable via specific marketing links, while App Store Connect's built-in product page A/B testing lets different listing variants be tested against each other for actual conversion rate, informing which version should become the primary listing.
+Two tools to improve your store page with **real data**:
+
+- **Custom product pages:** extra versions of your page (different screenshots, videos, or promotional text), each with **its own link**, for example for one ad campaign.
+- **Product page optimization:** an **A/B test** that shows different versions to different people, and measures which one **gets more downloads**.
 
 ```plaintext
 // Custom product page use case: a specific marketing campaign links to a
@@ -212,13 +416,23 @@ Custom product pages let a developer create additional, alternative App Store li
 // rather than sending all traffic to one single, generic default listing
 ```
 
-This capability meaningfully extends the ASO discipline discussed in 78.2 into genuinely measurable, iterative territory — rather than choosing metadata, screenshots, and messaging once based purely on intuition and hoping it's actually effective, A/B testing product page variants provides real, measured conversion data informing which specific messaging or visual approach genuinely performs better with actual users, turning App Store listing optimization from a one-time, intuition-driven decision into an ongoing, data-informed practice.
+Each custom product page has its own link, with a `ppid` parameter:
+
+```plaintext
+https://apps.apple.com/app/id1234567890?ppid=45812c9b-c296-43d3-9e0e-0a1b2c3d4e5f
+```
+
+For example, a campaign for vegetarians links to a page whose screenshots show vegetarian recipes first.
+
+This takes ASO (78.2) **beyond guessing**. Instead of choosing your page once and hoping, you **test and measure** which version really works, and keep improving.
 
 ---
 
-## 78.14 App Size Limits and On-Demand Resources 🟠
+## 78.14 App Size Limits and On-Demand Resources 🟡
 
-Beyond the binary size reduction techniques covered in section 69.15, the App Store enforces specific size-related constraints (a cellular download size threshold beyond which users are warned or blocked from downloading over cellular without Wi-Fi) — on-demand resources (already introduced in 69.15) directly address this by deferring non-essential content download until actually needed, keeping the initial download under relevant size thresholds.
+**Download size matters.** Above **200 MB**, iOS asks users before downloading over cellular, by default. (Users can change this setting.) Some people then **give up** on the download.
+
+**On-demand resources** keep extra content **out of the first download**. The app fetches it **later, when needed**. (Section 69.15 covers other ways to make your app smaller.)
 
 ```plaintext
 // On-demand resource tagging (declaring content NOT needed at initial install):
@@ -226,7 +440,20 @@ Beyond the binary size reduction techniques covered in section 69.15, the App St
 // rather than bundled into the initial app download — keeping initial download size smaller
 ```
 
-This directly builds on 69.15's binary size discussion but applies it specifically to the App Store's actual, concrete download-size thresholds and their real user-facing consequences — a smaller initial download isn't merely a generic technical nicety but has a concrete, measurable business impact, since users facing a cellular download warning (or an outright block) for an oversized app represent real, quantifiable download abandonment, making on-demand resources a genuinely practical technique for staying under these specific thresholds rather than merely a theoretical size-optimization exercise.
+In Xcode, give resources a **tag** (like `level2`). Then download them when needed:
+
+```swift
+let request = NSBundleResourceRequest(tags: ["level2"])
+
+try await request.beginAccessingResources()   // downloads if not already there
+let image = UIImage(named: "level2-background") // now available from the bundle
+// ... use the resources ...
+request.endAccessingResources()                 // the system may remove them later
+```
+
+For new apps, also look at Apple's **Background Assets** framework, which downloads large content in the background.
+
+A smaller first download is **not just a technical detail**. Users who see a cellular warning, or wait a long time, may **never install** the app. That is a real business cost.
 
 ---
 
@@ -234,17 +461,17 @@ This directly builds on 69.15's binary size discussion but applies it specifical
 
 | Concept | Key Mechanism | Purpose |
 |---|---|---|
-| Foundational setup | App Store Connect app record | Prerequisite for all subsequent submission steps |
-| Discoverability | Metadata, keywords, ASO | Search ranking vs. conversion-focused field allocation |
-| Conversion | Screenshots, app previews | First substantive content prospective users see |
-| Data transparency | `PrivacyInfo.xcprivacy` | Aggregated declaration across app and dependencies |
-| Anti-fingerprinting | Required reason APIs | Closes a tracking loophole with no user-facing prompt |
-| Informed decisions | Privacy nutrition labels | Pre-download data practice transparency |
-| Pre-release validation | TestFlight internal/external | Speed vs. reach trade-off for beta testing |
-| Submission readiness | Pre-submission checklist | Reduces avoidable rejection risk |
-| Rejection risk concentration | Common guideline violation categories | Focuses review effort where risk actually concentrates |
-| Rejection resolution | Resolution Center, appeals | Not every rejection requires a code change |
-| Risk-limited rollout | Phased release | Limits blast radius of an unanticipated serious issue |
-| System-mediated prompts | `requestReview()` | Frequency-limited, not guaranteed on every call |
-| Measured optimization | Custom product pages, A/B testing | Data-informed listing iteration, not one-time intuition |
-| Download-size impact | On-demand resources | Concrete business impact of staying under size thresholds |
+| App record | App Store Connect, `fastlane produce` | The first step for everything else |
+| ASO | Name, subtitle, keywords, description | Be found, then be chosen |
+| Screenshots | `fastlane snapshot`, localized images | The first thing people see |
+| Privacy manifest | `PrivacyInfo.xcprivacy` | Declare data for your app and its packages |
+| Required reason APIs | Approved reason codes | Stop silent fingerprinting |
+| Privacy labels | Tracking, linked, not linked | Users decide before downloading |
+| TestFlight | Internal and external testing | Fast checks vs. wide testing |
+| Submitting | Checklist, export compliance | Fewer rejections |
+| Guidelines | Crashes, broken features, demo accounts | Check where rejections happen |
+| Rejections | Fix, or explain in the Resolution Center | Not every rejection needs code |
+| Phased release | 1% to 100% over 7 days | Limit the damage of a bad release |
+| Ratings | `requestReview`, after happy moments | Ask at the right time |
+| Product pages | Custom pages, A/B tests | Improve the listing with data |
+| App size | On-demand resources | A smaller first download |
