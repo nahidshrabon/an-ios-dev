@@ -1,6 +1,14 @@
-## 77.1 Certificates, App IDs, and Profiles Explained
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Code signing rests on three distinct, related concepts — a certificate (proving a developer's identity, issued by Apple), an App ID (identifying a specific app, potentially with wildcard or explicit capability configuration), and a provisioning profile (binding a specific certificate, App ID, and set of allowed devices/capabilities together into what actually gets embedded in a built app to authorize it to run).
+## 77.1 Certificates, App IDs, and Profiles Explained 🟢
+
+**Code signing** proves who made an app and allows it to run. It is built on **three pieces**:
+
+| Piece | What it proves | Example |
+|---|---|---|
+| **Certificate** | "This is a registered developer or team" | Apple Distribution: Example Inc. |
+| **App ID** | "This is this specific app" (and its capabilities) | `com.example.myapp` |
+| **Provisioning profile** | Ties a certificate + an App ID + devices and capabilities together | Embedded in the built app |
 
 ```plaintext
 Certificate:          Proves "this is genuinely a specific registered developer/team"
@@ -9,13 +17,26 @@ Provisioning Profile:  Binds together: [this certificate] + [this App ID] + [the
                        — actually embedded in the built app, authorizing it to run under these conditions
 ```
 
-Understanding this three-part relationship is genuinely foundational for diagnosing any signing problem later in this section (77.4) — a provisioning profile is fundamentally a binding, meaning a signing failure is almost always traceable to a mismatch somewhere in this binding (a certificate that's expired or revoked, an App ID whose configured capabilities don't match what the app's entitlements actually request, or a profile that doesn't include the specific device being tested on), rather than being some inexplicable, opaque failure.
+See the signing certificates on your Mac:
+
+```bash
+security find-identity -v -p codesigning
+```
+
+Look inside a provisioning profile (it is a signed file):
+
+```bash
+security cms -D -i embedded.mobileprovision      # shows the App ID, devices, entitlements, and expiry
+```
+
+**Remember the binding.** Almost every signing error is a **mismatch** somewhere in it: an expired certificate, an App ID without a needed capability, or a profile that does not include your device (more in 77.4).
 
 ---
 
-## 77.2 Automatic vs Manual Signing
+## 77.2 Automatic vs Manual Signing 🟢
 
-Xcode's "Automatically manage signing" option handles certificate and profile creation/renewal transparently, appropriate for most individual developer and small-team scenarios, while manual signing requires explicitly selecting a specific certificate and provisioning profile — appropriate for CI environments (where `fastlane match`, section 76.9, typically manages this explicitly) or teams needing precise, deliberate control over exactly which signing identity is used.
+- **Automatic signing:** Xcode creates and renews certificates and profiles for you. Good for most developers and small teams.
+- **Manual signing:** you choose the **exact** certificate and profile. Good for **CI** (often with `fastlane match`, section 76.9), and when you need full control.
 
 ```plaintext
 // Automatic signing: Xcode silently creates/renews certificates and profiles as needed
@@ -24,13 +45,35 @@ Xcode's "Automatically manage signing" option handles certificate and profile cr
 // explicitly-controlled signing rather than Xcode's own automatic management
 ```
 
-This distinction directly explains why CI environments typically use manual signing (via `fastlane match`) rather than Xcode's automatic management — CI needs deterministic, reproducible signing behavior across every single run, while Xcode's automatic signing can behave somewhat unpredictably in a headless CI context (potentially attempting to create new certificates or profiles rather than simply using an already-established, correct one), making manual, explicit signing control genuinely more appropriate and reliable for automated build environments.
+Manual signing in an `.xcconfig` file (section 72.4):
+
+```plaintext
+// Release.xcconfig
+CODE_SIGN_STYLE = Manual
+DEVELOPMENT_TEAM = ABCDE12345
+CODE_SIGN_IDENTITY = Apple Distribution
+PROVISIONING_PROFILE_SPECIFIER = match AppStore com.example.myapp
+```
+
+If you do use automatic signing on CI, let `xcodebuild` talk to Apple with an App Store Connect API key (section 76.11):
+
+```bash
+xcodebuild archive -scheme MyApp -archivePath MyApp.xcarchive \
+  -allowProvisioningUpdates \
+  -authenticationKeyPath AuthKey.p8 \
+  -authenticationKeyID YOUR_KEY_ID \
+  -authenticationKeyIssuerID YOUR_ISSUER_ID
+```
+
+**Why CI usually uses manual signing:** CI needs the **same result on every run**. Automatic signing can try to create new certificates or profiles on a CI machine, which makes runs unpredictable.
 
 ---
 
-## 77.3 Entitlements and Capability Drift
+## 77.3 Entitlements and Capability Drift 🟡
 
-Entitlements (declared in an app's `.entitlements` file) specify which system capabilities an app is authorized to use (push notifications, App Groups recall section 43.4, CloudKit, and others) — and "capability drift" occurs when an app's actual entitlements file and its corresponding App ID's configured capabilities in the Apple Developer portal fall out of sync, a genuinely common source of confusing signing failures.
+**Entitlements** list the system features your app may use: push notifications, App Groups (section 43.4), CloudKit, and more. They live in an **`.entitlements`** file.
+
+**Capability drift** happens when your `.entitlements` file and your **App ID's capabilities** on the Apple Developer website **no longer match**. It is a common cause of confusing signing errors.
 
 ```xml
 <!-- MyApp.entitlements -->
@@ -40,13 +83,25 @@ Entitlements (declared in an app's `.entitlements` file) specify which system ca
 </array>
 ```
 
-Capability drift is a genuinely easy, common mistake specifically because entitlements can be added locally (in Xcode, directly in the `.entitlements` file) without automatically, correspondingly updating the App ID's capability configuration on Apple's Developer portal — a developer enabling a new capability like CloudKit locally in Xcode, without the corresponding App ID configuration actually being updated to match, produces exactly the kind of mismatch that manifests as a confusing signing failure, since the local entitlements request a capability the actual provisioning profile (bound to the outdated App ID configuration) doesn't authorize.
+How it happens:
+
+1. You turn on CloudKit in Xcode. The `.entitlements` file now asks for it.
+2. The App ID on the Developer website was **not** updated.
+3. The profile (built from the old App ID) does not allow CloudKit, so **signing fails**.
+
+Check what a built app really asks for:
+
+```bash
+codesign -d --entitlements :- MyApp.app        # print the app's entitlements
+```
+
+Compare it with what the profile allows (`security cms -D -i`, from 77.1). The difference is your drift.
 
 ---
 
-## 77.4 Why Signing Breaks and How to Diagnose It
+## 77.4 Why Signing Breaks and How to Diagnose It 🟡
 
-Signing failures typically stem from a handful of genuinely common, diagnosable root causes — an expired certificate, a provisioning profile that doesn't include a specific test device, capability drift (77.3), or a profile that's simply outdated relative to the app's current configuration — with Xcode's own signing error messages and the Apple Developer portal's certificate/profile management pages providing the actual diagnostic information needed to identify which specific cause applies.
+Signing errors come from **a few common causes**. Read the **exact** error message, find the category, and apply its fix.
 
 ```plaintext
 // Common signing error categories to check systematically:
@@ -56,13 +111,28 @@ Signing failures typically stem from a handful of genuinely common, diagnosable 
 // - "Profile has expired" → a profile past its validity period needs regeneration
 ```
 
-Recognizing these specific, distinct failure categories (rather than treating every signing error as one undifferentiated, mysterious problem) is the actual diagnostic skill worth developing here — because each category has a genuinely distinct, specific root cause and corresponding fix, correctly identifying *which* category a given failure actually falls into (by carefully reading Xcode's specific error message rather than just noting that "signing failed") is what turns a signing problem from a frustrating, opaque blocker into a straightforward, mechanical fix.
+| Error | Cause | Fix |
+|---|---|---|
+| No signing certificate found | Certificate expired, revoked, or not on this Mac | Install or create a new certificate |
+| Profile doesn't include device | The device is not registered | Register its UDID, then regenerate the profile |
+| Entitlement not supported | Capability drift (77.3) | Turn on the capability for the App ID |
+| Profile has expired | Too old | Regenerate and download it |
+
+Tools that help:
+
+```bash
+security find-identity -v -p codesigning      # which certificates are valid on this Mac
+codesign -dv --verbose=4 MyApp.app            # who signed the app, and with what
+codesign --verify --deep --strict MyApp.app   # is the signature valid?
+```
+
+**The skill is to stop treating "signing failed" as one mystery.** Each category has its own cause and its own fix, so a careful read of the message usually leads straight to the solution.
 
 ---
 
-## 77.5 Archiving and Exporting a Build
+## 77.5 Archiving and Exporting a Build 🟡
 
-Archiving (`Product > Archive` in Xcode, or `xcodebuild archive` in CI, recall section 76.2) produces a `.xcarchive` — a complete, signed build bundle including debug symbols — from which a build can then be exported in different forms depending on the intended distribution channel (App Store submission, ad hoc distribution, enterprise distribution, 77.6).
+**Archiving** (`Product → Archive` in Xcode, or `xcodebuild archive` on CI) makes a **`.xcarchive`**: a signed build **plus its debug symbols**. You then **export** it for a specific way of distributing (App Store, ad hoc, enterprise, 77.6).
 
 ```bash
 xcodebuild archive -scheme MyApp -archivePath MyApp.xcarchive
@@ -70,13 +140,33 @@ xcodebuild -exportArchive -archivePath MyApp.xcarchive -exportPath ./export \
   -exportOptionsPlist ExportOptions.plist
 ```
 
-The `.xcarchive`'s inclusion of debug symbols alongside the signed build is precisely why archives (rather than ordinary build products) are the appropriate starting point for the dSYM upload automation discussed in section 76.13 — an archive genuinely contains everything needed both to distribute the actual app *and* to later symbolicate crash reports from that specific build, making the archive (not a plain build output) the correct artifact a release pipeline should be built around preserving and processing.
+The `ExportOptions.plist` says how to export:
+
+```xml
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>     <!-- older Xcode versions: app-store -->
+    <key>teamID</key>
+    <string>ABCDE12345</string>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>destination</key>
+    <string>upload</string>               <!-- upload to App Store Connect directly -->
+</dict>
+</plist>
+```
+
+An archive contains both the **app to ship** and the **dSYMs** to read crash reports later (section 76.13). That is why a release pipeline should **keep the archive**, not just the app file.
 
 ---
 
-## 77.6 Ad Hoc and Enterprise Distribution
+## 77.6 Ad Hoc and Enterprise Distribution 🟡
 
-Ad hoc distribution allows installing a build directly on a specific, limited set of registered devices (identified by UDID in the provisioning profile) without going through TestFlight or the App Store, appropriate for very small-scale internal testing, while enterprise distribution (requiring an Apple Developer Enterprise Program membership) allows installing a build on any of an organization's own devices without per-device UDID registration, appropriate for genuinely internal, company-only apps never intended for public distribution.
+Two ways to install an app **without the App Store or TestFlight**:
+
+- **Ad hoc:** install on a **small list of registered devices**. The profile lists each device's UDID.
+- **Enterprise:** install on **any of your company's own devices**, with no device list. It needs the Apple Developer Enterprise Program.
 
 ```plaintext
 // Ad hoc: provisioning profile explicitly lists specific device UDIDs — a hard device count limit applies
@@ -84,13 +174,26 @@ Ad hoc distribution allows installing a build directly on a specific, limited se
 //             explicitly prohibited by Apple's terms for distribution to the general public
 ```
 
-The distinction between these two distribution methods reflects genuinely different intended scales and use cases, each with real constraints worth understanding before choosing between them — ad hoc distribution's UDID-based device limit makes it suitable only for small-scale testing (not general internal company-wide distribution), while enterprise distribution's broader internal reach comes with Apple's explicit contractual requirement that it remain genuinely internal-only, with real consequences (including potential enterprise certificate revocation) for organizations found using it to distribute apps to the general public rather than their own employees.
+| | Ad hoc | Enterprise |
+|---|---|---|
+| Who can install | Registered devices only (about 100 per device type each year) | Any device in your company |
+| Good for | Small test groups | Internal company apps |
+| Rule | Device limit | **Internal use only** |
+
+Export an ad hoc build:
+
+```xml
+<key>method</key>
+<string>release-testing</string>     <!-- older Xcode versions: ad-hoc -->
+```
+
+**Be careful with enterprise distribution.** Apple's terms say it must stay **inside your company**. Using it to give apps to the public can get your enterprise certificate **revoked**, which stops all your internal apps from working.
 
 ---
 
 ## 77.7 MDM and Custom App Distribution 🔴
 
-Mobile Device Management (MDM) systems let organizations manage and distribute apps to enrolled, organization-owned devices in a centrally administered way — including deploying custom, internally-developed apps (via enterprise distribution, 77.6, or Apple Business Manager's custom app distribution) alongside configuring managed app settings and restrictions across an organization's device fleet.
+**Mobile Device Management (MDM)** lets a company manage its **own devices** from one place: install apps, push settings, and set restrictions. It can deploy **custom internal apps** (through enterprise distribution, 77.6, or Apple Business Manager's custom apps).
 
 ```plaintext
 // MDM-distributed custom apps typically combine:
@@ -99,13 +202,22 @@ Mobile Device Management (MDM) systems let organizations manage and distribute a
 //   letting organizations pre-configure things like a server endpoint without user input)
 ```
 
-MDM-based distribution represents a genuinely different distribution model from anything else covered in this section — rather than an end user discovering and installing an app through the public App Store, MDM enables centrally-administered, organization-controlled deployment (with the ability to also push configuration and enforce restrictions) appropriate specifically for genuinely internal, enterprise-managed device fleets where an organization's IT department, not individual end users, controls what gets installed and how it's configured.
+The app reads the **settings pushed by MDM** (Managed App Configuration) from `UserDefaults`:
+
+```swift
+let managed = UserDefaults.standard.dictionary(forKey: "com.apple.configuration.managed")
+let serverURL = managed?["serverURL"] as? String ?? "https://default.example.com"
+```
+
+So the IT department can set, for example, the company's server address **without the user typing anything**.
+
+This is a different model from everything else in this section. The user does not choose apps in the App Store. **The company's IT team** decides what is installed and how it is set up.
 
 ---
 
 ## 77.8 Notarization and Alternative Marketplaces (EU) 🔴
 
-Regulatory changes in the EU (under the Digital Markets Act) have required Apple to support alternative app marketplaces and direct distribution outside the traditional App Store on iOS within the EU specifically, with Apple's notarization process providing a baseline security/integrity check for apps distributed through these alternative channels, distinct from full App Store review.
+Because of EU rules (the **Digital Markets Act**), Apple must allow, **in the EU only**, apps from **alternative app marketplaces** and from **direct distribution**, outside the App Store. These apps still go through **notarization**: a basic security check by Apple, which is smaller than full App Review.
 
 ```plaintext
 // EU-specific alternative distribution model (conceptual):
@@ -115,7 +227,13 @@ Regulatory changes in the EU (under the Digital Markets Act) have required Apple
 // - This distribution model does not apply outside the EU's specific regulatory scope
 ```
 
-This represents a genuinely significant, relatively recent shift in iOS's traditionally closed distribution model, though one specifically scoped to EU regulatory requirements rather than a global change — notarization's baseline security check reflects Apple's attempt to preserve some minimal integrity/security guarantee even for apps distributed outside its own traditional App Store review process, a genuinely evolving area of the platform that developers targeting EU markets specifically need to stay current on, distinct from the traditional single-marketplace distribution model that continues to apply everywhere else.
+| | App Store | EU alternative distribution |
+|---|---|---|
+| Where | Everywhere | EU only |
+| Apple's check | Full App Review | Notarization (a basic check) |
+| Who distributes | Apple | A marketplace, or you |
+
+This is a big change from iOS's traditional closed model, but it **only applies in the EU**. The rules are still changing, so if you target the EU, check Apple's current documentation.
 
 ---
 
@@ -123,12 +241,12 @@ This represents a genuinely significant, relatively recent shift in iOS's tradit
 
 | Concept | Key Mechanism | Purpose |
 |---|---|---|
-| Signing foundation | Certificate, App ID, provisioning profile | The three-part binding underlying all code signing |
-| Signing management | Automatic vs. manual signing | Xcode convenience vs. CI-appropriate deterministic control |
-| Capability sync | Entitlements vs. App ID configuration | Avoiding "capability drift" signing failures |
-| Systematic diagnosis | Common signing error categories | Turning opaque failures into mechanical, identifiable fixes |
-| Distributable artifact | `.xcarchive` | Signed build plus debug symbols, the basis for all export forms |
-| Small-scale testing | Ad hoc distribution | UDID-limited, non-TestFlight device installation |
-| Internal-only distribution | Enterprise distribution | Broader reach, strictly internal-use contractual requirement |
-| Centralized deployment | MDM, custom app distribution | Organization-controlled installation and configuration |
-| Evolving distribution model | EU alternative marketplaces, notarization | Regulatory-driven, EU-scoped alternative to App Store-only distribution |
+| The three pieces | Certificate, App ID, profile | The binding behind every signature |
+| Signing style | Automatic vs. manual | Convenience vs. predictable CI |
+| Entitlements | `.entitlements` vs. App ID | Avoid capability drift |
+| Diagnosis | Error categories and `codesign` | Turn a mystery into a known fix |
+| Archives | `.xcarchive`, `ExportOptions.plist` | The app plus its debug symbols |
+| Ad hoc | Registered devices | Small test groups |
+| Enterprise | Company devices only | Internal apps, internal use only |
+| MDM | Managed install and settings | Company-controlled devices |
+| EU distribution | Alternative marketplaces, notarization | Non-App Store distribution in the EU |

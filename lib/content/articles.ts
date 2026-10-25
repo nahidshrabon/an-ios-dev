@@ -858,7 +858,7 @@ export const articles: Article[] = [
     slug: "code-signing-and-distribution",
     title: "Code Signing and Distribution",
     description:
-      "Certificates/App IDs/profiles, automatic vs. manual signing, entitlements and capability drift, why signing breaks and how to diagnose it, archiving and exporting a build, ad hoc and enterprise distribution, MDM/custom app distribution, and notarization/alternative marketplaces in the EU.",
+      "How signing works and how apps get to users: certificates, App IDs and profiles, automatic vs. manual signing, entitlements, fixing signing errors, archives and export, ad hoc and enterprise distribution, MDM, and EU distribution.",
     tags: ["code-signing", "distribution", "provisioning"],
     publishedAt: "2026-08-16",
     get content() {
