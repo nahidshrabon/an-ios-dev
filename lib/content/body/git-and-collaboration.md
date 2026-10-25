@@ -1,6 +1,11 @@
-## 74.1 Commits, Staging, and History
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Git's staging area (the "index") lets changes be selectively prepared for a commit — `git add` stages specific changes, `git commit` records the staged snapshot permanently into the project's history, and this two-step model (stage, then commit) lets a developer construct a commit representing a coherent, deliberate unit of change rather than simply capturing every uncommitted change indiscriminately.
+## 74.1 Commits, Staging, and History 🟢
+
+Git saves work in two steps:
+
+1. **Stage** (`git add`): choose which changes go into the next commit. The staging area is also called the **index**.
+2. **Commit** (`git commit`): save the staged changes into the history, for good.
 
 ```bash
 git add ProfileView.swift ProfileViewModel.swift  # stage only the specific, related files
@@ -8,13 +13,24 @@ git commit -m "Add profile editing support"
 git log --oneline  # view the resulting commit history
 ```
 
-The staging area's genuine value becomes apparent specifically when a developer's working directory contains multiple, unrelated changes simultaneously (an in-progress feature alongside an unrelated bug fix stumbled upon along the way) — selectively staging only the files relevant to one coherent change lets that change be committed as its own clean, focused commit, while the unrelated change remains uncommitted and can be staged and committed separately afterward, rather than both getting tangled together into one confusing, mixed-purpose commit.
+More everyday commands:
+
+```bash
+git status                       # what changed, and what is staged
+git diff                         # changes not staged yet
+git add -p                       # stage only some parts of a file, piece by piece
+git restore --staged File.swift  # unstage a file (keeps your changes)
+git commit --amend               # fix the last commit (only if not pushed yet)
+git stash                        # put changes aside for later; git stash pop brings them back
+```
+
+**Why two steps?** Your folder often has **unrelated changes** at the same time: a feature and a small bug fix you found on the way. Stage and commit them **separately**, so each commit has one clear purpose.
 
 ---
 
-## 74.2 Branching and Merging
+## 74.2 Branching and Merging 🟢
 
-A Git branch is a movable pointer to a specific commit, letting development on a new feature or fix proceed independently from the main line of development (commonly called `main`) without affecting it until explicitly merged back — `git merge` integrates a branch's changes into another branch, creating a merge commit that records the point where the two histories rejoined.
+A **branch** is a separate line of work. You can build a feature without touching `main` until it is ready. **`git merge`** brings the branch's changes back into another branch.
 
 ```bash
 git checkout -b feature/profile-editing
@@ -23,26 +39,51 @@ git checkout main
 git merge feature/profile-editing
 ```
 
-Branching's fundamental value is enabling genuinely parallel, isolated development — multiple developers (or one developer working on multiple things) can work simultaneously on entirely separate lines of development without their in-progress, potentially incomplete or broken changes interfering with each other or with `main`'s own stability, with `merge` providing the mechanism to eventually integrate that isolated work back together once it's actually ready, while preserving the full historical record of how and when that integration happened.
+The newer, clearer commands do the same:
+
+```bash
+git switch -c feature/profile-editing   # create and switch to a new branch
+git switch main                          # switch back
+git branch                               # list branches
+git branch -d feature/profile-editing    # delete a branch after it is merged
+git log --oneline --graph --all          # see branches and merges as a graph
+```
+
+Branches let **several people (or several tasks) work in parallel**. Unfinished or broken work stays on its branch and does not break `main`. A merge keeps a record of when the work came back together.
 
 ---
 
-## 74.3 Rebasing and Interactive Rebase
+## 74.3 Rebasing and Interactive Rebase 🟡
 
-`git rebase` replays a branch's commits on top of a different base commit, producing a linear history rather than merge's explicit branching-and-rejoining structure, while interactive rebase (`git rebase -i`) additionally lets a developer reorder, combine (squash), edit, or drop individual commits before they become part of the branch's final, shared history.
+**`git rebase`** moves your branch's commits so they start from a **new base**, for example the latest `main`. The result is a **straight line** of history, without a merge commit.
 
 ```bash
 git rebase main  # replay feature branch commits on top of main's latest state
 git rebase -i HEAD~3  # interactively edit the last 3 commits: squash, reword, reorder, or drop
 ```
 
-Interactive rebase's genuine value lies in letting a developer clean up their own local commit history *before* sharing it — a feature branch's real development history might include several "fix typo" or "actually make it work" commits reflecting the messy reality of how the work actually happened, and squashing these into fewer, more coherent commits before opening a pull request produces a genuinely more readable, reviewable history for teammates, though this cleanup should generally happen only on commits not yet pushed/shared, since rewriting already-shared history can create genuine confusion for anyone else who has already based work on the original commits.
+**Interactive rebase** opens a list where you decide what happens to each commit:
+
+```plaintext
+pick   a1b2c3d Add profile editing
+squash e4f5a6b Fix typo                 ← merge into the commit above
+squash 7c8d9e0 Actually make it work     ← merge into the commit above
+reword 1f2e3d4 Add tests                 ← change the message
+```
+
+If your branch was already pushed, push the rewritten history safely:
+
+```bash
+git push --force-with-lease     # refuses if someone else pushed in the meantime
+```
+
+**Use it to clean up before sharing.** Turn "fix typo" and "actually make it work" into one clear commit before you open a pull request. But **do not rewrite commits others already use**. It confuses anyone who built on the old ones.
 
 ---
 
-## 74.4 Resolving Merge Conflicts in Xcode Projects
+## 74.4 Resolving Merge Conflicts in Xcode Projects 🟡
 
-Merge conflicts within Xcode's `.pbxproj` project file (a sprawling, machine-generated format, recall the `.xcconfig` discussion in section 72.4) are notoriously more painful to resolve manually than conflicts in ordinary source files, since the file's internal structure (unique identifiers, ordering-sensitive entries) makes naive text-based conflict resolution genuinely risky, potentially corrupting the project file if resolved carelessly.
+Conflicts in Xcode's **`.pbxproj` file** are much harder than conflicts in normal code. The file is generated by Xcode, full of IDs, and sensitive to order. A careless fix can **corrupt the project**.
 
 ```plaintext
 <<<<<<< HEAD
@@ -52,13 +93,27 @@ Merge conflicts within Xcode's `.pbxproj` project file (a sprawling, machine-gen
 >>>>>>> feature-branch
 ```
 
-Practical strategies for minimizing `.pbxproj` conflict pain include keeping the file's structure genuinely sorted/organized when possible, having team members avoid working on completely unrelated features that both happen to add new files during overlapping time windows when feasible, and, when a conflict does occur, sometimes resorting to opening the project in Xcode and re-adding a conflicting file reference cleanly rather than attempting to hand-edit the raw, cryptic `.pbxproj` conflict markers directly, since Xcode's own project file manipulation is considerably safer than manual text editing of this particular, unusually sensitive file format.
+Ways to have **fewer conflicts**:
+
+- **Use folders that Xcode keeps in sync** (Xcode 16 and later). Files in such a folder are not listed one by one in `.pbxproj`, so adding a file no longer edits the project file.
+- **Move code into Swift packages** (section 73). Their `Package.swift` is plain text and easy to merge.
+- **Move settings into `.xcconfig` files** (section 72.4).
+
+When a conflict happens anyway, a safe way is to take one side, then **re-add the missing file in Xcode**:
+
+```bash
+git checkout --ours MyApp.xcodeproj/project.pbxproj   # keep your version of the project file
+git add MyApp.xcodeproj/project.pbxproj
+# Then open Xcode and add the other branch's new file again (File → Add Files…)
+```
+
+Letting Xcode change its own project file is much safer than editing the conflict markers by hand.
 
 ---
 
-## 74.5 .gitignore for Xcode
+## 74.5 .gitignore for Xcode 🟢
 
-A properly configured `.gitignore` for an Xcode project excludes genuinely local, machine-specific, or regeneratable files from version control — user-specific Xcode state (`xcuserdata/`), build products (`DerivedData/`, `.build/`), and `Package.resolved` for library packages (recall the distinction discussed in section 73.2) — while correctly *including* files the team genuinely needs to share, like the project file itself and `.xcconfig` files.
+A **`.gitignore`** file tells Git which files **not** to track: personal Xcode state, build output, and anything that can be rebuilt.
 
 ```plaintext
 # Representative Xcode .gitignore entries
@@ -69,13 +124,39 @@ DerivedData/
 .swiftpm/
 ```
 
-Getting `.gitignore` right matters for genuinely practical reasons beyond mere tidiness — committing `xcuserdata/` (which stores per-developer editor state like open tabs and breakpoint positions) produces constant, meaningless merge conflicts as different developers' local editor state collides in version control, while committing `DerivedData/` or `.build/` bloats the repository with entirely regeneratable build artifacts that provide no actual value to anyone cloning the repository, making a correct `.gitignore` a genuine, practical hygiene concern rather than a purely cosmetic one.
+A bit more for a real project:
+
+```plaintext
+# macOS
+.DS_Store
+
+# Secrets (see section 61.12)
+Secrets.xcconfig
+.env
+```
+
+**Do commit:** the `.xcodeproj` (except `xcuserdata/`), your `.xcconfig` files, and an app's `Package.resolved` (section 73.2).
+
+Why it matters:
+
+- `xcuserdata/` holds **each developer's** open tabs and breakpoints. Committing it causes **constant, useless conflicts**.
+- `DerivedData/` and `.build/` are **build output**. They only make the repository bigger.
+
+If you already committed a file by mistake, stop tracking it (it stays on your disk):
+
+```bash
+git rm -r --cached MyApp.xcodeproj/xcuserdata
+```
 
 ---
 
-## 74.6 Pull Requests and Review Etiquette
+## 74.6 Pull Requests and Review Etiquette 🟢
 
-A pull request (PR) proposes merging a branch's changes, providing a structured space for code review before integration — good review etiquette involves reviewing promptly (respecting a teammate's time and momentum), distinguishing genuinely blocking concerns from optional suggestions, and providing specific, actionable feedback rather than vague criticism.
+A **pull request (PR)** asks to merge a branch, and gives the team a place to **review** it first. Good review habits:
+
+- **Review soon.** Your teammate is waiting.
+- **Say what must change and what is optional.**
+- **Be specific**, not vague.
 
 ```plaintext
 // A vague, less useful review comment:
@@ -86,13 +167,27 @@ A pull request (PR) proposes merging a branch's changes, providing a structured 
 should this be `[weak self]` given that `viewModel` holds a reference to this closure?"
 ```
 
-Distinguishing blocking from non-blocking feedback explicitly (often via a lightweight convention like prefixing optional suggestions with "nit:") is a genuinely valuable review practice — it lets an author immediately understand which specific pieces of feedback must be addressed before merging versus which are optional, worth-considering suggestions, avoiding the genuinely common friction of an author being uncertain whether a reviewer's comment represents a hard blocker or just a passing thought, and this clarity meaningfully speeds up the overall review-and-iterate cycle for both parties.
+Mark optional comments clearly, for example with **"nit:"**:
+
+```plaintext
+nit: maybe call this `loadRecipes()` instead of `fetch()`. Not blocking.
+```
+
+With the GitHub command line tool (`gh`):
+
+```bash
+gh pr create --fill              # open a PR from the current branch
+gh pr checkout 123               # get PR 123 on your machine to try it
+gh pr review 123 --approve       # approve it
+```
+
+When the author knows which comments **block** the merge and which are just ideas, the back-and-forth is much faster.
 
 ---
 
-## 74.7 Writing Commit Messages That Explain Why
+## 74.7 Writing Commit Messages That Explain Why 🟢
 
-A genuinely useful commit message explains *why* a change was made, not merely *what* changed — the "what" is usually already evident from the diff itself, while the "why" (the actual reasoning, context, or problem being solved) is exactly the information that's genuinely lost forever if not captured explicitly in the commit message at the time the change was actually made.
+A good commit message explains **why** you made the change. The **what** is already in the diff. The **why** is lost forever if you don't write it down.
 
 ```plaintext
 # Less useful: restates what's already visible in the diff
@@ -106,13 +201,23 @@ large file uploads (see support ticket #4521). 30s wasn't sufficient
 for uploads exceeding ~10MB on connections under 1 Mbps."
 ```
 
-This distinction matters because the "why" behind a change is precisely the information a future developer (quite possibly the original author, months later) will genuinely need but can no longer reconstruct purely from reading the code itself — discovering *that* a timeout value changed from 30 to 60 is trivial from the diff alone, but understanding *why* that specific value was chosen (and thus whether it's now safe to change again) requires the reasoning to have actually been captured in the commit message at the time, since that context is otherwise genuinely, irretrievably lost once the original author's memory of the specific situation fades.
+A common shape:
+
+```plaintext
+Short summary in under 50 characters      ← the first line
+
+Why the change was needed. What problem   ← a blank line, then the body
+it solves, and anything a future reader
+should know before changing it again.
+```
+
+Months later, someone (maybe you) sees the timeout is 60. The diff shows **that** it changed. Only the message says **why**, and so whether it is safe to change it again.
 
 ---
 
-## 74.8 Git Hooks for Linting and Formatting
+## 74.8 Git Hooks for Linting and Formatting 🟡
 
-Git hooks (scripts that run automatically at specific points in the Git workflow, like `pre-commit` before a commit is finalized) can enforce code quality checks automatically — running SwiftLint (recall section 75.1) or SwiftFormat (75.2) before allowing a commit to proceed, catching style violations or formatting issues at commit time rather than only later, during CI or code review.
+A **Git hook** is a script that Git runs **automatically** at certain moments. A **`pre-commit`** hook runs before each commit. It can run SwiftLint (section 75.1) or SwiftFormat (75.2) and **stop the commit** if there are problems.
 
 ```bash
 #!/bin/sh
@@ -124,13 +229,33 @@ if [ $? -ne 0 ]; then
 fi
 ```
 
-Catching issues at commit time via a Git hook is meaningfully earlier, and thus cheaper to fix, than catching the same issue later in CI or during code review — a developer immediately re-fixing a linting violation their own pre-commit hook just flagged, while the change is still fresh in their mind, is considerably less friction than the same violation being caught minutes or hours later in a CI run, or worse, during a teammate's code review after the change has already been pushed and is now part of a shared, reviewable history.
+Check **only the Swift files you are committing**, which is faster:
+
+```bash
+#!/bin/sh
+FILES=$(git diff --cached --name-only --diff-filter=d -- '*.swift')
+[ -z "$FILES" ] && exit 0
+swiftlint lint --strict $FILES || { echo "Fix SwiftLint issues first."; exit 1; }
+```
+
+Files in `.git/hooks` are **not shared** with the team. To share hooks, keep them in the repository and point Git to that folder:
+
+```bash
+mkdir .githooks && mv .git/hooks/pre-commit .githooks/
+chmod +x .githooks/pre-commit
+git config core.hooksPath .githooks       # each developer runs this once
+```
+
+**The earlier a problem is found, the cheaper it is to fix.** At commit time, the change is still fresh in your mind. Finding it later in CI or in a code review costs more time for everyone.
 
 ---
 
-## 74.9 Trunk-Based Development vs Release Branches 🟠
+## 74.9 Trunk-Based Development vs Release Branches 🟡
 
-Trunk-based development keeps a single, continuously-integrated main branch (`main`/`trunk`) with short-lived feature branches merged frequently, while a release-branch model maintains longer-lived branches per release version, with fixes selectively "cherry-picked" or backported between branches as needed — two genuinely different strategies for managing the tension between continuous integration and stable, released software.
+Two ways to organize branches:
+
+- **Trunk-based:** one main branch. Feature branches are **short** and merged **often**. Unfinished work hides behind **feature flags**.
+- **Release branches:** a **long-lived branch for each release**. Fixes are copied between branches when needed.
 
 ```plaintext
 // Trunk-based: short-lived branches, frequent merges to main, feature flags
@@ -142,13 +267,25 @@ main:     A---B---C-------------F  (ongoing development)
 release/2.0:    D---E            (stabilization branch, cherry-picked fixes as needed)
 ```
 
-The right choice between these models is a genuine trade-off depending on an app's actual release cadence and risk tolerance — trunk-based development suits teams shipping continuously (or nearly so) with strong automated testing (recall Part 10's testing material) catching regressions quickly, while a release-branch model suits situations needing a genuinely stable, frozen snapshot for an extended QA/certification period (common for apps with slower, more formal release cycles) where ongoing `main` development shouldn't risk destabilizing a release candidate still being validated.
+Copying one fix from `main` to a release branch is called **cherry-picking**:
+
+```bash
+git switch release/2.0
+git cherry-pick 9f8e7d6        # apply that one commit here
+```
+
+| | Trunk-based | Release branches |
+|---|---|---|
+| Good for | Shipping often, with strong automated tests | A long, frozen testing period before release |
+| Risk | Needs good tests and feature flags | Fixes must be copied to several branches |
+
+Choose by how often you ship, and how much risk you can accept.
 
 ---
 
-## 74.10 Contributing to an Open-Source Swift Project
+## 74.10 Contributing to an Open-Source Swift Project 🟢
 
-Contributing to an open-source Swift project (whether a widely-used package or Swift itself) typically follows a structured process — reading the project's contribution guidelines, starting with a genuinely small, well-scoped first contribution (rather than attempting a large, ambitious change immediately), and engaging with the project's existing review and discussion norms rather than assuming one's own team's internal conventions automatically apply.
+To contribute to an open-source Swift project (a popular package, or Swift itself), **start small** and **follow the project's rules**, not your team's.
 
 ```plaintext
 // A practical, low-risk first-contribution approach:
@@ -158,7 +295,23 @@ Contributing to an open-source Swift project (whether a widely-used package or S
 // 4. Engage genuinely and patiently with review feedback, which may differ from internal team norms
 ```
 
-Starting with a genuinely small, well-scoped contribution rather than a large one is practical advice with real, demonstrable value — a small change is meaningfully easier for maintainers (who are frequently volunteers with limited available review time) to actually review and merge promptly, and it also gives a new contributor valuable, low-risk exposure to that specific project's particular conventions, review norms, and expectations before attempting anything more substantial, considerably reducing the risk of investing significant effort into a large contribution that ultimately gets rejected or requires extensive rework due to unfamiliarity with the project's actual expectations.
+The usual GitHub flow:
+
+```bash
+gh repo fork apple/swift-collections --clone   # your own copy, cloned to your Mac
+cd swift-collections
+git switch -c fix/typo-in-docs
+# ... make a small change, run the tests ...
+git commit -m "Fix typo in Deque documentation"
+git push -u origin fix/typo-in-docs
+gh pr create --fill
+```
+
+Why start small:
+
+- Maintainers are often **volunteers** with little time. A small change is easier to review and merge.
+- You learn the project's **style and review habits** with little risk.
+- A big first change is more likely to be **rejected or need a lot of rework**.
 
 ---
 
@@ -166,13 +319,13 @@ Starting with a genuinely small, well-scoped contribution rather than a large on
 
 | Concept | Key Mechanism | Purpose |
 |---|---|---|
-| Deliberate commits | Staging area, `git add`/`git commit` | Coherent, focused commits from mixed working changes |
-| Parallel development | Branches, `git merge` | Isolated work, integrated back with full history |
-| History cleanup | Interactive rebase | Readable, reviewable history before sharing |
-| Project file conflicts | Careful `.pbxproj` conflict resolution | Avoids corrupting Xcode's sensitive project format |
-| Repository hygiene | `.gitignore` | Excludes local/regeneratable files, avoids meaningless conflicts |
-| Review clarity | Blocking vs. non-blocking feedback | Speeds up the review-and-iterate cycle |
-| Preserved context | "Why," not just "what," commit messages | Captures reasoning that would otherwise be lost |
-| Early quality checks | Git hooks (`pre-commit`) | Cheaper, immediate fixes vs. later CI/review discovery |
-| Release strategy | Trunk-based vs. release branches | Trade-off between continuous integration and stability windows |
-| Open-source norms | Small first contributions | Easier review, low-risk exposure to project conventions |
+| Commits | Stage with `git add`, then `git commit` | Each commit has one clear purpose |
+| Branches | `git switch -c`, `git merge` | Work in parallel without breaking `main` |
+| Rebase | `git rebase -i` | Clean history before sharing |
+| `.pbxproj` conflicts | Synced folders, packages, re-add in Xcode | Avoid corrupting the project file |
+| `.gitignore` | Skip personal and build files | No useless conflicts, smaller repo |
+| Reviews | Specific comments, mark "nit:" | Faster review cycles |
+| Commit messages | Explain why | Keep the reasoning for later |
+| Git hooks | `pre-commit`, `core.hooksPath` | Catch problems at commit time |
+| Branch strategy | Trunk-based vs. release branches | Ship often vs. a stable release window |
+| Open source | Small first PRs | Easy to review, low risk |

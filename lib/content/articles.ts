@@ -825,7 +825,7 @@ export const articles: Article[] = [
     slug: "git-and-collaboration",
     title: "Git and Collaboration",
     description:
-      "Commits/staging/history, branching and merging, rebasing and interactive rebase, resolving merge conflicts in Xcode project files, .gitignore for Xcode, pull requests and review etiquette, writing commit messages that explain why, Git hooks, trunk-based development vs. release branches, and contributing to open source.",
+      "Staging and commits, branches and merging, rebasing, .pbxproj conflicts, .gitignore for Xcode, pull requests and reviews, commit messages that explain why, Git hooks, trunk-based vs. release branches, and open-source contributions.",
     tags: ["git", "collaboration", "version-control"],
     publishedAt: "2026-08-16",
     get content() {
