@@ -880,7 +880,7 @@ export const articles: Article[] = [
     slug: "security-and-privacy",
     title: "Security and Privacy",
     description:
-      "Threat modeling, where secrets should and shouldn't live, CryptoKit hashing/HMAC/symmetric/public key cryptography, Secure Enclave-backed keys, biometrics, certificate pinning, jailbreak/tamper detection, App Tracking Transparency, SKAdNetwork/AdAttributionKit, secure logging, supply chain auditing, GDPR/CCPA, and data minimization.",
+      "Keeping apps and users safe: threat modeling, secrets and the Keychain, CryptoKit, the Secure Enclave, Face ID, certificate pinning, jailbreak checks, App Tracking Transparency, ad attribution, secure logging, supply chain risk, GDPR and CCPA, and data minimization.",
     tags: ["security", "privacy", "cryptokit"],
     publishedAt: "2026-08-16",
     get content() {

@@ -1,6 +1,8 @@
-## 79.1 Threat Modeling a Mobile App
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Threat modeling systematically identifies what could go wrong (what assets need protection, who might attack them, and how) before investing security effort — appropriate as a deliberate, structured first step rather than applying security techniques ad hoc without a clear understanding of what specific threats they're actually meant to address.
+## 79.1 Threat Modeling a Mobile App 🟢
+
+**Threat modeling** means thinking about **what could go wrong before you add security**: what you protect, who might attack it, and how. Then you spend effort where the real risk is.
 
 ```plaintext
 // A simple threat modeling framework: for each asset, ask:
@@ -10,13 +12,21 @@ Threat modeling systematically identifies what could go wrong (what assets need 
 // - What's the actual, appropriate mitigation given the realistic threat and asset sensitivity?
 ```
 
-Threat modeling's genuine value is preventing exactly the kind of scattered, unfocused security effort that either over-invests in protecting against unlikely threats or under-invests in protecting against genuinely likely ones — a banking app handling real financial credentials warrants meaningfully more security investment (certificate pinning, 79.9; Secure Enclave-backed keys, 79.6) than a simple recipe-sharing app, and threat modeling is the discipline that helps correctly calibrate security effort to an app's actual, specific risk profile rather than either extreme.
+A small example for a recipe app with accounts:
+
+| Asset | Who wants it | How | Protection |
+|---|---|---|---|
+| Login token | A thief with the phone | Reads app storage | Keychain (79.2) |
+| Password | Someone on public Wi-Fi | Reads network traffic | HTTPS (always on) |
+| Saved recipes | Almost nobody | — | Normal storage is fine |
+
+**Match the effort to the risk.** A banking app needs much more (certificate pinning in 79.9, Secure Enclave keys in 79.6) than a recipe app. Threat modeling keeps you from both **over-protecting** and **under-protecting**.
 
 ---
 
-## 79.2 Where Secrets Should and Shouldn't Live
+## 79.2 Where Secrets Should and Shouldn't Live 🟢
 
-API keys, credentials, and other secrets should never be hardcoded directly in an app's compiled binary (recall the AI coding tool data-handling concern from section 61.12, which raises a related but distinct issue) — since a compiled app binary can be reverse-engineered and inspected, any embedded secret is genuinely, eventually extractable, meaning secrets requiring genuine confidentiality belong server-side, with the app authenticating to a backend that then handles the actual sensitive credential.
+**Never put a real secret in your app's code.** Anyone can take your compiled app apart and find it. Secrets that must stay secret belong **on your server**.
 
 ```swift
 // Insecure: a hardcoded API key extractable from the compiled binary via reverse engineering
@@ -26,13 +36,41 @@ let apiKey = "sk_live_abc123..."  // NEVER do this for a genuinely sensitive sec
 // and makes the authenticated third-party API call on the app's behalf
 ```
 
-This is a genuinely important, sometimes-underestimated point — no amount of client-side obfuscation (string encoding tricks, splitting a key across multiple constants) provides genuine security against a sufficiently motivated attacker with access to the compiled binary, since the app must eventually decode and use the actual secret at runtime, meaning the only genuinely secure approach for a truly sensitive credential is keeping it entirely server-side and never embedding it in the distributed app binary at all.
+| Secret | Where it belongs |
+|---|---|
+| A third-party API key with real power | Your server only |
+| The user's login token | The **Keychain** on the device |
+| Settings and non-secret data | `UserDefaults` or files |
+
+Store a user's token in the **Keychain**, not in `UserDefaults`:
+
+```swift
+import Security
+
+func saveToken(_ token: String) -> Bool {
+    let base: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrAccount as String: "authToken",
+    ]
+    SecItemDelete(base as CFDictionary)            // remove an old value, if any
+
+    var item = base
+    item[kSecValueData as String] = Data(token.utf8)
+    item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
+}
+```
+
+**Hiding a key does not work.** Encoding it or splitting it into pieces only slows an attacker down, because the app must rebuild the real key at runtime. (Keeping secrets away from AI tools is a related topic, section 61.12.)
 
 ---
 
-## 79.3 CryptoKit: Hashing and HMAC
+## 79.3 CryptoKit: Hashing and HMAC 🟡
 
-CryptoKit provides modern, safe cryptographic hashing (`SHA256`, `SHA384`, `SHA512`) and HMAC (keyed hashing, verifying both data integrity and authenticity using a shared secret key) through a Swift-native, misuse-resistant API considerably safer to use correctly than older, lower-level C cryptography APIs.
+**CryptoKit** is Apple's modern, safe crypto library.
+
+- A **hash** (like SHA-256) turns data into a short fingerprint. The same data always gives the same hash, and any change gives a different one.
+- An **HMAC** is a hash **with a secret key**. It proves the data was not changed **and** came from someone with the key.
 
 ```swift
 import CryptoKit
@@ -45,13 +83,29 @@ let key = SymmetricKey(size: .bits256)
 let authenticationCode = HMAC<SHA256>.authenticationCode(for: data, using: key)
 ```
 
-CryptoKit's genuine design goal is making the *correct*, secure use of cryptography the *easy*, default path — rather than a developer needing deep cryptographic expertise to correctly use a lower-level API (with genuine risk of subtle misuse producing an insecure result despite looking superficially correct), CryptoKit's Swift-native types and APIs are specifically designed to make the safe, correct usage pattern the natural, straightforward one, meaningfully reducing the risk of cryptographic implementation mistakes compared to working with older, more error-prone C-level cryptography APIs directly.
+Check an HMAC later:
+
+```swift
+let isValid = HMAC<SHA256>.isValidAuthenticationCode(
+    authenticationCode, authenticating: data, using: key
+)
+// true only if the data is unchanged and the same key was used
+```
+
+Hash a downloaded file to check it was not damaged:
+
+```swift
+let fileData = try Data(contentsOf: downloadedURL)
+let fileHash = SHA256.hash(data: fileData)
+```
+
+CryptoKit is designed so that **the safe way is the easy way**. Older C crypto APIs were easy to use wrongly, with results that looked fine but were not secure.
 
 ---
 
-## 79.4 CryptoKit: Symmetric Encryption
+## 79.4 CryptoKit: Symmetric Encryption 🟡
 
-CryptoKit's symmetric encryption (`AES.GCM`, using the same key for both encryption and decryption) provides authenticated encryption — encrypting data while also verifying it hasn't been tampered with — appropriate for encrypting data at rest (recall Core Data's encryption discussion, section 42) or data the app itself both encrypts and later decrypts using a securely-stored key.
+**Symmetric encryption** uses **the same key** to encrypt and decrypt. CryptoKit's **`AES.GCM`** also **detects tampering**. Use it for data your app stores and later reads back (like Core Data encryption, section 42).
 
 ```swift
 import CryptoKit
@@ -66,13 +120,25 @@ let decryptedBox = try AES.GCM.SealedBox(combined: combined)
 let decrypted = try AES.GCM.open(decryptedBox, using: key)
 ```
 
-AES-GCM's "authenticated" property is a genuinely important distinction from simpler encryption schemes that only provide confidentiality without integrity verification — because GCM mode includes an authentication tag validated during decryption, tampering with encrypted data (an attacker modifying ciphertext, even without knowing the actual key) is detected and causes decryption to fail explicitly, rather than silently producing corrupted, incorrect plaintext that the app might otherwise process without any indication something had actually been tampered with.
+The key must survive app restarts. Turn it into bytes and keep it in the **Keychain** (79.2):
+
+```swift
+let keyData = key.withUnsafeBytes { Data($0) }    // save these bytes in the Keychain
+let restoredKey = SymmetricKey(data: keyData)      // later, rebuild the key
+```
+
+**"Authenticated" encryption matters.** If someone changes the encrypted bytes, even without the key, `AES.GCM.open` **throws an error**. Without that check, the app could quietly read corrupted data.
 
 ---
 
-## 79.5 CryptoKit: Public Key Cryptography and Signatures
+## 79.5 CryptoKit: Public Key Cryptography and Signatures 🟡
 
-CryptoKit's public key cryptography (`Curve25519`, `P256`, and related elliptic curve types) supports asymmetric key pairs — a private key that must remain secret and a public key that can be freely shared — appropriate for digital signatures (proving data originated from a specific key holder without revealing the private key itself) and key agreement protocols.
+**Public key cryptography** uses a **key pair**:
+
+- a **private key** that stays secret
+- a **public key** that you can share with anyone
+
+With a **signature**, the private key signs data, and **anyone with the public key can check it**, without ever having the private key.
 
 ```swift
 import CryptoKit
@@ -87,13 +153,32 @@ let signature = try privateKey.signature(for: message)
 let isValid = publicKey.isValidSignature(signature, for: message)
 ```
 
-The genuine power of asymmetric cryptography, distinct from the symmetric encryption covered in 79.4, is that verification doesn't require possessing the same secret used to create the signature — anyone holding the public key can verify a signature's authenticity, while only the private key holder could have actually created that valid signature in the first place, a fundamentally different trust model than symmetric encryption's shared-secret approach, and the actual foundation underlying mechanisms like App Attest (recall section 57.16) that need to prove authenticity without embedding a shared, extractable secret.
+**Key agreement** lets two sides create the **same secret key** without ever sending it:
+
+```swift
+let alice = Curve25519.KeyAgreement.PrivateKey()
+let bob = Curve25519.KeyAgreement.PrivateKey()
+
+// Each side uses its own private key and the other's public key
+let shared = try alice.sharedSecretFromKeyAgreement(with: bob.publicKey)
+let symmetricKey = shared.hkdfDerivedSymmetricKey(
+    using: SHA256.self, salt: Data(), sharedInfo: Data(), outputByteCount: 32
+)
+// Bob gets the same key from bob.sharedSecretFromKeyAgreement(with: alice.publicKey)
+```
+
+| | Symmetric (79.4) | Public key |
+|---|---|---|
+| Keys | One shared secret | A private and a public key |
+| Who can check | Only people with the secret | Anyone with the public key |
+
+This is the base of features like App Attest (section 57.16), which proves authenticity **without a shared secret** inside the app.
 
 ---
 
 ## 79.6 Secure Enclave-Backed Keys 🔴
 
-The Secure Enclave is a dedicated, isolated hardware security coprocessor present on modern Apple devices, and Secure Enclave-backed cryptographic keys can be generated such that the actual private key material never leaves the Secure Enclave at all — even the app's own process (and even a jailbroken device's root access) cannot directly extract the raw private key, since cryptographic operations using it happen entirely within the isolated hardware.
+The **Secure Enclave** is a separate, isolated **security chip** in Apple devices. A key created there **never leaves the chip**. Your app only gets a reference to it, and asks the chip to sign. Not even a jailbroken device with full access can read the raw key.
 
 ```swift
 import CryptoKit
@@ -104,13 +189,36 @@ let privateKey = try SecureEnclave.P256.Signing.PrivateKey()
 // and can request signing operations without ever accessing the raw key bytes
 ```
 
-This hardware-backed isolation provides a genuinely stronger security guarantee than any software-only key storage approach could ever achieve — even Keychain-stored keys (without Secure Enclave backing) exist as actual extractable bytes somewhere accessible to sufficiently privileged code, while a genuine Secure Enclave-backed key's private material is architecturally, physically isolated such that no software running on the device (regardless of its privilege level) can directly read the raw key material, making this the appropriate choice for the most security-critical key material a genuinely high-stakes app might need to protect.
+Check that the device has one, and keep the key across launches:
+
+```swift
+guard SecureEnclave.isAvailable else { return }    // not on the simulator, for example
+
+let key = try SecureEnclave.P256.Signing.PrivateKey()
+let reference = key.dataRepresentation             // an encrypted reference, not the key itself
+// Save `reference` in the Keychain. Later:
+let sameKey = try SecureEnclave.P256.Signing.PrivateKey(dataRepresentation: reference)
+```
+
+You can even require **Face ID or Touch ID** for every use of the key:
+
+```swift
+let access = SecAccessControlCreateWithFlags(
+    nil,
+    kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+    [.privateKeyUsage, .biometryCurrentSet],
+    nil
+)!
+let protectedKey = try SecureEnclave.P256.Signing.PrivateKey(accessControl: access)
+```
+
+**Why it is the strongest option:** a normal Keychain key still exists as bytes that very privileged code could read. A Secure Enclave key is **physically isolated**. Use it for your most important keys.
 
 ---
 
-## 79.7 LocalAuthentication and Biometrics
+## 79.7 LocalAuthentication and Biometrics 🟢
 
-`LAContext` provides Face ID/Touch ID authentication, letting an app verify a user's biometric identity (or device passcode fallback) before performing a sensitive action — critically, the app never receives the actual biometric data itself, only a success/failure result, since biometric processing happens entirely within the Secure Enclave (79.6).
+**`LAContext`** asks for **Face ID or Touch ID** (or the device passcode) before a sensitive action. Your app **never sees the face or fingerprint**. It only gets **yes or no**, because the check happens inside the Secure Enclave (79.6).
 
 ```swift
 import LocalAuthentication
@@ -124,13 +232,35 @@ func authenticateUser() async throws -> Bool {
 }
 ```
 
-The fact that raw biometric data never actually reaches the app (or even leaves the Secure Enclave) is a genuinely important privacy property, directly related to the hardware isolation discussed in 79.6 — an app using `LAContext` fundamentally cannot access or store a user's actual fingerprint or face data even if it wanted to, since the entire comparison happens within the Secure Enclave's isolated hardware, with the app receiving only a simple boolean success/failure result rather than anything resembling the actual biometric measurement itself.
+Add the reason to `Info.plist`, or the app crashes when it asks for Face ID:
+
+```xml
+<key>NSFaceIDUsageDescription</key>
+<string>Use Face ID to unlock your saved payment details.</string>
+```
+
+Check first, and allow the passcode as a fallback:
+
+```swift
+let context = LAContext()
+var error: NSError?
+
+if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+    // .deviceOwnerAuthentication = biometrics, or the passcode if biometrics fail
+    let ok = try await context.evaluatePolicy(.deviceOwnerAuthentication,
+                                              localizedReason: "Unlock your account")
+} else {
+    // No biometrics and no passcode set: show another way to sign in
+}
+```
+
+This is an important privacy property: the app **cannot** read or store biometric data, even if it wanted to.
 
 ---
 
-## 79.8 Detecting Biometry Changes 🟠
+## 79.8 Detecting Biometry Changes 🟡
 
-`LAContext`'s `evaluatedPolicyDomainState` changes if the set of enrolled biometric data changes (a new fingerprint or face added, or all biometric data removed) — letting an app detect this specific event and, for security-sensitive uses, potentially require re-authentication via a stronger factor rather than trusting a newly-changed biometric enrollment automatically.
+If someone **adds a new fingerprint or face** to the device, `LAContext.evaluatedPolicyDomainState` **changes**. A security-sensitive app can notice this and ask for a **stronger sign-in** (like the password) before trusting Face ID again.
 
 ```swift
 let context = LAContext()
@@ -140,13 +270,30 @@ let currentDomainState = context.evaluatedPolicyDomainState
 // enrolled biometric data has been added or removed since last checked
 ```
 
-This detection capability addresses a genuine, specific security scenario — if a device is temporarily accessible to someone other than its owner, that person could potentially enroll their own additional fingerprint or face, and without detecting this change, a security-sensitive app might continue trusting biometric authentication that now includes an unauthorized person's enrolled biometric data, making `evaluatedPolicyDomainState` monitoring a genuinely important, if narrow, additional safeguard for apps with meaningfully high security stakes tied to biometric authentication specifically.
+Store it after a successful sign-in, and compare it next time:
+
+```swift
+func biometryChanged() -> Bool {
+    let context = LAContext()
+    _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+    let current = context.evaluatedPolicyDomainState
+    let saved = UserDefaults.standard.data(forKey: "biometryState")
+    return saved != nil && saved != current
+}
+
+// After a successful password sign-in:
+// UserDefaults.standard.set(context.evaluatedPolicyDomainState, forKey: "biometryState")
+```
+
+A simpler way: protect a Keychain item with **`.biometryCurrentSet`** (as in 79.6). It **stops working automatically** when the enrolled biometrics change.
+
+**Why:** someone who borrows the phone could add **their own face**. Without this check, your app would trust it.
 
 ---
 
 ## 79.9 Certificate Pinning and Safe Rotation 🔴
 
-Certificate pinning hardens network communication against man-in-the-middle attacks by having an app verify a server's certificate (or public key) against a specific, expected value embedded in the app, rather than trusting any certificate merely because it chains to a trusted root authority — providing protection even against a compromised or maliciously-issued certificate that would otherwise pass standard TLS validation.
+Normal HTTPS trusts **any valid certificate** from a trusted authority. **Certificate pinning** also checks that the server uses **the exact key you expect**. This protects against a **man-in-the-middle** attack, even one that uses a wrongly issued certificate.
 
 ```swift
 // Conceptual pinning validation within a URLSessionDelegate's challenge handling:
@@ -157,13 +304,68 @@ func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationCh
 }
 ```
 
-The "safe rotation" concern in this subtopic's title reflects a genuinely real, easy-to-get-wrong operational risk with certificate pinning — because a pinned app hardcodes a specific expected certificate or key, that pin must be updated *before* the actual server certificate is rotated/renewed, or the app will suddenly reject all connections to its own legitimate backend the moment the old, pinned certificate expires, meaning certificate pinning requires genuine, deliberate operational discipline (typically pinning to a more stable intermediate key, or maintaining multiple valid pins during a transition period) rather than being a purely one-time, "set it and forget it" security configuration.
+**The easiest way** (iOS 14 and later) is in `Info.plist`, with no code:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSPinnedDomains</key>
+    <dict>
+        <key>api.example.com</key>
+        <dict>
+            <key>NSPinnedLeafIdentities</key>
+            <array>
+                <dict>
+                    <key>SPKI-SHA256-BASE64</key>
+                    <string>CURRENT_KEY_HASH_BASE64=</string>
+                </dict>
+                <dict>
+                    <key>SPKI-SHA256-BASE64</key>
+                    <string>BACKUP_KEY_HASH_BASE64=</string>   <!-- the next key, for rotation -->
+                </dict>
+            </array>
+        </dict>
+    </dict>
+</dict>
+```
+
+Or check it in code, with a `URLSessionDelegate`:
+
+```swift
+import CryptoKit
+
+final class PinningDelegate: NSObject, URLSessionDelegate {
+    let pinnedKeyHashes: Set<String> = ["CURRENT_KEY_HASH", "BACKUP_KEY_HASH"]
+
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge)
+        async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        guard let trust = challenge.protectionSpace.serverTrust,
+              SecTrustEvaluateWithError(trust, nil),                     // normal checks first
+              let leaf = (SecTrustCopyCertificateChain(trust) as? [SecCertificate])?.first,
+              let key = SecCertificateCopyKey(leaf),
+              let keyData = SecKeyCopyExternalRepresentation(key, nil) as Data?
+        else { return (.cancelAuthenticationChallenge, nil) }
+
+        // Hash the key bytes as iOS exports them. Compute your pins the same way.
+        let hash = Data(SHA256.hash(data: keyData)).base64EncodedString()
+        return pinnedKeyHashes.contains(hash)
+            ? (.useCredential, URLCredential(trust: trust))
+            : (.cancelAuthenticationChallenge, nil)
+    }
+}
+```
+
+**The danger is rotation.** Your app has the expected key built in. If the server gets a new key **before** the app knows it, the app **rejects its own server**, and every request fails. So:
+
+- Always pin **at least two keys**: the current one and the next one.
+- Update the app **before** you change the server's key.
+- Consider pinning a more stable key, like your certificate authority's.
 
 ---
 
 ## 79.10 Jailbreak and Tamper Detection Trade-offs 🔴
 
-Jailbreak/tamper detection attempts to identify whether an app is running on a compromised device (jailbroken, with security restrictions bypassed) or whether the app binary itself has been tampered with — a genuinely imperfect, adversarial cat-and-mouse endeavor, since any client-side detection logic can, in principle, itself be identified and bypassed by a sufficiently determined attacker with full control over the device.
+**Jailbreak and tamper detection** tries to notice if the device's security was removed, or if your app was modified. It is **never perfect**: an attacker with full control of the device can find and bypass the checks.
 
 ```swift
 // Common (imperfect) jailbreak detection signals:
@@ -173,13 +375,35 @@ Jailbreak/tamper detection attempts to identify whether an app is running on a c
 // None of these checks are foolproof against a sufficiently motivated, sophisticated attacker
 ```
 
-The genuine trade-off worth understanding here is that jailbreak/tamper detection provides a real, meaningful deterrent against unsophisticated or casual tampering while providing essentially no guarantee against a genuinely determined, sophisticated attacker — this connects directly back to the App Attest discussion (section 57.16), which addresses the same underlying integrity-verification goal but through hardware-backed attestation rather than client-side heuristic detection, making App Attest the meaningfully stronger mechanism where genuine tamper-resistance matters, with jailbreak detection heuristics providing a real but genuinely limited, secondary layer at best.
+A simple check looks like this:
+
+```swift
+func looksJailbroken() -> Bool {
+    #if targetEnvironment(simulator)
+    return false
+    #else
+    let suspiciousPaths = ["/Applications/Cydia.app", "/bin/bash", "/usr/sbin/sshd"]
+    if suspiciousPaths.contains(where: { FileManager.default.fileExists(atPath: $0) }) {
+        return true
+    }
+    // A normal app cannot write outside its sandbox
+    do {
+        try "test".write(toFile: "/private/jailbreak_test.txt", atomically: true, encoding: .utf8)
+        return true
+    } catch {
+        return false
+    }
+    #endif
+}
+```
+
+**The trade-off:** these checks stop **casual** tampering, but **not a determined attacker**. For real integrity checks, use **App Attest** (section 57.16), which uses hardware-backed proof instead of guesses. Treat jailbreak checks as a small extra layer at best.
 
 ---
 
-## 79.11 App Tracking Transparency
+## 79.11 App Tracking Transparency 🟢
 
-App Tracking Transparency (ATT) requires explicit user permission before an app can track a user's activity across other companies' apps and websites (most commonly for cross-app advertising attribution) — presented via a standardized system permission prompt (`ATTrackingManager.requestTrackingAuthorization`), with tracking without this permission being both a technical restriction (the advertising identifier is unavailable) and an explicit App Review Guidelines violation.
+**App Tracking Transparency (ATT)** requires the **user's permission** before your app tracks them across **other companies'** apps and websites, usually for advertising. Without permission, the advertising identifier is not available, and tracking anyway **breaks the App Review Guidelines**.
 
 ```swift
 import AppTrackingTransparency
@@ -189,13 +413,34 @@ func requestTrackingPermission() async -> ATTrackingManager.AuthorizationStatus 
 }
 ```
 
-ATT represents a genuinely significant, deliberate shift in the mobile advertising ecosystem's default posture — rather than cross-app tracking being possible by default with an opt-out buried in settings, ATT requires an explicit, standardized, system-level opt-*in* prompt before any cross-app tracking can occur at all, a meaningfully stronger privacy default than the industry's prior norm, with real, measurable downstream consequences for advertising attribution accuracy that directly motivated the development of privacy-preserving alternatives like SKAdNetwork and AdAttributionKit (79.12).
+Explain why, in `Info.plist`:
+
+```xml
+<key>NSUserTrackingUsageDescription</key>
+<string>This lets us show you ads that match your cooking interests.</string>
+```
+
+Ask when the app is **active and on screen**, then respect the answer:
+
+```swift
+import AdSupport
+
+let status = await requestTrackingPermission()
+if status == .authorized {
+    let adID = ASIdentifierManager.shared().advertisingIdentifier
+    // allowed to use it for tracking
+} else {
+    // do not track; the identifier is all zeros anyway
+}
+```
+
+ATT changed the default: tracking used to be **on unless you opted out**. Now it is **off unless you opt in**. That made ad measurement harder, which is why Apple made private alternatives (79.12).
 
 ---
 
 ## 79.12 SKAdNetwork and AdAttributionKit 🔴
 
-SKAdNetwork (and its newer evolution, AdAttributionKit) provides privacy-preserving advertising attribution — determining whether an ad click led to an app install and subsequent engagement — without requiring the precise, individual-level cross-app tracking that App Tracking Transparency (79.11) now gates behind explicit user permission.
+**SKAdNetwork** and its newer version **AdAttributionKit** answer the question "**did this ad lead to an install?**" **without tracking a single person**. They give **combined, privacy-safe** results, so this works even when the user did not allow tracking (79.11).
 
 ```swift
 // Conceptual: reporting a conversion event without individual-level tracking
@@ -205,13 +450,31 @@ import AdAttributionKit
 // tracking and correlating a specific individual user's precise cross-app activity
 ```
 
-These frameworks exist specifically to solve a genuine, real business problem created by ATT's stronger privacy default (79.11) — advertisers and app developers still have a legitimate need to measure whether their advertising spend is actually effective, and SKAdNetwork/AdAttributionKit's privacy-preserving design provides aggregated, statistically useful attribution signals without requiring the precise, individual-level tracking data that ATT now requires explicit permission for, representing a genuine attempt to reconcile legitimate advertising measurement needs with a meaningfully stronger default privacy posture.
+Ad networks you work with are listed in `Info.plist`, so they can receive these results:
+
+```xml
+<key>SKAdNetworkItems</key>
+<array>
+    <dict>
+        <key>SKAdNetworkIdentifier</key>
+        <string>example123.skadnetwork</string>   <!-- the ID your ad network gives you -->
+    </dict>
+</array>
+```
+
+| | Tracking with ATT permission | SKAdNetwork / AdAttributionKit |
+|---|---|---|
+| Data | Each user's activity | Combined, delayed results |
+| Needs permission | Yes | No |
+| Answers | Exactly who did what | Whether ads worked overall |
+
+**Why they exist:** advertisers still need to know if their ads work. These frameworks give useful numbers **without** individual tracking.
 
 ---
 
-## 79.13 Secure Logging: Keeping PII Out
+## 79.13 Secure Logging: Keeping PII Out 🟢
 
-Secure logging practices ensure that logs (recall `Logger`'s privacy annotation system from section 68.19) never inadvertently capture personally identifiable information (PII) — names, email addresses, precise location, health data — in a form that could be inappropriately exposed if logs are ever collected, transmitted to a third-party logging service, or accessed by someone who shouldn't see genuinely sensitive user data.
+**Logs must not leak PII** (personally identifiable information): names, emails, exact locations, health data. Logs can be collected, sent to services, or seen by people who should not see that data. Use `Logger`'s **privacy** options (section 68.19).
 
 ```swift
 import os
@@ -225,13 +488,24 @@ logger.info("Login attempt for \(userEmail)")
 logger.info("Login attempt for \(userEmail, privacy: .private)")
 ```
 
-This directly extends the `Logger` privacy annotation discussion from section 68.19 into a genuine, deliberate security and compliance practice, not merely a debugging convenience — beyond the general privacy benefit of redaction-by-default, secure logging discipline matters acutely for regulatory compliance purposes (79.15), since logs inadvertently containing PII can themselves become a genuine data protection liability, subject to the same GDPR/CCPA data handling obligations as any other collected personal data, making disciplined use of `Logger`'s privacy annotations a practical compliance measure, not just good hygiene.
+More options:
+
+```swift
+logger.info("Recipe count: \(count, privacy: .public)")                 // not sensitive: show it
+logger.info("User: \(userID, privacy: .private(mask: .hash))")         // hidden, but the same user
+                                                                         // gives the same hash
+logger.error("Payment failed for order \(orderID, privacy: .public)")  // an order ID is not PII
+```
+
+`.private(mask: .hash)` is useful: you can see that **the same user** appears in several log lines, without seeing **who** it is.
+
+This is about **compliance** too (79.15). PII in logs is personal data, with the **same GDPR and CCPA rules** as any other stored data.
 
 ---
 
 ## 79.14 Auditing SPM Dependencies for Supply Chain Risk 🔴
 
-Beyond the general dependency evaluation criteria discussed in section 73.7 (maintenance activity, license, necessity), supply chain security specifically concerns whether a dependency (or a compromised update to a previously-trustworthy dependency) could introduce malicious code into an app — a genuine, real-world attack vector that has affected other software ecosystems and represents a meaningful risk for any project with a non-trivial dependency tree.
+A **supply chain attack** happens when a dependency, or a **hacked update** of a trusted one, puts **malicious code** into your app. It has happened in other ecosystems. Any project with dependencies is at risk.
 
 ```plaintext
 // Supply chain-specific auditing practices, beyond general dependency evaluation:
@@ -241,13 +515,32 @@ Beyond the general dependency evaluation criteria discussed in section 73.7 (mai
 // - Being appropriately cautious about a dependency gaining new maintainers or ownership changes
 ```
 
-This connects directly to `Package.resolved`'s reproducibility guarantee from section 73.2, but applied here specifically through a security lens rather than purely a build-consistency one — pinning to exact, previously-reviewed versions via `Package.resolved` isn't just about avoiding "works on my machine" inconsistency, but also genuinely prevents an app from automatically pulling in a newly-published, potentially-compromised version of a dependency without deliberate review, making disciplined version pinning a meaningful supply chain security practice, not merely a build reproducibility one.
+In practice:
+
+```bash
+swift package show-dependencies            # know everything you pull in, including indirect ones
+git diff Package.resolved                  # in every PR: which versions changed?
+```
+
+For a very sensitive dependency, accept **only one exact, reviewed version**:
+
+```swift
+.package(url: "https://github.com/example/crypto-lib.git", exact: "2.4.1")
+```
+
+Before updating, read the **code changes**, not just the release notes. GitHub can show them between two tags:
+
+```plaintext
+https://github.com/example/crypto-lib/compare/2.4.1...2.5.0
+```
+
+`Package.resolved` (section 73.2) is not only for **same builds everywhere**. It also stops your app from **automatically getting a new, unreviewed, possibly hacked version**.
 
 ---
 
-## 79.15 GDPR and CCPA Obligations for App Developers
+## 79.15 GDPR and CCPA Obligations for App Developers 🟡
 
-GDPR (EU) and CCPA (California) impose genuine legal obligations around personal data handling — requiring, among other things, a clear legal basis for data collection, user rights to access/delete their own data, and appropriate data protection measures — obligations that apply to an app collecting personal data from users in these jurisdictions regardless of where the app's own developer happens to be located.
+**GDPR** (EU) and **CCPA** (California) are **laws** about personal data. They apply if your users are there, **wherever you are**. They require, among other things:
 
 ```plaintext
 // Representative GDPR/CCPA-relevant obligations for an app collecting personal data:
@@ -257,13 +550,32 @@ GDPR (EU) and CCPA (California) impose genuine legal obligations around personal
 // - Appropriate technical security measures protecting collected data (connecting to 79.2-79.4)
 ```
 
-These legal obligations aren't merely abstract compliance concerns disconnected from the technical material covered throughout this section — a user's right to request data deletion has genuine technical implications for how an app's data storage is actually architected (can specific user data genuinely be located and deleted upon request), and appropriate security measures directly connect to the CryptoKit and secure storage practices covered earlier in this section (79.3-79.6), meaning legal compliance and sound technical security/privacy engineering are genuinely intertwined concerns rather than separate, independent tracks of work.
+These rules affect **how you build the app**. For example, users must be able to **delete their data**. The App Store also requires that an app with account creation lets users **delete their account inside the app**:
+
+```swift
+struct AccountSettingsView: View {
+    @State private var showConfirm = false
+    let accountService: AccountService
+
+    var body: some View {
+        Button("Delete Account", role: .destructive) { showConfirm = true }
+            .confirmationDialog("Delete your account and all your data?",
+                                isPresented: $showConfirm) {
+                Button("Delete", role: .destructive) {
+                    Task { try await accountService.deleteAccount() }   // the server deletes everything
+                }
+            }
+    }
+}
+```
+
+For deletion to work, you must be able to **find all data that belongs to one user**. That is an architecture question, not just a legal one. Security (79.2 to 79.6) and legal compliance **go together**.
 
 ---
 
-## 79.16 Data Minimization as a Design Strategy
+## 79.16 Data Minimization as a Design Strategy 🟢
 
-Data minimization — collecting only the data genuinely necessary for an app's actual functionality, rather than collecting broadly "just in case" it might be useful someday — is both a genuine legal best practice (directly supporting GDPR/CCPA compliance, 79.15) and a sound security design principle in its own right, since data never collected in the first place can never be leaked, breached, or misused.
+**Data minimization** means collecting **only the data you really need**, not "just in case". It helps with the law (79.15), and it is great security: **data you never collect can never leak**.
 
 ```swift
 // Data minimization in practice: does this feature genuinely need this specific data point?
@@ -272,7 +584,24 @@ Data minimization — collecting only the data genuinely necessary for an app's 
 //   even if "age range" might theoretically be marketing-interesting someday
 ```
 
-Data minimization represents a genuinely elegant security principle specifically because it sidesteps entire categories of risk rather than attempting to mitigate them after the fact — every other security technique covered in this section (encryption, secure storage, careful logging) exists to protect data that's already been collected, while data minimization's approach of simply not collecting unnecessary data in the first place eliminates the corresponding risk surface entirely, making it worth genuinely deliberate consideration during a feature's initial design (asking "do we actually need this specific data point") rather than treating data protection purely as a downstream technical concern applied after a data collection decision has already been made.
+For example, ask only for **approximate location**:
+
+```xml
+<!-- Info.plist: ask for approximate location by default -->
+<key>NSLocationDefaultAccuracyReduced</key>
+<true/>
+```
+
+```swift
+import CoreLocation
+
+let manager = CLLocationManager()
+manager.desiredAccuracy = kCLLocationAccuracyReduced     // about a few kilometers, enough for weather
+```
+
+Ask this question **when you design each feature**: "Do we really need this data?"
+
+Every other technique in this section (encryption, the Keychain, careful logging) **protects data you already collected**. Minimization **removes the risk completely**.
 
 ---
 
@@ -280,19 +609,19 @@ Data minimization represents a genuinely elegant security principle specifically
 
 | Concept | Key Mechanism | Purpose |
 |---|---|---|
-| Structured risk assessment | Threat modeling | Calibrates security effort to actual, specific risk |
-| Secret handling | Server-side credential storage | No client-side obfuscation resists a determined attacker |
-| Integrity/authenticity | CryptoKit hashing, HMAC | Safe-by-default cryptographic primitives |
-| Confidentiality + integrity | CryptoKit `AES.GCM` | Authenticated encryption detects tampering |
-| Asymmetric trust | CryptoKit signatures (`Curve25519`, `P256`) | Verification without sharing the signing secret |
-| Hardware isolation | Secure Enclave-backed keys | Private key material never leaves isolated hardware |
-| Biometric authentication | `LAContext` | App never receives raw biometric data |
-| Enrollment change detection | `evaluatedPolicyDomainState` | Guards against unauthorized biometric re-enrollment |
-| MITM protection | Certificate pinning | Requires deliberate rotation discipline |
-| Tamper resistance (limited) | Jailbreak detection | A real but bypassable deterrent, not a guarantee |
-| Tracking consent | App Tracking Transparency | Explicit opt-in default for cross-app tracking |
-| Privacy-preserving attribution | SKAdNetwork, AdAttributionKit | Aggregated measurement without individual tracking |
-| Log hygiene | `Logger` privacy annotations | Prevents PII exposure, supports compliance |
-| Supply chain discipline | Reviewed, pinned dependency versions | Prevents unreviewed malicious dependency updates |
-| Legal compliance | GDPR, CCPA obligations | Intertwined with technical architecture and security |
-| Risk elimination | Data minimization | Never-collected data can never be leaked or misused |
+| Threat modeling | Assets, attackers, methods | Spend effort where the risk is |
+| Secrets | Server for API keys, Keychain for tokens | Nothing secret in the app's code |
+| Hashing and HMAC | `SHA256`, `HMAC` | Check data was not changed |
+| Encryption | `AES.GCM` | Hide data and detect tampering |
+| Signatures | `Curve25519`, `P256` | Anyone can verify, only you can sign |
+| Secure Enclave | Hardware-isolated keys | The key never leaves the chip |
+| Biometrics | `LAContext` | Yes or no, never the biometric data |
+| Biometry changes | `evaluatedPolicyDomainState`, `.biometryCurrentSet` | Notice a newly added face or finger |
+| Certificate pinning | `NSPinnedDomains` or a delegate | Stop man-in-the-middle, rotate safely |
+| Jailbreak checks | File and sandbox checks | A small, bypassable extra layer |
+| ATT | `requestTrackingAuthorization` | Tracking only with permission |
+| Ad attribution | SKAdNetwork, AdAttributionKit | Measure ads without tracking people |
+| Logging | `Logger` privacy options | No personal data in logs |
+| Supply chain | Pinned, reviewed versions | No surprise malicious updates |
+| GDPR and CCPA | Privacy policy, data deletion | Legal duties shape the design |
+| Data minimization | Collect only what you need | Data never collected cannot leak |
