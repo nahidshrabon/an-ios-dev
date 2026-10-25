@@ -891,7 +891,7 @@ export const articles: Article[] = [
     slug: "observability-and-analytics",
     title: "Observability and Analytics",
     description:
-      "Event taxonomy design, type-safe analytics events, batching/offline queueing, crash reporting and symbolication, reading crash reports in Organizer, crash-free session rate as an SLO, hang rate monitoring, ingesting MetricKit, distributed tracing, feature flags/remote config, kill switches, A/B testing assignment/exposure logging, and feature flag debt.",
+      "Seeing what happens in production: event design, type-safe analytics, batching, crash reports and Organizer, crash-free sessions, hang rate, MetricKit, distributed tracing, feature flags, kill switches, A/B testing, and flag cleanup.",
     tags: ["observability", "analytics", "feature-flags"],
     publishedAt: "2026-08-16",
     get content() {

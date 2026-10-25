@@ -1,6 +1,8 @@
-## 80.1 Designing an Event Taxonomy
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-An event taxonomy is the deliberate, upfront design of what analytics events an app emits, their naming conventions, and what properties each event carries — designed thoughtfully before implementation begins, since a haphazard, ad hoc approach (events named inconsistently by whichever developer happened to add them) produces analytics data that's genuinely difficult to actually analyze later.
+## 80.1 Designing an Event Taxonomy 🟢
+
+An **event taxonomy** is your **plan for analytics events**: which events the app sends, how they are named, and what data each one carries. Design it **before** you write the code. Events added randomly, each named differently, are very hard to analyze later.
 
 ```plaintext
 // A deliberate, consistent naming convention (verb_noun, snake_case):
@@ -10,13 +12,21 @@ An event taxonomy is the deliberate, upfront design of what analytics events an 
 // — versus an inconsistent, ad hoc mix: "ViewedRecipe", "recipe-save-event", "CheckoutDone"
 ```
 
-Investing in a genuinely thoughtful, consistent taxonomy upfront pays off considerably down the line — an analyst or product manager trying to answer a real business question ("what fraction of users who view a recipe actually save it") depends entirely on events being named and structured consistently enough to actually reliably query and join together, and retrofitting a consistent taxonomy onto years of inconsistently-named, ad hoc events after the fact is considerably more painful than establishing good conventions from an app's early analytics implementation.
+Write the plan down as a table that the whole team uses:
+
+| Event | When | Properties |
+|---|---|---|
+| `recipe_viewed` | The detail screen appears | `recipe_id`, `source` |
+| `recipe_saved` | The user taps Save | `recipe_id` |
+| `checkout_completed` | The order succeeds | `order_id`, `total_amount`, `item_count` |
+
+**Why it pays off:** a question like "how many people who view a recipe also save it?" only works if `recipe_viewed` and `recipe_saved` are named and shaped consistently. Fixing years of messy event names later is much harder than starting clean.
 
 ---
 
-## 80.2 Type-Safe Analytics Events in Swift
+## 80.2 Type-Safe Analytics Events in Swift 🟢
 
-Rather than emitting analytics events as loosely-typed dictionaries or raw strings (prone to typos in event names or property keys that fail silently, never actually being caught until an analyst notices missing or malformed data), a type-safe event modeling approach (an enum or struct per event type) lets the compiler catch structural mistakes at build time.
+Do not send events as loose strings and dictionaries. A typo in a name fails **silently**, and you find out weeks later. Model each event as a **Swift type**, so the **compiler** catches mistakes.
 
 ```swift
 enum AnalyticsEvent {
@@ -34,13 +44,42 @@ func track(_ event: AnalyticsEvent) {
 }
 ```
 
-This type-safe approach directly parallels the broader "convert a string-based, runtime-only-discoverable pattern into a compile-time-checked one" theme recurring throughout this curriculum (recall generated asset catalog symbols, section 72.7, and Core ML's generated interfaces, section 59.2) — a typo in an event name or a missing required property becomes an immediate compile error rather than a silent analytics data quality problem discovered weeks later when a report's numbers mysteriously don't add up.
+Turn each case into the **name and properties** from your taxonomy (80.1), in **one place**:
+
+```swift
+extension AnalyticsEvent {
+    var name: String {
+        switch self {
+        case .recipeViewed:      "recipe_viewed"
+        case .recipeSaved:       "recipe_saved"
+        case .checkoutCompleted: "checkout_completed"
+        }
+    }
+
+    var properties: [String: String] {
+        switch self {
+        case let .recipeViewed(id, source):
+            ["recipe_id": id, "source": source.rawValue]
+        case let .recipeSaved(id):
+            ["recipe_id": id]
+        case let .checkoutCompleted(orderID, total, count):
+            ["order_id": orderID, "total_amount": "\(total)", "item_count": "\(count)"]
+        }
+    }
+}
+
+// At the call site, a typo is now a compile error:
+track(.recipeViewed(recipeID: recipe.id, source: .search))
+```
+
+This is the same idea as generated asset symbols (section 72.7) and Core ML's generated classes (section 59.2): turn a fragile string into a **checked Swift type**.
 
 ---
 
-## 80.3 Batching and Offline Event Queueing
+## 80.3 Batching and Offline Event Queueing 🟡
 
-Analytics events should generally be batched (accumulated locally and sent in periodic groups rather than one network request per individual event) and queued for later delivery when offline — directly connecting to the background task budget concerns from section 49.5 and the general network efficiency principles from Part 5's networking material.
+- **Batch:** collect events and send them **in groups**, not one network request per event.
+- **Queue offline:** save events on the device, and send them **when the network is back**.
 
 ```swift
 actor AnalyticsQueue {
@@ -61,13 +100,65 @@ actor AnalyticsQueue {
 }
 ```
 
-Batching's genuine value is reducing both network overhead (many small individual requests are meaningfully less efficient than fewer, larger batched requests) and battery/energy impact (recall the network radio wake-up energy cost discussed in section 69.18) — while offline queueing (persisting events locally until they can actually be delivered) ensures analytics data isn't simply lost when a user's device lacks connectivity at the moment an event occurs, both genuinely important considerations for building an analytics system that provides complete, accurate data without being needlessly wasteful of network and battery resources.
+A fuller version that **saves events to a file**, so they survive the app being closed:
+
+```swift
+struct LoggedEvent: Codable {
+    let name: String
+    let properties: [String: String]
+    let timestamp: Date
+}
+
+actor PersistentAnalyticsQueue {
+    private var pending: [LoggedEvent] = []
+    private let fileURL = URL.documentsDirectory.appending(path: "pending-events.json")
+
+    init() {
+        if let data = try? Data(contentsOf: fileURL),
+           let saved = try? JSONDecoder().decode([LoggedEvent].self, from: data) {
+            pending = saved                                  // events from the last session
+        }
+    }
+
+    func enqueue(_ event: AnalyticsEvent) async {
+        pending.append(LoggedEvent(name: event.name, properties: event.properties, timestamp: .now))
+        save()
+        if pending.count >= 20 { await flush() }
+    }
+
+    func flush() async {
+        guard !pending.isEmpty else { return }
+        let batch = pending
+        do {
+            try await upload(batch)                          // one request for the whole batch
+            pending.removeFirst(batch.count)
+            save()
+        } catch {
+            // offline or server error: keep the events and try again later
+        }
+    }
+
+    private func save() {
+        try? JSONEncoder().encode(pending).write(to: fileURL)
+    }
+}
+```
+
+Also send what is left when the app goes to the background:
+
+```swift
+.onChange(of: scenePhase) { _, phase in
+    if phase == .background { Task { await analyticsQueue.flush() } }
+}
+```
+
+**Why:** fewer, bigger requests use **less network and battery** (each time the radio wakes up costs energy, section 69.18). Saving events offline means **no data is lost** when there is no connection.
 
 ---
 
-## 80.4 Crash Reporting Setup and Symbolication
+## 80.4 Crash Reporting Setup and Symbolication 🟢
 
-Crash reporting services (whether Apple's own, via App Store Connect, or a third-party service) automatically capture crash details (stack trace, device/OS info, breadcrumb context leading up to the crash) and require properly configured, matching dSYM upload (recall the strict dSYM-matching requirement from section 68.22, and its CI automation in section 76.13) to actually produce readable, symbolicated crash reports rather than raw, unreadable memory addresses.
+A **crash reporting service** (Apple's own in App Store Connect, or a third-party one) collects crashes from real users: the stack trace, the device and iOS version, and **breadcrumbs** (what happened just before). To turn raw memory addresses into **readable function names**, it needs the **matching dSYM** for that exact build (section 68.22, uploaded automatically by CI in section 76.13).
 
 ```swift
 // Crash reporting SDK integration typically requires:
@@ -76,13 +167,35 @@ Crash reporting services (whether Apple's own, via App Store Connect, or a third
 // - Optional custom breadcrumb logging for additional context leading up to a crash
 ```
 
-Without correctly configured dSYM upload specifically matching the exact build that crashed, even a crash reporting service with perfect crash capture provides essentially no actionable diagnostic value — this is precisely the symbolication requirement discussed in section 68.22 applied here to a production crash reporting pipeline specifically, reinforcing why the automated dSYM upload discipline established in the CI/CD material (76.13) is genuinely load-bearing infrastructure for the entire crash reporting system to actually function usefully in practice.
+Apple's **MetricKit** also delivers crash diagnostics from real devices to your app, with no third-party SDK:
+
+```swift
+import MetricKit
+
+final class CrashCollector: NSObject, MXMetricManagerSubscriber {
+    override init() {
+        super.init()
+        MXMetricManager.shared.add(self)                  // start receiving reports
+    }
+
+    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        for payload in payloads {
+            for crash in payload.crashDiagnostics ?? [] {
+                let report = crash.jsonRepresentation()    // the call stack and details
+                // send `report` to your server
+            }
+        }
+    }
+}
+```
+
+**Without the matching dSYM, a perfect crash report is useless.** You only see addresses. That is why automatic dSYM upload (76.13) is essential, not optional.
 
 ---
 
-## 80.5 Reading Crash Reports in Organizer
+## 80.5 Reading Crash Reports in Organizer 🟢
 
-Xcode's Organizer window (already introduced for performance metrics in section 69.17) also surfaces crash reports collected from real users — grouped by crash signature (similar crashes clustered together), showing affected device/OS version distribution, and providing symbolicated stack traces directly correlatable with source code.
+Xcode's **Organizer** (**Window → Organizer → Crashes**) shows crashes from real users. It is the same window as the performance metrics in section 69.17.
 
 ```plaintext
 // Organizer's crash report view surfaces:
@@ -91,13 +204,29 @@ Xcode's Organizer window (already introduced for performance metrics in section 
 // - Symbolicated stack trace, directly linkable back to the actual source code line
 ```
 
-Crash signature grouping is a genuinely important organizational feature worth understanding — rather than presenting a thousand individual crash reports as a thousand separate, undifferentiated problems, Organizer clusters crashes sharing the same underlying signature (likely the same root cause) together as one aggregated issue, letting a developer prioritize fixes based on genuine aggregate impact (how many distinct users are affected by this one specific crash signature) rather than being overwhelmed by an undifferentiated flood of individually-reported crash instances.
+How to use it:
+
+1. Choose your app and a version.
+2. Sort the crashes by **how many users** they affect.
+3. Open the top one, and look at the **stack trace**.
+4. Click **Open in Project** to jump to the exact line in your code.
+
+If you have a raw address and the dSYM, you can symbolicate one line by hand:
+
+```bash
+atos -arch arm64 \
+  -o MyApp.app.dSYM/Contents/Resources/DWARF/MyApp \
+  -l 0x100000000 0x0000000100a1b2c4
+# prints something like: RecipeDetailView.body.getter (RecipeDetailView.swift:42)
+```
+
+**Grouping matters.** A thousand reports of the **same crash** are shown as **one issue**, with a count. So you can fix the crash that hurts the most users first, instead of drowning in single reports.
 
 ---
 
-## 80.6 Crash-Free Session Rate as an SLO
+## 80.6 Crash-Free Session Rate as an SLO 🟢
 
-Crash-free session rate (the percentage of app sessions that complete without a crash) is a commonly-used Service Level Objective (SLO) for app stability — a single, trackable metric a team can set an explicit target for (like "99.5% crash-free sessions") and monitor over time via Organizer (80.5) or a crash reporting service, directly connecting to the regression-detection material from section 69.17.
+The **crash-free session rate** is the percentage of app sessions that end **without a crash**. Many teams set it as an **SLO** (Service Level Objective): a clear target to meet, like **99.5%**.
 
 ```plaintext
 // A representative SLO commitment:
@@ -106,13 +235,22 @@ Crash-free session rate (the percentage of app sessions that complete without a 
 //  requiring investigation, not just background noise to accept"
 ```
 
-Establishing crash-free session rate as an explicit, tracked SLO (rather than simply "try not to crash too much" as a vague, informal aspiration) provides the same kind of proactive, measurable discipline discussed for performance regression budgets in section 69.19 — a specific, numeric threshold gives a team a clear, objective signal for when a release's stability has genuinely regressed and requires investigation, rather than relying on subjective impressions or waiting for user complaints to reveal that stability has quietly degraded.
+How it is calculated:
+
+```plaintext
+crash-free session rate = (sessions without a crash ÷ all sessions) × 100
+
+Example:  200,000 sessions, 600 crashed
+          (199,400 ÷ 200,000) × 100 = 99.7%   ✓ above the 99.5% target
+```
+
+A number turns "try not to crash too much" into a **clear signal**. If a release drops below 99.5%, it is a **regression to investigate**, the same idea as performance budgets (section 69.19). You do not have to wait for angry reviews to notice.
 
 ---
 
-## 80.7 Hang Rate and ANR Monitoring
+## 80.7 Hang Rate and ANR Monitoring 🟡
 
-Beyond crash-free session rate (80.6), hang rate (the frequency of main thread hangs, recall section 69.13) is an equally important stability metric — measurable via `MetricKit`'s hang rate reporting (recall section 69.16) or a third-party crash/performance reporting service, since a severely unresponsive app that never technically crashes can still represent a genuinely serious quality problem from a real user's actual perspective.
+A **hang** is when the app **freezes** because the main thread is blocked (section 69.13). On Android it is called an **ANR** ("Application Not Responding"). A frozen app can be **as bad as a crash** for the user, but it produces **no crash report**. So track the **hang rate** too.
 
 ```plaintext
 // A hang, unlike a crash, produces no traditional crash report at all —
@@ -120,13 +258,32 @@ Beyond crash-free session rate (80.6), hang rate (the frequency of main thread h
 // the only production-visible signal that hangs are occurring at a meaningful rate
 ```
 
-The distinct value of tracking hang rate alongside crash-free session rate reflects a genuine, important insight — a user experiencing a severe, sustained hang has arguably just as bad (or worse) an experience as one experiencing an outright crash, yet a hang produces no traditional crash report at all, meaning a team monitoring *only* crash-free session rate could have a completely blind spot around a genuinely serious hang-related quality problem that `MetricKit`'s specific hang rate reporting (section 69.16) exists precisely to surface.
+MetricKit (section 69.16) reports hangs from real devices, with the stack that was blocked:
+
+```swift
+func didReceive(_ payloads: [MXDiagnosticPayload]) {
+    for payload in payloads {
+        for hang in payload.hangDiagnostics ?? [] {
+            print("Hang for \(hang.hangDuration)")          // how long the app was frozen
+            let stack = hang.callStackTree.jsonRepresentation() // what the main thread was doing
+            // send `stack` to your server
+        }
+    }
+}
+```
+
+| Metric | Catches |
+|---|---|
+| Crash-free session rate (80.6) | The app quits suddenly |
+| Hang rate | The app freezes, but does not quit |
+
+**If you only watch crashes, you miss hangs completely.** Track both.
 
 ---
 
 ## 80.8 Ingesting MetricKit into Your Own Stack 🔴
 
-Beyond viewing `MetricKit` data through Xcode Organizer (80.5, 69.17), an app can implement `MXMetricManagerSubscriber` (recall section 69.16) directly to receive and forward `MetricKit` payloads into a team's own analytics/observability backend, enabling custom dashboards, alerting, and correlation with other application-specific metrics beyond what Organizer's built-in views provide.
+Organizer (80.5) shows MetricKit data inside Xcode. You can also **receive the data in your app** with `MXMetricManagerSubscriber` (section 69.16), and **send it to your own backend**. Then you can build your own dashboards and alerts, and combine it with your other metrics.
 
 ```swift
 import MetricKit
@@ -142,13 +299,34 @@ class MetricsForwarder: NSObject, MXMetricManagerSubscriber {
 }
 ```
 
-Ingesting `MetricKit` data into a team's own custom observability stack is appropriate specifically when Organizer's built-in presentation isn't sufficient for a team's actual needs — perhaps needing custom alerting thresholds, correlation with backend service metrics for genuinely full-stack observability (80.9), or integration with an existing internal dashboard/monitoring tool already used for other parts of a team's infrastructure, letting `MetricKit`'s real-device performance data become one integrated input among a team's broader observability tooling rather than existing purely within Xcode's own, separate Organizer interface.
+A working version: subscribe once at launch, and send the payload as JSON:
+
+```swift
+final class MetricsForwarder: NSObject, MXMetricManagerSubscriber {
+    override init() {
+        super.init()
+        MXMetricManager.shared.add(self)
+    }
+
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            let json = payload.jsonRepresentation()        // launch time, hangs, memory, battery
+            Task { try? await uploadMetrics(json) }        // your own backend
+        }
+    }
+}
+
+// Keep one instance alive for the whole app, for example in your App type:
+// let metrics = MetricsForwarder()
+```
+
+Do this when Organizer is **not enough**: you want your **own alert limits**, want to **combine app and backend data** (80.9), or already use an internal dashboard for everything else.
 
 ---
 
 ## 80.9 Distributed Tracing from App to Backend 🔴
 
-Distributed tracing propagates a unique trace identifier from a client app request through every backend service that request subsequently touches — letting a single, specific user-facing operation (like "load the recommendations feed") be traced end-to-end across the app, any intermediate services, and the actual backend, rather than each layer's logging/monitoring existing in complete isolation from every other layer.
+**Distributed tracing** gives one user action (like "load the recipe feed") a **trace ID**. The ID travels from the app through **every backend service** that the request touches. Then you can follow that **one request end to end**, instead of looking at separate logs.
 
 ```swift
 // Conceptual: attaching a trace ID to an outgoing network request,
@@ -159,13 +337,29 @@ request.setValue(UUID().uuidString, forHTTPHeaderField: "X-Trace-ID")
 // letting the full request path be reconstructed and analyzed as one unified trace
 ```
 
-Distributed tracing addresses a genuine observability gap that exists when client-side and backend-side monitoring remain completely separate, disconnected systems — without a shared trace identifier connecting them, diagnosing why a specific user's specific request was slow requires manually correlating timestamps and context across entirely separate app-side and backend-side logging systems, while a properly propagated trace ID lets that same investigation follow one single, coherent trace directly across the entire request's actual full path, considerably simplifying diagnosis of genuinely cross-system, end-to-end performance or correctness issues.
+Many backends understand the standard **W3C `traceparent`** header:
+
+```swift
+func traceparentHeader() -> String {
+    func hex() -> String { UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased() }
+    let traceID = hex()                      // 32 hex characters: the whole request
+    let spanID = String(hex().prefix(16))    // 16 hex characters: this one call
+    return "00-\(traceID)-\(spanID)-01"     // version - trace id - span id - flags
+}
+
+var request = URLRequest(url: url)
+request.setValue(traceparentHeader(), forHTTPHeaderField: "traceparent")
+```
+
+Log the same trace ID in the app too, so app logs and server logs can be **joined**.
+
+**Without it**, finding out why one user's request was slow means matching timestamps across **separate** app and server logs by hand. **With it**, you follow **one trace** across the whole path.
 
 ---
 
-## 80.10 Feature Flags and Remote Config
+## 80.10 Feature Flags and Remote Config 🟢
 
-Feature flags (remotely-configurable boolean or more complex values controlling whether specific functionality is active) let a team change an app's behavior without requiring an actual App Store release — enabling gradual feature rollout, targeting specific user segments, or (critically) providing kill switches (80.11) for disabling problematic functionality without waiting for App Review.
+A **feature flag** is a setting you can change **from your server**, that turns a feature **on or off** in the app. You can then change behavior **without an App Store release**: roll out slowly, target some users, or switch a broken feature off (80.11).
 
 ```swift
 protocol FeatureFlagProviding {
@@ -182,13 +376,38 @@ if featureFlags.isEnabled(.newCheckoutFlow) {
 }
 ```
 
-Feature flags provide a genuinely significant decoupling between *deploying* code (getting a feature's implementation into a shipped app binary) and *releasing* it (actually making that feature active and visible to users) — a feature can be fully implemented, tested, and shipped within an app binary while remaining flagged off, then activated remotely for specific user segments or a gradual rollout percentage entirely independent of the App Store's own release and review timeline, a meaningfully faster and more controllable activation mechanism than App Review's inherent latency (recall section 78.8) would otherwise allow.
+A simple **remote config** provider: download the flags as JSON, and keep **safe defaults**:
+
+```swift
+@Observable
+final class RemoteFeatureFlags: FeatureFlagProviding {
+    private var values: [String: Bool] = [:]
+    private let defaults: [FeatureFlag: Bool] = [
+        .newCheckoutFlow: false,          // off unless the server says otherwise
+        .aiRecipeSuggestions: false,
+    ]
+
+    func refresh() async {
+        let url = URL(string: "https://config.example.com/flags.json")!
+        if let (data, _) = try? await URLSession.shared.data(from: url),
+           let decoded = try? JSONDecoder().decode([String: Bool].self, from: data) {
+            values = decoded               // e.g. {"newCheckoutFlow": true}
+        }
+    }
+
+    func isEnabled(_ flag: FeatureFlag) -> Bool {
+        values[flag.rawValue] ?? defaults[flag] ?? false
+    }
+}
+```
+
+The big idea: **deploying** code (shipping it in the app) and **releasing** a feature (turning it on for users) become **two separate steps**. You can ship a finished feature turned off, then turn it on whenever you want, without waiting for App Review (section 78.8).
 
 ---
 
-## 80.11 Kill Switches for Broken Features
+## 80.11 Kill Switches for Broken Features 🟢
 
-A kill switch is a specific, critical application of feature flags (80.10) — a remotely-controllable flag specifically maintained for the purpose of instantly disabling a feature discovered to be broken or harmful in production, without needing to wait for an emergency App Store review and release cycle.
+A **kill switch** is a feature flag (80.10) kept for one job: **turning off a broken feature instantly**, for everyone, without an emergency App Store release.
 
 ```swift
 if featureFlags.isEnabled(.newCheckoutFlow) {
@@ -199,13 +418,40 @@ if featureFlags.isEnabled(.newCheckoutFlow) {
 }
 ```
 
-The genuine, practical value of maintaining kill switches for meaningfully risky new features connects directly to the phased release risk-management principle from section 78.11 — while phased release limits a bad release's *initial* blast radius by gradually increasing rollout percentage, a kill switch provides an even faster, more immediate mitigation once a genuine problem is actually discovered (instantly disabling the specific problematic feature for all users, rather than needing to wait even for a paused phased rollout's already-affected users to naturally age out), making kill switches a meaningfully complementary, faster-acting safety mechanism specifically for a feature's worst-case, discovered-to-be-broken scenario.
+Always keep the **old, working path** behind the switch:
+
+```swift
+var body: some View {
+    if featureFlags.isEnabled(.newCheckoutFlow) {
+        NewCheckoutView()          // the risky new feature
+    } else {
+        CheckoutView()             // the known-working fallback
+    }
+}
+```
+
+Two rules:
+
+- **Choose the default carefully.** If the flags cannot be loaded, the app should fall back to the **safe** path.
+- **Test the "off" path.** A kill switch is useless if the fallback no longer works.
+
+| | Phased release (section 78.11) | Kill switch |
+|---|---|---|
+| Limits | How many users get a new version | Whether one feature is on |
+| Speed | Pause, but users who already updated keep it | Off for everyone, right away |
+
+They work **together**: phased release limits the first damage, and a kill switch stops a discovered problem **immediately**.
 
 ---
 
 ## 80.12 A/B Testing: Assignment and Exposure Logging 🔴
 
-Rigorous A/B testing requires two genuinely distinct logging concerns — assignment logging (recording which experimental variant a user was actually assigned to) and exposure logging (recording when a user actually experienced/saw that variant's effect) — since these two events don't always coincide, and conflating them produces genuinely misleading experimental results.
+A good **A/B test** logs **two different events**:
+
+- **Assignment:** which variant a user was **put into**.
+- **Exposure:** when the user **actually saw** that variant.
+
+They are not always the same moment, and mixing them up gives **wrong results**.
 
 ```swift
 // Assignment: recorded once when a user is bucketed into an experiment variant
@@ -216,13 +462,40 @@ analytics.track(.experimentAssigned(experimentID: "checkout_v2", variant: "treat
 analytics.track(.experimentExposed(experimentID: "checkout_v2", variant: "treatment"))
 ```
 
-The distinction between assignment and exposure matters genuinely, not just as a pedantic technicality — a user could be assigned to a treatment variant but never actually reach the screen where that variant's effect would apply (perhaps abandoning their session before reaching checkout at all), and counting that user's eventual behavior toward the experiment's results based purely on assignment (rather than genuine exposure) would incorrectly dilute the experiment's actual measured effect with users who were technically assigned but never truly exposed to the variant being tested, undermining the statistical validity of the entire experiment's conclusions.
+Put each user into the **same variant every time**, based on a hash of their ID:
+
+```swift
+import CryptoKit
+
+func variant(for userID: String, experiment: String) -> String {
+    let hash = SHA256.hash(data: Data("\(experiment):\(userID)".utf8))
+    let firstByte = Array(hash)[0]                            // a number from 0 to 255
+    return firstByte < 128 ? "control" : "treatment"            // about 50% each
+}
+```
+
+Log the exposure **only on the screen where the variant matters**:
+
+```swift
+struct CheckoutScreen: View {
+    let variant: String
+
+    var body: some View {
+        CheckoutContent(variant: variant)
+            .onAppear {
+                analytics.track(.experimentExposed(experimentID: "checkout_v2", variant: variant))
+            }
+    }
+}
+```
+
+**Why it matters:** a user can be **assigned** to the new checkout but **never reach** checkout. If you count them anyway, they **dilute** the result, and the test may say the change does nothing when it really works.
 
 ---
 
-## 80.13 Feature Flag Debt and Cleanup Discipline
+## 80.13 Feature Flag Debt and Cleanup Discipline 🟡
 
-Feature flags accumulate genuine technical debt over time if not actively, deliberately cleaned up — a flag whose experiment concluded months ago, or whose feature has long since fully rolled out to 100% of users, still adds real conditional complexity to the codebase for every day it remains un-removed, directly connecting to the dead code concerns raised for Periphery in section 75.4.
+Feature flags become **technical debt** if you never remove them. A flag whose feature has been at 100% for months still adds an extra `if` to the code, like the dead code that Periphery finds (section 75.4).
 
 ```swift
 // A stale flag check remaining in code long after its rollout concluded,
@@ -233,7 +506,33 @@ if featureFlags.isEnabled(.newCheckoutFlowLaunchedSixMonthsAgo) {
 }
 ```
 
-This connects directly to the dead/stale code concerns raised for Periphery in section 75.4, but specifically for feature flags rather than genuinely unused code — a flag that's effectively always true (or always false) in practice represents unnecessary, accumulated conditional complexity that a periodic, deliberate flag audit (removing flags whose rollout has fully concluded, or whose associated experiment has already reached its conclusion) can genuinely simplify away, making feature flag cleanup discipline a real, ongoing maintenance practice rather than a one-time setup concern, much like the broader dead code hygiene discussed throughout Part 11's tooling material.
+Give every flag a **removal date** when you create it, and let a **test** remind you:
+
+```swift
+enum FeatureFlag: String, CaseIterable {
+    case newCheckoutFlow
+    case aiRecipeSuggestions
+
+    var removeBy: Date {
+        switch self {
+        case .newCheckoutFlow:     DateComponents(calendar: .current, year: 2026, month: 12, day: 1).date!
+        case .aiRecipeSuggestions: DateComponents(calendar: .current, year: 2027, month: 3, day: 1).date!
+        }
+    }
+}
+```
+
+```swift
+import Testing
+
+@Test func noFlagIsPastItsRemovalDate() {
+    for flag in FeatureFlag.allCases {
+        #expect(flag.removeBy > .now, "\(flag) should be removed by now")
+    }
+}
+```
+
+When the test fails, **remove the flag and its old branch**. Cleaning up flags is **ongoing work**, not a one-time setup.
 
 ---
 
@@ -241,16 +540,16 @@ This connects directly to the dead/stale code concerns raised for Periphery in s
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| Upfront design | Event taxonomy | Consistent naming enables reliable analysis later |
-| Compile-time safety | Type-safe analytics events | Catches naming/property mistakes at build time |
-| Efficiency | Batching, offline queueing | Reduces network/battery cost, preserves data during outages |
-| Diagnostic foundation | Crash reporting + dSYM matching | Symbolication requires exact build-matched dSYMs |
-| Aggregated triage | Crash signature grouping (Organizer) | Prioritizes fixes by genuine aggregate impact |
-| Stability commitment | Crash-free session rate (SLO) | Objective, measurable stability regression signal |
-| Blind-spot coverage | Hang rate / ANR monitoring | Catches severe unresponsiveness crashes alone would miss |
-| Custom observability | `MXMetricManagerSubscriber` ingestion | Integrates MetricKit into a team's own stack |
-| End-to-end diagnosis | Distributed tracing | Unifies app-side and backend-side request visibility |
-| Deployment/release decoupling | Feature flags, remote config | Activation independent of App Store release timing |
-| Fast incident response | Kill switches | Immediate mitigation faster than phased rollout alone |
-| Experimental rigor | Assignment vs. exposure logging | Prevents diluted, statistically invalid A/B results |
-| Ongoing hygiene | Feature flag cleanup discipline | Prevents accumulated, stale conditional complexity |
+| Event taxonomy | A naming plan, written first | Data you can analyze later |
+| Type-safe events | An enum for events | Typos become compile errors |
+| Batching and queueing | Send in groups, save offline | Less battery, no lost events |
+| Crash reporting | Reports plus matching dSYMs | Readable crashes |
+| Organizer | Crashes grouped by signature | Fix the biggest problem first |
+| Crash-free sessions | A clear SLO, like 99.5% | Notice stability regressions |
+| Hang rate | MetricKit hang diagnostics | Catch freezes that are not crashes |
+| Own MetricKit stack | `MXMetricManagerSubscriber` | Your own dashboards and alerts |
+| Distributed tracing | A trace ID across app and backend | Follow one request end to end |
+| Feature flags | Remote on and off switches | Release without App Review |
+| Kill switches | Turn a broken feature off now | Faster than any release |
+| A/B testing | Separate assignment and exposure | Correct experiment results |
+| Flag cleanup | Removal dates and a test | No pile of stale flags |
