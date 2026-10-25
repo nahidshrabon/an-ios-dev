@@ -814,7 +814,7 @@ export const articles: Article[] = [
     slug: "swift-package-manager",
     title: "Swift Package Manager",
     description:
-      "Adding a package dependency, version rules and Package.resolved, creating your own package, Package.swift anatomy, package resources and bundles, local package development, evaluating dependencies, binary targets and XCFrameworks, build and command plugins, package traits, private registries, and migrating off CocoaPods.",
+      "Adding packages, version rules and Package.resolved, creating packages, targets and products, resources and Bundle.module, local packages, choosing dependencies, binary targets, build and command plugins, traits, private registries, and leaving CocoaPods.",
     tags: ["spm", "package-manager", "dependencies"],
     publishedAt: "2026-08-16",
     get content() {
