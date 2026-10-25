@@ -1,6 +1,8 @@
-## 72.1 Xcode Navigation and Essential Shortcuts
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Beyond basic file browsing, Xcode's navigation shortcuts (Cmd+Shift+O for "Open Quickly," Cmd+Ctrl+J for "Jump to Definition," Cmd+Shift+J to reveal a file in the navigator) meaningfully accelerate day-to-day development by letting a developer jump directly to relevant code rather than manually browsing through a project's file hierarchy.
+## 72.1 Xcode Navigation and Essential Shortcuts 🟢
+
+Learn a few shortcuts early. **Jumping straight to code** is much faster than clicking through folders.
 
 ```plaintext
 Cmd+Shift+O   Open Quickly — fuzzy-search and jump to any file/symbol by name
@@ -9,13 +11,31 @@ Cmd+Shift+J   Reveal in Navigator — locate the current file within the project
 Cmd+/         Comment/uncomment the current selection
 ```
 
-These shortcuts collectively represent a genuine productivity investment worth making early rather than continuing to navigate purely through manual clicking — "Open Quickly" specifically is disproportionately valuable in a larger codebase, since fuzzy-searching directly to a known file or symbol by name is consistently faster than manually traversing a deeply nested project navigator, and this compounding time savings across many daily navigation actions is exactly the kind of small efficiency that meaningfully adds up over a long development session.
+A few more you will use every day:
+
+```plaintext
+Cmd+B          Build
+Cmd+R          Run
+Cmd+U          Run the tests
+Cmd+Shift+K    Clean the build folder
+Ctrl+I         Re-indent the selected code
+Cmd+Ctrl+E     Rename a symbol everywhere in the current scope
+Option+click   Show Quick Help (documentation) for a symbol
+```
+
+**Open Quickly** is the most valuable one in a big project. Type part of a file or type name, and press Return.
 
 ---
 
-## 72.2 Targets, Schemes, and Configurations
+## 72.2 Targets, Schemes, and Configurations 🟢
 
-A target defines a distinct build product (the main app, a widget extension, a test bundle — recall the extension architecture from sections 52-53), a scheme defines what happens when you build/run/test/profile/archive (which target(s), which configuration, which arguments), and a configuration (typically Debug and Release, 72.8) defines build settings applied when building for a specific purpose.
+Three words that are easy to mix up:
+
+| Term | What it is | Example |
+|---|---|---|
+| **Target** | One thing Xcode builds (an app, a widget, a test bundle) | `MyWidgetExtension` |
+| **Scheme** | What happens when you Run, Test, Profile, or Archive: which target, which configuration, which arguments | `MyApp` |
+| **Configuration** | A set of build settings for one purpose | `Debug`, `Release` |
 
 ```plaintext
 // Conceptual relationship:
@@ -24,13 +44,22 @@ A target defines a distinct build product (the main app, a widget extension, a t
 // Configuration: "Debug" (defines settings like optimization level, active for that action)
 ```
 
-Understanding this three-layer relationship clarifies genuinely common Xcode confusion points — debugging a widget extension (recall section 68.24) requires selecting *that extension's own scheme*, not just its target, since a scheme is what actually determines which target gets built and run when you press the Run button, and a project can have several schemes referencing overlapping sets of targets for different purposes (a "MyApp-Debug" scheme, a "MyApp-Staging" scheme pointing at different configurations or launch arguments).
+From the terminal you can see all three, and pick them:
+
+```bash
+xcodebuild -list                                         # targets, schemes, configurations
+xcodebuild -scheme MyApp -configuration Release build    # build one scheme in Release
+```
+
+A common confusion: to debug a widget (section 68.24), select **the widget's scheme**, not only its target. The **scheme** decides what runs when you press Run. One project can have several schemes, like `MyApp-Debug` and `MyApp-Staging`.
 
 ---
 
-## 72.3 Build Settings and Inheritance
+## 72.3 Build Settings and Inheritance 🟡
 
-Build settings (compiler flags, optimization level, deployment target, and hundreds of others) can be set at multiple levels — project-wide defaults, per-target overrides, and per-configuration values — with more specific levels overriding broader ones, and the `$(inherited)` value explicitly preserving a broader-level setting rather than replacing it entirely.
+**Build settings** (compiler flags, optimization level, deployment target, and hundreds more) can be set at **several levels**: the project, the target, and each configuration. **The more specific level wins.**
+
+`$(inherited)` means "keep the value from the level above, and add mine".
 
 ```plaintext
 // A target-level build setting overriding the project default:
@@ -39,13 +68,20 @@ Build settings (compiler flags, optimization level, deployment target, and hundr
 // Resolves to:    -D DEBUG_LOGGING -D EXTRA_TARGET_FLAG (both flags present)
 ```
 
-The `$(inherited)` mechanism is genuinely important and easy to get wrong — omitting it at a target level when a project-level setting already exists silently *replaces* the project's setting entirely rather than adding to it, which can produce confusing behavior (a flag mysteriously missing at the target level despite being correctly set at the project level) that's only resolved by understanding this inheritance model explicitly rather than assuming settings simply accumulate automatically across every level.
+Without `$(inherited)`, the target value **replaces** the project value:
+
+```plaintext
+// Target level:   OTHER_SWIFT_FLAGS = -D EXTRA_TARGET_FLAG
+// Resolves to:    -D EXTRA_TARGET_FLAG        ← DEBUG_LOGGING is gone
+```
+
+This is an easy mistake: a flag "disappears" at the target, even though the project sets it correctly. Settings do **not** add up by themselves.
 
 ---
 
-## 72.4 .xcconfig Files
+## 72.4 .xcconfig Files 🟡
 
-`.xcconfig` files externalize build settings into plain-text, version-control-friendly configuration files, referenced from a project's build configurations — providing a genuinely more maintainable, diffable, and mergeable alternative to editing build settings purely through Xcode's own GUI, which stores settings within the considerably less human-readable `.pbxproj` project file format.
+An **`.xcconfig` file** holds build settings as **plain text**. Xcode's own UI stores settings inside the hard-to-read `.pbxproj` file. A text file is much easier to read and review.
 
 ```plaintext
 // Debug.xcconfig
@@ -58,13 +94,27 @@ SWIFT_ACTIVE_COMPILATION_CONDITIONS =
 GCC_OPTIMIZATION_LEVEL = s
 ```
 
-The genuine value of `.xcconfig` files becomes clear specifically in team, version-controlled contexts — a build setting change made purely through Xcode's GUI produces a diff within the sprawling, difficult-to-review `.pbxproj` file, while the same change made in a `.xcconfig` file produces a small, clean, genuinely reviewable text diff, making `.xcconfig` files a meaningfully better fit for settings a team wants to track, review, and reason about changes to over time through normal git-based code review (recall section 74.6's pull request discussion).
+Share common settings with `#include`:
+
+```plaintext
+// Shared.xcconfig
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+SWIFT_VERSION = 6.0
+
+// Debug.xcconfig
+#include "Shared.xcconfig"
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+```
+
+To use them: in the project's **Info** tab, under **Configurations**, choose the `.xcconfig` file for each configuration.
+
+**Why it matters in a team:** a change in the Xcode UI makes a messy diff in `.pbxproj`. The same change in an `.xcconfig` file is **one clear line** that is easy to review in a pull request (section 74.6).
 
 ---
 
-## 72.5 Build Phases and Run Script Phases
+## 72.5 Build Phases and Run Script Phases 🟡
 
-Build phases define the sequence of steps Xcode performs when building a target — compiling sources, linking, copying resources — and a Run Script phase lets a developer insert arbitrary shell script execution at a specific point in that sequence, appropriate for tasks like running SwiftLint (recall section 75.1), generating code, or validating build inputs before compilation proceeds.
+**Build phases** are the steps Xcode runs to build a target: compile sources, link, copy resources. A **Run Script phase** adds **your own shell script** at a chosen step, for example to run SwiftLint (section 75.1), generate code, or check inputs.
 
 ```bash
 # A Run Script build phase invoking SwiftLint during every build:
@@ -75,13 +125,27 @@ else
 fi
 ```
 
-Run Script phases are a genuinely powerful extension point precisely because they let arbitrary, custom tooling participate directly in the standard build process — rather than requiring a developer to remember to manually run a linter or code generator as a separate step, integrating that tooling as a Run Script phase means it runs automatically and consistently as part of every single build, though this power comes with a real responsibility to keep script phases fast, since a slow script phase directly adds to every developer's build time (connecting to the slow-build diagnosis concerns in 72.11).
+On Apple silicon Macs, Homebrew tools live in `/opt/homebrew/bin`, which is not always on the script's path. Add it:
+
+```bash
+export PATH="$PATH:/opt/homebrew/bin"
+if which swiftlint > /dev/null; then
+    swiftlint
+fi
+```
+
+Two things to know:
+
+- **User script sandboxing:** newer projects run scripts in a sandbox. A script can then only read and write the files you list in the phase's **Input Files** and **Output Files**.
+- **Keep scripts fast.** A script runs on **every build**, so a slow script slows down every developer (more in 72.11).
+
+The benefit: the tool runs **automatically on every build**, so nobody has to remember to run it.
 
 ---
 
-## 72.6 Info.plist Per Configuration
+## 72.6 Info.plist Per Configuration 🟡
 
-An app's `Info.plist` can vary per build configuration — commonly used to give Debug and Release builds distinct bundle identifiers or display names (letting both be installed simultaneously on one device for comparison) or to configure different API endpoint URLs per configuration without hardcoding environment-switching logic directly in Swift source.
+Your `Info.plist` can have **different values for Debug and Release**. A common use is a different app name and bundle identifier, so you can install **both builds side by side** on one device.
 
 ```plaintext
 // Info.plist values can reference build settings that vary per .xcconfig:
@@ -90,13 +154,29 @@ An app's `Info.plist` can vary per build configuration — commonly used to give
 // Release.xcconfig: APP_DISPLAY_NAME = MyApp
 ```
 
-Configuring environment-specific values this way — through build settings and `.xcconfig` files (72.4) rather than runtime conditional logic scattered through Swift source — keeps environment-specific configuration cleanly separated from application logic, and the distinct Debug/Release bundle identifier and display name pattern specifically solves a genuinely practical problem: letting a developer install and run both a Debug build and the actual Release/TestFlight build side by side on the same physical device for direct comparison, rather than one installation overwriting the other.
+The same way works for an API address. One trap: in an `.xcconfig` file, `//` starts a comment, so a URL needs a small trick:
+
+```plaintext
+// Debug.xcconfig
+API_BASE_URL = https:/$()/staging.example.com     // "$()" is empty, it stops "//" from being a comment
+
+// Info.plist
+API_BASE_URL = $(API_BASE_URL)
+```
+
+Then read it in Swift:
+
+```swift
+let baseURL = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String
+```
+
+This keeps environment settings **in the build settings**, not as `if` checks spread through your Swift code.
 
 ---
 
-## 72.7 Asset Catalogs and Generated Symbols
+## 72.7 Asset Catalogs and Generated Symbols 🟢
 
-Asset catalogs (`.xcassets`) organize an app's images, colors, and other resources, with Xcode automatically generating strongly-typed Swift accessors for catalog contents (`.appIcon`, a specific named `Color` or `ImageResource`) — eliminating the class of bug where a string-based asset name (`UIImage(named: "profileIcon")`) is misspelled and silently fails at runtime with no compile-time warning.
+An **asset catalog** (`.xcassets`) holds your images and colors. Xcode **generates Swift symbols** for each one. So a typo becomes a **compile error**, not a silent bug at runtime.
 
 ```swift
 // String-based lookup (older pattern): fails silently at runtime if misspelled
@@ -106,13 +186,27 @@ let image = UIImage(named: "profileIcon")  // typo produces nil, not a compile e
 let image = UIImage(resource: .profileIcon)
 ```
 
-This generated-symbol approach directly parallels the same class of improvement seen elsewhere in this curriculum for other string-based lookup patterns (recall Core ML's generated Swift interface from section 59.2, or SF Symbols' compile-time-checked names) — converting what used to be an error-prone, runtime-only-discoverable string lookup into a compile-time-checked, autocomplete-friendly Swift symbol is a broadly recurring theme across modern Apple tooling, consistently trading a small amount of generated-code overhead for eliminating an entire category of easily-made, silently-failing typo bugs.
+In SwiftUI:
+
+```swift
+Image(.profileIcon)          // an image named "profileIcon" in the catalog
+Color(.brandPrimary)         // a color named "brandPrimary"
+```
+
+You also get **autocomplete** for every asset. This is the same idea as Core ML's generated Swift class (section 59.2): turn a fragile string into a checked Swift symbol.
 
 ---
 
-## 72.8 Debug vs Release Builds
+## 72.8 Debug vs Release Builds 🟢
 
-Debug and Release are Xcode's default build configurations, differing in several consequential ways beyond just a name — Debug builds prioritize fast compilation and full debugging support (minimal optimization, debug symbols retained, assertions enabled), while Release builds prioritize runtime performance and binary size (aggressive optimization, per 72.9) at the cost of slower compilation and a build genuinely harder to step through in a debugger.
+Xcode has two default configurations:
+
+| | Debug | Release |
+|---|---|---|
+| Goal | Fast builds, easy debugging | Fast app, small size |
+| Optimization | None (`-Onone`) | Full (`-O`) |
+| Assertions | On | Off |
+| Debugging | Easy | Harder (code is optimized) |
 
 ```plaintext
 // Representative differences between the two default configurations:
@@ -120,13 +214,21 @@ Debug and Release are Xcode's default build configurations, differing in several
 // Release:  GCC_OPTIMIZATION_LEVEL = s (size), SWIFT_OPTIMIZATION_LEVEL = -O
 ```
 
-A genuinely important, sometimes-surprising consequence of this distinction is that code can behave subtly differently between Debug and Release builds — certain bugs (particularly around undefined behavior, or code relying on Debug-only assertion checks) can manifest only under Release's optimization level and not under Debug's, meaning genuinely thorough testing before shipping should include validating actual Release-configuration builds, not solely relying on Debug-configuration testing throughout development and assuming Release behaves identically.
+Run code only in Debug with `#if DEBUG`:
+
+```swift
+#if DEBUG
+print("Loaded \(recipes.count) recipes")     // only in Debug builds
+#endif
+```
+
+**Important:** code can behave **differently** in Release. Some bugs only appear with optimization on. So **test a real Release build** before you ship, not only Debug.
 
 ---
 
-## 72.9 Compiler Optimization Levels
+## 72.9 Compiler Optimization Levels 🟡
 
-The Swift compiler's optimization level (`-Onone`, `-O`, `-Osize`) controls the trade-off between compiled code performance and both compile time and debuggability — `-Onone` (Debug's default) compiles quickly and preserves a direct, debuggable correspondence between source and compiled code, while `-O` (Release's default) applies aggressive optimizations that can meaningfully improve runtime performance at real cost to both compile time and straightforward debuggability.
+The **optimization level** trades **speed of the app** against **build time and easy debugging**.
 
 ```plaintext
 // -Onone: fast compilation, direct source-to-code correspondence, easy breakpoint/variable inspection
@@ -135,13 +237,19 @@ The Swift compiler's optimization level (`-Onone`, `-O`, `-Osize`) controls the 
 // -Osize: optimizes primarily for smaller binary size, sometimes at some cost to raw runtime speed
 ```
 
-This trade-off directly explains why debugging a Release-configuration build (or any `-O`-compiled build) is a genuinely more frustrating experience than debugging Debug's `-Onone` build — aggressive optimization can reorder, inline, or eliminate code in ways that make LLDB's variable inspection (recall section 68.3-68.4) report confusingly optimized-away or seemingly-incorrect values, which is precisely why Debug configuration's `-Onone` default prioritizes a clean, debuggable correspondence over runtime performance during active development.
+| Level | Build | App | Debugging |
+|---|---|---|---|
+| `-Onone` (Debug) | Fast | Slower | Easy |
+| `-O` (Release) | Slower | Fastest | Hard |
+| `-Osize` | Slower | Small, a bit slower | Hard |
+
+This is why debugging a Release build is frustrating. The optimizer **moves, merges, or removes** code, so LLDB (section 68.3) may say a variable was "optimized away", or show a strange value.
 
 ---
 
-## 72.10 Strict Concurrency Build Settings
+## 72.10 Strict Concurrency Build Settings 🟡
 
-Swift's strict concurrency checking (recall Sendable and actor isolation from Part 2) can be configured per-target via the `SWIFT_STRICT_CONCURRENCY` build setting (or the modern Swift 6 language mode setting) — ranging from minimal checking through complete, Swift-6-equivalent enforcement — letting a team incrementally adopt stricter concurrency checking rather than requiring an all-at-once migration.
+Swift's **strict concurrency checking** (`Sendable` and actors, from Part 2) can be turned up **step by step** for each target, with the `SWIFT_STRICT_CONCURRENCY` setting. You do not have to fix everything at once.
 
 ```plaintext
 // SWIFT_STRICT_CONCURRENCY levels (build setting), roughly:
@@ -150,13 +258,33 @@ Swift's strict concurrency checking (recall Sendable and actor isolation from Pa
 // complete: full Swift 6-equivalent concurrency checking applied project-wide
 ```
 
-This graduated adoption model mirrors the same incremental-migration philosophy discussed for XCTest-to-Swift-Testing migration (section 65.17) — rather than a codebase needing to adopt complete, Swift 6-equivalent concurrency checking in one disruptive step, a team can progress through `minimal` → `targeted` → `complete` incrementally, addressing genuine concurrency issues the stricter checking surfaces at a manageable pace rather than being blocked entirely until every single concurrency issue across a potentially large, legacy codebase has been resolved at once.
+The final step is the **Swift 6 language mode**, where these checks are errors:
+
+```plaintext
+// Build setting
+SWIFT_VERSION = 6.0
+```
+
+```swift
+// In a Package.swift (swift-tools-version: 6.0), Swift 6 mode is the default.
+// You can also set it per target:
+.target(name: "RecipeFeature", swiftSettings: [.swiftLanguageMode(.v6)])
+```
+
+A typical path: `minimal` → `targeted` → `complete` → Swift 6 mode. Fix the warnings at each step. It is the same idea as moving from XCTest to Swift Testing bit by bit (section 65.17).
 
 ---
 
-## 72.11 Diagnosing Slow Builds 🟠
+## 72.11 Diagnosing Slow Builds 🟡
 
-Genuinely slow builds have several distinct, diagnosable causes — excessive whole-module optimization work (72.13), individual functions with pathologically slow type-checking (72.12), unnecessarily large dependency graphs, or inefficient Run Script phases (72.5) — and Xcode provides tooling (build timing reports, the `-Xfrontend -debug-time-function-bodies` flag) to actually measure where build time is genuinely being spent rather than guessing.
+Slow builds have **several possible causes**:
+
+- functions that are slow to **type-check** (72.12)
+- **whole-module** compilation where it is not needed (72.13)
+- a big **dependency graph**
+- slow **Run Script** phases (72.5)
+
+**Measure first, then fix.** Do not guess.
 
 ```bash
 # Enabling per-function type-checking time reporting to find genuinely slow-to-typecheck code:
@@ -164,13 +292,28 @@ Genuinely slow builds have several distinct, diagnosable causes — excessive wh
 # (warns about any function body taking more than 500ms to type-check)
 ```
 
-This connects directly back to the measure-before-optimizing discipline established in section 69.1 — applied here specifically to build performance rather than runtime performance, since "the build feels slow" is exactly the kind of vague performance complaint that benefits from actual measurement (which specific phase, which specific files or functions) before attempting a fix, rather than guessing at a cause and potentially spending effort optimizing something that isn't actually the genuine bottleneck in build time.
+Tools to measure:
+
+```plaintext
+Product → Perform Action → Build With Timing Summary
+    shows which build steps took the most time
+
+Report navigator → open a build → Assistant editor → Build Timeline
+    shows what ran in parallel, and what waited
+```
+
+```plaintext
+// Other Swift Flags: warn about slow single expressions too
+-Xfrontend -warn-long-expression-type-checking=200
+```
+
+This is the same "measure before optimizing" rule as for app performance (section 69.1). "The build feels slow" is vague. Find **which step, file, or function** is slow, then fix that.
 
 ---
 
-## 72.12 -warn-long-function-bodies and Type-Check Timing 🟠
+## 72.12 -warn-long-function-bodies and Type-Check Timing 🟡
 
-The `-warn-long-function-bodies` compiler flag specifically flags individual function bodies whose type-checking takes longer than a specified threshold — a genuinely common, specific cause of slow Swift compilation is complex type inference (particularly around SwiftUI view builders or complex generic/overload-heavy expressions) that the compiler struggles to resolve efficiently.
+`-warn-long-function-bodies` shows **which functions take too long to type-check**. A common cause is **complex type inference**, especially in long chained expressions and big SwiftUI view builders.
 
 ```swift
 // A function body the compiler might struggle to type-check quickly,
@@ -180,13 +323,25 @@ let result = items.filter { $0.isActive }.map { $0.value * multiplier }.reduce(0
 // often meaningfully reduce type-checking time for genuinely complex expressions
 ```
 
-Once `-warn-long-function-bodies` identifies a genuinely slow-to-typecheck function, the typical fix involves breaking an overly complex, deeply chained expression into separate statements with explicit type annotations — giving the compiler's type inference less simultaneous ambiguity to resolve at once considerably speeds up type-checking for that specific function, a targeted, measurement-driven fix directly enabled by first identifying the actual specific slow function via this flag rather than broadly guessing which code might be slow to compile.
+The fix: **split it into steps, with explicit types**:
+
+```swift
+let activeItems: [Item] = items.filter { $0.isActive }
+let values: [Int] = activeItems.map { $0.value * multiplier }
+let total: Int = values.reduce(0, +)
+let result: Int = total / items.count
+```
+
+Each line has less to guess, so the compiler finishes much faster. Fix only the functions the flag reports.
 
 ---
 
-## 72.13 Whole-Module vs Incremental Compilation
+## 72.13 Whole-Module vs Incremental Compilation 🟡
 
-Whole Module Optimization (WMO) compiles an entire module's files together in one unit, enabling more aggressive cross-file optimization at the cost of needing to recompile the whole module on any single file's change, while incremental compilation compiles files more independently, letting an unchanged file's compiled output be reused across builds — a genuine trade-off between Release-appropriate optimization depth and Debug-appropriate iteration speed.
+Two ways to compile a module:
+
+- **Whole Module Optimization (WMO):** compiles **all files together**. Better optimization across files, but one change rebuilds the whole module.
+- **Incremental:** compiles **files more separately**. An unchanged file's result is reused, so small changes rebuild fast.
 
 ```plaintext
 // SWIFT_COMPILATION_MODE build setting:
@@ -194,13 +349,18 @@ Whole Module Optimization (WMO) compiles an entire module's files together in on
 // singlefile:   used by default in Debug — faster incremental rebuilds, less cross-file optimization
 ```
 
-This is precisely why Debug and Release default to different compilation modes, consistent with their broader differing priorities established in 72.8-72.9 — Debug's incremental, single-file compilation mode prioritizes fast iteration (a small code change only requires recompiling the files that actually changed), while Release's whole-module mode prioritizes the deeper, cross-file optimization opportunities that compiling an entire module together enables, appropriate for a build meant to be optimized once and shipped rather than iterated on repeatedly throughout a single development session.
+| | Debug (incremental) | Release (whole module) |
+|---|---|---|
+| Goal | Fast iteration | The fastest app |
+| A one-file change | Rebuilds only that file and what depends on it | Rebuilds the whole module |
+
+This matches the Debug and Release goals from 72.8 and 72.9: iterate fast while developing, optimize well when shipping.
 
 ---
 
 ## 72.14 Explicit Modules 🔴
 
-Explicit module builds (as opposed to the traditional implicit module-loading model) make a build's module dependency graph fully explicit and precomputed ahead of actual compilation, rather than having the compiler implicitly discover and resolve module dependencies during compilation itself — a build system architecture change aimed at improving build reliability, parallelism, and diagnosability for genuinely large, complex projects.
+Normally, the compiler **finds module dependencies as it goes**, during compilation. With **explicit module builds**, the build system works out the **whole dependency graph first**, and then compiles.
 
 ```plaintext
 // Conceptually: explicit modules precompute a full dependency graph
@@ -209,13 +369,24 @@ Explicit module builds (as opposed to the traditional implicit module-loading mo
 // on-demand, module-by-module during the compilation process itself
 ```
 
-This shift toward explicitness parallels a broader pattern seen elsewhere in build and dependency tooling generally — much like `Package.resolved` (section 73.2) makes a Swift package's exact dependency versions explicit and reproducible rather than implicitly re-resolved on each build, explicit modules make the compiler's own internal module dependency resolution explicit and precomputed, which particularly benefits build parallelism and reliability for large projects with genuinely complex, deep module dependency graphs.
+```plaintext
+Implicit:  compile A → "A needs B" → build B → continue A → "A needs C" → ...
+Explicit:  plan: C, B, then A  →  build them in that order, many in parallel
+```
+
+The benefits:
+
+- **More reliable** builds
+- **More work in parallel**
+- **Clearer errors**, because the plan is known up front
+
+This is like `Package.resolved` (section 73.2), which writes down exact package versions instead of working them out again each time. You turn it on with Xcode's **Explicitly Built Modules** build setting. It helps most in big projects with deep module graphs.
 
 ---
 
-## 72.15 #Playground for Quick Iteration
+## 72.15 #Playground for Quick Iteration 🟢
 
-The `#Playground` macro embeds a lightweight, quickly-iterable code execution context directly within a regular Swift source file (rather than requiring a genuinely separate `.playground` file or project), letting a developer execute and inspect a small snippet of code's behavior without needing to run the entire app.
+The **`#Playground`** macro runs a **small piece of code inside a normal Swift file**. You see the result in Xcode, without running the whole app and without a separate `.playground` file.
 
 ```swift
 #Playground {
@@ -225,13 +396,23 @@ The `#Playground` macro embeds a lightweight, quickly-iterable code execution co
 }
 ```
 
-`#Playground`'s genuine value is providing genuinely fast, low-ceremony iteration for testing a small piece of logic in isolation — meaningfully faster than the alternative of running an entire app (waiting through full launch time, recall section 69.8-69.9) just to verify a small algorithm or data transformation actually behaves as expected, making it a practical tool specifically for the kind of quick "let me just check this works" verification that doesn't warrant either a full app run or a properly written, permanent unit test.
+Try your own code the same way:
+
+```swift
+#Playground {
+    let dto = RecipeDTO(recipe_id: "1", recipe_title: "Pasta", cook_time_minutes: nil)
+    let recipe = Recipe(dto: dto)
+    print(recipe.minutesToCook)      // check the mapping from 45.6 in seconds
+}
+```
+
+Use it for quick "does this work?" checks. It is much faster than launching the app (section 69.8), and lighter than writing a real unit test.
 
 ---
 
-## 72.16 Xcode 27 Diagnostics Improvements
+## 72.16 Xcode 27 Diagnostics Improvements 🟢
 
-Xcode 27 includes meaningful improvements to compiler diagnostics — clearer, more actionable error messages (particularly around Swift's more complex type inference failures and strict concurrency violations), improved fix-it suggestions, and better integration between diagnostics and the AI-assisted coding features covered in section 61.
+Xcode 27 gives **clearer error messages**, especially for hard **type inference** and **strict concurrency** errors. It also gives better **fix-it** suggestions, and works with the AI coding features from section 61.
 
 ```swift
 // Older, less actionable diagnostic style (illustrative):
@@ -241,7 +422,7 @@ Xcode 27 includes meaningful improvements to compiler diagnostics — clearer, m
 // and offer more directly applicable fix-it suggestions
 ```
 
-Improved diagnostic clarity has genuinely compounding value across a codebase's entire development lifecycle — a clearer, more specific error message (rather than a generic, hard-to-interpret type mismatch complaint) directly reduces the time a developer spends diagnosing what actually went wrong, and this improvement is particularly consequential for exactly the kind of complex type inference and strict concurrency errors (recall 72.10 and the broader Sendable/actor isolation material from Part 2) that have historically been among Swift's more notoriously difficult-to-interpret compiler diagnostics.
+Why it matters: a clear error message means **less time guessing** what went wrong. This helps most with the errors that Swift was known to explain badly: complex type inference, and concurrency problems like `Sendable` and actor isolation (72.10 and Part 2).
 
 ---
 
@@ -249,19 +430,19 @@ Improved diagnostic clarity has genuinely compounding value across a codebase's 
 
 | Concept | Key Idea | Purpose |
 |---|---|---|
-| Fast navigation | Open Quickly, Jump to Definition | Compounding daily productivity gains |
-| Build structure | Targets, schemes, configurations | Clarifies what builds/runs and with what settings |
-| Setting layering | Build setting inheritance, `$(inherited)` | Predictable override vs. accumulation behavior |
-| Reviewable config | `.xcconfig` files | Clean, diffable, version-control-friendly settings |
-| Custom build steps | Run Script phases | Integrates linting/codegen into every build |
-| Environment separation | Per-configuration `Info.plist` | Side-by-side Debug/Release installs, no hardcoded switching |
-| Compile-time safety | Generated asset symbols | Eliminates silent, string-based typo failures |
-| Configuration defaults | Debug vs. Release | Fast iteration vs. optimized, shippable output |
-| Performance/debuggability trade-off | `-Onone` vs. `-O`/`-Osize` | Explains Release build debugging difficulty |
-| Incremental adoption | `SWIFT_STRICT_CONCURRENCY` levels | Gradual path to full Swift 6 concurrency checking |
-| Measured diagnosis | Build timing tools | Measure-before-optimizing applied to build time |
-| Targeted fixes | `-warn-long-function-bodies` | Identifies specific slow-to-typecheck expressions |
-| Compilation strategy | Whole-module vs. incremental | Optimization depth vs. iteration speed trade-off |
-| Dependency clarity | Explicit modules | Precomputed, reliable, parallel-friendly module resolution |
-| Rapid iteration | `#Playground` | Fast, low-ceremony snippet testing without a full app run |
-| Diagnostic clarity | Xcode 27 improvements | Faster error diagnosis, especially for concurrency/inference |
+| Shortcuts | Open Quickly, Jump to Definition | Move around fast |
+| Targets, schemes, configurations | What is built, how it runs, which settings | Less confusion about Run and Test |
+| Build setting levels | `$(inherited)` | Add to a setting instead of replacing it |
+| `.xcconfig` files | Settings as plain text | Clean diffs and reviews |
+| Run Script phases | Your own script in the build | Lint and generate code on every build |
+| Per-configuration `Info.plist` | Different name and ID for Debug | Install Debug and Release side by side |
+| Generated asset symbols | `Image(.profileIcon)` | Typos become compile errors |
+| Debug vs. Release | Fast builds vs. fast app | Test a Release build before shipping |
+| Optimization levels | `-Onone`, `-O`, `-Osize` | Why Release is hard to debug |
+| Strict concurrency | `minimal` → `complete` → Swift 6 | Move to Swift 6 step by step |
+| Slow builds | Timing summary, timeline | Measure before fixing |
+| Slow type-checking | `-warn-long-function-bodies` | Find and split slow expressions |
+| Compilation mode | Whole module vs. incremental | Optimization vs. fast rebuilds |
+| Explicit modules | Plan the module graph first | Reliable, parallel builds |
+| `#Playground` | Run a snippet in a file | Quick checks without the app |
+| Xcode 27 diagnostics | Clearer errors and fix-its | Less time guessing |

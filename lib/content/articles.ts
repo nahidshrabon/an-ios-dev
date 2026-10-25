@@ -803,7 +803,7 @@ export const articles: Article[] = [
     slug: "xcode-and-the-build-system",
     title: "Xcode and the Build System",
     description:
-      "Xcode navigation and shortcuts, targets/schemes/configurations, build settings and inheritance, .xcconfig files, build phases and run scripts, per-configuration Info.plist, generated asset symbols, Debug vs. Release, optimization levels, strict concurrency settings, diagnosing slow builds, whole-module vs. incremental compilation, explicit modules, and #Playground.",
+      "Xcode shortcuts, targets and schemes, build settings and .xcconfig files, Run Script phases, Debug vs. Release, optimization levels, strict concurrency, fixing slow builds, compilation modes, explicit modules, and #Playground.",
     tags: ["xcode", "build-system", "tooling"],
     publishedAt: "2026-08-16",
     get content() {
