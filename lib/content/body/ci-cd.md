@@ -1,6 +1,8 @@
-## 76.1 Why CI Matters for Mobile
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Continuous Integration automatically builds and tests every proposed change (typically on every pull request) before it merges — for mobile specifically, this matters because iOS builds involve genuinely more moving parts than many server-side projects (code signing, provisioning profiles, simulator/device targeting, longer build times), making automated, consistent verification meaningfully more valuable than relying purely on individual developers remembering to build and test locally before merging.
+## 76.1 Why CI Matters for Mobile 🟢
+
+**Continuous Integration (CI)** builds and tests **every change automatically**, usually on every pull request, before it is merged. iOS builds have many moving parts (signing, simulators, long build times), so automatic checks are worth even more than on a server project.
 
 ```yaml
 # Conceptual CI trigger: run build + full test suite (recall Part 10) on every PR
@@ -12,13 +14,13 @@ jobs:
       - run: xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-CI's genuine value for mobile specifically connects directly back to the entire testing discipline established throughout Part 10 — a comprehensive test suite (Testing Foundations, Advanced Testing, UI Testing) provides essentially no protective value if it isn't actually, reliably run before every change merges, and CI is the mechanism that closes this gap, ensuring the safety net those tests are supposed to provide (recall section 65.1's actual argument for why tests exist) genuinely gets applied consistently, rather than depending on each individual developer's memory and diligence.
+**Tests only protect you if they run.** A great test suite (Part 10) is useless if people forget to run it before merging. CI makes sure it runs **every time**, without depending on anyone's memory.
 
 ---
 
-## 76.2 xcodebuild for Building
+## 76.2 xcodebuild for Building 🟢
 
-`xcodebuild` is the command-line interface to Xcode's own build system, letting a build be triggered without Xcode's GUI — essential for CI environments, which run headless and need a scriptable, command-line-driven build process rather than requiring interactive GUI operation.
+**`xcodebuild`** is Xcode's build system on the **command line**. CI machines have no screen, so they build with commands.
 
 ```bash
 xcodebuild build \
@@ -28,13 +30,25 @@ xcodebuild build \
   -destination 'generic/platform=iOS'
 ```
 
-`generic/platform=iOS` (rather than targeting a specific simulator or device) is the appropriate destination for a build intended for archiving/distribution rather than for running tests — this distinction matters because building for a generic platform destination produces a build not tied to any specific simulator or device architecture, appropriate for the archive-and-distribute pipeline (76.10, 77.5), while testing (76.3) instead requires targeting an actual, specific simulator or connected device capable of actually executing the built tests.
+Useful extra options:
+
+```bash
+xcodebuild -list                                   # see schemes and configurations
+xcodebuild build -scheme MyApp \
+  -destination 'generic/platform=iOS' \
+  -quiet \                                          # show only warnings and errors
+  CODE_SIGNING_ALLOWED=NO                           # just check that it compiles, no signing
+```
+
+Use a project with `-project`, or a workspace with `-workspace MyApp.xcworkspace`.
+
+**`generic/platform=iOS`** means "for any iOS device", not one specific simulator. Use it for builds you will **archive and ship** (76.10). Tests (76.3) need a **real simulator or device** to run on.
 
 ---
 
-## 76.3 xcodebuild for Testing
+## 76.3 xcodebuild for Testing 🟢
 
-`xcodebuild test` runs a project's test suite (both Swift Testing and XCTest-based tests, recall the interoperability discussion from section 65.16) against a specified simulator or device destination, producing a result bundle (76.4) capturing detailed test outcomes.
+**`xcodebuild test`** runs your tests (Swift Testing and XCTest, section 65.16) on a **specific simulator or device**, and can save the results in a result bundle (76.4).
 
 ```bash
 xcodebuild test \
@@ -44,13 +58,28 @@ xcodebuild test \
   -resultBundlePath TestResults.xcresult
 ```
 
-Unlike building for archiving (76.2), testing genuinely requires an actual, specific runtime target (a named simulator or connected device) capable of executing the compiled test code — this is precisely why the destination specification differs between the two `xcodebuild` invocations, reflecting the fundamentally different purposes of "produce an archivable build" versus "actually execute this code and observe its behavior," the latter requiring a real, specific execution environment rather than a generic platform target.
+The simulator name must **exist on that machine**. Check which ones are there:
+
+```bash
+xcrun simctl list devices available
+```
+
+Run only some tests, or run them in parallel:
+
+```bash
+xcodebuild test -scheme MyApp -destination '...' \
+  -only-testing:MyAppTests/RecipeTests          # one test class or suite
+xcodebuild test -scheme MyApp -destination '...' \
+  -parallel-testing-enabled YES                 # spread tests over several simulator clones
+```
+
+Building for shipping needs no device (76.2). Testing **runs code**, so it needs a real place to run it: a named simulator or a connected device.
 
 ---
 
-## 76.4 Result Bundles and xcresulttool
+## 76.4 Result Bundles and xcresulttool 🟡
 
-A `.xcresult` bundle captures comprehensive test run output — pass/fail status per test, screenshots and attachments (recall section 67.10), code coverage data, and build logs — with `xcresulttool` providing command-line access to extract and process this data programmatically, appropriate for CI systems needing to parse test results beyond simply checking the overall exit code.
+A **`.xcresult` bundle** holds everything about a test run: each test's result, screenshots (section 67.10), code coverage, and logs. **`xcresulttool`** reads it from the command line.
 
 ```bash
 xcresulttool get --format json --path TestResults.xcresult > results.json
@@ -58,13 +87,26 @@ xcresulttool get --format json --path TestResults.xcresult > results.json
 # failure messages, and attached screenshots, for programmatic CI processing
 ```
 
-Relying purely on `xcodebuild test`'s overall exit code (pass/fail for the entire suite) discards genuinely valuable diagnostic detail that a CI system's PR comment or dashboard could otherwise surface — `xcresulttool`'s structured extraction lets a CI pipeline report specifically which tests failed, attach the actual failure screenshots automatically captured (section 67.10), and even track code coverage trends over time, transforming a simple binary pass/fail signal into considerably richer, more actionable CI feedback.
+In Xcode 16 and later, there are clearer commands for test results:
+
+```bash
+xcrun xcresulttool get test-results summary --path TestResults.xcresult   # totals and failures
+xcrun xcresulttool get test-results tests --path TestResults.xcresult     # every test
+```
+
+Code coverage:
+
+```bash
+xcrun xccov view --report TestResults.xcresult      # coverage per file and target
+```
+
+The exit code of `xcodebuild test` only says **pass or fail**. The result bundle tells you **which** test failed, **why**, and shows the **screenshot**. CI can post that on the pull request, and track coverage over time.
 
 ---
 
-## 76.5 GitHub Actions for iOS
+## 76.5 GitHub Actions for iOS 🟢
 
-GitHub Actions, when used for iOS CI, requires a macOS runner (since Xcode and the iOS build toolchain only run on macOS) — configuring a workflow to check out code, select an appropriate Xcode version, resolve SPM dependencies, and run `xcodebuild` build/test commands (76.2-76.3) as part of an automated pipeline triggered by pull requests or pushes.
+**GitHub Actions** can run iOS CI, but it needs a **macOS runner**, because Xcode only runs on macOS.
 
 ```yaml
 name: iOS CI
@@ -77,13 +119,38 @@ jobs:
       - run: xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-The requirement for a macOS-specific runner is a genuine, unavoidable cost specific to iOS CI compared to many server-side or cross-platform CI setups — macOS runners are typically more expensive and often more resource-constrained than Linux runners on most CI platforms, making build time optimization (76.14) and effective caching (76.7) genuinely more consequential cost and speed concerns for iOS CI specifically than they might be for a project able to run its CI on cheaper, more abundant Linux infrastructure.
+A fuller workflow that also picks the Xcode version and keeps the results:
+
+```yaml
+name: iOS CI
+on: [pull_request]
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Test
+        run: |
+          xcodebuild test -scheme MyApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -resultBundlePath TestResults.xcresult
+      - uses: actions/upload-artifact@v4
+        if: always()                       # keep results even when tests fail
+        with:
+          name: test-results
+          path: TestResults.xcresult
+```
+
+**macOS runners cost more**, and are often slower, than Linux runners. So caching (76.7) and build speed (76.14) matter more for iOS than for many other projects.
 
 ---
 
-## 76.6 Xcode Cloud Workflows
+## 76.6 Xcode Cloud Workflows 🟢
 
-Xcode Cloud is Apple's own first-party CI/CD service, integrated directly into Xcode and App Store Connect — configuring workflows (build/test/archive actions triggered by branch pushes, PR creation, or tag pushes) without needing to write and maintain YAML-based pipeline configuration or manage a separate macOS runner infrastructure entirely.
+**Xcode Cloud** is **Apple's own CI/CD service**, built into Xcode and App Store Connect. You set up workflows in Xcode's UI. There is no YAML to write and no Mac runners to manage.
 
 ```plaintext
 // Xcode Cloud workflows are configured via Xcode's own UI/Cloud tab, defining:
@@ -92,13 +159,36 @@ Xcode Cloud is Apple's own first-party CI/CD service, integrated directly into X
 // - Post-actions: TestFlight distribution, notification on completion/failure
 ```
 
-Xcode Cloud's genuine value proposition is its deep, native integration with the rest of the Apple developer ecosystem — since it's built directly into Xcode and App Store Connect, it inherently understands schemes, test plans, and App Store Connect distribution without needing the kind of manual scripting and configuration a more general-purpose CI platform like GitHub Actions requires, trading some of that general-purpose flexibility for a considerably lower setup and maintenance burden specifically for iOS-focused teams already working within Apple's own tooling ecosystem.
+You can still run your own steps with **custom scripts** in a `ci_scripts` folder next to your project:
+
+```bash
+#!/bin/sh
+# ci_scripts/ci_post_clone.sh — runs after Xcode Cloud clones your repo
+brew install swiftlint
+```
+
+```bash
+#!/bin/sh
+# ci_scripts/ci_pre_xcodebuild.sh — runs before each build
+echo "Build number: $CI_BUILD_NUMBER"
+```
+
+| | Xcode Cloud | GitHub Actions |
+|---|---|---|
+| Setup | In Xcode, little to configure | YAML files you write |
+| Knows Apple tools | Schemes, test plans, TestFlight built in | You script them |
+| Flexibility | Less | More |
+
+Xcode Cloud is a good fit for teams that **live in Apple's tools** and want **low setup and maintenance**.
 
 ---
 
-## 76.7 Caching DerivedData and SPM Checkouts
+## 76.7 Caching DerivedData and SPM Checkouts 🟡
 
-CI build time can be meaningfully reduced by caching DerivedData (Xcode's own build intermediate/output cache, recall section 69.8's discussion of build phases) and SPM package checkouts between CI runs — avoiding redundant, full-from-scratch recompilation and dependency re-resolution/re-download on every single CI run when the relevant inputs haven't actually changed.
+CI gets faster if you **cache** things between runs:
+
+- **DerivedData:** Xcode's build output (section 69.8).
+- **SPM checkouts:** the downloaded packages.
 
 ```yaml
 # Conceptual caching configuration:
@@ -110,13 +200,26 @@ CI build time can be meaningfully reduced by caching DerivedData (Xcode's own bu
     key: ${{ hashFiles('**/Package.resolved') }}-${{ hashFiles('**/*.swift') }}
 ```
 
-Effective caching directly connects to the incremental vs. whole-module compilation trade-off discussed in section 72.13 — a CI run benefiting from properly cached DerivedData can potentially recompile only the files that actually changed since the last run (incremental compilation's benefit), rather than every CI run paying the full cost of compiling an entire project completely from scratch, a genuinely significant time and cost saving specifically valuable given the macOS runner cost concerns raised in 76.5.
+Keep the packages in a known folder, so they are easy to cache:
+
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: SourcePackages
+    key: spm-${{ hashFiles('**/Package.resolved') }}      # changes only when versions change
+- run: |
+    xcodebuild test -scheme MyApp \
+      -destination 'platform=iOS Simulator,name=iPhone 16' \
+      -clonedSourcePackagesDirPath SourcePackages
+```
+
+With a good cache, CI can rebuild **only what changed** (incremental compilation, section 72.13) instead of everything. On expensive macOS runners (76.5), that saves real time and money.
 
 ---
 
-## 76.8 Fastlane: Lanes and Actions
+## 76.8 Fastlane: Lanes and Actions 🟡
 
-Fastlane is a popular, widely-used automation tool for iOS release workflows, organizing automation into "lanes" (named, composable sequences of "actions" — pre-built automation steps for common tasks like running tests, building, or uploading to TestFlight) defined in a project's `Fastfile`.
+**Fastlane** is a popular tool that automates iOS release work. You write **lanes** (named sequences of steps) in a **`Fastfile`**. Each step is an **action**: a ready-made task like running tests, building, or uploading to TestFlight.
 
 ```ruby
 # Fastfile
@@ -127,25 +230,59 @@ lane :beta do
 end
 ```
 
-Fastlane's genuine value is providing a large library of pre-built, battle-tested actions for the many small, fiddly, and easy-to-get-wrong steps involved in an actual iOS release process — rather than a team needing to hand-write and maintain its own scripts for tasks like code signing coordination (76.9), version bumping, or TestFlight upload (76.10) from scratch, Fastlane's actions encapsulate this frequently-needed automation as reusable, well-tested building blocks a `Fastfile`'s lanes can simply compose together into a complete release pipeline.
+Run a lane from the terminal:
+
+```bash
+brew install fastlane
+fastlane init          # creates the fastlane folder with Fastfile and Appfile
+fastlane beta          # runs the "beta" lane
+```
+
+Shared settings live in the **`Appfile`**:
+
+```ruby
+# fastlane/Appfile
+app_identifier("com.example.myapp")
+team_id("ABCDE12345")
+```
+
+**Why:** releasing an app has many small, easy-to-break steps: signing (76.9), version numbers (76.12), uploading (76.10). Fastlane's actions are **tested building blocks** for each one, so you do not write and maintain all those scripts yourself.
 
 ---
 
-## 76.9 Fastlane match for Code Signing
+## 76.9 Fastlane match for Code Signing 🟡
 
-`fastlane match` addresses one of iOS CI's most notoriously painful problems — code signing coordination across a team and CI environment (recall the certificates/profiles material in section 77.1) — by storing encrypted certificates and provisioning profiles in a shared Git repository, letting any team member or CI machine fetch and install the exact correct, consistent signing identity rather than each individual machine needing its own separately-managed signing setup.
+**Code signing** (section 77.1) is one of the most painful parts of iOS CI. **`fastlane match`** keeps the team's **certificates and profiles encrypted in one shared Git repository**. Every developer and every CI machine gets the **same** signing setup from there.
 
 ```bash
 fastlane match appstore  # fetches and installs the shared App Store distribution certificate/profile
 ```
 
-Code signing is frequently cited as one of the single most common sources of CI pipeline breakage specifically for iOS projects (a theme explored more fully in section 77.4's diagnosis discussion) — `match`'s shared, centrally-managed certificate/profile repository directly addresses the root cause of much of this pain, which is typically inconsistent, independently-managed signing configuration across different developers' machines and CI environments, rather than any single developer's specific individual mistake.
+Set it up once, then use it in lanes:
+
+```bash
+fastlane match init                  # choose where to store them (for example a private Git repo)
+fastlane match development           # create or fetch development signing
+```
+
+```ruby
+lane :beta do
+  setup_ci                                   # a temporary keychain on the CI machine
+  match(type: "appstore", readonly: true)    # CI only reads, never creates new certificates
+  build_app(scheme: "MyApp")
+  upload_to_testflight
+end
+```
+
+The repository is encrypted. CI gets the password from a secret environment variable, `MATCH_PASSWORD`.
+
+Most signing failures on CI come from **each machine having its own, slightly different setup** (section 77.4). One shared source fixes the cause.
 
 ---
 
-## 76.10 Automating TestFlight Uploads
+## 76.10 Automating TestFlight Uploads 🟡
 
-Automating the build-archive-upload-to-TestFlight pipeline (via Fastlane's `upload_to_testflight` action, or direct App Store Connect API calls, 76.11) eliminates what would otherwise be a genuinely tedious, manual, multi-step process repeated for every beta release — building, archiving, exporting, and manually uploading through Xcode's Organizer or Transporter.
+Build, archive, export, and upload to TestFlight **with one command**, using Fastlane's `upload_to_testflight` or the App Store Connect API (76.11). By hand, it is a slow, error-prone job through Xcode's Organizer or Transporter.
 
 ```ruby
 lane :release_beta do
@@ -155,13 +292,29 @@ lane :release_beta do
 end
 ```
 
-Automating this pipeline provides genuine, compounding value specifically because beta releases tend to happen frequently during active development — a manual process that takes even 15-20 minutes of careful, error-prone manual steps becomes a meaningful recurring time cost when repeated for every beta build, while a fully automated pipeline (triggered by a simple command or an automatic CI trigger on a specific branch) reduces that same recurring task to essentially zero manual effort, freeing that time for actual development work instead.
+Run it automatically, for example on every push to a `release` branch:
+
+```yaml
+on:
+  push:
+    branches: [release]
+jobs:
+  beta:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: fastlane release_beta
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+```
+
+Beta builds happen **often**. A 15-minute manual job, repeated for every beta, adds up. Automated, it costs **almost nothing**.
 
 ---
 
-## 76.11 The App Store Connect API
+## 76.11 The App Store Connect API 🔴
 
-The App Store Connect API provides programmatic access to essentially everything App Store Connect's own web UI can do — managing TestFlight builds, app metadata, and submission status — using JWT-based authentication with a dedicated API key, appropriate for automation that needs to interact with App Store Connect beyond what Fastlane's higher-level actions already wrap.
+The **App Store Connect API** lets code do almost everything the App Store Connect website does: manage TestFlight builds, app details, and submissions. It uses **JWT** authentication with an **API key** you create in App Store Connect.
 
 ```swift
 // Conceptual API interaction (JWT auth against App Store Connect API):
@@ -169,13 +322,43 @@ The App Store Connect API provides programmatic access to essentially everything
 // GET /v1/apps/{id}/builds — query current build/processing status
 ```
 
-Direct API access matters specifically for automation needs that fall outside what Fastlane's pre-built actions already cover (76.8) — while Fastlane's actions handle the large majority of common release automation needs by wrapping this same underlying API, a team with genuinely custom App Store Connect automation requirements (perhaps integrating submission status directly into an internal dashboard, or building custom release-process tooling) can drop down to direct API access for exactly the specific capability Fastlane's existing actions don't already provide.
+A request with a JWT (signed with your private `.p8` key, valid for at most 20 minutes):
+
+```bash
+curl -H "Authorization: Bearer $JWT" \
+  https://api.appstoreconnect.apple.com/v1/apps
+```
+
+The JWT contains:
+
+```json
+{ "alg": "ES256", "kid": "YOUR_KEY_ID", "typ": "JWT" }
+{ "iss": "YOUR_ISSUER_ID", "iat": 1760000000, "exp": 1760001200, "aud": "appstoreconnect-v1" }
+```
+
+Fastlane can use the same key, instead of an Apple ID login:
+
+```ruby
+api_key = app_store_connect_api_key(
+  key_id: "YOUR_KEY_ID",
+  issuer_id: "YOUR_ISSUER_ID",
+  key_filepath: "AuthKey_YOUR_KEY_ID.p8"
+)
+upload_to_testflight(api_key: api_key)
+```
+
+Fastlane's actions use this API underneath, and cover most needs. Use the **API directly** only for **custom** needs, like showing submission status in your own dashboard.
 
 ---
 
-## 76.12 Automated Version and Build Numbering
+## 76.12 Automated Version and Build Numbering 🟢
 
-Automating an app's version (`CFBundleShortVersionString`) and build number (`CFBundleVersion`) — incrementing the build number automatically per CI run, or deriving version numbers from Git tags — eliminates the error-prone manual process of remembering to bump these values before every single release, a genuinely easy step to forget.
+An app has two numbers:
+
+- **Version** (`CFBundleShortVersionString`): what users see, like `2.3.0`.
+- **Build number** (`CFBundleVersion`): must **go up for every upload**.
+
+Let CI set them, so nobody forgets.
 
 ```ruby
 lane :bump_and_build do
@@ -184,13 +367,28 @@ lane :bump_and_build do
 end
 ```
 
-Forgetting to increment a build number before uploading a new TestFlight build is a genuinely common, avoidable mistake with a real consequence — App Store Connect rejects an upload with a build number that's not genuinely higher than a previously uploaded build, meaning automating this specific, mechanical bookkeeping step (rather than relying on a developer remembering to do it manually before every single upload) directly eliminates an entire recurring category of frustrating, easily-avoidable upload failures.
+Without Fastlane, set the build number from the CI run number:
+
+```bash
+xcodebuild archive -scheme MyApp \
+  -archivePath MyApp.xcarchive \
+  CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER        # the build number
+```
+
+Or with Apple's `agvtool`:
+
+```bash
+agvtool new-version -all 42            # set the build number to 42
+agvtool new-marketing-version 2.3.0    # set the version
+```
+
+**App Store Connect rejects an upload** whose build number is not higher than the last one. Automating it removes this common, avoidable failure.
 
 ---
 
-## 76.13 Uploading dSYMs Automatically
+## 76.13 Uploading dSYMs Automatically 🟡
 
-Automatically uploading dSYM files (recall section 68.22's symbolication discussion) as part of the CI/release pipeline — to Apple (for crash reports surfaced through App Store Connect) and/or to a third-party crash reporting service (recall section 80.4) — ensures crash reports from a given release are actually symbolicatable, rather than discovering only after a crash occurs that the matching dSYM was never properly archived.
+A **dSYM** file turns crash addresses back into function names and line numbers (symbolication, section 68.22). Upload dSYMs **in every release pipeline**, to Apple and to your crash reporting service (section 80.4).
 
 ```ruby
 lane :release do
@@ -200,13 +398,30 @@ lane :release do
 end
 ```
 
-This directly closes the strict dSYM-matching requirement discussed in section 68.22 — because a dSYM must correspond to the *exact* build that produced a given crash, automating dSYM upload as an integral, unskippable part of every single release pipeline (rather than as a separate, easily-forgotten manual step) ensures the correct dSYM for every shipped build genuinely exists wherever it's needed for symbolication, avoiding the genuinely frustrating scenario of receiving an unsymbolicated crash report from a real user with no way to retroactively recover the matching dSYM after the fact.
+Make sure Release builds create dSYMs:
+
+```plaintext
+// Release.xcconfig
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+```
+
+An archive keeps them in its `dSYMs` folder:
+
+```bash
+ls MyApp.xcarchive/dSYMs/          # MyApp.app.dSYM, plus one per framework
+```
+
+A dSYM must match **the exact build** that crashed. If the upload is a separate, manual step, someone will forget, and then a real user's crash **cannot be read**. Make it part of every release.
 
 ---
 
 ## 76.14 Build Time Optimization in CI 🔴
 
-Beyond general build time optimization techniques (recall section 72.11's slow-build diagnosis), CI-specific optimization includes parallelizing independent CI jobs (running linting, unit tests, and UI tests as separate concurrent jobs rather than sequentially), using pre-warmed or pre-configured runner images, and applying the caching strategies from 76.7 aggressively given CI's particular sensitivity to macOS runner cost (76.5).
+Besides the general tips for slow builds (section 72.11), CI has its own:
+
+- **Run independent jobs in parallel:** linting, unit tests, and UI tests at the same time.
+- **Use ready-made runner images** with the tools already installed.
+- **Cache aggressively** (76.7), because macOS runners are expensive (76.5).
 
 ```yaml
 # Parallelizing independent CI concerns as separate, concurrent jobs:
@@ -216,13 +431,39 @@ jobs:
   ui-tests:   { runs-on: macos-14, steps: [xcodebuild test -scheme MyApp -only-testing:UITests] }
 ```
 
-Parallelizing genuinely independent CI concerns (linting doesn't need to wait for unit tests to finish, and vice versa) directly applies the same test sharding principle discussed for local test suites in section 66.15, but at the level of an entire CI pipeline's distinct job types — running these concerns concurrently across separate CI jobs, rather than sequentially within one long-running job, reduces the total wall-clock time a developer waits for CI feedback, a genuinely valuable optimization given how directly CI turnaround time affects overall development velocity.
+The same in full GitHub Actions syntax. The three jobs start **at the same time**, and a deploy job waits for all of them:
+
+```yaml
+jobs:
+  lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: swiftlint --strict
+  unit-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:UnitTests
+  ui-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:UITests
+  deploy:
+    needs: [lint, unit-tests, ui-tests]      # runs only after all three pass
+    runs-on: macos-latest
+    steps:
+      - run: echo "deploy"
+```
+
+This is test sharding (section 66.15) applied to the **whole pipeline**. Developers wait less for CI, which makes the whole team faster.
 
 ---
 
 ## 76.15 Merge Queues and Build Sharding 🔴
 
-A merge queue automatically serializes and verifies multiple simultaneously-approved pull requests before actually merging them (re-testing each PR against the latest `main` including other queued PRs' changes), preventing the specific, genuinely tricky problem of two independently-passing PRs breaking `main` only once combined together — while build sharding (recall 66.15's test-sharding discussion) distributes an individual PR's own verification across multiple parallel CI runners.
+Two pull requests can **each pass CI**, and still **break `main` together**. A **merge queue** prevents this: it tests each PR **together with the PRs ahead of it** in the queue, and only then merges.
 
 ```plaintext
 // The problem merge queues solve:
@@ -232,7 +473,22 @@ A merge queue automatically serializes and verifies multiple simultaneously-appr
 // neither PR individually would have revealed, since neither was tested against the OTHER's changes
 ```
 
-Merge queues address a genuinely subtle correctness gap that simple "require passing CI before merge" branch protection alone doesn't catch — two PRs can each independently pass CI against the current `main` while still being mutually incompatible once both are actually merged together, and a merge queue specifically closes this gap by re-verifying each PR against the true, up-to-the-moment state including other PRs ahead of it in the queue, providing a genuinely stronger correctness guarantee than simply requiring each PR to pass CI independently and in isolation.
+On GitHub, turn on the merge queue in the branch rules, and let CI run for queued changes too:
+
+```yaml
+on:
+  pull_request:
+  merge_group:          # runs CI for each change in the merge queue
+```
+
+**Build sharding** is a different tool: it splits **one** PR's tests across **several runners** in parallel (like test sharding in section 66.15).
+
+| | Merge queue | Build sharding |
+|---|---|---|
+| Problem | Two good PRs break `main` together | One PR's checks are slow |
+| Solution | Test each PR with the ones ahead of it | Split the work across runners |
+
+A rule like "CI must pass before merge" **does not catch** the combined problem. A merge queue does.
 
 ---
 
@@ -240,18 +496,18 @@ Merge queues address a genuinely subtle correctness gap that simple "require pas
 
 | Concept | Key Tool/Mechanism | Purpose |
 |---|---|---|
-| Core rationale | Automated build/test on every PR | Ensures the testing safety net (Part 10) is actually applied |
-| Scriptable building | `xcodebuild build` | Headless, CI-appropriate build triggering |
-| Scriptable testing | `xcodebuild test` | Runs Swift Testing/XCTest suites against a real destination |
-| Rich test feedback | `.xcresult`, `xcresulttool` | Structured, actionable results beyond a pass/fail exit code |
-| General-purpose CI | GitHub Actions (macOS runners) | Flexible, YAML-configured pipelines |
-| Native Apple CI | Xcode Cloud | Deep ecosystem integration, lower setup burden |
-| Speed optimization | DerivedData/SPM caching | Avoids redundant full recompilation per run |
-| Release automation | Fastlane lanes/actions | Reusable building blocks for common release steps |
-| Signing coordination | `fastlane match` | Shared, consistent certificates/profiles across team and CI |
-| Beta distribution | Automated TestFlight upload | Eliminates a tedious, error-prone manual process |
-| Custom automation | App Store Connect API | Direct access beyond what Fastlane actions cover |
-| Upload reliability | Automated version/build numbering | Eliminates a common, avoidable upload failure cause |
-| Crash symbolication | Automated dSYM upload | Guarantees the exact matching dSYM is always available |
-| Pipeline speed | Job parallelization | Applies sharding principles at the CI pipeline level |
-| Merge correctness | Merge queues | Catches incompatibilities independent PR testing alone misses |
+| Why CI | Build and test every PR | Tests only help if they run |
+| Building | `xcodebuild build` | Builds without Xcode's UI |
+| Testing | `xcodebuild test` | Runs tests on a real simulator |
+| Test results | `.xcresult`, `xcresulttool`, `xccov` | Which test failed, and coverage |
+| GitHub Actions | macOS runners, YAML workflows | Flexible CI |
+| Xcode Cloud | Apple's built-in CI, `ci_scripts` | Low setup inside Apple's tools |
+| Caching | DerivedData and packages | Rebuild only what changed |
+| Fastlane | Lanes and actions | Ready-made release steps |
+| Signing | `fastlane match` | One shared signing setup |
+| TestFlight | Automated uploads | No manual upload steps |
+| App Store Connect API | JWT and an API key | Custom automation |
+| Numbering | Automatic build numbers | No rejected uploads |
+| dSYMs | Upload in every release | Crashes can always be read |
+| Pipeline speed | Parallel jobs | Less waiting for CI |
+| Merge queues | Test PRs together before merging | Catch combined breakages |

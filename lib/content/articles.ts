@@ -847,7 +847,7 @@ export const articles: Article[] = [
     slug: "ci-cd",
     title: "CI/CD",
     description:
-      "Why CI matters for mobile, xcodebuild for building and testing, result bundles and xcresulttool, GitHub Actions and Xcode Cloud, caching DerivedData/SPM checkouts, Fastlane lanes/actions/match, automating TestFlight uploads, the App Store Connect API, automated version numbering, automatic dSYM upload, CI build time optimization, and merge queues/build sharding.",
+      "Building and testing every change: why CI matters, xcodebuild, result bundles, GitHub Actions and Xcode Cloud, caching, Fastlane and match, TestFlight uploads, the App Store Connect API, build numbers, dSYMs, faster pipelines, and merge queues.",
     tags: ["ci-cd", "fastlane", "github-actions"],
     publishedAt: "2026-08-16",
     get content() {
