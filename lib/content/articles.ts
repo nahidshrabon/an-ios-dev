@@ -187,7 +187,7 @@ export const articles: Article[] = [
     slug: "swift-evolution-literacy",
     title: "Swift Evolution Literacy",
     description:
-      "How Swift itself changes over time: the Swift Evolution process, staged feature adoption via upcoming feature flags, and a version-by-version summary of what Swift 6.0 through 6.4 actually changed — mostly around concurrency.",
+      "How Swift itself changes: the Swift Evolution process, upcoming feature flags and language modes, and what Swift 6.0 through 6.4 changed, mostly around concurrency.",
     tags: ["swift","swift-evolution"],
     publishedAt: "2026-08-08",
     get content() {
