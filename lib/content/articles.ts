@@ -341,7 +341,7 @@ export const articles: Article[] = [
     slug: "drawing-and-custom-graphics",
     title: "Drawing and Custom Graphics",
     description:
-      "SwiftUI's vector drawing toolkit: Path and custom Shape conformance, stroking and filling, the immediate-mode Canvas API, time-driven drawing with TimelineView, geometry-aware effects, and Metal-backed shaders.",
+      "Drawing your own graphics: Path and custom shapes, fill and stroke, trim, Canvas for fast drawing, TimelineView for time-based drawing, visualEffect, GeometryEffect, SwiftUI Metal shaders, and blend modes.",
     tags: ["swiftui","graphics","drawing"],
     publishedAt: "2026-08-08",
     get content() {
