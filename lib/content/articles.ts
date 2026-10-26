@@ -473,7 +473,7 @@ export const articles: Article[] = [
     slug: "core-data",
     title: "Core Data",
     description:
-      "Apple's original object-graph persistence framework: the managed object model, NSPersistentContainer, contexts and concurrency, NSFetchedResultsController, batch operations, faulting, migration, persistent history, and CloudKit integration.",
+      "Working with Core Data, the engine under SwiftData: the managed object model, NSPersistentContainer, contexts and perform, NSPredicate, NSFetchedResultsController, parent/child contexts, batch requests, faulting, migrations, history tracking, and CloudKit sync.",
     tags: ["core-data", "persistence"],
     publishedAt: "2026-08-16",
     get content() {
