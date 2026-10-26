@@ -759,7 +759,7 @@ export const articles: Article[] = [
     slug: "debugging",
     title: "Debugging",
     description:
-      "Breakpoints and actions, the variables view and stepping, LLDB's po/p/v and expression, async/task debugging, reading common crash types and watchdog terminations, the View Hierarchy and Memory Graph debuggers, Zombie Objects, sanitizers, Logger/os_log, Console.app, symbolication, sysdiagnose, and debugging extensions.",
+      "The debugging toolbox: breakpoints and actions, LLDB's v, p, po, and expression, async and concurrency debugging, reading common crashes and watchdog kills, view and memory debuggers, sanitizers, Logger and Console, symbolication, sysdiagnose, and extensions.",
     tags: ["debugging", "lldb", "instruments"],
     publishedAt: "2026-08-16",
     get content() {
