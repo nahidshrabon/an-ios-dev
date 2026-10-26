@@ -693,7 +693,7 @@ export const articles: Article[] = [
     slug: "core-animation-and-graphics",
     title: "Core Animation and Graphics",
     description:
-      "The layer tree and CALayer, implicit vs. explicit animation, CABasicAnimation/CAKeyframeAnimation, CATransaction, CADisplayLink, the commit cycle, offscreen rendering costs, Core Graphics drawing and PDF generation, Core Image filters and custom CIKernel filters, and color management including wide gamut and HDR/EDR.",
+      "The layer level under every view: CALayer, implicit and explicit layer animation, CATransaction, CADisplayLink, the commit cycle, offscreen rendering, Core Graphics images and PDFs, Core Image filters and custom kernels, wide color, and HDR.",
     tags: ["graphics", "core-animation", "core-graphics"],
     publishedAt: "2026-08-16",
     get content() {
