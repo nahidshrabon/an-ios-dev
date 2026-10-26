@@ -319,7 +319,7 @@ export const articles: Article[] = [
     slug: "forms-and-input",
     title: "Forms and Input",
     description:
-      "SwiftUI's Form container paired with the full input-control toolkit: text entry, secure entry, toggles, sliders, pickers, buttons, validation patterns, and keyboard handling.",
+      "Forms and the controls that go in them: Form and Section, text and password fields, keyboards and AutoFill, toggles, sliders, steppers, pickers, date and color pickers, button roles and glass styles, validation, and moving focus between fields.",
     tags: ["swiftui","forms"],
     publishedAt: "2026-08-08",
     get content() {
