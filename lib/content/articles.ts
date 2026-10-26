@@ -616,7 +616,7 @@ export const articles: Article[] = [
     slug: "camera-photos-and-media",
     title: "Camera, Photos, and Media",
     description:
-      "Privacy-preserving photo picking, PhotoKit and limited library access, AVCaptureSession photo/video/frame capture, AVPlayer playback, AVAudioSession and AVAudioEngine, recording, export and composition, HLS streaming, and Now Playing integration.",
+      "Photos, camera, and media: private photo picking, PhotoKit and limited access, a custom camera with photo, video, and live-frame capture, playback, audio sessions, AVAudioEngine, recording, export and editing, HLS streaming, MusicKit and ShazamKit, and Lock Screen controls.",
     tags: ["platform", "avfoundation", "photokit"],
     publishedAt: "2026-08-16",
     get content() {
