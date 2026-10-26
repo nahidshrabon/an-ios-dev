@@ -1,82 +1,161 @@
-## 52.1 Widget Anatomy and the Widget Extension Target
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A widget lives in its own dedicated extension target (a separate, sandboxed process from the main app, echoing the extension model previewed in section 53), built from three core pieces: a `TimelineProvider` supplying data over time, a SwiftUI view rendering each timeline entry, and a `Widget` conformer tying them together.
+**Widgets** show a small, glanceable piece of your app on the Home Screen, Lock Screen, StandBy, and more. **Live Activities** show a **live event** (a timer, a delivery) on the Lock Screen and in the **Dynamic Island**. Both are built with **WidgetKit** and **SwiftUI**. This section covers how widgets get data, sizes, configuration, buttons, controls, sharing data with the app, and the full Live Activity lifecycle.
+
+---
+
+## 52.1 Widget Anatomy and the Widget Extension Target 🟢
+
+A widget lives in a **widget extension**: a separate **target** that runs in its **own process**, not inside your app (File ▸ New ▸ Target ▸ Widget Extension). Every widget has **three pieces**:
+
+| Piece | Job |
+|---|---|
+| **`TimelineProvider`** | Supplies the **data**, as entries over time (52.2) |
+| A SwiftUI **view** | Draws **one entry** |
+| A **`Widget`** type | Ties them together and names the widget |
 
 ```swift
+import WidgetKit
+import SwiftUI
+
 struct RecipeWidget: Widget {
-    let kind: String = "RecipeWidget"
+    let kind = "RecipeWidget"                       // a stable ID for this widget type
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: RecipeTimelineProvider()) { entry in
             RecipeWidgetView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)   // required since iOS 17
         }
-        .configurationDisplayName("Recipe of the Day")
-        .description("Shows a featured recipe suggestion.")
+        .configurationDisplayName("Recipe of the Day")              // shown in the widget gallery
+        .description("Shows a featured recipe.")
+    }
+}
+
+@main
+struct RecipeWidgetBundle: WidgetBundle {           // one extension can hold several widgets
+    var body: some Widget {
+        RecipeWidget()
     }
 }
 ```
 
-Because a widget extension runs as its own separate process, it cannot directly access the main app's in-memory state — it can only work with data the main app has explicitly persisted somewhere the extension can also read, which is exactly why shared storage mechanisms (App Groups, section 43.2; shared SwiftData containers, section 41.20) are a prerequisite for any widget showing genuinely live, app-generated data rather than static placeholder content.
+Because the widget runs in a **different process**, it **can't** see your app's **memory**: no shared singletons, no view models. It can only read data the app has **saved** somewhere **both** can reach, like an **App Group** (43.2, 41.20; see 52.9). This is the first thing to plan for any widget that shows real app data.
 
 ---
 
-## 52.2 TimelineProvider and Entries
+## 52.2 TimelineProvider and Entries 🟢
 
-A `TimelineProvider` supplies the actual data a widget displays, structured as a `Timeline` of dated `TimelineEntry` values — WidgetKit renders whichever entry's date has most recently passed, automatically advancing to the next entry as its own scheduled date arrives, without the widget process needing to be actively running at that moment.
+A widget doesn't run all the time. Instead, its provider hands WidgetKit a **timeline**: a list of **entries**, each with a **date**. WidgetKit shows each entry when its date arrives, **without** running your code again:
+
+```
+getTimeline() returns:
+  09:00 → Carbonara      ← shown now
+  17:00 → Risotto        ← system switches at 17:00 by itself
+  01:00 → Pancakes       ← and again at 01:00
+```
 
 ```swift
 struct RecipeEntry: TimelineEntry {
-    let date: Date
+    let date: Date          // required: when to show this entry
     let recipe: Recipe
 }
 
 struct RecipeTimelineProvider: TimelineProvider {
+    // Generic content while the real data loads (shown redacted)
     func placeholder(in context: Context) -> RecipeEntry {
-        RecipeEntry(date: Date(), recipe: .placeholder)
+        RecipeEntry(date: .now, recipe: .placeholder)
     }
 
+    // A quick sample, e.g. for the widget gallery
     func getSnapshot(in context: Context, completion: @escaping (RecipeEntry) -> Void) {
-        completion(RecipeEntry(date: Date(), recipe: currentFeaturedRecipe()))
+        let recipe = context.isPreview ? .sample : SharedStore.featuredRecipe()
+        completion(RecipeEntry(date: .now, recipe: recipe))
     }
 
+    // The real data: several future entries at once
     func getTimeline(in context: Context, completion: @escaping (Timeline<RecipeEntry>) -> Void) {
+        let now = Date.now
         let entries = (0..<3).map { offset in
-            RecipeEntry(date: Calendar.current.date(byAdding: .hour, value: offset * 8, to: Date())!, recipe: featuredRecipe(for: offset))
+            RecipeEntry(date: now.addingTimeInterval(Double(offset) * 8 * 3600),
+                        recipe: SharedStore.featuredRecipe(slot: offset))
         }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
 ```
 
-This design is a direct consequence of the strict reload budget covered next (52.3): rather than the widget process needing to wake up and recompute its content at every single display refresh, `getTimeline()` front-loads several future entries at once (here, three entries spaced 8 hours apart), and the system handles advancing through them on schedule entirely on its own, without needing to re-invoke the extension's code for each individual transition — `placeholder()` provides generic, non-personalized content shown briefly while a widget's real data is still loading (e.g., right after being added to the Home Screen), and `getSnapshot()` provides a quick, representative preview used in contexts like the widget gallery.
+| Method | Used for |
+|---|---|
+| `placeholder(in:)` | **Generic** content shown **briefly** while loading. Must be **fast**, no real data needed |
+| `getSnapshot(in:completion:)` | **One** entry for **previews** (the gallery). Use sample data when `context.isPreview` |
+| `getTimeline(in:completion:)` | The **real** entries, plus a **reload policy** (52.3) |
+
+Why **several** entries at once? Because reloads are **limited** (52.3). One reload that covers the next day is much cheaper than waking the widget every hour.
 
 ---
 
-## 52.3 Reload Policies and the Budget System
+## 52.3 Reload Policies and the Budget System 🟡
 
-A `Timeline`'s reload `policy` determines when WidgetKit should next call back into the provider to fetch a fresh timeline, and the system imposes a strict overall daily budget on how many times a given widget can actually be reloaded — making the choice of policy a genuine trade-off between freshness and staying within budget.
+The timeline's **policy** says when WidgetKit should ask for a **new** timeline:
 
 ```swift
-// .atEnd: request a new timeline once the last provided entry's date has passed
-Timeline(entries: entries, policy: .atEnd)
-
-// .after(date): request a new timeline at a specific future point, even if
-// entries remain — useful when you know content becomes stale at a known time
-Timeline(entries: entries, policy: .after(refreshDate))
-
-// .never: this timeline's entries are the final ones; no further reload requested
-Timeline(entries: entries, policy: .never)
+Timeline(entries: entries, policy: .atEnd)               // after the last entry's date
+Timeline(entries: entries, policy: .after(refreshDate))  // at (or after) this date
+Timeline(entries: entries, policy: .never)               // only when the app asks (52.9)
 ```
 
-Because the system's daily reload budget is limited and shared across however many widgets a user has of a given kind, front-loading multiple entries into one timeline (as shown in 52.2) is a meaningfully more budget-efficient strategy than requesting frequent reloads for single-entry timelines — a widget that requests a fresh reload every 15 minutes will exhaust its daily budget far faster than one that computes a handful of entries covering the next several hours in a single reload, directly connecting to the general resource-discipline theme from background execution budgets (section 49.13).
+The policy is a **request**, not a promise. The system gives each widget a daily **budget** of reloads. Apple says a widget the user **looks at often** typically gets around **40–70** reloads a day (roughly every 15–60 minutes). The budget depends on how often the widget is **seen**, and other factors.
+
+Reloads **don't** use the budget when:
+
+- the **app is in the foreground** and asks for a reload,
+- the app has an active **audio** or **navigation** session,
+- the system **locale** or Dynamic Type / accessibility settings change.
+
+So:
+
+| Do | Don't |
+|---|---|
+| Put **many entries** in one timeline | Return **one** entry and ask to reload every 5 minutes |
+| Reload from the **app** when data really changes (52.9) | Use reloads to fake a **clock** |
+| Use **self-updating text** for times | Reload every second for a countdown |
+
+**Self-updating text** is a big one. These views update **on their own**, with **no** reloads:
+
+```swift
+Text(entry.timerEnd, style: .timer)                 // "12:34" counting
+Text(entry.date, style: .relative)                  // "5 min ago"
+Text(timerInterval: entry.start...entry.timerEnd, countsDown: true)
+ProgressView(timerInterval: entry.start...entry.timerEnd) // a bar that fills over time
+```
+
+This is the same idea as background budgets (49.13): the system shares **limited** resources, so design for **few**, smart updates.
 
 ---
 
-## 52.4 Widget Families and Sizes
+## 52.4 Widget Families and Sizes 🟢
 
-A widget can support multiple sizes — `.systemSmall`, `.systemMedium`, `.systemLarge`, `.systemExtraLarge` (iPad only), plus Lock Screen-specific families (52.7) — with `WidgetFamily` read via `@Environment(\.widgetFamily)` inside the widget's view to render appropriately different layouts for each.
+A widget can support several **sizes**, called **families**:
+
+| Family | Where |
+|---|---|
+| `.systemSmall`, `.systemMedium`, `.systemLarge` | Home Screen, Today view (and Mac desktop) |
+| `.systemExtraLarge` | iPad |
+| `.accessoryCircular`, `.accessoryRectangular`, `.accessoryInline` | Lock Screen, watchOS (52.7) |
+
+Choose the sizes on the widget, and read the **current** one in the view:
 
 ```swift
+struct RecipeWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "RecipeWidget", provider: RecipeTimelineProvider()) { entry in
+            RecipeWidgetView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)
+        }
+        .supportedFamilies([.systemSmall, .systemMedium])     // only these sizes
+    }
+}
+
 struct RecipeWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: RecipeEntry
@@ -84,229 +163,588 @@ struct RecipeWidgetView: View {
     var body: some View {
         switch family {
         case .systemSmall:
-            Text(entry.recipe.title).font(.caption)
+            VStack(alignment: .leading) {
+                Text(entry.recipe.title).font(.headline)
+                Text("\(entry.recipe.minutes) min").font(.caption).foregroundStyle(.secondary)
+            }
         case .systemMedium:
-            HStack { RecipeImage(entry.recipe); Text(entry.recipe.title) }
+            HStack {
+                RecipeThumbnail(recipe: entry.recipe)
+                Text(entry.recipe.title).font(.headline)
+            }
         default:
-            RecipeDetailWidgetLayout(recipe: entry.recipe)
+            RecipeDetailLayout(recipe: entry.recipe)
         }
     }
 }
 ```
 
-Declaring `.supportedFamilies([.systemSmall, .systemMedium])` on the `Widget` conformer opts into specific sizes, and the view itself is responsible for adapting its actual layout per family — much like SwiftUI's general size-class-driven adaptive layout (section 33.1), a single widget view definition handles multiple presentation contexts, just driven by `widgetFamily` specifically rather than the more general `horizontalSizeClass`/`verticalSizeClass`.
+It's like **size classes** (33.1): one view, several layouts. But a widget family is a **fixed** size, so you design each one **on purpose**. Don't just shrink the large layout into the small one.
+
+Preview each family with the **`#Preview`** macro (iOS 17):
+
+```swift
+#Preview(as: .systemSmall) {
+    RecipeWidget()
+} timeline: {
+    RecipeEntry(date: .now, recipe: .sample)
+    RecipeEntry(date: .now, recipe: .sample2)       // see the switch between entries
+}
+```
 
 ---
 
-## 52.5 Configurable Widgets with AppIntentConfiguration
+## 52.5 Configurable Widgets with AppIntentConfiguration 🟡
 
-`AppIntentConfiguration` (replacing the older `IntentConfiguration`/`INIntent`-based system, consistent with section 51's broader App Intents transition) lets a user customize a widget's behavior — like choosing which specific recipe collection to feature — directly from the widget's edit UI, backed by an `AppIntent` and `AppEntity` (sections 51.2, 51.4).
+Users can **edit** some widgets (long-press ▸ **Edit Widget**), for example to pick **which** recipe collection to show. This uses **App Intents** (51): the options are just **`@Parameter`s**.
+
+**1. The configuration intent:**
 
 ```swift
+import AppIntents
+
 struct SelectCollectionIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Select Collection"
+    static let title: LocalizedStringResource = "Select Collection"
 
     @Parameter(title: "Collection")
-    var collection: CollectionEntity?
+    var collection: CollectionEntity?               // an AppEntity (51.4), with its query
 }
+```
 
-struct RecipeWidget: Widget {
+**2. A provider that receives the configuration.** It's an **`AppIntentTimelineProvider`**, with **async** methods:
+
+```swift
+struct CollectionTimelineProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> RecipeEntry {
+        RecipeEntry(date: .now, recipe: .placeholder)
+    }
+
+    func snapshot(for configuration: SelectCollectionIntent, in context: Context) async -> RecipeEntry {
+        RecipeEntry(date: .now, recipe: .sample)
+    }
+
+    func timeline(for configuration: SelectCollectionIntent, in context: Context) async -> Timeline<RecipeEntry> {
+        let recipes = await SharedStore.recipes(in: configuration.collection?.id)   // use the user's choice
+        let entries = recipes.prefix(3).enumerated().map { index, recipe in
+            RecipeEntry(date: .now.addingTimeInterval(Double(index) * 3600), recipe: recipe)
+        }
+        return Timeline(entries: entries, policy: .atEnd)
+    }
+}
+```
+
+**3. The widget, using `AppIntentConfiguration`:**
+
+```swift
+struct CollectionWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "RecipeWidget", intent: SelectCollectionIntent.self, provider: RecipeTimelineProvider()) { entry in
+        AppIntentConfiguration(kind: "CollectionWidget",
+                               intent: SelectCollectionIntent.self,
+                               provider: CollectionTimelineProvider()) { entry in
             RecipeWidgetView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)
         }
     }
 }
 ```
 
-`WidgetConfigurationIntent` is a specialized `AppIntent` variant specifically for widget configuration — the same `@Parameter`/`AppEntity` infrastructure from section 51 powers the widget's "Edit Widget" long-press UI, meaning the searchable entity-picking experience users see when configuring a widget is built from exactly the same underlying mechanism that powers Siri/Shortcuts parameter resolution, rather than a separate, widget-specific configuration system.
+This replaces the old **`IntentConfiguration`**, which used SiriKit intent files. The **entity picker** the user sees in "Edit Widget" is the **same** one Siri and Shortcuts use (51.4). One system, many surfaces.
 
 ---
 
-## 52.6 Interactive Widgets with Buttons and Toggles
+## 52.6 Interactive Widgets with Buttons and Toggles 🟡
 
-Modern widgets support limited interactivity directly within the widget itself — `Button` and `Toggle` can trigger an `AppIntent`'s `perform()` method without launching the containing app at all, appropriate for quick, self-contained actions like marking something complete.
+Since iOS 17, widgets can contain **`Button`** and **`Toggle`**. They run an **App Intent** (51.2) **without opening the app**:
 
 ```swift
+struct MarkRecipeCookedIntent: AppIntent {
+    static let title: LocalizedStringResource = "Mark Recipe as Cooked"
+
+    @Parameter(title: "Recipe ID")
+    var recipeID: String
+
+    init() {}                                        // App Intents need an empty init
+    init(recipeID: String) { self.recipeID = recipeID }
+
+    func perform() async throws -> some IntentResult {
+        try await SharedStore.markCooked(recipeID)  // write to the shared App Group store
+        return .result()
+    }
+}
+
 struct RecipeWidgetView: View {
     let entry: RecipeEntry
 
     var body: some View {
         HStack {
             Text(entry.recipe.title)
-            Button(intent: MarkRecipeCookedIntent(recipe: entry.recipe.asEntity)) {
-                Image(systemName: "checkmark.circle")
+            Spacer()
+            Button(intent: MarkRecipeCookedIntent(recipeID: entry.recipe.id.uuidString)) {
+                Image(systemName: entry.recipe.isCooked ? "checkmark.circle.fill" : "circle")
             }
+            .buttonStyle(.plain)
         }
     }
 }
 ```
 
-`Button(intent:)` directly invokes the specified `AppIntent`'s `perform()` in the background, without requiring the widget to open the containing app or present any UI — this reuses the exact same `AppIntent` infrastructure from section 51 (the very same `MarkRecipeCookedIntent` originally built for Siri/Shortcuts could be the identical intent triggered here from a widget button), reflecting App Intents' unified, multi-surface design once again.
+What happens on a tap:
+
+```
+tap → system runs perform() (app stays closed)
+    → WidgetKit reloads the timeline
+    → the widget shows the new entry
+```
+
+Use **`Toggle(isOn:intent:)`** for on/off state. Keep actions **small and quick**: "mark cooked", "start timer", "check off item". Anything that needs a **screen** should open the app instead (52.10).
+
+The intent can be the **same** one you offer to Siri and Shortcuts (51). That's App Intents' "**write once, use everywhere**" design again.
 
 ---
 
-## 52.7 Lock Screen and StandBy Widgets
+## 52.7 Lock Screen and StandBy Widgets 🟡
 
-Beyond the Home Screen, widgets can also target the Lock Screen (circular, rectangular, and inline families) and StandBy mode (a dedicated always-on-style presentation when an iPhone is charging horizontally) — each with tighter rendering constraints (52.10) than Home Screen widgets, typically rendering in a monochrome, high-contrast style rather than full color.
+**Lock Screen** widgets (iOS 16) use the three **accessory** families:
 
 ```swift
 .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
 ```
 
-These accessory families (the same families referenced for watchOS complications in section 33.8, since Lock Screen widgets and watch complications share underlying WidgetKit infrastructure) impose meaningfully tighter space and rendering constraints than Home Screen widgets — a Lock Screen widget's content is typically rendered using the system's tint color rather than arbitrary custom colors, and StandBy widgets need to remain legible and glanceable from across a room in a dimly-lit environment, both pushing widget content design toward simplicity and high information density over rich visual styling.
+| Family | Looks like |
+|---|---|
+| `.accessoryCircular` | A small circle: a gauge, an icon, a number |
+| `.accessoryRectangular` | A few lines of text |
+| `.accessoryInline` | One line of text above the clock |
 
----
-
-## 52.8 ControlWidget for Control Center
-
-`ControlWidget` (distinct from a standard `Widget`) powers Control Center controls and the Lock Screen's control area — compact, typically single-action controls (a toggle, a button) rather than the richer, multi-element layouts a standard widget can present.
+On the Lock Screen, widgets are drawn in a **vibrant**, **monochrome** style: the system **ignores** your colors and tints the content to match the wallpaper. Design with **shapes and contrast**, not color. You can check the mode:
 
 ```swift
-struct RecipeTimerControl: ControlWidget {
-    var body: some ControlWidgetConfiguration {
-        StaticControlConfiguration(kind: "RecipeTimerControl") {
-            ControlWidgetButton(action: StartCookingTimerIntent()) {
-                Label("Start Timer", systemImage: "timer")
+struct LockScreenRecipeView: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    let entry: RecipeEntry
+
+    var body: some View {
+        ZStack {
+            AccessoryWidgetBackground()                      // the standard soft background
+            VStack {
+                Image(systemName: "fork.knife")
+                    .widgetAccentable()                      // tinted with the accent in .accented mode
+                Text("\(entry.recipe.minutes)m").font(.caption)
             }
         }
     }
 }
 ```
 
-Like interactive Home Screen widgets (52.6), `ControlWidget` actions are backed by `AppIntent`s — but `ControlWidget` is architecturally its own distinct WidgetKit surface, intentionally simpler and more compact than a full `Widget`, since Control Center controls are meant to be instantly-recognizable, single-purpose actions (much like a Camera or Flashlight toggle) rather than glanceable information displays, the role standard widgets are better suited for.
+| `widgetRenderingMode` | When |
+|---|---|
+| `.fullColor` | Normal Home Screen |
+| `.vibrant` | Lock Screen, StandBy at night (shown in red) |
+| `.accented` | Tinted Home Screen styles, watchOS: content split into accent and default groups |
 
----
+The **same** accessory families power **watchOS complications** (33.8). One widget can serve both.
 
-## 52.9 Sharing Data with the Host App
-
-Because a widget extension runs as a separate process from the main app (52.1), any data the widget displays must be written somewhere both processes can read — the same App Group-based shared storage mechanisms covered in sections 41.20 (shared SwiftData) and 43.2 (shared UserDefaults) are the standard tools, alongside explicitly requesting a timeline reload when the main app changes underlying data.
-
-```swift
-// From the main app, after saving new data the widget should reflect:
-WidgetCenter.shared.reloadTimelines(ofKind: "RecipeWidget")
-```
-
-`WidgetCenter.shared.reloadTimelines(ofKind:)` is the explicit signal the main app sends to prompt WidgetKit to re-invoke the widget's `TimelineProvider` sooner than its next scheduled reload would naturally occur — essential for keeping a widget reasonably current after a meaningful data change (like the user marking a recipe as their new favorite), since otherwise the widget would only reflect that change once its existing timeline's reload policy (52.3) eventually triggers on its own.
-
----
-
-## 52.10 Widget Rendering Constraints and Limits
-
-Widgets operate under meaningfully stricter rendering constraints than a full app screen — no scrolling content, no arbitrary gestures beyond tapping/Button-triggered intents, restricted view modifier support (some SwiftUI modifiers simply have no effect or aren't available within a widget's rendering context), and a limited memory budget for the extension process itself.
-
-```plaintext
-Widgets CANNOT: scroll, support drag gestures, use most animation
-timing curves freely, or arbitrarily nest deep view hierarchies —
-design for a static, glanceable snapshot, not an interactive mini-app
-```
-
-These constraints exist because a widget is fundamentally meant to be a glanceable, quickly-rendered snapshot rather than a miniature interactive app — the rendering environment is deliberately more restrictive to keep widgets lightweight and fast to render across potentially many simultaneous widgets on a Home Screen, and designing within these constraints (rather than attempting to force full-app interactivity into a widget) is essential to building a widget that actually works reliably rather than silently failing to render certain unsupported constructs.
-
----
-
-## 52.11 Live Activities: ActivityAttributes
-
-A Live Activity is a persistent, updatable, glanceable UI shown on the Lock Screen and in the Dynamic Island for an ongoing, real-time event (a food delivery tracker, a live sports score, a cooking timer) — defined via `ActivityAttributes`, which splits an activity's data into fixed attributes (set once, at creation) and dynamic `ContentState` (updated repeatedly over the activity's lifetime).
+**StandBy** (iOS 17) is the full-screen mode when an iPhone is **charging on its side**. It shows your **`.systemSmall`** widget, **scaled up**, and **without** its background. It's seen from **across the room**, often in the **dark**, so use **big, bold** content. Check the background with:
 
 ```swift
+@Environment(\.showsWidgetContainerBackground) private var showsBackground
+```
+
+---
+
+## 52.8 ControlWidget for Control Center 🟡
+
+**Controls** (iOS 18) are small **buttons** and **toggles** that live in **Control Center**, on the **Lock Screen**, and on the **Action Button**. They're built in the widget extension with **`ControlWidget`**, not `Widget`.
+
+A **button** control runs an intent (as in 51.15):
+
+```swift
+struct StartTimerControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "com.example.recipes.start-timer") {
+            ControlWidgetButton(action: StartCookingTimerIntent()) {
+                Label("Cook Timer", systemImage: "timer")
+            }
+        }
+        .displayName("Start Cook Timer")
+    }
+}
+```
+
+A **toggle** control also needs its **current value**, from a **value provider**, and a **`SetValueIntent`** to change it:
+
+```swift
+struct TimerToggleControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "com.example.recipes.timer-toggle",
+                                   provider: TimerStateProvider()) { isRunning in
+            ControlWidgetToggle("Cook Timer", isOn: isRunning, action: SetTimerRunningIntent()) { isOn in
+                Label(isOn ? "Running" : "Stopped", systemImage: "timer")
+            }
+        }
+        .displayName("Cook Timer")
+    }
+}
+
+struct TimerStateProvider: ControlValueProvider {
+    var previewValue: Bool { false }                           // shown in the controls gallery
+    func currentValue() async throws -> Bool {
+        SharedStore.isTimerRunning()
+    }
+}
+
+struct SetTimerRunningIntent: SetValueIntent {
+    static let title: LocalizedStringResource = "Set Cook Timer"
+
+    @Parameter(title: "Running")
+    var value: Bool                                            // the new value from the toggle
+
+    func perform() async throws -> some IntentResult {
+        if value {
+            try await CookTimer.start()
+        } else {
+            await CookTimer.stop()
+        }
+        return .result()
+    }
+}
+```
+
+| | `Widget` | `ControlWidget` |
+|---|---|---|
+| Shows | **Information** (glanceable content) | **One action** or **one on/off state** |
+| Layout | Your own SwiftUI layout | A **system-styled** symbol and label |
+| Updates | Timeline (52.2) | Value provider; reload with `ControlCenter.shared.reloadControls(ofKind:)` |
+
+Think of the **flashlight** or **camera** button: instantly clear, one purpose.
+
+---
+
+## 52.9 Sharing Data with the Host App 🟢
+
+The app and the widget are **separate processes** (52.1), so they share data through an **App Group** container. Turn on the **same** App Group on **both** targets, then:
+
+```swift
+enum SharedStore {
+    static let defaults = UserDefaults(suiteName: "group.com.example.recipes")!   // 43.2
+
+    static func saveFeatured(_ recipe: Recipe) throws {
+        defaults.set(try JSONEncoder().encode(recipe), forKey: "featuredRecipe")
+    }
+
+    static func featuredRecipe() -> Recipe {
+        guard let data = defaults.data(forKey: "featuredRecipe"),
+              let recipe = try? JSONDecoder().decode(Recipe.self, from: data) else {
+            return .placeholder
+        }
+        return recipe
+    }
+}
+```
+
+For bigger data, use a **shared SwiftData** container in the group folder (41.20).
+
+When the **app** changes something the widget shows, **tell** WidgetKit:
+
+```swift
+// In the app, after saving:
+try SharedStore.saveFeatured(recipe)
+WidgetCenter.shared.reloadTimelines(ofKind: "RecipeWidget")   // just this widget kind
+// or: WidgetCenter.shared.reloadAllTimelines()
+```
+
+Without this call, the widget only updates at its **next scheduled** reload (52.3), which could be **hours** away. And when the app is in the **foreground**, this reload **doesn't** use the widget's budget.
+
+| Data flow | How |
+|---|---|
+| App → widget | Save to the App Group, then `reloadTimelines(ofKind:)` |
+| Widget → app | An interactive widget's intent (52.6) writes to the App Group; the app reads it on next launch or `scenePhase` change |
+| Tap → app screen | `.widgetURL(_:)` or `Link` opens a deep link (49.7) |
+
+---
+
+## 52.10 Widget Rendering Constraints and Limits 🟢
+
+A widget is **not** a mini app. WidgetKit **renders your view ahead of time** and shows that result. So many normal SwiftUI features **don't work**:
+
+| Not supported | Do this instead |
+|---|---|
+| **Scrolling** (`ScrollView`, `List` scrolling) | Show the top few items |
+| **Gestures** (`onTapGesture`, drags) | `Button(intent:)` (52.6), or a deep link |
+| **Continuous animations** | Animated **transitions between entries** only (`.contentTransition(.numericText())`) |
+| **UIKit views** (`UIViewRepresentable`), video, live maps | Images; `MKMapSnapshotter` for a map image |
+| **Network calls in the view** | Fetch in the **provider**, before building the entry |
+
+Taps that **open the app**:
+
+```swift
+// Whole widget: one URL (the only option for a small widget without buttons)
+RecipeWidgetView(entry: entry)
+    .widgetURL(URL(string: "recipes://recipe/\(entry.recipe.id)"))
+
+// Medium and large: several tap targets
+Link(destination: URL(string: "recipes://recipe/\(recipe.id)")!) {
+    Text(recipe.title)
+}
+```
+
+The extension also has a **small memory limit**. Large images are a common cause of crashes: **resize** them to the widget's size before saving them to the App Group (53.11).
+
+Design for a **glanceable snapshot**: the user should understand it in **one second**.
+
+---
+
+## 52.11 Live Activities: ActivityAttributes 🟡
+
+A **Live Activity** shows a **live event** on the **Lock Screen** and in the **Dynamic Island**: a cooking timer, a food delivery, a sports score. It lasts for the **event**, then goes away.
+
+Its data is split into **two parts**:
+
+```swift
+import ActivityKit
+
 struct CookingTimerAttributes: ActivityAttributes {
+    // Changes during the activity
     struct ContentState: Codable, Hashable {
-        var remainingSeconds: Int
+        var endDate: Date            // when the timer finishes
         var isPaused: Bool
     }
 
-    let recipeTitle: String // fixed for the activity's entire lifetime
+    // Set once at the start, never changes
+    let recipeTitle: String
 }
 ```
 
-This fixed/dynamic split directly mirrors the two most common categories of data a real-time tracked event has: some information genuinely doesn't change once the activity starts (which recipe is being cooked), while other information updates frequently throughout the activity's life (remaining time) — structuring `ActivityAttributes` this way lets the system optimize update delivery, since only the smaller, frequently-changing `ContentState` needs to be transmitted on each update, not the entire activity's data.
+| Part | Example | Changes? |
+|---|---|---|
+| Attributes (the struct's own properties) | Recipe name, order number | **No**, fixed at start |
+| **`ContentState`** | Time left, driver's location, score | **Yes**, on every update |
 
----
+Updates only send the small **`ContentState`**. The total data must stay **under 4 KB**, so send **values**, not images.
 
-## 52.12 Live Activities: Starting, Updating, Ending
+Note the timer stores an **end date**, not "seconds left". The view counts down **by itself** (52.3), so you don't need an update every second.
 
-An app starts, updates, and ends a Live Activity via `Activity<Attributes>`'s static/instance methods, directly from the main app's own process (unlike widgets, a Live Activity is initiated by the app itself, typically in direct response to a user action like starting a cooking timer).
+The UI is defined in the **widget extension**, with **`ActivityConfiguration`**:
 
 ```swift
-func startCookingTimer(for recipe: Recipe, seconds: Int) throws {
-    let attributes = CookingTimerAttributes(recipeTitle: recipe.title)
-    let initialState = CookingTimerAttributes.ContentState(remainingSeconds: seconds, isPaused: false)
-    let activity = try Activity.request(attributes: attributes, content: .init(state: initialState, staleDate: nil))
-}
-
-func updateTimer(_ activity: Activity<CookingTimerAttributes>, remainingSeconds: Int) async {
-    await activity.update(.init(state: .init(remainingSeconds: remainingSeconds, isPaused: false), staleDate: nil))
-}
-
-func endTimer(_ activity: Activity<CookingTimerAttributes>) async {
-    await activity.end(.init(state: .init(remainingSeconds: 0, isPaused: false), staleDate: nil), dismissalPolicy: .immediate)
-}
-```
-
-`Activity.request()` starts the Live Activity and immediately shows it on the Lock Screen/Dynamic Island, `.update()` pushes a new `ContentState` reflecting the activity's current progress (called repeatedly as the underlying real-time event actually progresses — e.g., once per second for a live timer), and `.end()` terminates the activity with a final state and a `dismissalPolicy` controlling exactly when it disappears from the Lock Screen after ending (`.immediate` versus giving the user a brief window to see the final state before automatic dismissal).
-
----
-
-## 52.13 Dynamic Island Regions and Layout
-
-The Dynamic Island presents a Live Activity across several distinct, purpose-specific regions — a compact leading/trailing pair (shown alongside other system UI when multiple things compete for the Island's space), a minimal single-glyph presentation (when even more space is constrained), and an expanded view (shown on long-press) with leading, trailing, center, and bottom regions.
-
-```swift
-DynamicIsland {
-    DynamicIslandExpandedRegion(.leading) { Text("🍝") }
-    DynamicIslandExpandedRegion(.trailing) { Text("\(entry.remainingSeconds)s") }
-    DynamicIslandExpandedRegion(.bottom) { ProgressView(value: progress) }
-} compactLeading: {
-    Text("🍝")
-} compactTrailing: {
-    Text("\(entry.remainingSeconds)s")
-} minimal: {
-    Text("🍝")
-}
-```
-
-Designing for all of these regions is a genuine, deliberate layout exercise, not an afterthought — the compact and minimal presentations must communicate the activity's most essential information in an extremely constrained space (potentially just one or two characters), while the expanded presentation has more room but still needs to remain glanceable rather than replicating a full app screen's information density, echoing the same "design for glanceability, not full interactivity" principle from widget constraints (52.10) but applied to the Dynamic Island's specific, further-constrained regions.
-
----
-
-## 52.14 Push-Updated Live Activities 🔴
-
-Beyond updating a Live Activity directly from the initiating app's own process (52.12), a Live Activity can also be updated via a specialized remote push notification — essential for activities whose progress is driven by a server (like a food delivery's actual location) rather than something the local device can compute or observe on its own.
-
-```json
-{
-    "aps": {
-        "timestamp": 1234567890,
-        "event": "update",
-        "content-state": {
-            "remainingSeconds": 120,
-            "isPaused": false
+struct CookingTimerLiveActivity: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: CookingTimerAttributes.self) { context in
+            // Lock Screen (and banner on devices without a Dynamic Island)
+            HStack {
+                Text(context.attributes.recipeTitle).font(.headline)
+                Spacer()
+                Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
+                    .monospacedDigit()
+            }
+            .padding()
+        } dynamicIsland: { context in
+            CookingTimerIsland.make(context: context)            // 52.13
         }
     }
 }
 ```
 
-This connects directly back to push notification infrastructure (section 50.4–50.5) — a server holding the actual authoritative state of a real-world event (a delivery driver's live location, sent from the delivery company's own backend) pushes updates directly to the Live Activity via a specialized APNs payload shape, without the user's device needing to poll or otherwise determine that state locally, extending the same push infrastructure covered for ordinary notifications to this specific, richer, continuously-updating UI surface.
+Add **`NSSupportsLiveActivities = YES`** to the **app's** Info.plist, and add the activity to your `WidgetBundle`.
 
 ---
 
-## 52.15 Debugging Widgets and Extensions 🟠
+## 52.12 Live Activities: Starting, Updating, Ending 🟡
 
-Widget debugging has genuine practical friction beyond ordinary app debugging — Xcode's scheme editor lets you select "Widget Extension" as the target to run/debug directly (attaching a debugger to the extension process specifically), and WidgetKit-specific console logging, combined with careful attention to the reload budget (52.3), are essential for diagnosing why a widget isn't updating as expected.
+The **app** starts a Live Activity, usually right after a **user action** ("Start timer"). Unlike a widget, the user doesn't add it: the app **requests** it.
 
-```plaintext
-Common widget debugging steps:
-1. In Xcode's scheme, choose the widget extension target directly to
-   attach a debugger to IT specifically, not just the main app
-2. Check for reload budget exhaustion — a widget that's requested too
-   many reloads recently may simply be throttled, not broken
-3. Verify shared App Group storage is actually configured correctly
-   on BOTH the main app and widget extension targets (52.9) —
-   a common, easy-to-miss source of "widget shows stale/empty data"
+```swift
+import ActivityKit
+
+func startCookingTimer(for recipe: Recipe, minutes: Int) throws -> Activity<CookingTimerAttributes>? {
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return nil }   // the user can turn them off
+
+    let attributes = CookingTimerAttributes(recipeTitle: recipe.title)
+    let state = CookingTimerAttributes.ContentState(
+        endDate: .now.addingTimeInterval(Double(minutes) * 60),
+        isPaused: false
+    )
+    return try Activity.request(
+        attributes: attributes,
+        content: ActivityContent(state: state, staleDate: nil)
+    )
+}
+
+func pause(_ activity: Activity<CookingTimerAttributes>) async {
+    var state = activity.content.state
+    state.isPaused = true
+    await activity.update(ActivityContent(state: state, staleDate: nil))
+}
+
+func finish(_ activity: Activity<CookingTimerAttributes>) async {
+    let final = CookingTimerAttributes.ContentState(endDate: .now, isPaused: false)
+    await activity.end(ActivityContent(state: final, staleDate: nil),
+                       dismissalPolicy: .after(.now.addingTimeInterval(15 * 60)))
+}
 ```
 
-Because the widget extension is a genuinely separate process with its own lifecycle, breakpoints set only in the main app's scheme won't ever trigger for code running inside the widget extension — explicitly selecting the widget extension as the active scheme target is required to debug its `TimelineProvider` or view code directly, and a very common category of "my widget isn't updating" bug turns out to be a reload-budget exhaustion issue (52.3) rather than a genuine code defect, making budget awareness one of the first things worth checking before assuming the provider logic itself is broken.
+| Step | API | Notes |
+|---|---|---|
+| Start | `Activity.request(attributes:content:)` | App must be in the **foreground** (or use push-to-start, 52.14) |
+| Update | `activity.update(_:)` | Only when the state **really** changes: pause, resume, new step |
+| End | `activity.end(_:dismissalPolicy:)` | Show a **final** state |
+
+**`dismissalPolicy`** decides how long the **ended** activity stays on the Lock Screen:
+
+| Policy | Effect |
+|---|---|
+| `.default` | Stays for a while (up to **4 hours**) so the user sees the result |
+| `.immediate` | Removed right away |
+| `.after(date)` | Removed at that time (within the 4-hour window) |
+
+Limits to know: an activity can be active for up to **8 hours**; after that, the system ends it (it can stay on the Lock Screen a bit longer). Find running activities again after a relaunch with **`Activity<CookingTimerAttributes>.activities`**.
+
+---
+
+## 52.13 Dynamic Island Regions and Layout 🟡
+
+On iPhones with a **Dynamic Island**, a Live Activity has **three** presentations:
+
+| Presentation | When | Space |
+|---|---|---|
+| **Compact** (leading + trailing) | Your activity is the **only** one running | Two small areas, left and right of the camera |
+| **Minimal** | **Several** apps' activities run at once | One tiny circle |
+| **Expanded** | The user **long-presses**, or an update has an **alert** | A larger card: leading, trailing, center, bottom |
+
+```swift
+enum CookingTimerIsland {
+    static func make(context: ActivityViewContext<CookingTimerAttributes>) -> DynamicIsland {
+        DynamicIsland {
+            DynamicIslandExpandedRegion(.leading) {
+                Image(systemName: "fork.knife")
+            }
+            DynamicIslandExpandedRegion(.trailing) {
+                Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
+                    .monospacedDigit()
+                    .frame(width: 60)
+            }
+            DynamicIslandExpandedRegion(.bottom) {
+                Text(context.attributes.recipeTitle).font(.headline)
+            }
+        } compactLeading: {
+            Image(systemName: "fork.knife")
+        } compactTrailing: {
+            Text(timerInterval: Date.now...context.state.endDate, countsDown: true)
+                .monospacedDigit()
+                .frame(width: 44)
+        } minimal: {
+            Image(systemName: "timer")
+        }
+        .widgetURL(URL(string: "recipes://timer"))             // tap opens the app here
+        .keylineTint(.orange)                                    // the island's outline color
+    }
+}
+```
+
+Design tips:
+
+- **Compact**: only the **most important** fact. Here: an icon and the time left.
+- **Minimal**: often just an **icon**, or a **tiny** value.
+- **Expanded**: more detail, but still **glanceable**: not a full screen.
+- Use the **same** state data everywhere, so all presentations agree.
+
+Design **every** region on purpose. The compact view is what users see **most**.
+
+---
+
+## 52.14 Push-Updated Live Activities 🔴
+
+Some events are known only by a **server**: where the delivery driver is, the current score. For these, the **server** updates the Live Activity with a special **push** (APNs, 50.4), even while the app isn't running.
+
+**1. Ask for a push token** when starting the activity:
+
+```swift
+let activity = try Activity.request(
+    attributes: attributes,
+    content: ActivityContent(state: state, staleDate: nil),
+    pushType: .token                                  // this activity gets its own push token
+)
+
+Task {
+    for await tokenData in activity.pushTokenUpdates {          // can change; watch it
+        let token = tokenData.map { String(format: "%02x", $0) }.joined()
+        try await api.registerLiveActivityToken(token, orderID: order.id)
+    }
+}
+```
+
+**2. The server sends** to APNs with these headers:
+
+```
+apns-push-type: liveactivity
+apns-topic: com.example.recipes.push-type.liveactivity
+apns-priority: 10        (5 = low priority, not shown at once)
+```
+
+**3. The payload:**
+
+```json
+{
+  "aps": {
+    "timestamp": 1767225600,
+    "event": "update",
+    "content-state": {
+      "endDate": 788918520,
+      "isPaused": false
+    },
+    "stale-date": 1767229200,
+    "alert": {
+      "title": "Almost ready",
+      "body": "2 minutes left on your pasta"
+    }
+  }
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `event` | `"update"`, `"end"`, or `"start"` (push-to-start) |
+| `content-state` | Must **decode** into your `ContentState` |
+| `timestamp` | Newer updates win; older ones are ignored |
+| `alert` | Optional: lights up the screen and expands the island |
+| `dismissal-date` | With `"end"`: when to remove it |
+
+⚠️ A common bug: **`content-state`** is decoded with the default **`JSONDecoder`**. A `Date` is then a number of seconds since **2001** (not 1970)! Above, `788918520` is 1 January 2026, 00:02 UTC. Use the same encoding on the server, or store plain numbers (like a Unix timestamp) in `ContentState`.
+
+More options:
+
+- **Push-to-start** (iOS 17.2): the server can **start** an activity. Get the token from `Activity<CookingTimerAttributes>.pushToStartTokenUpdates`.
+- **Broadcast** pushes (iOS 18): one push on a **channel** updates **many** users' activities at once, like a live sports score.
+- High-priority pushes have a **budget**. For very frequent updates, add `NSSupportsLiveActivitiesFrequentUpdates` to Info.plist.
+
+---
+
+## 52.15 Debugging Widgets and Extensions 🟡
+
+The widget runs in its **own process** (52.1). Breakpoints in the **app's** scheme **don't stop** in widget code, because the debugger is attached to the **app**, not the extension.
+
+How to debug:
+
+1. Choose the **widget extension's scheme** in Xcode and run it. Xcode installs the widget and attaches the debugger to the **extension** process. (The scheme's settings choose which widget **kind** and **family** to show.)
+2. Use **`#Preview(as:)`** with several entries (52.4) for fast layout work.
+3. Log with **`Logger`** and read the logs in the **Console** app (68).
+
+When "**my widget doesn't update**", check these first. They are usually **not** bugs in the provider:
+
+```
+1. App Group: is the SAME group turned on for BOTH targets?
+   (the widget reads an empty store and shows placeholder data)
+2. Reload: does the app call WidgetCenter...reloadTimelines(ofKind:)
+   after saving? Is the kind string spelled the same?
+3. Budget: did it reload too often? In real use it may be throttled
+   for a while. (While debugging in Xcode, the budget isn't applied,
+   so this bug often shows up only on testers' devices.)
+4. Policy: is the timeline's policy .never by mistake?
+5. Memory: did the extension crash on a large image? (Console app)
+6. Live Activities: does content-state decode into ContentState? (52.14)
+```
+
+Most widget bugs are **setup** problems: shared storage, reload signals, and budgets. Check those **before** you rewrite the provider.
 
 ---
 
@@ -314,18 +752,18 @@ Because the widget extension is a genuinely separate process with its own lifecy
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Widget structure | `Widget`, `TimelineProvider`, SwiftUI view | The three core pieces of any widget |
-| Data over time | `TimelineEntry`, `Timeline` | Front-loaded entries advanced automatically |
-| Reload economy | `TimelineReloadPolicy`, daily budget | Balance freshness against a limited reload allowance |
-| Multiple sizes | `WidgetFamily`, `@Environment(\.widgetFamily)` | Adaptive layout per widget size |
-| User configuration | `AppIntentConfiguration`, `WidgetConfigurationIntent` | App-Intents-powered widget customization |
-| In-widget actions | `Button(intent:)` | Trigger an `AppIntent` without opening the app |
-| Lock Screen/StandBy | Accessory widget families | Tighter, monochrome, high-contrast presentation |
-| Control Center | `ControlWidget` | Compact, single-action controls |
-| Cross-process data | App Groups, `WidgetCenter.reloadTimelines()` | Shared storage plus explicit refresh signaling |
-| Rendering limits | No scrolling, restricted modifiers | Design for a static snapshot, not a mini-app |
-| Live event UI | `ActivityAttributes`, fixed vs. `ContentState` | Persistent, updatable Lock Screen/Island presence |
-| Activity lifecycle | `Activity.request()`/`.update()`/`.end()` | Start, refresh, and conclude a Live Activity |
-| Dynamic Island | Compact/minimal/expanded regions | Purpose-specific layout at each Island presentation |
-| Server-driven updates | Push-updated Live Activities | APNs-delivered state for server-authoritative events |
-| Debugging | Widget extension scheme, budget awareness | Attach to the right process; check for throttling first |
+| Widget structure | `Widget`, `TimelineProvider`, a SwiftUI view | The three pieces of every widget |
+| Data over time | `TimelineEntry`, `Timeline` | Many future entries; the system switches them |
+| Reload budget | `.atEnd`, `.after`, `.never`; self-updating `Text` | Few, smart reloads |
+| Sizes | `supportedFamilies`, `\.widgetFamily` | A designed layout per size |
+| User configuration | `AppIntentConfiguration`, `AppIntentTimelineProvider` | Edit Widget options from App Intents |
+| In-widget actions | `Button(intent:)`, `Toggle(isOn:intent:)` | Run an intent without opening the app |
+| Lock Screen / StandBy | Accessory families, `widgetRenderingMode` | Monochrome, glanceable, also watchOS |
+| Controls | `ControlWidget`, `ControlWidgetButton`, `ControlWidgetToggle` | One-tap actions in Control Center |
+| Shared data | App Groups, `WidgetCenter.reloadTimelines(ofKind:)` | Save, then tell the widget |
+| Rendering limits | No scrolling or gestures; `widgetURL`, `Link` | A snapshot, not a mini app |
+| Live Activity data | `ActivityAttributes`, `ContentState` | Fixed data vs. changing data (< 4 KB) |
+| Activity lifecycle | `request`, `update`, `end(dismissalPolicy:)` | Start from the app; end with a final state |
+| Dynamic Island | Compact, minimal, expanded regions | The key fact in tiny space |
+| Server updates | `pushType: .token`, `liveactivity` pushes | The server drives the activity |
+| Debugging | Extension scheme, `#Preview`, setup checklist | Check App Group, reloads, budget first |

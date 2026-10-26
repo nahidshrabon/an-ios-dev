@@ -583,7 +583,7 @@ export const articles: Article[] = [
     slug: "widgetkit-and-live-activities",
     title: "WidgetKit and Live Activities",
     description:
-      "Widget anatomy, TimelineProvider and reload budgets, widget families, AppIntentConfiguration, interactive widgets, Lock Screen/StandBy/Control Center surfaces, and the full Live Activities lifecycle with Dynamic Island and push updates.",
+      "Building widgets and Live Activities: timelines and reload budgets, sizes, configurable and interactive widgets, Lock Screen, StandBy, and controls, sharing data with the app, rendering limits, and the Live Activity lifecycle with the Dynamic Island and push updates.",
     tags: ["platform", "widgetkit", "live-activities"],
     publishedAt: "2026-08-16",
     get content() {
