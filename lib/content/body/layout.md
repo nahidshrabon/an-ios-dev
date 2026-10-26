@@ -768,7 +768,7 @@ Before using it, check if a simpler tool does the job:
 | To **know** a view's size (and react) | `.onGeometryChange()` (24.20) |
 | Different layouts for narrow vs. wide | `ViewThatFits` (24.17) or size classes |
 | A view filling the width | `.frame(maxWidth: .infinity)` |
-| A fully custom layout | The `Layout` protocol (section 30) |
+| A fully custom layout | The `Layout` protocol (31.8) |
 
 If you do need `GeometryReader`, a safer place is **inside a background or overlay**. There it gets the **same size as the view**, and can't change the layout:
 
