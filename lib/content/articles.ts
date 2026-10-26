@@ -462,7 +462,7 @@ export const articles: Article[] = [
     slug: "swiftdata",
     title: "SwiftData",
     description:
-      "Apple's modern, Swift-native persistence framework: @Model and ModelContainer, @Query, relationships and #Predicate, sorting, background work with @ModelActor, schema migrations, CloudKit sync, and performance debugging.",
+      "Saving data with SwiftData: @Model, ModelContainer, @Query, insert, delete, and save, attributes, relationships and inverses, #Predicate, dynamic sorting, background work with @ModelActor, migrations, CloudKit sync, sharing with widgets, and performance.",
     tags: ["swiftdata", "persistence"],
     publishedAt: "2026-08-16",
     get content() {
