@@ -9400,308 +9400,257 @@ UIView.animate(withDuration: 0.3) {
   {
     id: "uikit-and-swiftui-interop-quiz",
     title: "UIKit and SwiftUI Interop Quiz",
-    description: "20 questions on UIViewRepresentable and UIViewControllerRepresentable, the Coordinator pattern, context and environment access, UIHostingController, UIHostingConfiguration for cells, cross-boundary data flow, and dismantling cleanup.",
+    description: "20 questions on UIViewRepresentable and UIViewControllerRepresentable, the Coordinator, context and environment, UIHostingController, sizing across the boundary, UIHostingConfiguration, two-way data flow, and dismantling.",
     relatedArticleSlug: "uikit-and-swiftui-interop",
     questions: [
       {
         id: "q1",
-        prompt: "What are the two required methods on `UIViewRepresentable`, and what does each do?",
+        prompt: "What are the two required methods of `UIViewRepresentable`?",
         options: [
-          { id: "a", text: "`viewDidLoad()` and `viewWillAppear()`, mirroring `UIViewController` lifecycle methods directly" },
-          { id: "b", text: "`init()` only; `updateUIView` is optional and essentially never actually implemented" },
-          { id: "c", text: "`body` and `updateBody()`, mirroring SwiftUI's own `View` protocol requirements" },
-          { id: "d", text: "`makeUIView` builds the view once; `updateUIView` syncs it on every SwiftUI update" },
+          { id: "a", text: "`makeUIView`, then `updateUIView`" },
+          { id: "b", text: "`viewDidLoad` and `viewWillAppear`" },
+          { id: "c", text: "`body` and `init` for the struct" },
+          { id: "d", text: "`draw(_:)` and `layoutSubviews()`" },
         ],
-        correctOptionId: "d",
-        explanation: "`makeUIView(context:)` runs once to build and configure the initial UIView, while `updateUIView(_:context:)` runs on every SwiftUI re-evaluation of the representable to sync the existing UIKit view with current state — the two together bridge UIKit's imperative model into SwiftUI's declarative re-render cycle.",
+        correctOptionId: "a",
+        explanation: "Make creates the UIKit view; update copies SwiftUI values into it.",
       },
       {
         id: "q2",
-        prompt: "Why does `updateUIView(_:context:)` run repeatedly rather than just once?",
+        prompt: "Why does `updateUIView(_:context:)` run many times?",
         options: [
-          { id: "a", text: "It's the sync point that keeps the already-constructed UIKit view in step with SwiftUI's current state, running every time SwiftUI re-evaluates the representable's containing view — conceptually parallel to a SwiftUI view's `body` re-running on state change" },
-          { id: "b", text: "It doesn't; it behaves identically to `makeUIView` and only runs a single time" },
-          { id: "c", text: "It runs on a fixed timer regardless of state changes" },
-          { id: "d", text: "It only runs when the app transitions between light and dark mode" },
+          { id: "a", text: "UIKit calls it every frame to redraw" },
+          { id: "b", text: "It retries until the view loads" },
+          { id: "c", text: "It runs once per subview of the view" },
+          { id: "d", text: "SwiftUI calls it when inputs update" },
         ],
-        correctOptionId: "a",
-        explanation: "Since the underlying UIView is a persistent, mutable object rather than a fresh declarative description, SwiftUI needs a dedicated hook to apply state changes to it imperatively each time — that's exactly what `updateUIView` provides, running on the same cadence a SwiftUI `body` would re-evaluate.",
+        correctOptionId: "d",
+        explanation: "Keep it cheap, and only change what's different.",
       },
       {
         id: "q3",
-        prompt: "When should `UIViewControllerRepresentable` be used instead of `UIViewRepresentable`?",
+        prompt: "When should you use `UIViewControllerRepresentable`?",
         options: [
-          { id: "a", text: "They are fully interchangeable with no meaningful difference between them" },
-          { id: "b", text: "For UIKit functionality owning its own view controller lifecycle, like a camera picker" },
-          { id: "c", text: "`UIViewControllerRepresentable` should always be preferred, regardless of what's wrapped" },
-          { id: "d", text: "`UIViewRepresentable` cannot wrap any view that has an associated delegate object" },
+          { id: "a", text: "When the UIKit API gives you a view controller" },
+          { id: "b", text: "When the UIKit view is smaller than the screen" },
+          { id: "c", text: "When you need the view to support Dark Mode" },
+          { id: "d", text: "Whenever the UIKit code uses Auto Layout" },
         ],
-        correctOptionId: "b",
-        explanation: "The choice depends on what the underlying UIKit API actually vends — a ready-made `UIViewController` (like `VNDocumentCameraViewController`) fits `UIViewControllerRepresentable`, while a standalone `UIView` subclass fits `UIViewRepresentable`.",
+        correctOptionId: "a",
+        explanation: "Like `SFSafariViewController` or a document scanner.",
       },
       {
         id: "q4",
-        prompt: "Why can't a `UIViewRepresentable`/`UIViewControllerRepresentable` struct itself serve directly as a persistent UIKit delegate?",
+        prompt: "Why can't the representable struct be the UIKit delegate itself?",
         options: [
-          { id: "a", text: "Structs are not permitted to conform to any protocol at all in Swift" },
-          { id: "b", text: "UIKit delegates must always be enums, never structs or classes themselves" },
-          { id: "c", text: "The struct is a value type recreated on every update, so it can't hold stable identity" },
-          { id: "d", text: "Representables are actually classes already under the hood, so this isn't a real constraint" },
+          { id: "a", text: "Structs can't conform to protocols" },
+          { id: "b", text: "Delegates must come from Interface Builder" },
+          { id: "c", text: "It's a short-lived value, not an object" },
+          { id: "d", text: "SwiftUI forbids delegates in representables" },
         ],
         correctOptionId: "c",
-        explanation: "SwiftUI re-creates representable struct values on each update, so a struct instance has no stable identity over time — a UIKit delegate relationship requires a persistent reference-type object, which is exactly the role the `Coordinator` fills instead.",
+        explanation: "Delegates are weak class references; the coordinator is a long-lived class.",
       },
       {
         id: "q5",
-        prompt: "What is the purpose of `makeCoordinator()`, and when is it called relative to `makeUIView`/`updateUIView`?",
+        prompt: "When is `makeCoordinator()` called?",
         options: [
-          { id: "a", text: "It's called on every single `updateUIView` invocation, creating a fresh Coordinator each time" },
-          { id: "b", text: "It is only called if the representable has no `@Binding` properties defined" },
-          { id: "c", text: "It has no defined calling convention and may run zero or many times unpredictably" },
-          { id: "d", text: "Called once, independent of repeated `makeUIView`/`updateUIView` calls" },
+          { id: "a", text: "Before every `updateUIView` call" },
+          { id: "b", text: "Only when the view is removed" },
+          { id: "c", text: "Once, before `makeUIView` runs" },
+          { id: "d", text: "Every time the device rotates" },
         ],
-        correctOptionId: "d",
-        explanation: "`makeCoordinator()` producing a single, persistent `Coordinator` instance for the representable's whole lifetime is precisely what makes the Coordinator suitable as a stable delegate/target — unlike `makeUIView`/`updateUIView`, which can each be called multiple times over that same lifetime.",
+        correctOptionId: "c",
+        explanation: "SwiftUI keeps the coordinator for the view's whole life.",
       },
       {
         id: "q6",
-        prompt: "Given the code below, how does the `Coordinator` get data from a UIKit delegate callback back into SwiftUI state?",
-        codeExample: `struct ScannerContainerView: UIViewControllerRepresentable {
-    @Binding var scannedText: String
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
-        let scanner = VNDocumentCameraViewController()
-        scanner.delegate = context.coordinator
-        return scanner
-    }
-
-    func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {}
-
-    class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
-        var parent: ScannerContainerView
-
-        init(_ parent: ScannerContainerView) {
-            self.parent = parent
-        }
-
-        func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
-            parent.scannedText = extractText(from: scan)
-        }
-    }
-}`,
+        prompt: "Why refresh `context.coordinator.parent = self` in `update`?",
         options: [
-          { id: "a", text: "It holds a reference back to its parent representable and writes into a `@Binding` (like `scannedText`) from within the delegate callback method" },
-          { id: "b", text: "It cannot; UIKit delegate callbacks are entirely isolated from SwiftUI state" },
-          { id: "c", text: "It uses `NotificationCenter` exclusively, with no direct reference to the parent" },
-          { id: "d", text: "It requires the representable to poll the Coordinator on a timer" },
+          { id: "a", text: "Otherwise the coordinator is deallocated early" },
+          { id: "b", text: "It's needed to make the delegate methods fire" },
+          { id: "c", text: "It resets the UIKit view to its starting state" },
+          { id: "d", text: "The coordinator's struct copy can be stale" },
         ],
-        correctOptionId: "a",
-        explanation: "The Coordinator keeps a `parent` reference to the representable struct that created it, and when a UIKit delegate method fires (like `didFinishWith`), it writes through that reference into a `@Binding`'s wrapped value — flowing data from the imperative UIKit side back up into SwiftUI-owned state.",
+        correctOptionId: "d",
+        explanation: "Bindings still work from an old copy, but closures and plain values may not.",
       },
       {
         id: "q7",
-        prompt: "What information does the `context: Context` parameter provide to representable methods?",
+        prompt: "What does the `context` parameter carry?",
         options: [
-          { id: "a", text: "Only the Coordinator instance; nothing else is ever provided" },
-          { id: "b", text: "The Coordinator, propagated environment values, and the current transaction" },
-          { id: "c", text: "Only a reference to the app's root view controller, and nothing more" },
-          { id: "d", text: "A snapshot of every property on the representable struct, encoded as JSON" },
+          { id: "a", text: "Coordinator, environment, transaction" },
+          { id: "b", text: "The parent controller and its window" },
+          { id: "c", text: "The UIKit view's frame and constraints" },
+          { id: "d", text: "The app delegate and launch options" },
         ],
-        correctOptionId: "b",
-        explanation: "`Context` bundles three distinct pieces of information a representable might need: the persistent `Coordinator`, ambient `environment` values (like `@Environment` would expose to a normal SwiftUI view), and the current `transaction` (including any active animation).",
+        correctOptionId: "a",
+        explanation: "Everything the representable needs from SwiftUI's side.",
       },
       {
         id: "q8",
-        prompt: "How does `context.environment` relate to a normal SwiftUI view reading `@Environment`?",
+        prompt: "How does `context.environment` relate to `@Environment`?",
         options: [
-          { id: "a", text: "They are unrelated; representables cannot access environment values at all" },
-          { id: "b", text: "`context.environment` only exposes a fixed set of two hardcoded values" },
-          { id: "c", text: "Exposes the same environment values `@Environment` would provide" },
-          { id: "d", text: "Environment values must be re-declared as `@State` before a representable can read them" },
+          { id: "a", text: "The same values, for UIKit to use" },
+          { id: "b", text: "It's a separate copy just for UIKit" },
+          { id: "c", text: "It only holds the color scheme value" },
+          { id: "d", text: "It's read-only and always out of date" },
         ],
-        correctOptionId: "c",
-        explanation: "This is one of the key conveniences of the `Context` type — rather than requiring every environment value a representable's UIKit content might need to be manually passed in as an explicit property, `context.environment` gives direct read access to the same values `@Environment` would provide elsewhere in the view tree.",
+        correctOptionId: "a",
+        explanation: "So a wrapped view can follow `.disabled()`, dark mode, or custom `@Entry` values.",
       },
       {
         id: "q9",
-        prompt: "What is `UIHostingController`, and what must be done to add one as a child of an existing UIKit view controller?",
+        prompt: "How do you add a `UIHostingController` as part of a UIKit screen?",
         options: [
-          { id: "a", text: "A protocol UIKit view controllers conform to; no special setup is needed" },
-          { id: "b", text: "A view (not a view controller), added directly via `addSubview` with no containment calls needed" },
-          { id: "c", text: "A singleton object; only one can exist per app" },
-          { id: "d", text: "A `UIViewController` subclass wrapping SwiftUI content, which must go through the exact same containment sequence (`addChild`, add its view, `didMove(toParent:)`) as any other child view controller" },
+          { id: "a", text: "Just `view.addSubview(host.view)`" },
+          { id: "b", text: "Make it the window's root controller" },
+          { id: "c", text: "`addChild`, add its view, then `didMove`" },
+          { id: "d", text: "Call `present(host)` in `viewDidLoad()`" },
         ],
-        correctOptionId: "d",
-        explanation: "Since `UIHostingController` is itself just a `UIViewController` subclass under the hood, embedding one as a child follows the identical view controller containment protocol as any other — `addChild`, adding the hosting controller's `view`, and calling `didMove(toParent:)` last.",
+        correctOptionId: "c",
+        explanation: "It's a normal child view controller, so it needs the full containment steps.",
       },
       {
         id: "q10",
-        prompt: "How can the SwiftUI content displayed by an already-instantiated `UIHostingController` be updated later?",
+        prompt: "How can you update the SwiftUI content of an existing `UIHostingController`?",
         options: [
-          { id: "a", text: "Reassigning `hostingController.rootView`, triggering SwiftUI's normal re-render" },
-          { id: "b", text: "The hosting controller must be destroyed and a completely new one created each time" },
-          { id: "c", text: "`UIHostingController`'s content is fixed at initialization and can never be changed" },
-          { id: "d", text: "Only by calling `setNeedsLayout()` repeatedly until the content updates itself" },
+          { id: "a", text: "Create a brand-new hosting controller each time" },
+          { id: "b", text: "Set a new `rootView`, or change a shared model" },
+          { id: "c", text: "Call `reloadData()` on the hosting controller" },
+          { id: "d", text: "You can't; its content is fixed after `init`" },
         ],
-        correctOptionId: "a",
-        explanation: "`rootView` is a settable property — assigning it a new SwiftUI view value hands that updated description to SwiftUI's normal diffing machinery, which re-renders the hosted content accordingly, without needing to tear down and recreate the whole `UIHostingController`.",
+        correctOptionId: "b",
+        explanation: "With an `@Observable` model, UIKit changes update the SwiftUI view automatically.",
       },
       {
         id: "q11",
-        prompt: "Why does sizing a `UIViewRepresentable`'s wrapped view correctly within SwiftUI require attention?",
+        prompt: "Why does sizing a wrapped UIKit view in SwiftUI need care?",
         options: [
-          { id: "a", text: "SwiftUI automatically ignores all sizing information from wrapped UIKit views" },
-          { id: "b", text: "Because UIKit's frame-based layout and SwiftUI's proposal-based layout negotiation are fundamentally different systems, the wrapped view must report its size to SwiftUI via mechanisms like intrinsic content size and content hugging/compression resistance" },
-          { id: "c", text: "UIKit views can never be sized by SwiftUI under any circumstances, requiring a fixed `.frame()` always" },
-          { id: "d", text: "Sizing only matters for `UIViewControllerRepresentable`, never `UIViewRepresentable`" },
+          { id: "a", text: "The two lay out in different ways" },
+          { id: "b", text: "UIKit views can't be resized at all" },
+          { id: "c", text: "SwiftUI ignores every UIKit view size" },
+          { id: "d", text: "Wrapped views are always full screen" },
         ],
-        correctOptionId: "b",
-        explanation: "Since the two frameworks solve layout in genuinely different ways, a wrapped UIKit view needs to communicate its sizing needs through properties SwiftUI's layout system actually understands — intrinsic content size and hugging/compression resistance priorities — for SwiftUI to size it sensibly within a stack or container.",
+        correctOptionId: "a",
+        explanation: "SwiftUI reads intrinsic size and priorities; views without one take all the space.",
       },
       {
         id: "q12",
-        prompt: "How does a `UIHostingController` communicate the size its hosted SwiftUI content needs, to surrounding UIKit code?",
+        prompt: "What does `host.sizingOptions = .intrinsicContentSize` do?",
         options: [
-          { id: "a", text: "It cannot; hosted SwiftUI content always has a size of zero until manually set" },
-          { id: "b", text: "`UIHostingController` requires surrounding UIKit code to hardcode a fixed pixel size" },
-          { id: "c", text: "Via a `sizeThatFits(in:)`-driven size, like `systemLayoutSizeFitting`" },
-          { id: "d", text: "Only through Interface Builder's size inspector, and never programmatically" },
+          { id: "a", text: "Makes the view fill the whole window" },
+          { id: "b", text: "Gives it a real Auto Layout size" },
+          { id: "c", text: "Locks the content to one fixed size" },
+          { id: "d", text: "Turns off Auto Layout for the view" },
         ],
-        correctOptionId: "c",
-        explanation: "Just as `systemLayoutSizeFitting` lets UIKit code ask a constraint-based view subtree for its ideal size, `UIHostingController` exposes an analogous `sizeThatFits(in:)`-based mechanism so UIKit code can size a container appropriately around hosted SwiftUI content that doesn't have an explicit fixed frame.",
+        correctOptionId: "b",
+        explanation: "Then you can place it like a `UILabel`, and it resizes with its content.",
       },
       {
         id: "q13",
-        prompt: "What does `UIHostingConfiguration` let a `UITableViewCell`/`UICollectionViewCell` do?",
+        prompt: "What does `UIHostingConfiguration` let a UIKit cell do?",
         options: [
-          { id: "a", text: "Convert the entire table view into a SwiftUI `List` automatically, with no other code" },
-          { id: "b", text: "Replace `UITableViewDataSource` with a SwiftUI-only data source protocol entirely" },
-          { id: "c", text: "Disable cell reuse entirely for that specific cell type, breaking the reuse pool" },
-          { id: "d", text: "Assigns SwiftUI content to `contentConfiguration`, skipping manual hosting wiring" },
+          { id: "a", text: "Turn the whole list into a SwiftUI `List`" },
+          { id: "b", text: "Skip cell reuse to load rows faster" },
+          { id: "c", text: "Show SwiftUI views as its content" },
+          { id: "d", text: "Use a storyboard design for the cell" },
         ],
-        correctOptionId: "d",
-        explanation: "`UIHostingConfiguration` is assigned to a cell's `contentConfiguration` property, letting the cell's visual content be described declaratively in SwiftUI while UIKit automatically handles the underlying hosting machinery on each reuse — sparing the manual containment boilerplate a hand-rolled `UIHostingController` per cell would otherwise require.",
+        correctOptionId: "c",
+        explanation: "The cell stays a normal, reused UIKit cell.",
       },
       {
         id: "q14",
-        prompt: "Why is `UIHostingConfiguration` generally preferred over manually embedding a `UIHostingController` inside each table/collection view cell?",
+        prompt: "Why prefer `UIHostingConfiguration` over a hosting controller in each cell?",
         options: [
-          { id: "a", text: "Avoids per-cell containment boilerplate, letting the cell reuse normally" },
-          { id: "b", text: "There is no practical difference at all between the two approaches" },
-          { id: "c", text: "`UIHostingConfiguration` is the only way to use SwiftUI views inside a table view" },
-          { id: "d", text: "Manually embedding a `UIHostingController` in a cell is not technically possible" },
+          { id: "a", text: "It's the only way to use SwiftUI in UIKit" },
+          { id: "b", text: "No containment code; reuse and sizing handled" },
+          { id: "c", text: "It renders the cells on a background thread" },
+          { id: "d", text: "It removes the need for a data source" },
         ],
-        correctOptionId: "a",
-        explanation: "Since cells are reused repeatedly, manually managing a `UIHostingController`'s containment lifecycle within each recycled cell would be significant, error-prone boilerplate — `UIHostingConfiguration` handles this automatically, letting cells stay ordinary, reusable `UITableViewCell`/`UICollectionViewCell` instances.",
+        correctOptionId: "b",
+        explanation: "A hand-made hosting controller per cell needs `addChild` and is easy to get wrong.",
       },
       {
         id: "q15",
-        prompt: "Given the code below, how is two-way data flow achieved between the UIKit `UISlider` and the SwiftUI `@Binding`?",
-        codeExample: `struct LegacySliderView: UIViewRepresentable {
-    @Binding var value: Double
-    var onEditingChanged: (Bool) -> Void = { _ in }
+        prompt: "In this code, how does the value flow both ways?",
+        codeExample: `func updateUIView(_ uiView: UISlider, context: Context) {
+    context.coordinator.value = $value
+    if uiView.value != Float(value) { uiView.value = Float(value) }
+}
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(value: $value, onEditingChanged: onEditingChanged)
-    }
-
-    func makeUIView(context: Context) -> UISlider {
-        let slider = UISlider()
-        slider.addTarget(context.coordinator, action: #selector(Coordinator.valueChanged), for: .valueChanged)
-        slider.addTarget(context.coordinator, action: #selector(Coordinator.editingEnded), for: [.touchUpInside, .touchUpOutside])
-        return slider
-    }
-
-    func updateUIView(_ uiView: UISlider, context: Context) {
-        uiView.value = Float(value)
-    }
-
-    class Coordinator: NSObject {
-        var value: Binding<Double>
-        var onEditingChanged: (Bool) -> Void
-
-        init(value: Binding<Double>, onEditingChanged: @escaping (Bool) -> Void) {
-            self.value = value
-            self.onEditingChanged = onEditingChanged
-        }
-
-        @objc func valueChanged(_ sender: UISlider) {
-            value.wrappedValue = Double(sender.value)
-        }
-    }
+// In the Coordinator:
+@objc func valueChanged(_ sender: UISlider) {
+    value.wrappedValue = Double(sender.value)
 }`,
         options: [
-          { id: "a", text: "SwiftUI automatically observes any UIKit control without any wiring code needed" },
-          { id: "b", text: "The Coordinator wires target-action to write into the `@Binding`'s value" },
-          { id: "c", text: "Two-way binding is impossible across the boundary; only SwiftUI-to-UIKit flow works" },
-          { id: "d", text: "The slider's value is read only once, at `makeUIView` time, and never updates again" },
+          { id: "a", text: "The slider and binding share the same memory" },
+          { id: "b", text: "`update` sets it; the action writes back" },
+          { id: "c", text: "SwiftUI polls the slider's value every frame" },
+          { id: "d", text: "UIKit copies the binding into it for you" },
         ],
         correctOptionId: "b",
-        explanation: "The `Coordinator`'s `@objc valueChanged` method (triggered via target-action) writes the slider's current value into `value.wrappedValue`, replicating the two-way data flow a native SwiftUI `Slider(value:)` would provide, just bridged manually through UIKit's control-event mechanism.",
+        explanation: "The `!=` check stops a feedback loop.",
       },
       {
         id: "q16",
-        prompt: "Beyond target-action, what other mechanism can bridge richer reactive data flow across the interop boundary?",
+        prompt: "Besides target-action, what can bridge richer data across the boundary?",
         options: [
-          { id: "a", text: "Only `UserDefaults` polling on a fixed timer, checked periodically" },
-          { id: "b", text: "XML-based configuration files exchanged directly between the two frameworks" },
-          { id: "c", text: "Combine subscriptions or `NotificationCenter` publishers forwarding into bindings" },
-          { id: "d", text: "There is no mechanism beyond target-action; Combine can't be used here at all" },
+          { id: "a", text: "Saving values to `UserDefaults` on each change" },
+          { id: "b", text: "Sending notifications through the App Store" },
+          { id: "c", text: "Combine or async streams in the coordinator" },
+          { id: "d", text: "Rebuilding the representable on every update" },
         ],
         correctOptionId: "c",
-        explanation: "This pattern generalizes beyond a single delegate callback — a `Coordinator` can hold Combine subscriptions to a UIKit object's publishers (or `NotificationCenter` publishers), forwarding updates into `@Published` properties or bindings for richer, ongoing reactive data flow.",
+        explanation: "Forward the values into bindings or an `@Observable` model.",
       },
       {
         id: "q17",
-        prompt: "What is `dismantleUIView(_:coordinator:)`, and when is it called?",
+        prompt: "What is `dismantleUIView(_:coordinator:)`, and when does it run?",
         options: [
-          { id: "a", text: "A required method called every time `updateUIView` runs" },
-          { id: "b", text: "A deprecated method with no modern replacement or use case" },
-          { id: "c", text: "A method that runs before `makeUIView`, to prepare the view for construction" },
-          { id: "d", text: "An optional static method called when the wrapped view is being permanently removed from the SwiftUI view hierarchy, the natural place for cleanup the Coordinator can't handle via ordinary deinitialization" },
+          { id: "a", text: "Setup, just before the view first appears" },
+          { id: "b", text: "A redraw, each time the view is updated" },
+          { id: "c", text: "A reset, when the app goes to the background" },
+          { id: "d", text: "Cleanup, when the view leaves for good" },
         ],
         correctOptionId: "d",
-        explanation: "`dismantleUIView` (or its `UIViewControllerRepresentable` counterpart) fires specifically at permanent removal time, giving representables an explicit teardown hook distinct from `makeUIView`/`updateUIView`'s construction and sync responsibilities.",
+        explanation: "It's optional; you only need it for resources that don't stop themselves.",
       },
       {
         id: "q18",
-        prompt: "Why is `dismantleUIView` declared as a `static` method rather than an instance method?",
+        prompt: "Why is `dismantleUIView` `static`?",
         options: [
-          { id: "a", text: "Because it deliberately has no implicit access to `self` — it receives the outgoing view and coordinator explicitly as parameters, since the representable value that originally created them may no longer exist by the time dismantling happens" },
-          { id: "b", text: "It's simply a stylistic choice with no functional reasoning behind it" },
-          { id: "c", text: "Static methods run faster than instance methods in Swift, which is the sole reason" },
-          { id: "d", text: "Instance methods cannot be called during view hierarchy teardown for technical reasons" },
+          { id: "a", text: "Static methods are faster to call" },
+          { id: "b", text: "It must run before `makeCoordinator`" },
+          { id: "c", text: "UIKit can only call static methods" },
+          { id: "d", text: "The struct that made it may be gone" },
         ],
-        correctOptionId: "a",
-        explanation: "Because representable struct values are transient and recreated on every update, the original instance that produced a given view/coordinator pair may already be gone by dismantling time — making `self` unreliable, which is exactly why the view and coordinator are passed in explicitly as parameters instead.",
+        correctOptionId: "d",
+        explanation: "SwiftUI passes in exactly what's needed: the view and the coordinator.",
       },
       {
         id: "q19",
-        prompt: "What kind of resource specifically requires `dismantleUIView`-based cleanup, rather than relying on ordinary Swift deinitialization?",
+        prompt: "Which resource needs `dismantleUIView`, not just `deinit`?",
         options: [
-          { id: "a", text: "Simple stored properties like `String` or `Int`, since they always need manual cleanup" },
-          { id: "b", text: "A resource like an active `CADisplayLink`, which retains its target and keeps firing until explicitly invalidated — ordinary deallocation alone won't stop it" },
-          { id: "c", text: "`@Binding` properties, since bindings never clean up automatically under any circumstances" },
-          { id: "d", text: "`UILabel` and other simple, non-observing UIKit views" },
+          { id: "a", text: "A `String` property holding the title" },
+          { id: "b", text: "A `CADisplayLink` keeping its target" },
+          { id: "c", text: "A `weak` reference to the hosted view" },
+          { id: "d", text: "A `let` constant with the slider's range" },
         ],
         correctOptionId: "b",
-        explanation: "`CADisplayLink` is called out specifically because it retains its target and continues firing on each display refresh until `invalidate()` is called explicitly — since this retention would otherwise prevent or complicate normal deinitialization-based cleanup, `dismantleUIView` provides the necessary explicit teardown point.",
+        explanation: "It holds the coordinator strongly and fires until `invalidate()` is called.",
       },
       {
         id: "q20",
-        prompt: "Taken together, what is the overall purpose of these interop mechanisms — `UIViewRepresentable`, `Coordinator`, `UIHostingController`, `UIHostingConfiguration`?",
+        prompt: "What is the overall purpose of these interop tools?",
         options: [
-          { id: "a", text: "To eventually replace UIKit entirely, with these APIs serving only as a temporary migration aid" },
-          { id: "b", text: "To allow SwiftUI code to be compiled directly into Objective-C, bypassing UIKit" },
-          { id: "c", text: "To let UIKit and SwiftUI content be embedded within each other in either direction, with mechanisms for construction, ongoing sync, persistent delegate-like objects, ambient context access, sizing, and cleanup across the boundary" },
-          { id: "d", text: "To provide a way to disable SwiftUI's declarative update mechanism when embedding UIKit content" },
+          { id: "a", text: "Converting UIKit code to SwiftUI automatically" },
+          { id: "b", text: "Running UIKit apps on watchOS and tvOS" },
+          { id: "c", text: "Removing UIKit from the app's dependencies" },
+          { id: "d", text: "Mixing both step by step, no rewrite" },
         ],
-        correctOptionId: "c",
-        explanation: "Each mechanism addresses a distinct piece of the same underlying problem — bridging two structurally different UI frameworks in both directions, covering construction and sync (`makeUIView`/`updateUIView`), persistent object identity (`Coordinator`), hosting one inside the other (`UIHostingController`, `UIHostingConfiguration`), and the supporting concerns of context access, sizing, and lifecycle cleanup that make that bridging robust.",
+        correctOptionId: "d",
+        explanation: "Wrap what SwiftUI lacks; add SwiftUI screens and rows to UIKit apps.",
       },
     ],
   },

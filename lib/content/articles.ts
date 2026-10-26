@@ -429,7 +429,7 @@ export const articles: Article[] = [
     slug: "uikit-and-swiftui-interop",
     title: "UIKit and SwiftUI Interop",
     description:
-      "Bridging the two frameworks in both directions: UIViewRepresentable and UIViewControllerRepresentable, the Coordinator pattern, hosting SwiftUI inside UIKit with UIHostingController, UIHostingConfiguration for cells, and cross-boundary data flow.",
+      "Mixing UIKit and SwiftUI in both directions: UIViewRepresentable and UIViewControllerRepresentable, the Coordinator, context and environment, UIHostingController, sizing across the boundary, SwiftUI cells with UIHostingConfiguration, two-way data flow, and cleanup.",
     tags: ["uikit", "swiftui", "interop"],
     publishedAt: "2026-08-16",
     get content() {
