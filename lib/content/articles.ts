@@ -638,7 +638,7 @@ export const articles: Article[] = [
     slug: "other-system-frameworks",
     title: "Other System Frameworks",
     description:
-      "A broad survey: HealthKit, EventKit, Contacts, Core Motion, Core Bluetooth (central and peripheral), AccessorySetupKit, Core NFC, PassKit/Apple Pay and Wallet, CarPlay templates, Screen Time APIs, Transferable, Translation, and App Attest.",
+      "A practical tour of more system frameworks: HealthKit, EventKit, Contacts, Core Motion, Bluetooth central and peripheral, AccessorySetupKit, Core NFC, Apple Pay and Wallet, CarPlay, Screen Time, Transferable, Translation, and App Attest, and the privacy patterns they share.",
     tags: ["platform", "healthkit", "corebluetooth"],
     publishedAt: "2026-08-16",
     get content() {
