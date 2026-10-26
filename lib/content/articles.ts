@@ -561,7 +561,7 @@ export const articles: Article[] = [
     slug: "notifications",
     title: "Notifications",
     description:
-      "Requesting permission, local notifications and triggers, categories and interactive actions, APNs and device tokens, handling taps, silent push, service and content extensions, threading, time-sensitive/critical alerts, and debugging delivery.",
+      "Local and push notifications: permission, triggers, actions, APNs auth and device tokens, handling taps, silent pushes, service and content extensions, grouping, interruption levels, and debugging delivery step by step.",
     tags: ["platform", "notifications", "push"],
     publishedAt: "2026-08-16",
     get content() {
