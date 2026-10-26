@@ -418,7 +418,7 @@ export const articles: Article[] = [
     slug: "table-and-collection-views",
     title: "Table and Collection Views",
     description:
-      "UITableView and UICollectionView's data source/delegate patterns, cell reuse and self-sizing, UICollectionViewFlowLayout and custom layouts, prefetching for scroll performance, and animated inserts, deletes, and reorders.",
+      "UIKit lists and grids: data sources and delegates, cell reuse and self-sizing cells, flow and compositional layouts, headers and footers, prefetching, custom layouts, index paths, and safe animated updates with diffable data sources.",
     tags: ["uikit", "table-view", "collection-view"],
     publishedAt: "2026-08-16",
     get content() {
