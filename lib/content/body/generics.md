@@ -1,6 +1,8 @@
-## 8.1 Why Generics: The Duplicate-Code Problem
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Without generics, supporting multiple types means writing near-identical functions repeatedly:
+## 8.1 Why Generics: The Duplicate-Code Problem 🟢
+
+Without generics, supporting several types means writing **almost the same function** again and again:
 
 ```swift
 func swapInts(_ a: inout Int, _ b: inout Int) {
@@ -16,13 +18,21 @@ func swapDoubles(_ a: inout Double, _ b: inout Double) {
 }
 ```
 
-All three functions are identical except for the type — exactly the kind of duplication generics eliminate, letting you write the logic once and have the compiler generate type-specific versions as needed.
+The three functions are **identical except for the type**. **Generics** remove this duplication: you write the logic **once**, and it works for **any type**.
+
+You already use generics every day. `Array`, `Dictionary`, `Optional`, and `Result` are all generic:
+
+```swift
+let names: Array<String> = ["Alex"]          // usually written [String]
+let ages: Dictionary<String, Int> = [:]      // usually written [String: Int]
+let maybe: Optional<Int> = nil               // usually written Int?
+```
 
 ---
 
-## 8.2 Generic Functions and Type Parameters
+## 8.2 Generic Functions and Type Parameters 🟢
 
-A generic function introduces a **type parameter** (conventionally named `T`, or something descriptive) in angle brackets, standing in for a type the caller determines:
+A **generic function** declares a **type parameter** in angle brackets, like `<T>`. `T` is a **placeholder** for a real type, chosen by the **caller**:
 
 ```swift
 func swapValues<T>(_ a: inout T, _ b: inout T) {
@@ -40,7 +50,17 @@ swapValues(&s1, &s2)
 print(s1, s2)   // "world" "hello"
 ```
 
-`T` is a placeholder Swift resolves at each call site based on the actual argument types — the compiler generates specialized code as if you'd written `swapInts`/`swapStrings` by hand, but you only wrote the logic once. Multiple type parameters are just as easy:
+At each call, Swift **infers** `T` from the arguments: `Int` in the first call, `String` in the second. Both arguments must have the **same** `T`:
+
+```swift
+var n = 1
+var text = "a"
+swapValues(&n, &text)   // ❌ error: conflicting arguments to generic parameter 'T' ('Int' vs. 'String')
+```
+
+The type check is still **fully static**: you get the safety of separate functions, but write the logic once. (The optimizer often creates specialized fast versions for the types you actually use.)
+
+You can have **several** type parameters:
 
 ```swift
 func makePair<A, B>(_ first: A, _ second: B) -> (A, B) {
@@ -50,11 +70,13 @@ func makePair<A, B>(_ first: A, _ second: B) -> (A, B) {
 let pair = makePair(1, "one")   // (Int, String)
 ```
 
+**Naming:** `T` is fine for short, general functions. For clearer code, use a **descriptive name**, like the standard library does: `Element`, `Key`, `Value`, `Wrapped`.
+
 ---
 
-## 8.3 Generic Types
+## 8.3 Generic Types 🟢
 
-Types themselves — structs, classes, enums — can be generic too, parameterized over the type(s) they hold:
+Types (structs, classes, enums) can be generic too. The type parameter says **what they hold**:
 
 ```swift
 struct Stack<Element> {
@@ -81,13 +103,33 @@ stringStack.push("a")
 stringStack.push("b")
 ```
 
-`Optional<Wrapped>` and `Array<Element>` (which you've been using since sections 3–4) are themselves generic types defined exactly this way in the standard library — there's nothing special-cased about them.
+`Stack<Int>` and `Stack<String>` are **different types**. You can't push a `String` onto a `Stack<Int>`:
+
+```swift
+intStack.push("three")   // ❌ error: cannot convert value of type 'String' to expected argument type 'Int'
+```
+
+`Optional<Wrapped>` and `Array<Element>` (sections 3–4) are written **exactly this way** in the standard library. Nothing about them is special.
+
+A real app example: a generic loading state you can reuse for every screen:
+
+```swift
+enum Loadable<Value> {
+    case idle
+    case loading
+    case loaded(Value)
+    case failed(Error)
+}
+
+var recipes: Loadable<[Recipe]> = .loading
+var profile: Loadable<User> = .idle
+```
 
 ---
 
-## 8.4 Type Constraints with `where`
+## 8.4 Type Constraints with `where` 🟡
 
-An unconstrained type parameter `T` can be *anything*, which means you can't call any type-specific operations on it (like `<` or `==`) unless you constrain it. A constraint restricts `T` to types conforming to a specific protocol:
+A plain `T` can be **any** type. So you can't use `<` or `==` on it: not every type supports them. A **constraint** limits `T` to types that conform to a protocol, and that **unlocks** the protocol's operations:
 
 ```swift
 func findLargest<T: Comparable>(_ items: [T]) -> T? {
@@ -102,7 +144,16 @@ print(findLargest([3, 7, 2, 9, 4]))         // Optional(9)
 print(findLargest(["banana", "apple", "cherry"]))   // Optional("cherry")
 ```
 
-For more complex constraints — especially involving multiple type parameters or associated types (8.5) — a `where` clause after the parameter list is more flexible than inline constraints:
+Without `: Comparable`, the `>` line doesn't compile:
+
+```swift
+func findLargestBroken<T>(_ items: [T]) -> T? {
+    // item > largest   ❌ error: binary operator '>' cannot be applied to two 'T' operands
+    nil
+}
+```
+
+For more complex rules (several type parameters, or associated types from 8.5), use a **`where` clause** after the signature:
 
 ```swift
 func allEqual<T: Sequence>(_ sequence: T) -> Bool where T.Element: Equatable {
@@ -118,13 +169,30 @@ print(allEqual([1, 1, 1]))   // true
 print(allEqual([1, 2, 1]))   // false
 ```
 
-You can also stack multiple constraints with `&`, requiring conformance to several protocols at once: `func process<T: Equatable & Hashable>(_ value: T)`.
+Combine protocols with `&`:
+
+```swift
+func uniqueCount<T: Hashable & CustomStringConvertible>(_ values: [T]) -> String {
+    "\(Set(values).count) unique: \(values.map(\.description))"
+}
+```
+
+Or require two type parameters to match:
+
+```swift
+func haveSameItems<A: Sequence, B: Sequence>(_ a: A, _ b: B) -> Bool
+    where A.Element == B.Element, A.Element: Hashable {
+    Set(a) == Set(b)
+}
+
+haveSameItems([1, 2, 3], Set([3, 2, 1]))   // true — an Array and a Set
+```
 
 ---
 
-## 8.5 Associated Types in Protocols
+## 8.5 Associated Types in Protocols 🟡
 
-A protocol can declare a **placeholder type** — an associated type — that conforming types fill in with a concrete type, using `associatedtype`. This is how protocols like `Sequence` and `Collection` (fully explored in section 14) stay generic over their element type:
+A protocol can declare its own **placeholder type** with **`associatedtype`**. Each **conforming type** fills it in. This is how `Sequence` and `Collection` (section 14) work with any element type:
 
 ```swift
 protocol Container {
@@ -142,10 +210,17 @@ struct IntContainer: Container {
 }
 ```
 
-Unlike a generic function's type parameter (which the *caller* specifies), an associated type is determined by the *conforming type* itself, inferred from how it implements the protocol's requirements — `IntContainer` never explicitly writes `Item = Int`; Swift infers it from the `add(_ item: Int)` signature.
+| | Generic type parameter (`<T>`) | Associated type |
+|---|---|---|
+| Declared on | A function or type | A protocol |
+| Chosen by | The **caller** | The **conforming type** |
+| Example | `swapValues(&a, &b)` picks `T` | `IntContainer` picks `Item = Int` |
+
+`IntContainer` never writes `Item = Int`. Swift **infers** it from `add(_ item: Int)`. You can also write it explicitly:
 
 ```swift
 struct StringContainer: Container {
+    typealias Item = String          // optional: explicit, instead of inferred
     var items: [String] = []
     mutating func add(_ item: String) {
         items.append(item)
@@ -154,11 +229,30 @@ struct StringContainer: Container {
 }
 ```
 
+A **generic** type can conform too, passing its own parameter through:
+
+```swift
+struct Box<T>: Container {
+    var items: [T] = []
+    mutating func add(_ item: T) { items.append(item) }   // Item = T
+    var count: Int { items.count }
+}
+```
+
+Associated types can have **constraints**:
+
+```swift
+protocol Repository {
+    associatedtype Model: Identifiable & Codable
+    func fetchAll() async throws -> [Model]
+}
+```
+
 ---
 
-## 8.6 Generic Constraints on Extensions
+## 8.6 Generic Constraints on Extensions 🟡
 
-You can extend a generic type with functionality that only applies when its type parameter meets a certain constraint — this was already seen conceptually in 7.6 (conditional conformance), but it applies just as well to plain methods, not just protocol conformances:
+You can extend a generic type with methods that exist **only when** its type parameter meets a condition. You saw this for conformances in 7.6; it works for plain methods too:
 
 ```swift
 extension Stack where Element: Equatable {
@@ -168,7 +262,9 @@ extension Stack where Element: Equatable {
 }
 ```
 
-This `contains` method only exists on `Stack<Element>` when `Element` is `Equatable` — `Stack<SomeNonEquatableType>` simply won't have this method available at all, and the compiler enforces that at the call site.
+(For this to compile, `items` must be visible to the extension. Make it `private(set) var items` or move the extension into the same file.)
+
+Now `contains` exists **only** on stacks whose elements are `Equatable`. The compiler checks this at every call:
 
 ```swift
 var numberStack = Stack<Int>()
@@ -180,11 +276,29 @@ var weirdStack = Stack<NotEquatable>()
 // weirdStack.contains(...)   // ❌ error: this method doesn't exist for this Stack specialization
 ```
 
+You can also target **one specific type**:
+
+```swift
+extension Stack where Element == String {
+    func joined() -> String {
+        items.joined(separator: " ")
+    }
+}
+
+var words = Stack<String>()
+words.push("hello"); words.push("world")
+words.joined()   // "hello world"
+```
+
+The standard library does this a lot. For example, `joined()` exists only on sequences of strings, and `sum`-like helpers only on numeric collections.
+
 ---
 
-## 8.7 `some` — Opaque Return Types
+## 8.7 `some` — Opaque Return Types 🟡
 
-`some Protocol` as a return type means "this function returns *some specific, concrete type* conforming to `Protocol`, but the caller doesn't get to know exactly which one — only that it's consistent across all calls to this specific function." This is heavily used in SwiftUI (`some View`), but applies generally:
+**`some Protocol`** as a return type means: "this returns **one specific concrete type** that conforms to `Protocol`. The caller doesn't know **which** type, only that it is always the same one."
+
+You use this all the time in SwiftUI (`some View`), but it works everywhere:
 
 ```swift
 protocol Shape {
@@ -204,13 +318,36 @@ let shape = makeShape()
 print(shape.area())   // 12.566...
 ```
 
-The key benefit: the compiler knows the *real*, concrete underlying type at compile time (enabling full static dispatch and optimization), while the function's public signature hides that detail from callers — useful for encapsulation, and required for protocols with associated types (like `some View`), which can't otherwise be used as a plain return type at all.
+**The benefits:**
+
+- The **compiler** knows the real type (`Circle`), so calls are fast and fully optimized.
+- The **caller** only sees `some Shape`, so you can change the real type later without breaking callers.
+- It works for protocols with **associated types**, like `View`. Its real type is often huge and unreadable:
+
+```swift
+var body: some View {
+    VStack {
+        Text("Hi")
+        Image(systemName: "star")
+    }
+}
+// The real type is something like VStack<TupleView<(Text, Image)>>.
+// `some View` hides that.
+```
+
+`some` also works for **parameters**. It's a short way to write a generic function:
+
+```swift
+func printArea(of shape: some Shape) {      // same as: func printArea<S: Shape>(of shape: S)
+    print(shape.area())
+}
+```
 
 ---
 
-## 8.8 `any` — Existential Types
+## 8.8 `any` — Existential Types 🟡
 
-`any Protocol` is different: it's a **boxed container** that can hold *any* type conforming to `Protocol`, and the specific concrete type can vary at runtime, even across multiple values stored in the same collection:
+**`any Protocol`** is different. It is a **box** that can hold **any** conforming type, and the type inside can **change at runtime**. Different values in the same array can have different concrete types:
 
 ```swift
 struct Square: Shape {
@@ -224,13 +361,33 @@ for shape in shapes {
 }
 ```
 
-This is impossible with `some Shape` — `some` fixes one specific type per function/context, so you couldn't declare `[some Shape]` mixing genuinely different concrete types. `any Shape` gives up that compile-time specificity in exchange for genuine runtime heterogeneity.
+This is **impossible with `some`**. `some` means **one** fixed type, so a `[some Shape]` can't mix circles and squares.
+
+A variable of type `any` can also be **reassigned** to a different concrete type:
+
+```swift
+var current: any Shape = Circle(radius: 1)
+current = Square(side: 4)       // ✅ fine — the box now holds a Square
+```
+
+To get the concrete type back, cast it:
+
+```swift
+if let circle = current as? Circle {
+    print("radius: \(circle.radius)")
+}
+```
 
 ---
 
-## 8.9 `some` vs `any`: Performance and Legality
+## 8.9 `some` vs `any`: Performance and Legality 🟡
 
-`some` (opaque types) preserve full static type information at compile time, enabling the compiler to use direct, non-boxed static dispatch — generally faster, with no extra runtime indirection. `any` (existential types) erase the concrete type into a runtime-checked box, which typically involves heap allocation and dynamic (witness table) dispatch — generally slower, though flexible.
+| | `some Shape` | `any Shape` |
+|---|---|---|
+| Concrete type | **One**, fixed, known to the compiler | **Any**, can change at runtime |
+| Calls | Direct (static dispatch), fast | Through a lookup table (dynamic dispatch) |
+| Storage | Stored directly | In a box; large values may need a heap allocation |
+| Mixed array | ❌ No | ✅ Yes |
 
 ```swift
 // some: one concrete type, resolved and optimized at compile time
@@ -244,13 +401,24 @@ func makeSomeShape(random: Bool) -> any Shape {
 }
 ```
 
-Notice the legality difference too: `makeSomeShape` above *couldn't* be written with `some Shape`, because it might return two genuinely different concrete types depending on the branch — `some` requires exactly one fixed underlying type per function. **Default to `some`** wherever a single concrete type is guaranteed; reach for `any` only when you specifically need heterogeneous storage or truly dynamic type selection.
+Notice the **legality** difference: `makeSomeShape` **can't** return `some Shape`, because it returns **two different** types depending on the branch. `some` needs exactly **one** type per function:
+
+```swift
+func broken(random: Bool) -> some Shape {
+    if random { return Circle(radius: 5) }
+    return Square(side: 3)
+    // ❌ error: function declares an opaque return type 'some Shape', but the return
+    //    statements in its body do not have matching underlying types
+}
+```
+
+**Rule:** use **`some` by default**. Use **`any`** only when you really need **different types together** (a mixed array, a property that can change type, a dependency you swap in tests).
 
 ---
 
-## 8.10 Primary Associated Types: `Collection<Int>`
+## 8.10 Primary Associated Types: `Collection<Int>` 🟡
 
-Since Swift 5.7, protocols can expose their associated types directly in angle-bracket syntax at the use site — called **primary associated types** — making constraints far more readable than the older, more verbose `where` clause spelling:
+Since Swift 5.7, protocols can declare **primary associated types**. You write them in angle brackets **where you use the protocol**. This is much easier to read than a `where` clause:
 
 ```swift
 // Older style, still valid
@@ -264,15 +432,33 @@ func sumAllModern(_ collection: some Collection<Int>) -> Int {
 }
 
 print(sumAllModern([1, 2, 3]))   // 6
+print(sumAllModern(Set([4, 5])))  // 9 — any collection of Int works
 ```
 
-`Collection<Int>` here reads almost like a generic type instantiation, even though `Collection` is a protocol with `Element` declared as its primary associated type — this syntax is purely a readability improvement over the equivalent `where` clause; both compile to the same constraint.
+`Collection<Int>` looks like a generic type, but `Collection` is a protocol. `<Int>` sets its **primary associated type**, `Element`. Both versions above mean **exactly the same thing**.
+
+Your own protocols can declare one, in angle brackets after the name:
+
+```swift
+protocol Repository<Model> {
+    associatedtype Model
+    func fetchAll() async throws -> [Model]
+}
+
+func showCount(from repo: some Repository<Recipe>) async throws {
+    print(try await repo.fetchAll().count)
+}
+
+let repos: [any Repository<Recipe>] = []   // works with `any` too
+```
 
 ---
 
-## 8.11 Type Erasure: Writing an `AnyX` Wrapper
+## 8.11 Type Erasure: Writing an `AnyX` Wrapper 🔴
 
-Before opaque types (`some`) existed, and still in cases requiring genuine heterogeneous storage, **type erasure** is the classic technique for hiding a generic type's concrete parameter behind a concrete wrapper type — the standard library's own `AnySequence`, `AnyHashable`, and similar types all use this pattern.
+**Type erasure** hides a concrete type behind a **wrapper type**. The standard library has several: `AnySequence`, `AnyHashable`, `AnyPublisher` (Combine). You'll see the pattern in older code, and it's still useful in some cases.
+
+Take a protocol with an associated type:
 
 ```swift
 protocol Animal {
@@ -280,31 +466,54 @@ protocol Animal {
     func eat(_ food: Food)
 }
 
-// Animal has an associated type, so you can't write `[any Animal]` directly —
-// existentials can't be formed from protocols with associated type requirements
-// (without primary associated types constraining them). A type-erased wrapper solves this:
+struct Cat: Animal { func eat(_ food: String) { print("Cat eats \(food)") } }
+struct Dog: Animal { func eat(_ food: String) { print("Dog eats \(food)") } }
+```
 
+Since Swift 5.7, you **can** write `[any Animal]`. But you **can't call** `eat(_:)` on it: Swift doesn't know **which `Food`** each animal takes.
+
+A **type-erased wrapper** fixes this. It stores the real animal's behavior **in a closure**, and exposes a known `Food` type:
+
+```swift
 struct AnyAnimal<Food>: Animal {
     private let _eat: (Food) -> Void
 
     init<A: Animal>(_ animal: A) where A.Food == Food {
-        var animal = animal
-        _eat = { food in animal.eat(food) }
+        _eat = animal.eat           // capture the real animal's method
     }
 
     func eat(_ food: Food) {
-        _eat(food)
+        _eat(food)                  // forward the call
     }
 }
+
+let pets: [AnyAnimal<String>] = [AnyAnimal(Cat()), AnyAnimal(Dog())]
+for pet in pets {
+    pet.eat("fish")
+}
+// Cat eats fish
+// Dog eats fish
 ```
 
-The wrapper stores the underlying logic as a closure captured at initialization time, forwarding calls to the original concrete instance — this "erases" the specific concrete type (`A`) while preserving behavior, letting you store a homogeneous array of erased wrappers (`[AnyAnimal<String>]`) even though the original types were all different.
+The concrete type (`Cat`, `Dog`) is **erased**, but the **behavior** is kept.
+
+**Today there's often a simpler way:** give the protocol a **primary associated type** (8.10), and use `any Animal<String>`:
+
+```swift
+protocol Pet<Food> {
+    associatedtype Food
+    func eat(_ food: Food)
+}
+// (with Cat and Dog conforming to Pet instead)
+let pets2: [any Pet<String>] = [Cat(), Dog()]
+pets2.forEach { $0.eat("fish") }   // works — Food is known to be String
+```
 
 ---
 
-## 8.12 Variadic Generics and Parameter Packs
+## 8.12 Variadic Generics and Parameter Packs 🔴
 
-Introduced in Swift 5.9, **parameter packs** let a generic function or type accept a variable number of *differently-typed* generic parameters — something previously only possible for same-typed variadics (recall `Int...` from 5.4).
+Swift 5.9 added **parameter packs**. A generic function can now take **any number** of values, each with a **different type**. Before, variadic parameters (`Int...`, 5.4) had to share **one** type.
 
 ```swift
 func makeTuple<each T>(_ value: repeat each T) -> (repeat each T) {
@@ -314,13 +523,34 @@ func makeTuple<each T>(_ value: repeat each T) -> (repeat each T) {
 let result = makeTuple(1, "two", 3.0)   // (Int, String, Double)
 ```
 
-`each T` declares a *pack* of type parameters (rather than a single type), and `repeat each value` expands the pack at both the parameter list and the return type — this is what allows the function to accept and return an arbitrary-length, arbitrarily-typed tuple, something that previously required hand-writing separate overloads for 2-tuples, 3-tuples, 4-tuples, and so on.
+- **`each T`** declares a **pack** of types, not just one.
+- **`repeat each value`** **expands** the pack: "do this for every value".
+
+**Why it matters:** before packs, libraries had to write **separate overloads** for 2, 3, 4, ... values. SwiftUI did this for its `ViewBuilder` (only up to 10 views!). Packs remove that limit.
+
+A practical example: check that **all** of several optional values are present, whatever their types:
+
+```swift
+func allPresent<each T>(_ value: repeat (each T)?) -> Bool {
+    for v in repeat each value {
+        if v == nil { return false }
+    }
+    return true
+}
+
+let name: String? = "Alex"
+let age: Int? = nil
+allPresent(name, age)          // false
+allPresent(name, 42 as Int?)   // true
+```
+
+(`for ... in repeat each` needs Swift 6.0 or later.)
 
 ---
 
-## 8.13 Phantom Types for Compile-Time Safety
+## 8.13 Phantom Types for Compile-Time Safety 🔴
 
-A phantom type is a generic type parameter that appears in a type's declaration but is never actually *used* by any of its stored properties — it exists purely to let the compiler distinguish between otherwise-identical values at compile time, catching category errors that would otherwise only surface at runtime.
+A **phantom type** is a generic type parameter that **no property actually uses**. It exists only so the **compiler can tell values apart**, and catch mix-ups at compile time.
 
 ```swift
 struct Distance<Unit> {
@@ -341,7 +571,37 @@ addMeters(distanceInMeters, distanceInMeters)   // ✅ fine — both are Distanc
 addMeters(distanceInMeters, distanceInFeet)      // ❌ compile-time error — mismatched phantom types!
 ```
 
-`Meters` and `Feet` here are never actually stored anywhere inside `Distance` — they exist purely as compile-time tags. This pattern catches unit-mismatch bugs (adding meters to feet without conversion) as a compile error rather than a runtime bug, at zero runtime cost, since the phantom type parameter disappears entirely after compilation.
+`Meters` and `Feet` are **never stored** in `Distance`. They are only **tags** for the compiler. An empty `enum` is perfect for this: nobody can create a value of it.
+
+Now a conversion must be **explicit**:
+
+```swift
+extension Distance where Unit == Feet {
+    var inMeters: Distance<Meters> {
+        Distance<Meters>(value: value * 0.3048)
+    }
+}
+
+addMeters(distanceInMeters, distanceInFeet.inMeters)   // ✅ converted on purpose
+```
+
+A common app use: typed IDs, so you can't pass a recipe ID where a user ID is expected:
+
+```swift
+struct ID<Owner>: Hashable {
+    let raw: String
+}
+
+struct User { let id: ID<User> }
+struct Recipe { let id: ID<Recipe> }
+
+func loadUser(_ id: ID<User>) { /* ... */ }
+
+let recipe = Recipe(id: ID(raw: "r-42"))
+// loadUser(recipe.id)   // ❌ error: cannot convert value of type 'ID<Recipe>' to 'ID<User>'
+```
+
+**The cost at runtime is zero.** The phantom parameter exists only at compile time. `Distance<Meters>` takes exactly as much memory as a plain `Double`.
 
 ---
 
@@ -349,16 +609,16 @@ addMeters(distanceInMeters, distanceInFeet)      // ❌ compile-time error — m
 
 | Topic | One-line takeaway |
 |---|---|
-| The duplication problem | Generics let you write logic once instead of near-identical per-type copies |
-| Generic functions | `<T>` introduces a placeholder type resolved per call site |
-| Generic types | Structs/classes/enums can be parameterized too — `Array` and `Optional` are built this way |
-| Type constraints (`where`) | Restrict a type parameter to conform to specific protocols, unlocking type-specific operations |
-| Associated types | A protocol's own placeholder type, filled in by each conforming type, not the caller |
-| Constrained extensions | Add methods to a generic type only when its parameter meets a condition |
-| `some` (opaque types) | One specific, compiler-known concrete type per context — fast, static dispatch |
-| `any` (existential types) | A runtime box holding any conforming type — enables heterogeneous storage, costs more |
-| `some` vs `any` | Default to `some` for a single guaranteed type; use `any` only for genuine runtime variety |
-| Primary associated types | `Collection<Int>` syntax as sugar over the equivalent `where` clause |
-| Type erasure (`AnyX`) | Wraps a concrete generic type behind closures to hide its specific type parameter |
-| Parameter packs | `each T` / `repeat each` enable variadic generics over differently-typed parameters |
-| Phantom types | Unused generic parameters that exist purely to enforce compile-time category safety |
+| The duplication problem | Write the logic once instead of a copy per type |
+| Generic functions | `<T>` is a placeholder type, chosen at each call |
+| Generic types | Structs, classes, and enums can have type parameters, like `Array` |
+| Type constraints (`where`) | Limit `T` to a protocol to unlock its operations |
+| Associated types | A protocol's own placeholder, filled in by each conforming type |
+| Constrained extensions | Methods that exist only when the type parameter fits |
+| `some` (opaque types) | One hidden, fixed concrete type; fast |
+| `any` (existential types) | A box for any conforming type; mixed collections; slower |
+| `some` vs `any` | `some` by default; `any` only when types must vary |
+| Primary associated types | `some Collection<Int>`: short form of a `where` clause |
+| Type erasure (`AnyX`) | Wraps a concrete type in closures; often replaced by `any P<T>` today |
+| Parameter packs | `each T` / `repeat each`: any number of differently-typed values |
+| Phantom types | Unused type parameters as compile-time tags; zero runtime cost |

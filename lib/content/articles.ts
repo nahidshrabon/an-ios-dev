@@ -99,7 +99,7 @@ export const articles: Article[] = [
     slug: "generics",
     title: "Generics",
     description:
-      "Writing code that works across many types without duplication: generic functions and types, constraints, associated types, and the some/any distinction for working with protocols abstractly.",
+      "Writing code once for many types: generic functions and types, constraints, associated types, constrained extensions, some vs. any, primary associated types, type erasure, parameter packs, and phantom types.",
     tags: ["swift","generics"],
     publishedAt: "2026-08-04",
     get content() {
