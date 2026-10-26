@@ -44,7 +44,7 @@ export const articles: Article[] = [
     slug: "collections",
     title: "Collections",
     description:
-      "Swift's three core collection types — Array, Dictionary, Set — and the functional operations (map, filter, reduce, and friends) that transform them without hand-written loops.",
+      "Swift's three main collections, Array, Dictionary, and Set, plus sorting and the operations that replace hand-written loops: map, filter, reduce, compactMap, flatMap, search helpers, slices, and lazy sequences.",
     tags: ["swift", "collections"],
     publishedAt: "2026-08-02",
     get content() {
