@@ -1,6 +1,10 @@
-## 10.1 What ARC Is and What It Counts
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-ARC (Automatic Reference Counting) manages the memory of **class instances** automatically by tracking how many *strong references* point to each one. When that count reaches zero, the instance is deallocated (`deinit` runs, recall 6.8) and its memory is reclaimed — no manual `retain`/`release` calls, and no garbage collector pausing your app to scan memory.
+## 10.1 What ARC Is and What It Counts 🟢
+
+**ARC** (Automatic Reference Counting) manages the memory of **class instances** for you. It counts how many **strong references** point to each object. When the count reaches **zero**, the object is freed: its `deinit` runs (6.8) and its memory is reclaimed.
+
+There are no manual `retain`/`release` calls, and no garbage collector that pauses your app to scan memory.
 
 ```swift
 class Person {
@@ -22,13 +26,20 @@ person2 = nil                                    // reference count: 0 -> deinit
 // Alice is being deallocated
 ```
 
-Crucially, ARC only counts references to **class instances** — structs, enums, and other value types aren't reference-counted at all, since they don't have shared identity to track (recall 6.9).
+ARC counts **only class instances** (and closures, which are reference types too). Structs and enums are **values**: they have no shared identity, so there is nothing to count (6.9).
+
+| | Counted by ARC? |
+|---|---|
+| Class instances | ✅ Yes |
+| Closures | ✅ Yes |
+| Actors | ✅ Yes (they are reference types) |
+| Structs, enums, tuples | ❌ No (but a class **inside** a struct is counted) |
 
 ---
 
-## 10.2 Strong References and Object Lifetime
+## 10.2 Strong References and Object Lifetime 🟢
 
-By default, every reference to a class instance — a variable, a property, a captured value in a closure — is a **strong** reference, meaning it keeps that instance alive as long as the reference itself exists.
+By default, **every** reference to an object is **strong**: a variable, a property, an array element, a value captured by a closure. A strong reference **keeps the object alive**.
 
 ```swift
 class Engine {
@@ -47,13 +58,22 @@ car = nil                 // Car is deallocated, which drops its strong referenc
 // Engine destroyed
 ```
 
-An object stays alive exactly as long as at least one strong reference to it exists, anywhere in the program. Once the last strong reference disappears, deallocation happens immediately and deterministically (unlike a garbage-collected language, where cleanup timing is less predictable).
+**The rule:** an object lives **exactly as long as at least one strong reference** to it exists, anywhere in the app. When the last one goes away, the object is freed **immediately** and **predictably**. (With a garbage collector, cleanup happens "some time later".)
+
+```plaintext
+car ──strong──► Car ──strong──► Engine
+
+car = nil   →   Car has 0 refs → freed → its engine property goes away
+                Engine now has 0 refs → freed
+```
+
+This predictability is why `deinit` is a reliable place for cleanup in Swift.
 
 ---
 
-## 10.3 Retain Cycles Between Two Objects
+## 10.3 Retain Cycles Between Two Objects 🟢
 
-A **retain cycle** happens when two (or more) objects hold strong references to each other, so neither's reference count ever reaches zero — even after every *external* reference to both is gone, they keep each other alive forever, leaking memory.
+A **retain cycle** happens when two (or more) objects hold **strong references to each other**. Their counts **never reach zero**. Even after all **outside** references are gone, they keep each other alive **forever**. This is a **memory leak**.
 
 ```swift
 class Person {
@@ -81,13 +101,24 @@ unit4A = nil
 // Neither deinit ever prints! Both objects leak, kept alive by each other's strong reference.
 ```
 
-Even though the local variables `john` and `unit4A` are set to `nil`, the two objects still hold strong references to *each other*, so their reference counts never drop to zero — a classic, easy-to-miss memory leak.
+```plaintext
+john   ──X                     (set to nil)
+unit4A ──X                     (set to nil)
+
+Person ──strong──► Apartment
+   ▲                   │
+   └──────strong───────┘       ← each has 1 reference left: the other one
+```
+
+Nothing crashes and nothing warns you. The memory is just **never freed**. In an app, a leaked view model can keep **network calls, timers, and images** alive too.
 
 ---
 
-## 10.4 `weak` References
+## 10.4 `weak` References 🟢
 
-A `weak` reference doesn't keep its target alive — it doesn't count toward the strong reference count at all. Because the referenced object could be deallocated at any time (via its other strong references), a `weak` reference must always be an **optional**, and Swift automatically sets it to `nil` the instant its target is deallocated.
+A **`weak`** reference **doesn't keep** its object alive. It doesn't add to the strong count.
+
+Because the object can be freed at any time, a `weak` reference is **always optional**. When the object is freed, Swift sets the reference to **`nil` automatically**.
 
 ```swift
 class Person {
@@ -117,13 +148,29 @@ unit4A = nil       // Apartment's only remaining strong ref is gone -> deinit ru
 // "Apartment 4A is being deallocated"
 ```
 
-`weak` is the right choice whenever the relationship is genuinely optional and the referenced object might legitimately be deallocated while the reference still exists — like a `tenant` who could move out.
+After John is freed, the apartment's `tenant` is `nil` automatically:
+
+```swift
+var anotherUnit: Apartment? = Apartment(unit: "5B")
+var sam: Person? = Person(name: "Sam")
+anotherUnit?.tenant = sam
+sam = nil
+print(anotherUnit?.tenant as Any)   // nil — the weak reference was cleared
+```
+
+A `weak` reference must be optional, because Swift may set it to `nil`:
+
+```swift
+weak var owner: Person      // ❌ error: 'weak' variable should have optional type 'Person?'
+```
+
+**When to use it:** when the relationship is **optional**, and the other object may **legitimately go away** first, like a tenant who moves out.
 
 ---
 
-## 10.5 `unowned` References and When They Crash
+## 10.5 `unowned` References and When They Crash 🟡
 
-`unowned` is like `weak` — it doesn't keep its target alive and doesn't count toward the strong reference count — but it's declared as **non-optional**, asserting that the reference will *always* have a valid value for as long as the `unowned` reference itself is used.
+**`unowned`** is like `weak`: it doesn't keep the object alive. But it is **not optional**. It **promises** that the object will **always exist** while this reference is used.
 
 ```swift
 class CreditCard {
@@ -147,13 +194,32 @@ customer?.card = CreditCard(number: "1234", customer: customer!)
 customer = nil   // both Customer and CreditCard deallocate cleanly together
 ```
 
-The risk: if you access an `unowned` reference *after* its target has already been deallocated, the app crashes immediately with a memory access violation — there's no `nil`-check safety net like `weak` provides. Only use `unowned` when the referenced object is guaranteed to outlive (or have an identical lifetime to) the reference holding it — as with a `CreditCard` that logically cannot exist without its `customer`.
+**The risk:** if you use an `unowned` reference **after** its object was freed, the app **crashes**. There is no `nil` safety net:
+
+```swift
+var card: CreditCard?
+do {
+    let temp = Customer(name: "Bob")
+    card = CreditCard(number: "5678", customer: temp)
+}   // temp is freed here, but the card still exists
+
+print(card!.customer.name)   // 💥 crash: attempted to read an unowned reference but object was already deallocated
+```
+
+| | `weak` | `unowned` |
+|---|---|---|
+| Keeps the object alive | No | No |
+| Type | Optional (`T?`) | Non-optional (`T`) |
+| After the object is freed | Becomes `nil` | **Crash** if used |
+| Use when | The other object **may** go away first | The other object **always** lives at least as long |
+
+Use `unowned` **only** when the other object is **guaranteed** to live as long as (or longer than) this one. A credit card can't exist without its customer, so it's a fit there. When in doubt, use `weak`.
 
 ---
 
-## 10.6 Retain Cycles in Closures
+## 10.6 Retain Cycles in Closures 🟢
 
-Closures capture reference types **strongly** by default (recall 5.12–5.13) — which means a class that stores a closure as a property, where that closure itself captures `self`, creates the exact same retain-cycle problem as two objects referencing each other directly.
+Closures capture objects **strongly** by default (5.12–5.13). So a class that **stores a closure** that **uses `self`** creates the same cycle as two objects pointing at each other:
 
 ```swift
 class ViewModel {
@@ -178,13 +244,38 @@ viewModel = nil
 // and viewModel keeps the closure alive via onUpdate, forming a cycle
 ```
 
-This pattern is extremely common in real apps, since storing a completion handler or callback closure as a property is routine — and it's exactly why `[weak self]` (recall 5.13, and see 10.7 next) exists.
+```plaintext
+ViewModel ──strong (onUpdate)──► closure
+    ▲                               │
+    └──────strong (captures self)───┘
+```
+
+This is **very common** in real apps: storing a callback or completion handler as a property is routine. That's exactly why `[weak self]` exists (10.7).
+
+**Not every closure with `self` is a cycle.** A closure that is **not stored** by `self` (or by something `self` owns) is fine:
+
+```swift
+func load() {
+    // Runs once and is then released; self isn't storing it. No cycle.
+    DispatchQueue.main.async {
+        self.data = "Loaded"
+    }
+
+    // Non-escaping closures (map, filter, forEach) can't cause cycles at all.
+    let upper = ["a", "b"].map { _ in self.data.uppercased() }
+}
+```
+
+A cycle needs a **loop of strong references**. Ask: "does `self` (directly or indirectly) **own** this closure?"
 
 ---
 
-## 10.7 `[weak self]` vs `[unowned self]`
+## 10.7 `[weak self]` vs `[unowned self]` 🟡
 
-Both break closure retain cycles by capturing `self` without a strong reference, but they differ exactly like `weak` vs `unowned` do for object properties: `[weak self]` produces an optional `self` that must be unwrapped (and might legitimately be `nil` by the time the closure runs), while `[unowned self]` asserts `self` will always still exist when the closure runs — crashing if that assumption is wrong.
+Both break a closure cycle by capturing `self` **without** a strong reference. They differ like `weak` and `unowned` properties do:
+
+- **`[weak self]`**: `self` becomes **optional**. It may be `nil` when the closure runs.
+- **`[unowned self]`**: promises `self` **still exists** when the closure runs, and **crashes** if not.
 
 ```swift
 class ViewModel {
@@ -209,13 +300,31 @@ viewModel = nil
 // "ViewModel deallocated" now prints correctly — the cycle is broken
 ```
 
-**Guidance:** default to `[weak self]` for closures that might genuinely outlive their owner (network callbacks, timers, notification handlers) — it's the safer choice. Reach for `[unowned self]` only when you can guarantee the closure will never be called after `self` is deallocated (e.g. a closure that's guaranteed to run synchronously, or is torn down alongside `self` in lockstep).
+For one-line uses, optional chaining is shorter:
+
+```swift
+onUpdate = { [weak self] in
+    self?.refresh()          // does nothing if self is gone
+}
+```
+
+**Guidance:**
+
+- **Default to `[weak self]`** for closures that might run **after** their owner is gone: network callbacks, timers, notification observers.
+- Use `[unowned self]` **only** when you're certain the closure can never run after `self` is freed. The small convenience is rarely worth the crash risk.
+
+```swift
+// Typical: a timer owned by the view model
+timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+    self?.tick()
+}
+```
 
 ---
 
-## 10.8 Retain Cycles in Delegates
+## 10.8 Retain Cycles in Delegates 🟢
 
-The classic delegate pattern (heavily used in UIKit, and still relevant when interoperating with it — see section 35) is a textbook retain-cycle risk: if a parent object strongly holds a child, and the child's `delegate` property strongly points back at the parent, you get the same two-object cycle as 10.3.
+The **delegate pattern** (very common in UIKit, section 35) is a classic cycle risk. A parent **owns** a child strongly, and the child's `delegate` points **back** at the parent. If that back-reference is strong, you get the two-object cycle from 10.3.
 
 ```swift
 protocol DownloadDelegate: AnyObject {
@@ -245,13 +354,32 @@ class ViewController: DownloadDelegate {
 }
 ```
 
-This is why delegate protocols are conventionally constrained to `AnyObject` (class-only) — it's what makes `weak var delegate` legal at all, since `weak` only applies to reference types. Making `delegate` `weak` is the standard, expected convention for this pattern precisely to avoid the parent/child retain cycle.
+```plaintext
+ViewController ──strong──► Downloader
+       ▲                        │
+       └────────weak────────────┘    ← no cycle
+```
+
+Two rules go together:
+
+1. The `delegate` property is **`weak`**.
+2. The delegate protocol is limited to classes with **`: AnyObject`**. `weak` only works with reference types, so without it, `weak var delegate` doesn't compile:
+
+```swift
+protocol PlainDelegate { }
+class Thing {
+    weak var delegate: PlainDelegate?
+    // ❌ error: 'weak' must not be applied to non-class-bound 'any PlainDelegate'
+}
+```
+
+UIKit follows this everywhere: `tableView.delegate`, `scrollView.delegate`, and `textField.delegate` are all `weak`.
 
 ---
 
-## 10.9 Retain Cycles with `Task` and Async Closures
+## 10.9 Retain Cycles with `Task` and Async Closures 🔴
 
-Swift Concurrency's `Task { }` closures (fully covered in Part 2) capture their surrounding context strongly by default too, exactly like ordinary closures — a class storing a `Task` that captures `self`, especially one performing long-running or repeating work, is a modern variant of the same retain-cycle problem.
+A `Task { }` closure (Part 2) also captures **strongly** by default. Usually that's fine: the task finishes, and releases `self`. The problem is a task that is **stored** and **never finishes**, like a polling loop:
 
 ```swift
 class DataLoader {
@@ -277,12 +405,36 @@ class DataLoader {
 }
 ```
 
-Without `[weak self]`, a never-ending `Task` like this keeps `DataLoader` alive forever, since the task's closure holds a strong reference to `self` and the task itself never completes. The fix mirrors ordinary closures — capture weakly and check cancellation:
+The task holds `self` strongly and **never ends**, so `DataLoader` **lives forever**, and keeps polling the network even after its screen is closed.
+
+**The fix:** capture `self` weakly, and stop when it's gone or the task is cancelled:
 
 ```swift
 task = Task { [weak self] in
-    while let self, !Task.isCancelled {
+    while !Task.isCancelled {
+        guard let self else { return }      // the owner is gone: stop
         await self.poll()
+        try? await Task.sleep(for: .seconds(5))
+    }
+}
+```
+
+And cancel the task when the owner goes away:
+
+```swift
+deinit {
+    task?.cancel()
+}
+```
+
+(While the loop body runs, `self` is held strongly for that pass. So the object is freed at the latest after the current sleep ends. That's fine for a polling loop.)
+
+In SwiftUI, the **`.task { }` modifier** is often the simplest answer. SwiftUI **cancels it automatically** when the view disappears:
+
+```swift
+.task {
+    while !Task.isCancelled {
+        await viewModel.poll()
         try? await Task.sleep(for: .seconds(5))
     }
 }
@@ -290,9 +442,9 @@ task = Task { [weak self] in
 
 ---
 
-## 10.10 Verifying Deallocation with `deinit` Logging
+## 10.10 Verifying Deallocation with `deinit` Logging 🟢
 
-Since retain cycles fail silently (no crash, no warning — just a quiet memory leak), a simple but effective debugging technique is adding a `print` statement (or a breakpoint) inside `deinit` during development, to confirm an object is actually being deallocated when you expect it to be.
+Retain cycles fail **silently**: no crash, no warning, just memory that is never freed. A simple check during development: **print in `deinit`** (or set a breakpoint there), and confirm the object is freed when you expect.
 
 ```swift
 class ProfileViewModel {
@@ -305,13 +457,31 @@ class ProfileViewModel {
 }
 ```
 
-If you navigate away from a screen backed by `ProfileViewModel` and never see "ProfileViewModel deallocated" printed, that's a strong signal something — an unbroken closure capture, a delegate that should be `weak`, a retained `Task` — is holding onto it longer than intended. Xcode's Memory Graph Debugger (covered in section 68) is the more thorough tool for tracking down exactly *what* is holding the unwanted reference once you've confirmed a leak this way.
+**The test:** open the screen, then leave it. If you never see "ProfileViewModel deallocated", something still holds it: a closure without `[weak self]`, a strong delegate, or a stored `Task`.
+
+You can turn this into a **unit test**, so leaks are caught automatically:
+
+```swift
+import Testing
+
+@Test func viewModelIsReleased() {
+    weak var weakViewModel: ProfileViewModel?
+    do {
+        let viewModel = ProfileViewModel()
+        viewModel.setup()                 // the code that might create a cycle
+        weakViewModel = viewModel
+    }                                     // the last strong reference ends here
+    #expect(weakViewModel == nil, "ProfileViewModel leaked")
+}
+```
+
+Once you know **that** something leaks, Xcode's **Memory Graph Debugger** (section 68) shows **what** is holding it.
 
 ---
 
-## 10.11 Copy-on-Write and `isKnownUniquelyReferenced`
+## 10.11 Copy-on-Write and `isKnownUniquelyReferenced` 🔴
 
-Swift's value types (`Array`, `Dictionary`, `Set`, and your own structs containing them) achieve efficient copy semantics through **copy-on-write (COW)**: assigning or passing a value type doesn't actually duplicate its underlying storage immediately — it shares the same storage buffer until one of the copies is actually *mutated*, at which point a real copy is made just before that mutation.
+`Array`, `Dictionary`, `Set`, and `String` use **copy-on-write (COW)**. Assigning one to another variable **doesn't copy** the storage right away. Both **share** the same buffer, until one of them is **changed**. Only then is a real copy made, just before the change:
 
 ```swift
 var array1 = [1, 2, 3, 4, 5]
@@ -322,7 +492,18 @@ print(array1)          // [1, 2, 3, 4, 5] — unaffected
 print(array2)          // [1, 2, 3, 4, 5, 6]
 ```
 
-This is why value types can be "cheap to copy" despite conceptually being fully independent — the actual expensive copy only happens on the *first write* after a share, not on every assignment. You can build this behavior into your own types using `isKnownUniquelyReferenced`, which checks whether a reference-counted storage object currently has exactly one owner:
+```plaintext
+After  array2 = array1:    array1 ──┐
+                                    ├──► [1, 2, 3, 4, 5]     (shared)
+                           array2 ──┘
+
+After  array2.append(6):   array1 ──► [1, 2, 3, 4, 5]
+                           array2 ──► [1, 2, 3, 4, 5, 6]     (copied on first write)
+```
+
+That's how value types are **cheap to pass around** but still **fully independent**: the expensive copy happens only on the **first write** after sharing.
+
+Your **own** structs don't get COW automatically for their class-based storage. You can build it with **`isKnownUniquelyReferenced`**, which checks whether a storage object has **exactly one owner**:
 
 ```swift
 final class Storage {
@@ -346,11 +527,18 @@ struct MyArray {
 }
 ```
 
+Without that check, two copies of `MyArray` would share one `Storage`, and appending to one would **change the other**: class reference behavior hiding inside a struct.
+
+**Tip:** to keep COW cheap, avoid making extra copies of a big array right before you change it. For example, change it **in place** (`items[i].title = ...`) instead of copying an element out and back in a loop.
+
 ---
 
-## 10.12 Stack vs Heap Allocation in Swift
+## 10.12 Stack vs Heap Allocation in Swift 🟡
 
-Value types (structs, enums, tuples) are generally allocated on the **stack** — fast, automatically reclaimed when a scope exits, with no reference counting overhead — while class instances are allocated on the **heap**, managed by ARC, and require pointer indirection to access.
+As a **simple model**:
+
+- **Value types** (structs, enums, tuples) usually live on the **stack**: very fast, freed automatically when the scope ends, and **no reference counting**.
+- **Class instances** live on the **heap**: allocation is slower, ARC must count references, and every access goes **through a pointer**.
 
 ```swift
 struct Point {   // typically stack-allocated: fast, no ARC overhead
@@ -365,13 +553,27 @@ class PointBox {   // heap-allocated: requires ARC, pointer indirection
 }
 ```
 
-This is one of the practical performance reasons Swift favors `struct` by default (recall 6.10): stack allocation avoids heap allocation overhead and ARC's retain/release traffic entirely for simple, self-contained data. Note this is a simplification — a struct *containing* a class property, or one captured by an escaping closure, may still end up requiring heap allocation indirectly, since the compiler's actual allocation strategy involves more nuance than a strict stack/heap split by type kind alone.
+This is one **performance** reason Swift prefers `struct` by default (6.10).
+
+**But it's a simplification.** A value can still end up using the heap:
+
+```swift
+struct Profile {
+    var name: String          // String's characters may live in a heap buffer
+    var tags: [String]        // the array's elements are in a heap buffer
+    var avatar: UIImage?      // a class instance: heap + ARC
+}
+```
+
+Copying this `Profile` does **ARC work** for `tags` and `avatar`. Also, values captured by an escaping closure, or stored in an `any` box (10.13), may move to the heap.
+
+**In practice:** don't guess. If memory or speed matters, **measure** with Instruments (section 69).
 
 ---
 
-## 10.13 Existential Boxing Cost
+## 10.13 Existential Boxing Cost 🔴
 
-Recall from section 8.9 that `any Protocol` (an existential type) erases a value's concrete type into a runtime container. For value types larger than a small fixed buffer (typically 3 machine words), this existential container must allocate additional storage on the **heap** to hold the value — an extra allocation and indirection cost that `some`/generic code avoids entirely.
+From 8.9: `any Protocol` (an **existential**) stores a value in a **runtime box**. The box has a small **inline buffer**, about **3 machine words** (24 bytes on 64-bit devices). A value **bigger** than that must be stored **on the heap**, with an extra allocation and an extra pointer hop. `some` and generic code don't need this.
 
 ```swift
 protocol Shape {
@@ -388,13 +590,30 @@ let shapes: [any Shape] = [BigShape(a: 1, b: 2, c: 3, d: 4, e: 5)]
 // on top of whatever allocation BigShape itself would otherwise need
 ```
 
-This is a concrete, measurable reason `some`/generics generally outperform `any` (beyond the dynamic dispatch difference discussed in 8.9) — the existential's boxing behavior can introduce heap traffic that a statically-typed generic parameter never incurs, especially for larger value types.
+```plaintext
+BigShape: 5 × 8 bytes = 40 bytes  >  24-byte inline buffer  →  stored in a heap box
+SmallShape: 2 × 8 bytes = 16 bytes ≤ 24-byte inline buffer  →  stored inline
+```
+
+Compare with a generic version: no box, no extra allocation:
+
+```swift
+func totalArea<S: Shape>(_ shapes: [S]) -> Double {      // or: [some Shape]
+    shapes.reduce(0) { $0 + $1.area() }
+}
+
+totalArea([BigShape(a: 1, b: 2, c: 3, d: 4, e: 5)])
+```
+
+This is a concrete reason `some` and generics are usually **faster** than `any`, besides dynamic dispatch (8.9). It matters most in **hot loops** with many values. For normal app code, choose based on clarity first.
 
 ---
 
-## 10.14 Autorelease Pools and When You Still Need Them
+## 10.14 Autorelease Pools and When You Still Need Them 🔴
 
-Autorelease pools are a holdover mechanism from Objective-C's memory model, still occasionally relevant in Swift when interoperating with Objective-C/Cocoa APIs (or writing tight loops that create many temporary Objective-C objects) — `autoreleasepool { }` forces temporary objects to be released promptly rather than accumulating until the end of the current run loop iteration.
+**Autorelease pools** come from Objective-C's memory model. Some Objective-C and Cocoa APIs return **"autoreleased"** objects: they're freed later, when the current pool is **drained** (usually at the end of the run loop iteration).
+
+In a tight loop that creates many such objects, they **pile up** until the loop ends. **`autoreleasepool { }`** frees them **after each pass**:
 
 ```swift
 for i in 0..<100_000 {
@@ -407,13 +626,27 @@ for i in 0..<100_000 {
 }
 ```
 
-In pure Swift code using only native Swift types, you'll rarely need this explicitly — ARC handles Swift object lifetimes deterministically without needing a pool. It remains relevant mainly in tight loops that heavily exercise Objective-C-bridged APIs, where without it, memory usage can spike noticeably during the loop before being reclaimed.
+A real case: processing many images from disk in one loop:
+
+```swift
+for url in imageURLs {
+    autoreleasepool {
+        guard let image = UIImage(contentsOfFile: url.path) else { return }
+        let thumbnail = image.preparingThumbnail(of: CGSize(width: 200, height: 200))
+        save(thumbnail)
+    }   // temporary image memory is released here, every pass
+}
+```
+
+Without the pool, memory can climb to hundreds of MB during the loop, and the app may be **terminated**.
+
+In **pure Swift** code with Swift types, you **rarely** need this: ARC frees Swift objects right away. It matters mainly in **tight loops** using **Objective-C-based APIs** (UIKit, Foundation, Core Graphics).
 
 ---
 
-## 10.15 The Law of Exclusivity
+## 10.15 The Law of Exclusivity 🔴
 
-Swift enforces **exclusive access** to memory: you cannot have two overlapping accesses to the same variable where at least one of them is a mutation — this rule is checked (mostly at compile time, sometimes at runtime) to prevent subtle bugs and to enable certain compiler optimizations that assume no aliasing.
+Swift enforces **exclusive access** to memory: two accesses to the **same variable** may **not overlap** if at least one of them **changes** it. Swift checks this mostly **at compile time**, and sometimes **at runtime**.
 
 ```swift
 func modify(_ value: inout Int, using closure: (Int) -> Int) {
@@ -428,7 +661,13 @@ modify(&counter) { input in
 }
 ```
 
-A more classic runtime example: passing the same variable as two different `inout` arguments to one function call is flagged as an exclusivity violation, since the function body might read/write both "at once":
+The fix: use the value the closure receives, instead of reading the variable again:
+
+```swift
+modify(&counter) { input in input + 1 }   // ✅ counter == 2
+```
+
+Passing the **same variable** to two `inout` parameters is also an overlap. For a local variable, the compiler catches it:
 
 ```swift
 func swapValues(_ a: inout Int, _ b: inout Int) {
@@ -436,10 +675,27 @@ func swapValues(_ a: inout Int, _ b: inout Int) {
 }
 
 var x = 5
-swapValues(&x, &x)   // 💥 runtime crash: simultaneous accesses to the same variable
+swapValues(&x, &x)   // ❌ error: overlapping accesses to 'x', but modification requires exclusive access
 ```
 
-This rule exists because Swift's optimizer is allowed to assume no two mutable references alias the same memory unless explicitly proven otherwise — violating exclusivity (even if it "seems to work") can lead to undefined, unpredictable behavior once optimizations are applied, which is why Swift actively detects and rejects (or crashes on) these violations rather than allowing silently incorrect results.
+When the compiler **can't see** the overlap (class properties, globals, escaping closures), Swift checks **at runtime** and **crashes**:
+
+```swift
+final class Settings { var step = 1 }
+
+func demo() {
+    let settings = Settings()
+
+    func increment(_ number: inout Int) {
+        number += settings.step     // reads settings.step...
+    }
+
+    increment(&settings.step)       // ...while settings.step is being modified
+    // 💥 runtime crash: Simultaneous accesses to 0x..., but modification requires exclusive access
+}
+```
+
+**Why this rule exists:** the optimizer may assume that two mutable accesses **never point to the same memory**. Breaking that (even if it "seems to work") could give **wrong results** after optimization. So Swift **rejects** these cases, or crashes, instead of silently computing garbage.
 
 ---
 
@@ -447,18 +703,18 @@ This rule exists because Swift's optimizer is allowed to assume no two mutable r
 
 | Topic | One-line takeaway |
 |---|---|
-| ARC | Automatically tracks strong references to class instances; deallocates at zero, deterministically |
-| Strong references | Default reference kind; keeps the referenced instance alive |
-| Retain cycles | Two objects strongly referencing each other keep both alive forever, silently leaking |
-| `weak` | Doesn't keep the target alive; must be optional; auto-`nil`s when the target deallocates |
-| `unowned` | Like `weak` but non-optional; crashes if accessed after its target is deallocated |
-| Closure retain cycles | A stored closure strongly capturing `self` creates the same cycle as two objects |
-| `[weak self]` vs `[unowned self]` | Default to `weak` for safety; `unowned` only with a guaranteed matching lifetime |
-| Delegate retain cycles | `weak var delegate` is the standard convention, requiring `AnyObject`-constrained protocols |
-| `Task` retain cycles | Async closures capture strongly too; `[weak self]` + cancellation checks prevent leaks |
-| `deinit` logging | A simple, practical way to confirm expected deallocation during development |
-| Copy-on-write | Value types share storage until first mutation, then copy — cheap assignment, safe mutation |
-| Stack vs heap | Value types typically stack-allocate (fast, no ARC); classes heap-allocate (ARC-managed) |
-| Existential boxing | `any` can require extra heap allocation for values larger than its inline buffer |
-| Autorelease pools | A rarely-needed Objective-C interop tool for releasing temporary objects promptly in tight loops |
-| Law of Exclusivity | Overlapping mutable access to the same memory is forbidden, enabling safe compiler optimizations |
+| ARC | Counts strong references to objects; frees them at zero, right away |
+| Strong references | The default; keeps the object alive |
+| Retain cycles | Objects that hold each other strongly leak, silently |
+| `weak` | Doesn't keep alive; optional; becomes `nil` when the object is freed |
+| `unowned` | Doesn't keep alive; non-optional; crashes if used after the object is freed |
+| Closure retain cycles | A stored closure that captures `self` strongly is a cycle |
+| `[weak self]` vs `[unowned self]` | `weak` by default; `unowned` only with a guaranteed lifetime |
+| Delegate retain cycles | `weak var delegate`, with an `AnyObject` protocol |
+| `Task` retain cycles | Stored, endless tasks leak; use `[weak self]` and cancel |
+| `deinit` logging | Print in `deinit`, or test with a `weak` reference, to catch leaks |
+| Copy-on-write | Shared storage until the first write; build your own with `isKnownUniquelyReferenced` |
+| Stack vs heap | Values are usually cheap; classes need the heap and ARC; measure to be sure |
+| Existential boxing | `any` may heap-allocate values bigger than ~3 words |
+| Autorelease pools | Free Objective-C temporaries in tight loops |
+| Law of Exclusivity | No overlapping access when one of them writes |

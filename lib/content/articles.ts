@@ -121,7 +121,7 @@ export const articles: Article[] = [
     slug: "memory-management",
     title: "Memory Management",
     description:
-      "Automatic Reference Counting — how Swift manages class instance lifetimes, retain cycles and how to break them with weak/unowned, copy-on-write, and other advanced memory topics.",
+      "How Swift frees objects with ARC: strong references, retain cycles and how to break them with weak and unowned (in closures, delegates, and Tasks), finding leaks, copy-on-write, stack vs. heap, and exclusivity.",
     tags: ["swift","memory-management","arc"],
     publishedAt: "2026-08-04",
     get content() {
