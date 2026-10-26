@@ -495,7 +495,7 @@ export const articles: Article[] = [
     slug: "cloudkit-and-sync",
     title: "CloudKit and Sync",
     description:
-      "CloudKit's core concepts and APIs directly: containers/databases/records, change-token-based incremental sync, subscriptions, CKShare collaboration, CKSyncEngine, conflict resolution, offline-first architecture, debugging, and CRDTs.",
+      "CloudKit underneath automatic sync: containers, databases, and records, zones and change tokens, subscriptions and silent pushes, sharing with CKShare, CKSyncEngine, conflict resolution, offline-first design, debugging sync, and CRDTs.",
     tags: ["cloudkit", "sync", "persistence"],
     publishedAt: "2026-08-16",
     get content() {
