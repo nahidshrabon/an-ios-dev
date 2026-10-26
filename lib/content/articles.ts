@@ -737,7 +737,7 @@ export const articles: Article[] = [
     slug: "advanced-testing",
     title: "Advanced Testing",
     description:
-      "Test doubles beyond mocks, testing actors and isolated code, TestClock, snapshot testing setup and cross-device considerations, testing SwiftUI/@Observable state and App Intents, contract testing, recorded fixtures vs. live integration, honest code coverage, property-based and mutation testing, test plans, and sharding.",
+      "Beyond the basics: kinds of test doubles, testing actors and time, snapshot tests, SwiftUI and @Observable state, App Intents, contract tests, fixtures vs. live tests, honest coverage, property-based and mutation testing, test plans, and sharding.",
     tags: ["testing", "swift-testing", "snapshot-testing"],
     publishedAt: "2026-08-16",
     get content() {
