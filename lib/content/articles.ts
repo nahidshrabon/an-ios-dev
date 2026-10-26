@@ -385,7 +385,7 @@ export const articles: Article[] = [
     slug: "document-based-apps",
     title: "Document-Based Apps",
     description:
-      "First-class SwiftUI support for document apps via DocumentGroup and the FileDocument/ReferenceFileDocument protocols: value vs. reference document models, async streaming I/O, snapshot-based saving, custom UTType declarations, and multi-format support.",
+      "Building document apps in SwiftUI: DocumentGroup, FileDocument vs. ReferenceFileDocument, snapshots for safe background saving, undo-based change tracking, async document I/O, custom UTType declarations, and opening and saving several formats.",
     tags: ["swiftui", "documents", "filedocument"],
     publishedAt: "2026-08-16",
     get content() {
