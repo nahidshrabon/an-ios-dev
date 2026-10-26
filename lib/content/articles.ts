@@ -209,7 +209,7 @@ export const articles: Article[] = [
     slug: "structured-concurrency",
     title: "Structured Concurrency",
     description:
-      "Swift's structured concurrency model: async let for simple parallel work, task groups for dynamic parallel work, cooperative cancellation, and bridging older callback-based APIs into async/await with continuations.",
+      "Swift's structured concurrency: async let for a few parallel tasks, task groups for many, error propagation and result order, cooperative cancellation, task-local values, and turning old callbacks into async functions with continuations.",
     tags: ["swift","concurrency","structured-concurrency"],
     publishedAt: "2026-08-08",
     get content() {
