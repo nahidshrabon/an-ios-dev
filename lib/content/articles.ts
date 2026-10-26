@@ -286,7 +286,7 @@ export const articles: Article[] = [
     slug: "state-management",
     title: "State Management",
     description:
-      "SwiftUI's property wrappers for managing state: @State, @Binding, @Observable/@Bindable, @Environment, persistence wrappers, @FocusState, legacy ObservableObject literacy, and the deeper mechanics of view identity.",
+      "Where SwiftUI state lives and how it flows: @State, @Binding, @Observable and @Bindable, @Environment and @Entry, @AppStorage, @SceneStorage, @FocusState, the older ObservableObject system, and how view identity keeps or resets state.",
     tags: ["swiftui","state-management"],
     publishedAt: "2026-08-08",
     get content() {
