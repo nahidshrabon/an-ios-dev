@@ -440,7 +440,7 @@ export const articles: Article[] = [
     slug: "networking-fundamentals",
     title: "Networking Fundamentals",
     description:
-      "URLSession with async/await: building requests and query strings, sending JSON, authentication headers, distinguishing transport errors from HTTP errors, decoding responses, loading/error UI states, AsyncImage, file uploads and downloads, and client-side secrets.",
+      "Talking to servers with URLSession and async/await: HTTP basics, URLRequest and safe query strings, sending JSON, bearer tokens, transport vs. HTTP errors, decoding, loading and error states, AsyncImage, uploads and downloads, and why app secrets aren't secret.",
     tags: ["networking", "urlsession"],
     publishedAt: "2026-08-16",
     get content() {
