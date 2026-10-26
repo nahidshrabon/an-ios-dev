@@ -231,7 +231,7 @@ export const articles: Article[] = [
     slug: "sendable-and-data-race-safety",
     title: "Sendable and Data-Race Safety",
     description:
-      "Sendable — the protocol marking types safe to pass across isolation boundaries — its automatic and manual conformance rules, region-based isolation, and the practical workflow for migrating a module to Swift 6 mode.",
+      "Sendable, the protocol for values that are safe to share across isolation domains: automatic and manual conformance, @Sendable closures, @unchecked Sendable, sending, region-based isolation, common Swift 6 errors, and migrating to Swift 6 mode.",
     tags: ["swift","concurrency","sendable"],
     publishedAt: "2026-08-08",
     get content() {

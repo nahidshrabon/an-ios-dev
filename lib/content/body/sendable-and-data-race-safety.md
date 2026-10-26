@@ -1,6 +1,10 @@
-## 20.1 What `Sendable` Means
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`Sendable` is a marker protocol (like `Error` from section 9.1) indicating that a type is safe to share across concurrency isolation boundaries — passed into a `Task`, sent to an actor, or captured by a `@Sendable` closure — without risking a data race. It's the compiler's way of answering "is it safe to hand this value to a different isolation domain?"
+## 20.1 What `Sendable` Means 🟢
+
+**`Sendable`** is a **marker protocol** (like `Error`, 9.1). It means: "values of this type are **safe to share across isolation boundaries**". That includes passing them into a `Task`, sending them to an actor, or capturing them in a `@Sendable` closure, **without** risking a data race.
+
+It's how the compiler answers: "**Is it safe to hand this value to another isolation domain?**"
 
 ```swift
 struct Point: Sendable {
@@ -15,13 +19,24 @@ actor Store {
 }
 ```
 
-Value types (structs, enums) whose members are all themselves `Sendable` are naturally safe to share, since each copy is fully independent (recall section 6.9's value semantics) — there's no shared mutable storage for two isolation domains to race over. Reference types (classes) are the more interesting case, covered in 20.2.
+**Value types** (structs, enums) whose properties are all `Sendable` are naturally safe: each copy is **independent** (6.9), so two domains never share the same storage.
+
+A **class** is the tricky case: two domains could hold the **same object** and change it at once (20.2).
+
+What's already `Sendable`:
+
+| Sendable | Not Sendable (by default) |
+|---|---|
+| `Int`, `String`, `Bool`, `Double`, `Date`, `URL`, `UUID`, `Data` | Most classes |
+| Arrays, dictionaries, optionals **of** Sendable types | Closures that capture mutable state |
+| Actors | `NSMutableArray`, `NSAttributedString`, many Objective-C types |
+| `@MainActor` classes | |
 
 ---
 
-## 20.2 Automatic `Sendable` Conformance Rules
+## 20.2 Automatic `Sendable` Conformance Rules 🟡
 
-Swift automatically synthesizes `Sendable` conformance for simple structs/enums whose stored properties/associated values are all themselves `Sendable` — mirroring exactly how `Equatable`/`Hashable` synthesis works (recall sections 7.7–7.8).
+For **structs and enums** whose stored properties (or associated values) are **all `Sendable`**, Swift handles `Sendable` for you. That works like `Equatable`/`Hashable` synthesis (7.7–7.8):
 
 ```swift
 struct User: Sendable {   // synthesized automatically, since String and Int are both Sendable
@@ -34,21 +49,42 @@ struct Container {
 }
 ```
 
-Classes, by contrast, are **not** automatically `Sendable` in most cases — a class instance is a shared reference, so even if all its stored properties are individually `Sendable` types, two isolation domains could still hold the same reference and mutate it concurrently, an inherent hazard structs don't have. The narrow exception: a `final class` with only immutable (`let`) `Sendable` properties can be automatically `Sendable`, since it's genuinely immutable after construction and therefore safe to share.
+For **non-public** structs and enums, Swift even **infers** `Sendable` without you writing it (like `Container` above). For **public** types, write `: Sendable` explicitly, because it becomes part of your public API.
+
+**Classes are not automatically `Sendable`.** A class instance is a **shared reference**. Even if each property is a `Sendable` type, two domains could hold the same object and change its `var`s at the same time.
+
+A class **can** declare `Sendable` itself, and the compiler **checks** it, if:
+
+- it's **`final`** (no subclass could add mutable state), and
+- all stored properties are **`let`** and **`Sendable`**.
 
 ```swift
-final class ImmutablePoint: Sendable {   // synthesized — final class, all properties are immutable
+final class ImmutablePoint: Sendable {   // allowed and checked: final, only immutable Sendable properties
     let x: Double
     let y: Double
     init(x: Double, y: Double) { self.x = x; self.y = y }
 }
+
+final class MutablePoint: Sendable {
+    var x = 0.0      // ❌ error: stored property 'x' of 'Sendable'-conforming class 'MutablePoint' is mutable
+}
+```
+
+Two kinds of classes **are** safe to share automatically:
+
+```swift
+actor Cache { }                 // actors are always Sendable
+
+@MainActor
+final class ViewModel { }       // global-actor-isolated classes are Sendable:
+                                // all access goes through the main actor
 ```
 
 ---
 
-## 20.3 `@Sendable` Closures
+## 20.3 `@Sendable` Closures 🟡
 
-A `@Sendable` closure is one that's safe to pass across isolation boundaries — it can only capture `Sendable` values, and (critically) it cannot capture a mutable variable (`var`) by reference in a way that would let two isolation domains mutate the same captured variable concurrently.
+A **`@Sendable` closure** is safe to pass across isolation boundaries. It may only capture **`Sendable`** values, and it **can't change** a captured `var`, because two domains could then change the same variable at once.
 
 ```swift
 func runConcurrently(_ work: @Sendable @escaping () -> Void) {
@@ -59,7 +95,7 @@ func runConcurrently(_ work: @Sendable @escaping () -> Void) {
 
 var counter = 0
 runConcurrently {
-    // ❌ error: mutation of captured var 'counter' in a Sendable closure
+    // ❌ error: mutation of captured var 'counter' in concurrently-executing code
     counter += 1
 }
 
@@ -69,13 +105,38 @@ runConcurrently {
 }
 ```
 
-Most closures passed to Swift Concurrency APIs (`Task { }`, task group `addTask`, actor method arguments crossing isolation) are implicitly required to be `@Sendable` — this is precisely the mechanism that catches, at compile time, the kind of unsynchronized shared-mutable-capture bug that used to only surface as a runtime data race.
+Most closures you pass to concurrency APIs **must** be `@Sendable` (or `sending`): `Task { }`, task group `addTask`, `Task.detached`. That's exactly what catches, **at compile time**, the shared-mutable-capture bugs that used to show up only as random runtime crashes.
+
+How to fix the `counter` case, depending on what you need:
+
+```swift
+// 1. You only need the value: capture a copy
+let snapshot = counter
+runConcurrently { print(snapshot) }
+
+// 2. You really need shared mutable state: use an actor
+actor Tally { var value = 0; func increment() { value += 1 } }
+let tally = Tally()
+runConcurrently { Task { await tally.increment() } }
+
+// 3. Or a Sendable class that protects its state with a Mutex (14.21, see SafeCounter in 20.4)
+let safeCounter = SafeCounter()
+runConcurrently { safeCounter.increment() }
+```
+
+Function **types** can be marked too, when you store them:
+
+```swift
+struct Job: Sendable {
+    let run: @Sendable () async -> Void    // a Sendable struct needs Sendable stored closures
+}
+```
 
 ---
 
-## 20.4 `@unchecked Sendable` and Your Obligations
+## 20.4 `@unchecked Sendable` and Your Obligations 🔴
 
-`@unchecked Sendable` is an escape hatch: it tells the compiler "trust me, this type is actually safe to share across isolation domains, even though you can't verify that yourself" — appropriate specifically for types using their own internal synchronization (a lock, a `Mutex` from section 14.21) that the compiler has no way to reason about.
+**`@unchecked Sendable`** is an **escape hatch**. It tells the compiler: "**trust me**, this type is safe to share, even though you can't check it." It's meant for types that protect their state **themselves**, with a lock or similar tool the compiler can't reason about:
 
 ```swift
 final class ThreadSafeCounter: @unchecked Sendable {
@@ -96,38 +157,86 @@ final class ThreadSafeCounter: @unchecked Sendable {
 }
 ```
 
-Using `@unchecked Sendable` is a genuine promise you're making to the compiler, not a way to silence an inconvenient error — every access to the type's mutable state must actually be protected by the synchronization mechanism you're relying on (here, consistently locking around every read/write of `_value`), or you've reintroduced the exact data race `Sendable` checking exists to prevent, just with the compiler no longer able to catch it.
+**It's a real promise, not a way to silence errors.** **Every** access to the mutable state must go through the lock. Miss **one** path, and you've brought back exactly the data race `Sendable` is supposed to prevent, but now the compiler **can't** warn you.
+
+A common mistake:
+
+```swift
+final class Settings: @unchecked Sendable {
+    var theme = "light"          // ⚠️ no lock at all — @unchecked just hides the race
+}
+```
+
+**Prefer checked alternatives** when you can. A `Mutex` (14.21) gives the same result, **checked** by the compiler, with no `@unchecked`:
+
+```swift
+import Synchronization
+
+final class SafeCounter: Sendable {
+    private let state = Mutex(0)
+
+    var value: Int { state.withLock { $0 } }
+    func increment() { state.withLock { $0 += 1 } }
+}
+```
+
+| Option | Checked by the compiler? |
+|---|---|
+| Struct of Sendable values | ✅ |
+| `final class` with only `let` | ✅ |
+| Actor / `@MainActor` class | ✅ |
+| Class with a `Mutex` | ✅ |
+| `@unchecked Sendable` | ❌ Your promise only |
 
 ---
 
-## 20.5 `sending` Parameters and Results
+## 20.5 `sending` Parameters and Results 🔴
 
-`sending` marks a parameter or return value as being fully, uniquely transferred to the receiving context — after passing a `sending` value, the caller can no longer use it, which lets the compiler permit transferring a *non*-`Sendable` value safely, since it can prove there's no longer any other reference to it that could race.
+**`sending`** marks a parameter (or result) whose value is **handed over completely** to the receiver. After passing it, the **caller can't use it anymore**. Because nobody else can still touch it, the compiler allows passing even a **non-`Sendable`** value safely.
 
 ```swift
 class NonSendableBox {
     var value = 0
 }
 
-func consume(_ box: sending NonSendableBox) {
+func takeOwnership(_ box: sending NonSendableBox) {
     // safe to use box freely here — the compiler guarantees no other
     // code retains simultaneous access to it after the transfer
 }
 
 func useBox() {
     let box = NonSendableBox()
-    consume(box)
-    // box.value = 5   // ❌ error: 'box' was consumed by the sending parameter and can no longer be used here
+    takeOwnership(box)
+    // box.value = 5   // ❌ error: sending 'box' risks causing data races (it's used after being sent)
 }
 ```
 
-This is closely related to the `consuming` ownership modifier from section 11.8, and to region-based isolation (20.6) — `sending` lets the compiler prove a specific transfer is safe on a case-by-case basis, without requiring the transferred type to be blanket `Sendable`, which is often more precise and less restrictive than requiring full `Sendable` conformance for a type that's only ever used this "hand off and never touch again" way.
+`Task { }` uses this. Its closure is a `sending` parameter, so a fresh non-`Sendable` value can move into a task, as long as you don't use it afterwards:
+
+```swift
+func startWork() {
+    let box = NonSendableBox()          // created here, used nowhere else
+    Task {
+        box.value += 1                  // ✅ fine: `box` was sent into the task
+    }
+}
+```
+
+A `sending` **result** promises the caller gets a value **nobody else** holds:
+
+```swift
+func makeBox() -> sending NonSendableBox {
+    NonSendableBox()                    // a fresh object: safe to hand to any isolation domain
+}
+```
+
+`sending` is related to the `consuming` ownership modifier (11.8) and to region-based isolation (20.6). It proves **one specific handoff** is safe, which is more precise than requiring the whole type to be `Sendable`, when you only ever "hand it off and never touch it again".
 
 ---
 
-## 20.6 Region-Based Isolation: How the Compiler Proves Safety
+## 20.6 Region-Based Isolation: How the Compiler Proves Safety 🔴
 
-Region-based isolation (introduced conceptually in Swift 6.0, strengthened in Swift 6.3 per section 16.6) is the broader analysis technique underlying `sending`'s safety guarantee — the compiler tracks which values are provably isolated to a single "region" (with no other live references anywhere else in the program), allowing safe transfer of non-`Sendable` values whenever it can prove that isolation, rather than requiring `Sendable` conformance as the only path to safety.
+**Region-based isolation** (from Swift 6.0, improved since; see 16.6) is the analysis behind `sending`. The compiler groups values into **regions**: values that may refer to each other. If it can prove a region has **no other live references**, it allows moving that region to another isolation domain, even if the types aren't `Sendable`.
 
 ```swift
 func processData() async {
@@ -141,13 +250,27 @@ func processData() async {
 }
 ```
 
-The practical benefit: not every genuinely safe transfer requires a type to be marked `Sendable` — if the compiler's region analysis can independently prove no concurrent aliasing exists for a *specific* value at a *specific* point in the code, it can permit the transfer without that blanket type-level guarantee, which is exactly what reduced false-positive Swift 6 mode errors between the 6.0 and 6.3 releases.
+What makes values join a region:
+
+```swift
+func example() async {
+    let a = NonSendableBox()
+    let b = NonSendableBox()
+    let list = [a]              // `list` and `a` are now in the same region (list refers to a)
+
+    Task { print(list.count) }  // sends the region {list, a}
+    // a.value = 1              // ❌ error: `a` was sent along with `list`
+    b.value = 1                 // ✅ fine: `b` is in a different region
+}
+```
+
+**The practical benefit:** not every safe handoff needs a `Sendable` type. If the compiler can prove there's no shared reference **at that point in the code**, it allows it. That removed many confusing Swift 6 errors for code that was actually safe.
 
 ---
 
-## 20.7 Reading and Fixing Common Swift 6 Concurrency Errors
+## 20.7 Reading and Fixing Common Swift 6 Concurrency Errors 🟡
 
-A handful of error patterns account for the large majority of Swift 6 migration friction. Recognizing them (and their typical fixes) makes migration substantially less painful than treating each error as a novel puzzle:
+A few error patterns cause most Swift 6 migration pain. Learn to recognize them, and they stop feeling like puzzles:
 
 ```swift
 // Error: "Non-sendable type 'X' passed across actor boundary"
@@ -163,13 +286,50 @@ A handful of error patterns account for the large majority of Swift 6 migration 
 // mutable shared state, or protect it with an actor/Mutex if mutation is genuinely required.
 ```
 
-The unifying theme across nearly all of these errors: the compiler has found a genuine potential data race that Swift 5 mode would have silently allowed (or only warned about) — the "fix" is rarely to silence the error, but to actually restructure the code (using actors, `Sendable` conformance, or `sending`) to eliminate the race the compiler correctly identified.
+Worked example for the **second** error, which is very common in UIKit code:
+
+```swift
+class ImageLoader {                     // not on the main actor
+    func didFinish(_ image: UIImage, imageView: UIImageView) {
+        imageView.image = image
+        // ❌ error: main actor-isolated property 'image' can not be mutated
+        //    from a nonisolated context
+    }
+}
+
+// Fix A: this code is UI code → put it on the main actor
+@MainActor
+class ImageLoader2 {
+    func didFinish(_ image: UIImage, imageView: UIImageView) {
+        imageView.image = image         // ✅
+    }
+}
+
+// Fix B: the class must stay off main → hop over for the UI part
+class ImageLoader3 {
+    func didFinish(_ image: UIImage, imageView: UIImageView) async {
+        await MainActor.run { imageView.image = image }   // ✅
+    }
+}
+```
+
+And one for **global variables**:
+
+```swift
+var cache: [String: Data] = [:]
+// ❌ error: var 'cache' is not concurrency-safe because it is nonisolated global shared mutable state
+
+// Fixes: make it a `let`, isolate it to an actor, or put it on @MainActor
+@MainActor var cache2: [String: Data] = [:]
+```
+
+**The common thread:** each error points to a **real possible data race** that Swift 5 allowed silently. The fix is almost never to hide the error, but to **change the code**: an actor, a `Sendable` type, `sending`, or `async`/`await`.
 
 ---
 
-## 20.8 Migrating a Module to Swift 6 Language Mode
+## 20.8 Migrating a Module to Swift 6 Language Mode 🟡
 
-Migrating an existing codebase to Swift 6 mode is best done incrementally, module by module (recall section 16.3's note that Swift 6 mode is opt-in per module), rather than attempting a single, disruptive whole-project flip:
+Migrate **step by step, one module at a time** (Swift 6 mode is chosen **per module**, 16.3), not the whole project at once:
 
 ```swift
 // A practical migration sequence:
@@ -182,17 +342,43 @@ Migrating an existing codebase to Swift 6 mode is best done incrementally, modul
 //    suppress concurrency-checking noise specifically from those still-Swift-5-mode imports.
 ```
 
+```plaintext
+Migration order (leaf modules first):
+
+   Models  →  Networking  →  Persistence  →  Features  →  App
+   (no deps)                                              (depends on everything)
+```
+
+For dependencies that **haven't migrated yet**:
+
 ```swift
 @preconcurrency import SomeLegacyFramework
 ```
 
-`@preconcurrency import` is specifically useful mid-migration: it tells the compiler "treat this specific import's types as if they predate strict concurrency checking," suppressing false-positive-feeling errors that stem purely from a dependency not having migrated yet, without weakening the concurrency checking applied to your *own* module's code.
+**`@preconcurrency import`** tells the compiler: "treat this module's types as **older than** strict concurrency checking." It hides errors that come **only** from that dependency not being updated yet. Your **own** code is still checked fully.
+
+You can also mark your **own** older protocol this way, so conformers don't break:
+
+```swift
+@preconcurrency
+protocol LegacyDelegate: AnyObject {
+    func didUpdate()
+}
+```
+
+Remove `@preconcurrency` once the dependency is updated. Otherwise it may hide real problems later.
 
 ---
 
-## 20.9 Strict Concurrency Settings Per Target
+## 20.9 Strict Concurrency Settings Per Target 🟡
 
-Before fully committing to Swift 6 language mode, a target can enable **strict concurrency checking** at varying levels under Swift 5 mode itself — `minimal`, `targeted`, or `complete` — letting a codebase preview and incrementally address Swift 6-style errors as warnings first, without yet making the full jump to Swift 6 mode's hard-error enforcement.
+Before switching to Swift 6 mode, a target can turn on **strict concurrency checking** while still in **Swift 5 mode**. There are three levels:
+
+| Level | Checks |
+|---|---|
+| `minimal` | Only code that already uses concurrency features (the old default) |
+| `targeted` | Also code that adopted `Sendable` or actors |
+| `complete` | **Everything**, exactly like Swift 6 mode, but as **warnings** |
 
 ```swift
 // In Package.swift:
@@ -200,12 +386,20 @@ Before fully committing to Swift 6 language mode, a target can enable **strict c
     name: "MyTarget",
     swiftSettings: [
         .swiftLanguageMode(.v5),
-        .enableExperimentalFeature("StrictConcurrency=complete")   // full checking, as warnings under Swift 5 mode
+        .enableUpcomingFeature("StrictConcurrency")   // = complete checking, as warnings under Swift 5 mode
     ]
 )
 ```
 
-`.complete` applies the same checking rigor Swift 6 mode would enforce as hard errors, but surfaces it as warnings instead — letting a team fix issues at their own pace under Swift 5 mode, then flip the target to full Swift 6 language mode once those warnings are cleared, turning what would otherwise be a single disruptive migration event into a gradual, warning-driven cleanup process.
+In Xcode: **Build Settings** → **Strict Concurrency Checking** → **Complete**.
+
+`complete` finds **the same problems** Swift 6 mode would, but as **warnings**, not errors. So the build still works, and your team fixes them **at its own pace**. When the warnings are gone, switch the target to Swift 6 mode. The switch is then a **non-event**.
+
+```plaintext
+1. Swift 5 mode + Strict Concurrency: Complete   → 47 warnings
+2. Fix warnings over a few weeks                 → 0 warnings
+3. Swift Language Version: 6                     → builds cleanly, now enforced as errors
+```
 
 ---
 
@@ -213,14 +407,12 @@ Before fully committing to Swift 6 language mode, a target can enable **strict c
 
 | Topic | One-line takeaway |
 |---|---|
-| `Sendable` | Marks a type safe to share across isolation boundaries without risking a data race |
-| Automatic conformance | Synthesized for simple structs/enums with all-`Sendable` members; classes need extra care |
-| `@Sendable` closures | Can't capture mutable `var`s by reference or non-`Sendable` values — caught at compile time |
-| `@unchecked Sendable` | An unverified developer promise, appropriate only with genuine internal synchronization |
-| `sending` | Proves a specific one-time transfer safe without requiring blanket `Sendable` conformance |
-| Region-based isolation | The compiler analysis proving no concurrent aliasing exists for a specific value transfer |
-| Common Swift 6 errors | A handful of recurring patterns — usually fixed by `Sendable`, `sending`, actors, or `async`/`await` |
-| Module migration | Incremental, module-by-module, leaf-first, using `@preconcurrency import` for unmigrated dependencies |
-| Strict concurrency settings | `minimal`/`targeted`/`complete` preview Swift 6-style checking as warnings before the full language mode jump |
-
-**This concludes Part 2 — Concurrency (Sections 17–22 cover the full part; Sections 17–20 completed here).**
+| `Sendable` | A type that's safe to share across isolation domains |
+| Automatic conformance | Free for structs/enums of Sendable values; classes need `final` + `let`, or an actor |
+| `@Sendable` closures | Can't change captured `var`s or capture non-Sendable values |
+| `@unchecked Sendable` | Your unchecked promise; prefer a `Mutex` or an actor |
+| `sending` | A one-time handoff of a value the caller never touches again |
+| Region-based isolation | The compiler proves no one else holds the value, so it can move |
+| Common Swift 6 errors | Each points to a real race; fix with actors, `Sendable`, `sending`, or `await` |
+| Module migration | Leaf modules first; `@preconcurrency import` for unmigrated dependencies |
+| Strict concurrency settings | `complete` in Swift 5 mode shows Swift 6 problems as warnings first |
