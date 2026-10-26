@@ -1,6 +1,12 @@
-## 13.1 What Macros Are and Why They Replaced Codegen
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A macro is code that runs **at compile time**, inspecting and generating Swift source code as part of the build itself — introduced in Swift 5.9 to replace a common older pattern: external scripts (often Python or a tool like Sourcery, covered in section 75.7) that scanned your source files and generated additional `.swift` files before the real build started.
+## 13.1 What Macros Are and Why They Replaced Codegen 🟢
+
+A **macro** is code that runs **at compile time**. It looks at your Swift code and **generates more Swift code**, as part of the normal build.
+
+Macros came in Swift 5.9. Before them, teams often used **external scripts** (Python, or tools like Sourcery, section 75.7) that scanned the source and wrote extra `.swift` files **before** the real build.
+
+You already use macros:
 
 ```swift
 @Observable
@@ -10,13 +16,28 @@ class UserSettings {
 }
 ```
 
-That `@Observable` annotation is a macro — at compile time, it expands to generate all the observation-tracking boilerplate (storage, change notification plumbing) that would otherwise need to be hand-written or produced by an external code generator. The key advantage over external codegen scripts: macros run *inside* the normal Swift compilation pipeline, are type-checked as real Swift code, show up correctly in Xcode's autocomplete and "Expand Macro" inspector, and don't require a separate build phase or external tool to keep in sync.
+`@Observable` is a macro. At compile time it writes all the **observation code** (storage, change tracking) that you'd otherwise write by hand.
+
+| | External codegen script | Macro |
+|---|---|---|
+| Runs | In a separate build step | Inside the normal compiler |
+| Output checked by the compiler | Only after it's generated | Yes, as real Swift |
+| Xcode support | Weak | Autocomplete, errors, **Expand Macro** |
+| Gets out of sync | Easily | Never; it runs every build |
+
+Other macros you may know:
+
+```swift
+#Preview { ContentView() }               // SwiftUI previews
+@Model class Recipe { var title = "" }   // SwiftData (section 41)
+#expect(total == 42)                     // Swift Testing (section 65)
+```
 
 ---
 
-## 13.2 Freestanding Expression Macros `#macro`
+## 13.2 Freestanding Expression Macros `#macro` 🟢
 
-A **freestanding** macro is invoked directly in code with a `#` prefix, standing on its own (not attached to a declaration) — it expands into an expression or a series of statements at that exact call site.
+A **freestanding** macro is used with a **`#`** prefix, on its own (not attached to a declaration). It expands **right where you write it**.
 
 ```swift
 let value = #stringify(1 + 2)
@@ -24,13 +45,66 @@ print(value.0)   // 3   (the computed result)
 print(value.1)   // "1 + 2"   (the original source text, captured automatically)
 ```
 
-`#stringify` (a real example macro from Apple's own macro sample package) expands at compile time into code that evaluates the expression *and* captures its literal source text as a string — something no ordinary function could do, since a function only ever sees the already-evaluated `3`, never the original `"1 + 2"` source text that produced it. Other common freestanding macros include `#warning`/`#error`-style diagnostics and `#Preview` (used constantly in SwiftUI development, covered in section 23.14).
+`#stringify` (from Apple's macro example package) gives you **both** the result **and** the original **source text**. A normal function **can't** do that: it only receives the already-computed `3`, never the text `"1 + 2"`.
+
+That's why Swift Testing's `#expect` is a macro. When a test fails, it can show you the **whole expression** and the values inside it:
+
+```swift
+let price = 10
+let quantity = 3
+#expect(price * quantity == 40)
+// Expectation failed: (price * quantity → 30) == 40
+```
+
+Freestanding macros come in two kinds:
+
+| Kind | Expands into | Example |
+|---|---|---|
+| Expression | A value | `#stringify(x)`, `#expect(...)` |
+| Declaration | New declarations | `#Preview { ... }` |
 
 ---
 
-## 13.3 Attached Member Macros
+## 13.3 Attached Member Macros 🟡
 
-An **attached** macro is applied to an existing declaration (a type, property, or function) using `@` syntax, and a **member macro** specifically adds new members (properties, methods) to the type it's attached to:
+An **attached** macro is written with **`@`** on a declaration (a type, property, or function). A **member macro** adds **new members** (properties, methods, initializers) **inside** the type it's attached to.
+
+A typical example: an enum macro that adds an `isX` property for each case:
+
+```swift
+@CaseChecks
+enum LoadState {
+    case idle
+    case loading
+    case failed(Error)
+}
+
+// after macro expansion, roughly:
+enum LoadState {
+    case idle
+    case loading
+    case failed(Error)
+
+    var isIdle: Bool { if case .idle = self { true } else { false } }
+    var isLoading: Bool { if case .loading = self { true } else { false } }
+    var isFailed: Bool { if case .failed = self { true } else { false } }
+}
+
+let state = LoadState.loading
+state.isLoading   // true
+```
+
+Without the macro, you'd write (and keep updating) one property per case by hand. Add a case, and the macro adds its property automatically.
+
+The member macro **can read** the type it's attached to (here, the list of cases), and generate code **from** it. That is something a protocol extension can't do.
+
+Other real member macros: `@Observable` adds its tracking storage this way, and libraries offer things like a public memberwise `init` for public structs.
+
+---
+
+## 13.4 Attached Peer and Accessor Macros 🔴
+
+A **peer macro** adds new declarations **next to** the one it's attached to, at the same level. For example, it can add a completion-handler version of an `async` function:
 
 ```swift
 @AddCompletionHandler
@@ -50,13 +124,9 @@ func fetchUser(id: Int, completion: @escaping (String) -> Void) {
 }
 ```
 
-A member macro like this can generate an entire additional function (here, a completion-handler-based bridging function for a modern `async` function) alongside the original, letting you write only the modern version by hand while the macro produces the legacy-compatible overload automatically — a genuinely common real need when a library must support both async/await callers and older completion-handler-based callers.
+You write only the **modern** `async` version. The macro writes the **older** callback version, for callers that still need it.
 
----
-
-## 13.4 Attached Peer and Accessor Macros
-
-A **peer macro** adds new declarations *alongside* the one it's attached to (similar to a member macro, but for declarations outside a type body — like a standalone function generating a companion function next to it). An **accessor macro** adds `get`/`set`/`willSet`/`didSet` logic to an existing stored property, without changing its declared type or requiring a separate wrapper type:
+An **accessor macro** adds `get`/`set` (or `willSet`/`didSet`) to an existing **stored property**:
 
 ```swift
 @Clamped(0...100)
@@ -69,13 +139,23 @@ var volume: Int = 150 {
 }
 ```
 
-Notice this achieves conceptually the same clamping behavior as the `@Clamped` property wrapper from section 12.5 — but as an accessor macro, it can generate accessor logic directly on the *original* property, without introducing an actual separate wrapper struct and its associated indirection. Macros and property wrappers often solve overlapping problems; macros tend to produce more direct, less indirect generated code, at the cost of needing an actual macro implementation (Swift code, via SwiftSyntax) rather than a reusable generic struct.
+(An accessor macro can't create storage itself. In practice it's paired with a **peer** macro that adds the hidden `_volume` property. `@Observable` uses exactly this combination on each property.)
+
+This does the same job as the `@Clamped` **property wrapper** in 12.5, but **without** a separate wrapper struct.
+
+| | Property wrapper | Accessor macro |
+|---|---|---|
+| How | A reusable generic struct | Code generated by a compiler plugin |
+| Extra indirection | Yes (`_volume` is a wrapper) | No (plain code on the property) |
+| Effort to write | Low | High (SwiftSyntax, 13.6) |
 
 ---
 
-## 13.5 Attached Extension and Conformance Macros
+## 13.5 Attached Extension and Conformance Macros 🟡
 
-An **extension macro** generates an entire `extension` block for the type it's attached to — commonly used to add protocol conformances (a **conformance macro** is a specific case of this) that require generated implementation code, exactly like `@Observable` generating the machinery needed for a type to work with SwiftUI's observation system:
+An **extension macro** generates a whole **`extension`** for the type it's attached to. It's most often used to add a **protocol conformance** with the code needed to satisfy it.
+
+`@Observable` uses this. It adds an extension that makes your class conform to `Observable`:
 
 ```swift
 @Observable
@@ -91,13 +171,35 @@ class UserSettings: Observable {
 }
 ```
 
-Extension macros are what let `@Observable` (and similarly, `@Model` for SwiftData in section 41.1) add both new members *and* a protocol conformance in one annotation, entirely generated at compile time — this is precisely why applying `@Observable` to a class is enough to make it work seamlessly with SwiftUI's `@Bindable` and automatic view-update tracking, without you writing any of that plumbing by hand.
+One `@Observable` actually uses **several** macro roles at once:
+
+```plaintext
+@Observable
+  ├─ member macro          → adds the observation registrar storage
+  ├─ member-attribute macro → puts @ObservationTracked on each stored property
+  │     └─ accessor + peer  → each property gets tracking get/set and hidden storage
+  └─ extension macro       → adds `extension UserSettings: Observable {}`
+```
+
+That's why **one word** is enough for SwiftUI to track your class:
+
+```swift
+struct SettingsView: View {
+    @Bindable var settings: UserSettings
+
+    var body: some View {
+        TextField("Name", text: $settings.username)   // works thanks to the generated code
+    }
+}
+```
+
+SwiftData's **`@Model`** (section 41.1) works the same way: members, accessors, and conformances, all generated.
 
 ---
 
-## 13.6 SwiftSyntax Basics: Nodes and Trivia
+## 13.6 SwiftSyntax Basics: Nodes and Trivia 🔴
 
-Macros are implemented using **SwiftSyntax**, Apple's library for parsing and manipulating Swift source code as a structured tree — every piece of your source code (a function, an expression, even whitespace) becomes a typed **node** in this tree that a macro's implementation code can inspect and transform.
+Macros are written with **SwiftSyntax**, Apple's library that turns Swift source code into a **tree**. Every part of your code (a function, an expression, even spaces and comments) becomes a typed **node** that a macro can read and create.
 
 ```swift
 // Simplified conceptual illustration of what a macro implementation examines:
@@ -110,13 +212,39 @@ Macros are implemented using **SwiftSyntax**, Apple's library for parsing and ma
 //     rightOperand: IntegerLiteralExprSyntax("2")
 ```
 
-**Trivia** refers to the "non-meaningful" parts of source code — whitespace, comments, line breaks — which SwiftSyntax preserves and tracks separately from the meaningful syntax nodes themselves, so a macro can generate output that preserves sensible formatting rather than collapsing everything onto one line. Understanding that macros operate on this structured tree (not on raw text with string manipulation) is the key mental model shift from thinking of macros as "fancy text templates."
+**Trivia** means the parts of code with **no meaning** for the compiler: spaces, line breaks, and comments. SwiftSyntax keeps them **attached to nodes**, so generated code can keep sensible formatting.
+
+```plaintext
+"  let x = 1 // count"
+   ^^                    leading trivia of `let`: two spaces
+              ^^^^^^^^   trailing trivia of `1`: a space and a comment
+```
+
+Reading an enum's cases in a macro looks like this:
+
+```swift
+import SwiftSyntax
+
+func caseNames(in enumDecl: EnumDeclSyntax) -> [String] {
+    enumDecl.memberBlock.members
+        .compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }   // only `case` lines
+        .flatMap { $0.elements }                               // `case a, b` has two
+        .map { $0.name.text }                                  // "idle", "loading", ...
+}
+```
+
+**The key mental model:** a macro works on a **structured tree**, not on raw text. It's not a "fancy text template". That's why macro output is real, checked Swift code.
+
+You can explore any code's tree at **swift-ast-explorer.com**: paste code, and see its nodes.
 
 ---
 
-## 13.7 Writing Your First Macro Package
+## 13.7 Writing Your First Macro Package 🔴
 
-A macro has two distinct halves that live in separate targets: the **declaration** (what callers actually import and use, marked with `@attached`/`@freestanding`) and the **implementation** (a separate compiler-plugin target containing the actual SwiftSyntax-based expansion logic, which never ships inside the app itself — it only runs during compilation):
+A macro has **two halves**, in separate targets:
+
+- The **declaration**: what users import and call. It's marked `@freestanding` or `@attached`.
+- The **implementation**: a **compiler plugin** with the SwiftSyntax code. It runs **only during the build**, and **never ships** inside the app.
 
 ```swift
 // Declaration (in the main library target, what consumers import):
@@ -143,13 +271,43 @@ public struct StringifyMacro: ExpressionMacro {
 }
 ```
 
-This split exists because macro *implementations* need to run as compiler plugins during the build, using the full SwiftSyntax parsing/compiler-plugin infrastructure — but the declaration your app code actually imports and calls is a lightweight, ordinary-looking function/type signature, letting consumers use the macro without needing SwiftSyntax as a dependency of their own app code at all.
+`expansion(of:in:)` receives the **macro call as a syntax node**, and **returns new syntax**. The string literal is turned into `ExprSyntax` for you.
+
+Create the package from Xcode (**File → New → Package → Swift Macro**), or the terminal:
+
+```bash
+swift package init --type macro --name MyMacros
+```
+
+```plaintext
+MyMacros/
+├── Package.swift
+├── Sources/
+│   ├── MyMacros/            ← declarations (users import this)
+│   ├── MyMacrosMacros/      ← implementation (compiler plugin, uses SwiftSyntax)
+│   └── MyMacrosClient/      ← a small example that uses the macro
+└── Tests/
+    └── MyMacrosTests/       ← assertMacroExpansion tests (13.8)
+```
+
+**Why the split?** The implementation needs the large SwiftSyntax library and runs inside the compiler. Your **app** only needs the small declaration, so it doesn't depend on SwiftSyntax at runtime.
+
+Report problems as **real compiler errors**, instead of crashing:
+
+```swift
+guard let enumDecl = declaration.as(EnumDeclSyntax.self) else {
+    throw MacroError("@CaseChecks can only be applied to an enum")   // MacroError: your own small Error type
+    // shows up in Xcode as a normal red error on the @CaseChecks line
+}
+```
+
+The first time you use a third-party macro package, Xcode asks you to **Trust & Enable** it, because its plugin runs code on your machine during the build.
 
 ---
 
-## 13.8 Testing Macros with `assertMacroExpansion`
+## 13.8 Testing Macros with `assertMacroExpansion` 🟡
 
-SwiftSyntax provides a dedicated testing utility, `assertMacroExpansion`, that lets you verify a macro produces exactly the expected expanded source code, given some input — treating macro expansion as a testable transformation from input source to output source:
+SwiftSyntax includes **`assertMacroExpansion`**. It checks that your macro turns a given **input** into **exactly** the expected **output** source:
 
 ```swift
 import SwiftSyntaxMacrosTestSupport
@@ -170,13 +328,33 @@ final class StringifyMacroTests: XCTestCase {
 }
 ```
 
-This lets you write ordinary unit tests (using either XCTest, as shown, or Swift Testing's `@Test`, covered in section 65) that pin down exactly what source code your macro should generate for a given input — catching regressions in the macro's expansion logic the same way you'd catch a regression in any other piece of tested code, rather than only discovering an incorrect expansion by manually inspecting generated code later.
+You can also test that **misuse** gives the right **error**:
+
+```swift
+func testCaseChecksRejectsStructs() {
+    assertMacroExpansion(
+        """
+        @CaseChecks
+        struct NotAnEnum {}
+        """,
+        expandedSource: """
+        struct NotAnEnum {}
+        """,
+        diagnostics: [
+            DiagnosticSpec(message: "@CaseChecks can only be applied to an enum", line: 1, column: 1)
+        ],
+        macros: ["CaseChecks": CaseChecksMacro.self]
+    )
+}
+```
+
+These are normal unit tests (XCTest, or Swift Testing from section 65). They catch **regressions** in your macro's output, just like tests for any other code. Test edge cases: empty input, odd formatting, wrong declaration kinds.
 
 ---
 
-## 13.9 Expanding Macros in Xcode to Debug Them
+## 13.9 Expanding Macros in Xcode to Debug Them 🟢
 
-Xcode provides a built-in way to *see* exactly what a macro expands to in your actual code, without needing to run a separate test: right-click (or use the contextual menu indicator) on a macro usage in the editor and choose "Expand Macro," which reveals the generated code inline, nested underneath the macro call.
+Xcode can **show** exactly what a macro generates in **your** code. **Right-click** the macro and choose **Expand Macro**. The generated code appears **inline**, under the macro:
 
 ```swift
 @Observable
@@ -189,13 +367,36 @@ class UserSettings {
 // or for diagnosing why a macro-generated symbol conflicts with something you wrote.
 ```
 
-This is the practical, everyday debugging workflow for macros — rather than reading the macro's *implementation* source code to guess at its output, you can directly inspect the actual generated code for your specific usage, which is especially useful when diagnosing a confusing compiler error that originates from macro-expanded code (Xcode's error messages will point at the expansion, which "Expand Macro" lets you inspect directly).
+This is the **everyday** way to debug macros. Instead of reading the macro's implementation and guessing, you see the **real output** for your case.
+
+It helps most with **confusing errors**. For example:
+
+```swift
+@Observable
+class Profile {
+    var _name = ""        // ❌ error: invalid redeclaration of '_name'
+    var name = ""
+}
+```
+
+The error points into generated code. **Expand Macro** shows that `@Observable` itself creates a hidden `_name` for the `name` property, so your own `_name` clashes with it. Rename yours, and the error is gone.
+
+You can also expand macros from the terminal, when building a package:
+
+```bash
+swift build -Xswiftc -Xfrontend -Xswiftc -dump-macro-expansions
+```
 
 ---
 
-## 13.10 Macro Build-Time Cost and When to Avoid Them
+## 13.10 Macro Build-Time Cost and When to Avoid Them 🟡
 
-Because macros execute as separate compiler-plugin processes during every build, and their SwiftSyntax-based parsing/expansion work isn't free, heavy macro usage across a large codebase can measurably slow down build times — every file using a given macro requires invoking that macro's plugin process and running its (potentially nontrivial) expansion logic during compilation.
+Macros are **not free**:
+
+- Each macro runs as a **compiler plugin** process during the build, for every file that uses it.
+- The macro package depends on **SwiftSyntax**, which is a **large** library to compile. (Newer Xcode and SwiftPM versions can use a **prebuilt** SwiftSyntax, which helps a lot.)
+
+In a big codebase with many macros, this can **slow builds** noticeably.
 
 ```swift
 // Consider carefully before reaching for a macro when a simpler alternative exists:
@@ -210,7 +411,14 @@ Because macros execute as separate compiler-plugin processes during every build,
 //   entire tracking implementation across a type's stored properties.
 ```
 
-The practical guidance: macros are a powerful, precise tool for compile-time code generation, but they're not a free abstraction — reach for a protocol extension or property wrapper first if either would solve the problem just as well, and reserve custom macros for cases genuinely requiring inspection or generation of source structure that those simpler mechanisms can't express, being mindful of the cumulative build-time cost across a large codebase using many macro-annotated declarations.
+| Goal | Simplest tool |
+|---|---|
+| Shared default behavior for many types | Protocol extension (7.5) |
+| Custom get/set logic for one property | Property wrapper (12.5) |
+| Read the **source** (case names, property list, expression text) | **Macro** |
+| Generate code **from a type's structure** | **Macro** |
+
+**Rule:** try a protocol extension or a property wrapper **first**. Write a custom macro only when you truly need to **read or generate code structure**. And **use** Apple's macros (`@Observable`, `@Model`, `#Preview`, `#expect`) freely: that's what they're for.
 
 ---
 
@@ -218,13 +426,13 @@ The practical guidance: macros are a powerful, precise tool for compile-time cod
 
 | Topic | One-line takeaway |
 |---|---|
-| What macros are | Compile-time code generation, replacing external codegen scripts, fully type-checked and IDE-integrated |
-| Freestanding macros (`#macro`) | Stand alone at a call site, expanding into an expression or statements — e.g. `#stringify` |
-| Member macros | Attached to a type, adding new members like generated companion functions |
-| Peer/accessor macros | Peer macros add sibling declarations; accessor macros add get/set logic directly to a property |
-| Extension/conformance macros | Generate an entire extension, often adding a protocol conformance plus its implementation |
-| SwiftSyntax | The structured-tree representation of source code macros inspect and generate — not string templating |
-| Macro packages | Split into a lightweight declaration (what consumers import) and a separate compiler-plugin implementation |
-| Testing macros | `assertMacroExpansion` verifies exact expected output source for given input source |
-| Debugging macros | Xcode's "Expand Macro" reveals the actual generated code inline, for any macro usage |
-| Build-time cost | Macros aren't free — prefer protocol extensions or property wrappers when they'd suffice |
+| What macros are | Code that writes code at compile time; checked by the compiler; replaces codegen scripts |
+| Freestanding macros (`#macro`) | Expand where written; can see the source text, like `#stringify` and `#expect` |
+| Member macros | Add members inside a type, based on its structure |
+| Peer/accessor macros | Peers add sibling declarations; accessors add get/set to a property |
+| Extension/conformance macros | Add an extension, often a protocol conformance, like `@Observable` |
+| SwiftSyntax | Source code as a tree of nodes, plus trivia; not text templates |
+| Macro packages | A small declaration target plus a compiler-plugin implementation |
+| Testing macros | `assertMacroExpansion` checks the exact output and the errors |
+| Debugging macros | Right-click → Expand Macro shows the generated code |
+| Build-time cost | Plugins and SwiftSyntax slow builds; prefer simpler tools when they work |

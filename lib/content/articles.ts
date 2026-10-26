@@ -154,7 +154,7 @@ export const articles: Article[] = [
     slug: "macros",
     title: "Macros",
     description:
-      "Compile-time code generation that replaced older codegen scripts: freestanding and attached macro kinds, the SwiftSyntax foundation they're built on, and the practical workflow for writing and debugging one.",
+      "Code that writes code at compile time: freestanding and attached macros (member, peer, accessor, extension), how @Observable uses them, SwiftSyntax, writing and testing a macro package, Expand Macro, and build-time cost.",
     tags: ["swift","macros"],
     publishedAt: "2026-08-04",
     get content() {
