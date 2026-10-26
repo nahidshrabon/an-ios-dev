@@ -605,7 +605,7 @@ export const articles: Article[] = [
     slug: "location-and-maps",
     title: "Location and Maps",
     description:
-      "Location permission tiers, the async CLLocationUpdate/CLMonitor APIs, accuracy authorization, significant location change, background location, SwiftUI Map with annotations and overlays, camera control, local search, directions, and geocoding.",
+      "Core Location and MapKit: permission levels, live updates, approximate location, geofences, low-power and background tracking, SwiftUI maps with pins, overlays, and camera control, place search, directions, Look Around, and geocoding.",
     tags: ["platform", "corelocation", "mapkit"],
     publishedAt: "2026-08-16",
     get content() {

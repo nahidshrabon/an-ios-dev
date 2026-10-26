@@ -1,266 +1,625 @@
-## 54.1 Location Permission Types and the Prompt Flow
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Location access has two distinct permission tiers — "When In Use" (location available only while the app is actively being used) and "Always" (location available even when backgrounded, subject to additional system scrutiny) — each requiring its own specific usage description string (recall `Info.plist` usage descriptions, section 49.3) and following a specific, system-enforced request flow.
+Location is one of the most **private** things an app can ask for. This section covers **Core Location** (permissions, accuracy, live updates, geofences, background tracking) and **MapKit** (maps in SwiftUI, pins, overlays, the camera, search, directions, Look Around, and turning addresses into coordinates and back).
+
+---
+
+## 54.1 Location Permission Types and the Prompt Flow 🟢
+
+There are **two** levels of location permission:
+
+| Level | Location available | Info.plist key |
+|---|---|---|
+| **When In Use** | While the app is **in use** (on screen, or just after) | `NSLocationWhenInUseUsageDescription` |
+| **Always** | Also in the **background**, and can **relaunch** the app | `NSLocationAlwaysAndWhenInUseUsageDescription` |
+
+The user also has choices of their own: **Allow Once** (When In Use, for this session only), **Don't Allow**, and turning **Precise** location off (54.3). Without the usage-description key (49.3), the request **does nothing**.
+
+Request **When In Use** first, at the moment the user does something that needs it ("Find restaurants near me"):
 
 ```swift
 import CoreLocation
 
-let locationManager = CLLocationManager()
+@MainActor
+final class LocationPermission: NSObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    var onChange: ((CLAuthorizationStatus) -> Void)?
 
-func requestLocationPermission() {
-    locationManager.requestWhenInUseAuthorization()
-    // "Always" access typically requires FIRST being granted "When In Use,"
-    // then later requesting the upgrade via requestAlwaysAuthorization()
+    override init() {
+        super.init()
+        manager.delegate = self
+    }
+
+    func request() {
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()     // shows the prompt (only once!)
+        case .denied, .restricted:
+            showOpenSettingsHint()                      // only Settings can change it now
+        default:
+            break                                       // already allowed
+        }
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor in onChange?(status) }
+    }
 }
 ```
 
-Apple deliberately makes "Always" authorization a two-step process in most flows — an app must first be granted "When In Use," and only later (ideally at a moment when the always-on need is contextually obvious to the user, like enabling a background delivery-tracking feature) can it request the upgrade to "Always," rather than being able to request the more expansive, more sensitive permission immediately at first launch; this staged approach exists specifically to prevent apps from over-requesting background location access before users understand why it's genuinely needed.
+From iOS 18, the simpler way is a **`CLServiceSession`**. Keep it alive while a feature needs location; it asks for permission when needed:
+
+```swift
+// While the "nearby" screen is open:
+let session = CLServiceSession(authorization: .whenInUse)
+// ... use CLLocationUpdate.liveUpdates() (54.2) ...
+// Release it (set to nil) when done
+```
+
+**Always** is a **two-step** flow by design:
+
+```
+1. App asks for When In Use ──► user allows
+2. Later, when a background feature is turned on, the app asks for Always
+   ──► the system may show the upgrade prompt LATER, when the app
+       actually uses location in the background ("Keep Only While Using"
+       or "Change to Always Allow")
+```
+
+So users see the Always question **when the reason is clear**, not at first launch. Ask for Always **only** if a feature truly needs it (geofences, 54.4; significant changes, 54.5). Most apps never do.
 
 ---
 
-## 54.2 CLLocationUpdate Async API
+## 54.2 CLLocationUpdate Async API 🟢
 
-`CLLocationUpdate.liveUpdates()` provides the modern, `AsyncSequence`-based way to receive a continuous stream of location updates — directly applying `AsyncSequence` iteration (section 21) to location tracking, replacing the older delegate-callback-based `CLLocationManagerDelegate` pattern for this specific use case.
+**`CLLocationUpdate.liveUpdates()`** (iOS 17) gives you locations as an **`AsyncSequence`** (21.2). No delegate needed:
 
 ```swift
+import CoreLocation
+
 func trackLocation() async throws {
-    let updates = CLLocationUpdate.liveUpdates()
-    for try await update in updates {
+    for try await update in CLLocationUpdate.liveUpdates() {
         if let location = update.location {
-            print("Current location: \(location.coordinate)")
+            print("Now at \(location.coordinate), ±\(location.horizontalAccuracy) m")
         }
-        if update.authorizationDenied {
-            break // stop iterating if permission was revoked mid-stream
+        if update.authorizationDenied {                     // iOS 18
+            break                                           // the user said no: stop
         }
-    }
-}
-```
-
-This `for try await` pattern is a direct, welcome simplification over the older delegate-based approach (which required implementing `locationManager(_:didUpdateLocations:)` and managing a separate delegate object) — location updates now integrate naturally into structured concurrency, letting a `Task` simply iterate the stream and `break` out (cleanly canceling the underlying tracking) whenever the app no longer needs updates, consistent with the general shift toward `AsyncSequence`-based APIs seen throughout modern Apple frameworks (recall `URLSession.bytes`, section 39.12).
-
----
-
-## 54.3 Accuracy Authorization and Reduced Accuracy
-
-Beyond the When In Use/Always permission tiers, users can independently grant only "reduced accuracy" location — a coarser, roughly city-block-level location rather than precise GPS coordinates — and an app can request a temporary precise-accuracy upgrade for a specific purpose when genuinely needed.
-
-```swift
-func requestPreciseLocationIfNeeded() {
-    guard locationManager.accuracyAuthorization == .reducedAccuracy else { return }
-    locationManager.requestTemporaryFullAccuracyAuthorization(withPurposeKey: "PreciseDeliveryTracking")
-}
-```
-
-`requestTemporaryFullAccuracyAuthorization(withPurposeKey:)` requires a corresponding purpose string declared in `Info.plist`, explaining to the user exactly why precise location is needed for this specific request — reflecting the same general privacy-transparency principle as ordinary usage description strings (54.1), but specifically for the more granular reduced-versus-full accuracy distinction, letting users default to coarser, more private location sharing while still allowing genuinely justified, purpose-specific upgrades to precise accuracy.
-
----
-
-## 54.4 Region Monitoring with CLMonitor
-
-`CLMonitor` (a more recent, `async`-native replacement for the older region-monitoring delegate callbacks) lets an app register geographic regions and receive notifications when the device enters or exits them, even while the app isn't actively running — the technical foundation behind geofencing features like location-based reminders.
-
-```swift
-func monitorGroceryStore(center: CLLocationCoordinate2D) async {
-    let monitor = await CLMonitor("GroceryStoreMonitor")
-    let condition = CLMonitor.CircularGeographicCondition(center: center, radius: 100)
-    await monitor.add(condition, identifier: "grocery-store", assuming: .unsatisfied)
-
-    for try? await event in await monitor.events {
-        if event.identifier == "grocery-store" && event.state == .satisfied {
-            // user has entered the region
+        if update.isStationary {
+            // the device stopped moving; updates pause to save battery
         }
     }
 }
 ```
 
-Like `CLLocationUpdate` (54.2), `CLMonitor` embraces `AsyncSequence`-based iteration over the older delegate pattern — `await monitor.events` produces a continuous stream of region transition events the app can process with the same `for await` structured-concurrency pattern used throughout the rest of modern location APIs, while the underlying region monitoring itself continues to work even when the app isn't actively in the foreground, relying on system-level geofencing infrastructure rather than the app needing to continuously poll its own location.
-
----
-
-## 54.5 Significant Location Change
-
-Significant location change monitoring is a coarser, far more battery-efficient alternative to continuous location tracking — the system only delivers an update when the device has moved a meaningfully large distance (roughly, between cell tower handoffs), appropriate for apps needing general awareness of the user's location over time without the battery cost of continuous precise tracking.
+To **stop**, leave the loop (`break`), or **cancel** the task that runs it. In SwiftUI, `.task` does that for you when the view goes away:
 
 ```swift
-locationManager.startMonitoringSignificantLocationChanges()
+struct NearbyView: View {
+    @State private var location: CLLocation?
+
+    var body: some View {
+        Text(location.map { "\($0.coordinate.latitude), \($0.coordinate.longitude)" } ?? "Locating…")
+            .task {                                          // starts on appear, cancels on disappear
+                do {
+                    for try await update in CLLocationUpdate.liveUpdates() {
+                        location = update.location
+                    }
+                } catch {
+                    // location updates failed
+                }
+            }
+    }
+}
 ```
 
-This is the correct tool for use cases like "notice roughly when the user has traveled to a new city" or "periodically check in on general location for a long-running background feature," where continuous, precise tracking would be significant battery overkill relative to the actual precision the feature needs — the trade-off for this battery efficiency is coarser, less frequent updates, making it inappropriate for anything requiring fine-grained, real-time positioning (like active turn-by-turn navigation), where `CLLocationUpdate.liveUpdates()` (54.2) remains the correct choice despite its higher battery cost.
+Pick a **configuration** that matches the activity. It helps the system filter and save power:
+
+```swift
+CLLocationUpdate.liveUpdates(.fitness)               // also: .automotiveNavigation, .otherNavigation, .airborne
+```
+
+| Old way | New way |
+|---|---|
+| A `CLLocationManager` + delegate object | One `for try await` loop |
+| `startUpdatingLocation()` / `stopUpdatingLocation()` | Start the loop / leave it |
+| Callbacks on some queue | Structured concurrency: cancels with the task |
+
+Need only **one** location ("where am I now?")? Take the **first** good update and `break`.
 
 ---
 
-## 54.6 Background Location and the Blue Bar
+## 54.3 Accuracy Authorization and Reduced Accuracy 🟡
 
-Continuing to receive location updates while an app is backgrounded requires both "Always" authorization (54.1) and the `location` background mode capability declared in Xcode — and the system displays a persistent, hard-to-miss blue status bar/indicator whenever an app is actively using location in the background, a deliberate, non-optional transparency measure users cannot disable.
+Since iOS 14, the user can turn **Precise** location **off**. The app then gets **approximate** location: an area of a **few kilometers**, updated only a few times an hour. Enough for **weather** or "which city?", not for **turn-by-turn** directions.
+
+Check it with **`accuracyAuthorization`**:
+
+```swift
+let manager = CLLocationManager()
+
+switch manager.accuracyAuthorization {
+case .fullAccuracy:    showExactPin()
+case .reducedAccuracy: showApproximateArea()             // design for this case too!
+@unknown default:      showApproximateArea()
+}
+```
+
+When a **specific** feature really needs precision, ask for it **just for now**:
+
+```swift
+func startDeliveryTracking() async {
+    if manager.accuracyAuthorization == .reducedAccuracy {
+        try? await manager.requestTemporaryFullAccuracyAuthorization(
+            withPurposeKey: "DeliveryTracking"              // a key in Info.plist (below)
+        )
+    }
+    // continue; it may still be reduced if the user said no
+}
+```
+
+The **purpose key** points to a sentence in **Info.plist**, shown in the prompt:
 
 ```xml
-<!-- Info.plist: declaring the background location capability -->
+<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+<dict>
+    <key>DeliveryTracking</key>
+    <string>Precise location lets the driver find your door.</string>
+</dict>
+```
+
+Precise access then lasts for **this session** only.
+
+If your app **never** needs precision (a weather app), set **`NSLocationDefaultAccuracyReduced`** to `YES` in Info.plist. The prompt then offers **approximate** location by default. Users trust apps that ask for **less**.
+
+---
+
+## 54.4 Region Monitoring with CLMonitor 🟡
+
+**Geofencing** means "tell me when the user **enters** or **leaves** a place", like a reminder when arriving at the grocery store. **`CLMonitor`** (iOS 17) does this with async events, and the **system** watches the regions, even when your app **isn't running**:
+
+```swift
+import CoreLocation
+
+func startStoreMonitoring(storeCenter: CLLocationCoordinate2D) async {
+    let monitor = await CLMonitor("StoreMonitor")              // a stable name
+
+    let condition = CLMonitor.CircularGeographicCondition(center: storeCenter, radius: 150)
+    await monitor.add(condition, identifier: "grocery-store", assuming: .unsatisfied)
+}
+
+func handleStoreEvents() async throws {
+    let monitor = await CLMonitor("StoreMonitor")              // same name: same conditions
+
+    for try await event in await monitor.events {
+        switch event.state {
+        case .satisfied:   remindShoppingList(for: event.identifier)   // entered
+        case .unsatisfied: break                                       // left
+        default:           break                                       // unknown, unmonitored
+        }
+    }
+}
+```
+
+How it works:
+
+- Conditions are **saved** by the system under the monitor's **name**. They survive app restarts.
+- When an event happens and your app isn't running, the system **launches it in the background**. Re-create the monitor with the **same name** at launch, and start reading **`events`** right away, or you'll miss it.
+- Background launches need **Always** permission (54.1).
+- There's a limit of about **20** conditions per app. Monitor the **nearest** few places, and update the list as the user moves.
+- Use a radius of at least **100–200 m**: geofences aren't precise.
+
+It's the same async style as `CLLocationUpdate` (54.2), and it uses **no** extra battery from your app: the system does the watching.
+
+---
+
+## 54.5 Significant Location Change 🟡
+
+**Significant-change** monitoring is the **low-power** way to follow a user over time. The system tells you only when the device has moved a **real distance** (about **500 meters** or more), and not more often than about every **5 minutes**:
+
+```swift
+final class TripLogger: NSObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+
+    func start() {
+        manager.delegate = self
+        manager.startMonitoringSignificantLocationChanges()     // needs Always for background use
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let latest = locations.last else { return }
+        TripStore.shared.append(latest)                         // e.g. "arrived in a new city"
+    }
+}
+```
+
+Like geofences, it can **relaunch** your app in the background. Start monitoring again at launch to receive the event.
+
+| Need | Use |
+|---|---|
+| Turn-by-turn, a running route | `liveUpdates()` (54.2): precise, more battery |
+| "Arrived at the gym" | `CLMonitor` (54.4) |
+| "Now in a new city", a rough travel log | **Significant change**: coarse, very low battery |
+| "Spent time at a place" | Visit monitoring: `startMonitoringVisits()` |
+
+Pick the **least** precise tool that does the job. Battery life is part of the user experience.
+
+---
+
+## 54.6 Background Location and the Blue Bar 🟡
+
+To keep receiving **live** updates when the app goes to the background, add the **Location updates** background mode (Signing & Capabilities ▸ Background Modes):
+
+```xml
 <key>UIBackgroundModes</key>
 <array>
     <string>location</string>
 </array>
 ```
 
-The blue indicator (and its associated banner, tappable to jump directly to the app actively using background location) is specifically designed to be impossible for the user to miss or silence — this is a deliberate design choice reflecting how much more sensitive background location tracking is compared to foreground-only access, ensuring users always have clear, ongoing visibility into which apps are tracking their location even when those apps aren't actively open and visible, a meaningful check against silent, unwanted background tracking.
+Then, with **When In Use** permission, **start** the session in the **foreground** and tell the system it should continue (iOS 17):
+
+```swift
+final class RunTracker {
+    private var backgroundSession: CLBackgroundActivitySession?
+    private var trackingTask: Task<Void, Never>?
+
+    func startRun() {                                   // called from a button, in the foreground
+        backgroundSession = CLBackgroundActivitySession()
+        trackingTask = Task {
+            do {
+                for try await update in CLLocationUpdate.liveUpdates(.fitness) {
+                    if let location = update.location { RunStore.shared.add(location) }
+                }
+            } catch { }
+        }
+    }
+
+    func stopRun() {
+        trackingTask?.cancel()
+        backgroundSession?.invalidate()                 // stop background location now
+        backgroundSession = nil
+    }
+}
+```
+
+While this runs in the background, iOS shows a **blue indicator** (a pill around the clock or a blue status bar). The user can **tap** it to jump back to your app. Your app **can't** hide it.
+
+| Permission | Background behavior |
+|---|---|
+| When In Use + background mode | Continues a session **started in the foreground**; **blue indicator** shown |
+| Always | Can also get geofence and significant-change **launches** (54.4, 54.5) |
+
+Why so visible? Background tracking is **very** sensitive. The indicator makes sure users always **know** which app follows them. A good app **stops** as soon as the feature ends (the run, the delivery), and the indicator goes away.
 
 ---
 
-## 54.7 Map in SwiftUI with Annotations
+## 54.7 Map in SwiftUI with Annotations 🟢
 
-SwiftUI's `Map` view renders an interactive map directly within a SwiftUI view hierarchy, with `Annotation` (or `Marker`) placing custom or standard pins at specific coordinates.
+SwiftUI's **`Map`** (iOS 17 API) takes a **builder**, like `List`. You put **markers** and **annotations** inside, with `ForEach` (26.2):
 
 ```swift
+import SwiftUI
 import MapKit
 
 struct RestaurantMapView: View {
     let restaurants: [Restaurant]
+    @State private var selection: Restaurant.ID?
 
     var body: some View {
-        Map {
+        Map(selection: $selection) {
+            UserAnnotation()                                    // the blue "you are here" dot
+
             ForEach(restaurants) { restaurant in
-                Annotation(restaurant.name, coordinate: restaurant.coordinate) {
-                    Image(systemName: "fork.knife.circle.fill")
-                        .foregroundStyle(.red)
-                        .background(.white, in: .circle)
-                }
+                Marker(restaurant.name, systemImage: "fork.knife",
+                       coordinate: restaurant.coordinate)
+                    .tint(.orange)
+                    .tag(restaurant.id)                         // makes it selectable
+            }
+        }
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+            MapScaleView()
+        }
+        .safeAreaInset(edge: .bottom) {
+            if let id = selection, let restaurant = restaurants.first(where: { $0.id == id }) {
+                RestaurantCard(restaurant: restaurant)          // details for the selected pin
             }
         }
     }
 }
 ```
 
-This declarative, `ForEach`-driven approach to placing annotations directly mirrors the same patterns from `List`/`ForEach` (section 26.2) — each `Restaurant`'s coordinate drives an `Annotation`'s placement, and `Annotation`'s trailing closure accepts arbitrary SwiftUI content (unlike the simpler, standard-pin-only `Marker`), letting a custom icon, label, or even a small interactive control be placed directly on the map at that specific location.
+**`Marker`** vs. **`Annotation`**:
+
+| | `Marker` | `Annotation` |
+|---|---|---|
+| Looks like | The standard Maps **balloon** pin | **Any SwiftUI view** you want |
+| Content | Title + SF Symbol, text, or monogram | Your own view |
+| Best for | Many pins, standard look | Custom badges, prices, photos |
+
+```swift
+Annotation(restaurant.name, coordinate: restaurant.coordinate) {
+    Text("$\(restaurant.averagePrice)")
+        .font(.caption.bold())
+        .padding(6)
+        .background(.orange, in: .capsule)
+        .foregroundStyle(.white)
+}
+```
+
+Change the look of the map with **`.mapStyle`**:
+
+```swift
+.mapStyle(.standard(pointsOfInterest: .excludingAll))   // hide other businesses
+.mapStyle(.imagery(elevation: .realistic))              // satellite, 3D
+.mapStyle(.hybrid)                                      // satellite + labels
+```
 
 ---
 
-## 54.8 Map Overlays and Polylines
+## 54.8 Map Overlays and Polylines 🟢
 
-Beyond point annotations, `Map` supports overlay content like `MapPolyline` (drawing a route or path) and `MapCircle`/`MapPolygon` (highlighting a region), letting an app visualize richer geographic data than individual pins alone can express.
+Besides points, a map can draw **lines** and **areas**:
 
 ```swift
 Map {
-    MapPolyline(coordinates: routeCoordinates)
-        .stroke(.blue, lineWidth: 4)
+    // A path: a route, a run, a delivery
+    MapPolyline(coordinates: runCoordinates)
+        .stroke(.blue, lineWidth: 5)
 
-    MapCircle(center: deliveryZoneCenter, radius: 2000)
-        .foregroundStyle(.blue.opacity(0.15))
-        .stroke(.blue, lineWidth: 2)
+    // A round area: a delivery zone, a geofence (54.4)
+    MapCircle(center: storeCenter, radius: 2000)
+        .foregroundStyle(.orange.opacity(0.15))
+        .stroke(.orange, lineWidth: 2)
+
+    // Any shape: a park, a neighborhood
+    MapPolygon(coordinates: parkCorners)
+        .foregroundStyle(.green.opacity(0.2))
+
+    Marker("Store", coordinate: storeCenter)
 }
 ```
 
-`MapPolyline` is exactly the tool for visualizing a route (like a walking or driving path between two points, whether hand-computed or sourced from `MKDirections`, 54.11), and `MapCircle`/`MapPolygon` are well suited to visualizing regions (a delivery zone, a geofenced area from `CLMonitor`, 54.4) — these overlay types compose naturally within the same `Map { }` builder alongside `Annotation`s, letting a single map combine points of interest, a highlighted route, and a relevant boundary region all within one coherent view.
+| Overlay | Draws |
+|---|---|
+| `MapPolyline` | A **line** through points, or an `MKRoute` (54.11) |
+| `MapCircle` | A **circle**, with a radius in **meters** |
+| `MapPolygon` | A filled **shape** from corner points |
+
+Overlays and pins **mix freely** in the same `Map { }` builder. Draw the overlays **first** so the pins stay on top.
 
 ---
 
-## 54.9 Map Camera Control and Positions
+## 54.9 Map Camera Control and Positions 🟡
 
-`MapCameraPosition` (bound to `Map`'s `position:` parameter) controls exactly what region/viewpoint the map currently displays, programmatically adjustable — the map equivalent of controlling a `ScrollView`'s scroll position (recall `scrollPosition`, section 26.16).
+**`MapCameraPosition`** controls **what part** of the world the map shows. Bind it, like `.scrollPosition()` for a scroll view (26.16):
 
 ```swift
-struct ControlledMapView: View {
-    @State private var cameraPosition: MapCameraPosition = .automatic
+struct StoreMapView: View {
+    let stores: [Store]
+    @State private var position: MapCameraPosition = .automatic    // fit all content
+    @State private var visibleRegion: MKCoordinateRegion?
 
     var body: some View {
-        Map(position: $cameraPosition) {
-            // annotations, overlays
+        Map(position: $position) {
+            ForEach(stores) { store in
+                Marker(store.name, coordinate: store.coordinate)
+            }
         }
-        .onAppear {
-            withAnimation {
-                cameraPosition = .region(MKCoordinateRegion(center: userLocation, latitudinalMeters: 1000, longitudinalMeters: 1000))
+        .onMapCameraChange(frequency: .onEnd) { context in
+            visibleRegion = context.region                           // the user moved the map
+        }
+        .overlay(alignment: .top) {
+            Button("Search This Area") {
+                Task { await searchStores(in: visibleRegion) }
+            }
+            .buttonStyle(.borderedProminent)
+            .padding()
+        }
+        .toolbar {
+            Button("Me") {
+                withAnimation { position = .userLocation(fallback: .automatic) }
             }
         }
     }
 }
 ```
 
-`.automatic` lets the map choose a sensible default framing based on its content (like fitting all displayed annotations into view), while `.region()`, `.camera()` (for more precise control including pitch/heading), and `.userLocation()` (centering directly on the device's current position) provide explicit, programmatic control — binding `cameraPosition` as `@State` means the app can both read the map's current viewpoint (useful for "search this area" style features) and set it programmatically (like animating to a specific location when a search result is tapped).
+| Position | Shows |
+|---|---|
+| `.automatic` | Fits the map's **content** (all pins) |
+| `.region(MKCoordinateRegion)` | A center + **size** in meters or degrees |
+| `.item(MKMapItem)` | One place, nicely framed |
+| `.camera(MapCamera)` | Full control: center, distance, **pitch** (tilt), **heading** |
+| `.userLocation(fallback:)` | Follows the **user** |
+
+To **move** the map, **set** the position (inside `withAnimation` for a smooth fly-over). To **know** where the user moved it, use **`onMapCameraChange`**. Note: after the user drags, the bound position becomes a "user-controlled" value; it doesn't tell you the region. That's why the `context` matters.
 
 ---
 
-## 54.10 Search with MKLocalSearch
+## 54.10 Search with MKLocalSearch 🟢
 
-`MKLocalSearch` performs a geographic search for places matching a text query (like "coffee shops" or a specific business name), returning `MKMapItem` results with location, name, and other point-of-interest metadata — the mapping equivalent of a text-based search API, but geographically aware.
+**`MKLocalSearch`** finds **places** from text: "coffee", "pizza", "Apple Park":
 
 ```swift
-func searchNearby(query: String, region: MKCoordinateRegion) async throws -> [MKMapItem] {
+import MapKit
+
+func searchNearby(_ query: String, in region: MKCoordinateRegion) async throws -> [MKMapItem] {
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = query
-    request.region = region
+    request.region = region                                 // prefer results near here
+    request.resultTypes = .pointOfInterest                  // businesses, not addresses
+    request.pointOfInterestFilter = MKPointOfInterestFilter(including: [.restaurant, .cafe])
 
-    let search = MKLocalSearch(request: request)
-    let response = try await search.start()
+    let response = try await MKLocalSearch(request: request).start()
     return response.mapItems
 }
 ```
 
-`request.region` biases (though doesn't strictly limit) results toward a specific geographic area, meaning a search for "pizza" run with a region centered on the user's current location returns geographically relevant results rather than pizza places anywhere in the world — each returned `MKMapItem` carries rich metadata (name, phone number, category, and its `MKPlacemark`/coordinate) suitable for both displaying as a search result and immediately plotting as a map annotation (54.7).
+- **`region`** **biases** results toward an area. It doesn't strictly **limit** them.
+- Each **`MKMapItem`** has a **name**, a location, a phone number, a website URL, a category, and more. Show it in a list, then as a `Marker` (54.7): `Marker(item: mapItem)` works directly.
+
+For **search-as-you-type** suggestions, use **`MKLocalSearchCompleter`**. It's made for that, and it's cheap:
+
+```swift
+@Observable
+final class PlaceSuggestions: NSObject, MKLocalSearchCompleterDelegate {
+    var results: [MKLocalSearchCompletion] = []
+    private let completer = MKLocalSearchCompleter()
+
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = [.pointOfInterest, .address]
+    }
+
+    func update(text: String) { completer.queryFragment = text }    // call on every keystroke
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        results = completer.results                                // "Blue Bottle Coffee, Oakland"
+    }
+}
+
+// When the user taps a suggestion, get the full place:
+// let response = try await MKLocalSearch(request: .init(completion: suggestion)).start()
+```
 
 ---
 
-## 54.11 Directions and Routing
+## 54.11 Directions and Routing 🟡
 
-`MKDirections` computes an actual route (turn-by-turn steps, estimated travel time, and the route's geographic path) between two points, suitable for both displaying a route overlay (54.8) and presenting textual step-by-step directions.
+**`MKDirections`** calculates a **route** between two places:
 
 ```swift
-func getDirections(from source: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D) async throws -> MKRoute? {
-    let request = MKDirections.Request()
-    request.source = MKMapItem(placemark: MKPlacemark(coordinate: source))
-    request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination))
-    request.transportType = .walking
+import MapKit
 
-    let directions = MKDirections(request: request)
-    let response = try await directions.calculate()
-    return response.routes.first
+func walkingRoute(to destination: MKMapItem) async throws -> MKRoute? {
+    let request = MKDirections.Request()
+    request.source = .forCurrentLocation()                  // from the user's location
+    request.destination = destination                       // e.g. a search result (54.10)
+    request.transportType = .walking
+    request.requestsAlternateRoutes = true
+
+    let response = try await MKDirections(request: request).calculate()
+    return response.routes.first                            // routes are sorted, best first
 }
 ```
 
-The returned `MKRoute`'s `polyline` property provides exactly the coordinate data `MapPolyline` (54.8) needs to visually render the computed route on screen, while `route.steps` provides the individual turn-by-turn instructions (each with its own instruction text and distance) suitable for a textual directions list — `transportType` (`.walking`, `.automobile`, `.transit`) meaningfully changes both the computed route and its estimated travel time, since a walking route may reasonably take paths a driving route cannot (and vice versa).
+An **`MKRoute`** gives you **two** different things:
 
----
-
-## 54.12 Look Around Scenes 🟠
-
-Look Around (Apple's street-level imagery feature, its counterpart to Google's Street View) can be embedded directly within an app via `LookAroundPreview`, showing an immersive, navigable street-level view of a specific location.
+| Property | Use |
+|---|---|
+| **`polyline`** | The **shape** of the route: draw it with `MapPolyline(route)` (54.8) |
+| **`steps`** | **Text** instructions: "Turn right onto Main St", each with a distance |
+| `expectedTravelTime`, `distance` | "12 min · 900 m" |
 
 ```swift
-struct LocationLookAroundView: View {
-    @State private var scene: MKLookAroundScene?
-    let coordinate: CLLocationCoordinate2D
+Map {
+    if let route {
+        MapPolyline(route).stroke(.blue, lineWidth: 6)
+    }
+}
 
-    var body: some View {
-        LookAroundPreview(scene: $scene)
-            .task {
-                let request = MKLookAroundSceneRequest(coordinate: coordinate)
-                scene = try? await request.scene
-            }
+List(route?.steps ?? [], id: \.self) { step in
+    if !step.instructions.isEmpty {
+        Text(step.instructions)
     }
 }
 ```
 
-`MKLookAroundSceneRequest` asynchronously fetches whether Look Around imagery is even available for a given coordinate (not every location has coverage) and, if so, the actual scene data `LookAroundPreview` needs to render — this gives an app the same kind of immersive, "what does this place actually look like from the street" preview Apple Maps itself provides, directly embedded within a custom view rather than requiring the user to leave the app and open Maps separately.
+**`transportType`** really changes the route: walking can use **paths** and **stairs** that cars can't; driving uses **roads** and one-way rules. For **public transit**, `MKDirections` can give an **ETA** (`calculateETA()`), but not a full drawable route.
+
+For real **turn-by-turn** navigation, don't build your own: hand off to **Apple Maps**:
+
+```swift
+destination.openInMaps(launchOptions: [
+    MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
+])
+```
 
 ---
 
-## 54.13 Geocoding and Reverse Geocoding
+## 54.12 Look Around Scenes 🟡
 
-Geocoding converts a human-readable address into geographic coordinates; reverse geocoding does the opposite, converting coordinates into a human-readable address/placemark — both handled via `CLGeocoder`.
+**Look Around** is Apple Maps' **street-level** 360° imagery. You can show it inside your app:
 
 ```swift
-func geocodeAddress(_ address: String) async throws -> CLLocationCoordinate2D? {
-    let geocoder = CLGeocoder()
-    let placemarks = try await geocoder.geocodeAddressString(address)
-    return placemarks.first?.location?.coordinate
-}
+import SwiftUI
+import MapKit
 
-func reverseGeocode(_ coordinate: CLLocationCoordinate2D) async throws -> String? {
-    let geocoder = CLGeocoder()
-    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-    let placemarks = try await geocoder.reverseGeocodeLocation(location)
-    return placemarks.first?.name
+struct StoreLookAroundView: View {
+    let coordinate: CLLocationCoordinate2D
+    @State private var scene: MKLookAroundScene?
+    @State private var isLoading = true
+
+    var body: some View {
+        Group {
+            if let scene {
+                LookAroundPreview(initialScene: scene)        // tap to open full screen
+                    .frame(height: 200)
+                    .clipShape(.rect(cornerRadius: 12))
+            } else if !isLoading {
+                ContentUnavailableView("No street view here", systemImage: "eye.slash")
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            isLoading = true
+            scene = try? await MKLookAroundSceneRequest(coordinate: coordinate).scene
+            isLoading = false
+        }
+    }
 }
 ```
 
-Geocoding is the appropriate tool when an app has address text (from a user-entered form field, or an external data source that only provides addresses rather than coordinates) that needs to be plotted on a map or used for distance calculations; reverse geocoding is the appropriate tool for the opposite direction — converting a raw coordinate (like the device's current GPS location) into a human-readable street address or place name suitable for display, such as showing "123 Main St, Anytown" instead of raw latitude/longitude numbers in a UI.
+**`MKLookAroundSceneRequest`** first checks if **coverage exists** at that spot. Many places have **none**, so `scene` can be **`nil`**: always handle that case (here, with `ContentUnavailableView`). Only show the Look Around UI when there's a scene.
+
+---
+
+## 54.13 Geocoding and Reverse Geocoding 🟢
+
+| | Input | Output | Example |
+|---|---|---|---|
+| **Geocoding** | An **address** (text) | **Coordinates** | A typed address → a pin on the map |
+| **Reverse geocoding** | **Coordinates** | An **address** / place name | GPS position → "123 Main St" |
+
+The long-supported API is **`CLGeocoder`**:
+
+```swift
+import CoreLocation
+
+func coordinate(for address: String) async throws -> CLLocationCoordinate2D? {
+    let placemarks = try await CLGeocoder().geocodeAddressString(address)
+    return placemarks.first?.location?.coordinate
+}
+
+func streetName(at coordinate: CLLocationCoordinate2D) async throws -> String? {
+    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
+    guard let place = placemarks.first else { return nil }
+    return [place.thoroughfare, place.locality].compactMap { $0 }.joined(separator: ", ")
+}
+```
+
+iOS 26 moves this into **MapKit**, with **`MKGeocodingRequest`** and **`MKReverseGeocodingRequest`**. They return `MKMapItem`s, and `CLGeocoder` is deprecated there:
+
+```swift
+// iOS 26+ (check the documentation for details)
+if let request = MKReverseGeocodingRequest(location: location) {
+    let items = try await request.mapItems
+    let address = items.first?.address?.shortAddress       // e.g. "123 Main St, Springfield"
+}
+```
+
+Rules for both:
+
+- Geocoding uses Apple's **servers**, and it's **rate-limited**. Don't geocode a **list** of 500 addresses in a loop. Geocode **once**, then **store** the coordinates.
+- Results can be **wrong** or **empty** for unclear addresses. Show the pin and let the user **confirm**.
+- Use reverse geocoding for **display** ("You're near Main St"), not to identify a **precise** spot.
 
 ---
 
@@ -268,16 +627,16 @@ Geocoding is the appropriate tool when an app has address text (from a user-ente
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Permission tiers | When In Use vs. Always | Staged, transparency-focused authorization flow |
-| Modern location stream | `CLLocationUpdate.liveUpdates()` | `AsyncSequence`-based continuous location updates |
-| Accuracy control | `accuracyAuthorization`, temporary full accuracy | Coarse-by-default, purpose-justified precise upgrades |
-| Geofencing | `CLMonitor` | Async region enter/exit notifications |
-| Battery-efficient tracking | Significant location change | Coarse, infrequent updates for general awareness |
-| Background tracking transparency | `location` background mode, blue indicator | Non-optional, always-visible background tracking notice |
-| Declarative mapping | `Map`, `Annotation`, `Marker` | SwiftUI-native map rendering with custom pins |
-| Richer geographic visuals | `MapPolyline`, `MapCircle`/`MapPolygon` | Routes and region overlays |
-| Programmatic viewpoint | `MapCameraPosition` | Read/set the map's current displayed region |
-| Place search | `MKLocalSearch` | Geographically-aware text search for points of interest |
-| Route computation | `MKDirections`, `MKRoute` | Turn-by-turn steps and route geometry |
-| Street-level imagery | `LookAroundPreview`, `MKLookAroundSceneRequest` | Immersive, embedded street-level views |
-| Address conversion | `CLGeocoder` | Address ↔ coordinate conversion in both directions |
+| Permission | When In Use, Always, `CLServiceSession` | Ask for the least, at the right moment |
+| Live location | `CLLocationUpdate.liveUpdates()` | A `for try await` stream; stop by leaving the loop |
+| Precision | `accuracyAuthorization`, temporary full accuracy | Work with approximate; upgrade only when needed |
+| Geofences | `CLMonitor`, `CircularGeographicCondition` | Enter/exit events, even when the app isn't running |
+| Low-power tracking | Significant changes, visits | Rough movement for very little battery |
+| Background location | `location` mode, `CLBackgroundActivitySession` | Continue a session; the blue indicator stays visible |
+| Maps | `Map`, `Marker`, `Annotation`, `UserAnnotation` | Declarative maps with standard or custom pins |
+| Overlays | `MapPolyline`, `MapCircle`, `MapPolygon` | Routes and areas |
+| Camera | `MapCameraPosition`, `onMapCameraChange` | Move the map; know where the user moved it |
+| Place search | `MKLocalSearch`, `MKLocalSearchCompleter` | Search by text; suggestions while typing |
+| Directions | `MKDirections`, `MKRoute`, `openInMaps` | Route shape + steps; hand off for navigation |
+| Look Around | `MKLookAroundSceneRequest`, `LookAroundPreview` | Street-level views, when coverage exists |
+| Addresses | `CLGeocoder`, `MKGeocodingRequest` (iOS 26) | Address ↔ coordinates; cache the results |
