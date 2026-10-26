@@ -550,7 +550,7 @@ export const articles: Article[] = [
     slug: "app-lifecycle-and-system-integration",
     title: "App Lifecycle and System Integration",
     description:
-      "The App protocol and scene phases, Info.plist and entitlements, custom URL schemes vs. universal links, Handoff, state restoration, BGAppRefreshTask/BGProcessingTask, background execution budgets, Core Spotlight, and SharePlay.",
+      "How an app fits into the system: scene phases, background and foreground, Info.plist and entitlements, URL schemes and universal links, routing, Handoff, state restoration, background tasks and their budgets, Spotlight, and SharePlay.",
     tags: ["platform", "lifecycle", "background-tasks"],
     publishedAt: "2026-08-16",
     get content() {
