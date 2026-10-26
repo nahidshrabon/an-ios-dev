@@ -396,7 +396,7 @@ export const articles: Article[] = [
     slug: "uikit-essentials",
     title: "UIKit Essentials",
     description:
-      "Why UIKit still matters in a SwiftUI-first world: the view controller and view lifecycle, programmatic UI vs. Interface Builder, delegates and target-action, the responder chain, gesture recognizers, view controller containment, and UIScene.",
+      "The core of UIKit and why it still matters: the view controller lifecycle, frames and bounds, programmatic UI vs. Interface Builder, delegates and target-action, the responder chain, gestures, containment, custom transitions, UIScene, and traits.",
     tags: ["uikit", "essentials"],
     publishedAt: "2026-08-16",
     get content() {
