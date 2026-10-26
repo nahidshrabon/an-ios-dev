@@ -715,7 +715,7 @@ export const articles: Article[] = [
     slug: "realitykit-arkit-and-visionos",
     title: "RealityKit, ARKit, and visionOS",
     description:
-      "RealityKit's entity-component model and RealityView, USDZ assets and Reality Composer Pro, shader graph materials, ARKit world tracking, plane/image/object detection, scene reconstruction and occlusion, face and body tracking, and visionOS windows, volumes, immersive spaces, ornaments, gaze/pinch input, hand tracking, and performance budgets.",
+      "3D and spatial apps: RealityKit entities, components, and systems, RealityView, USDZ and Reality Composer Pro, ARKit tracking, planes, images, and occlusion, face and body tracking, and visionOS scenes, input, hand tracking, spatial capture, and performance.",
     tags: ["graphics", "realitykit", "arkit", "visionos"],
     publishedAt: "2026-08-16",
     get content() {
