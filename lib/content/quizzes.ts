@@ -7083,278 +7083,264 @@ Picker("Size", selection: $size) {
   {
     id: "animation-quiz",
     title: "Animation Quiz",
-    description: "20 questions on implicit/explicit animation, curves and springs, transitions, matchedGeometryEffect, phase/keyframe animators, and Animatable.",
+    description: "20 questions on implicit and explicit animation, curves and springs, transitions, matchedGeometryEffect, phase and keyframe animators, Animatable, transactions, Reduce Motion, and debugging.",
     relatedArticleSlug: "animation",
     questions: [
       {
         id: "q1",
         prompt: "Why is the `value:` parameter required on `.animation(_:value:)`?",
         options: [
-          { id: "a", text: "It scopes the animation to trigger only when that specific value changes, rather than any state change" },
-          { id: "b", text: "It unconditionally and permanently sets the animation's own duration, overriding any other timing, in every case" },
-          { id: "c", text: "It unconditionally and permanently determines which specific view actually receives the animation, without exception" },
-          { id: "d", text: "It unconditionally has no functional purpose whatsoever and exists only for readability, regardless of context" },
+          { id: "a", text: "It sets how long the animation will last" },
+          { id: "b", text: "It gives the start value for the animation" },
+          { id: "c", text: "It names the animation for later debugging" },
+          { id: "d", text: "It limits it to changes of that value" },
         ],
-        correctOptionId: "a",
-        explanation: "Without a specific `value:` to watch, SwiftUI would have no clear signal for when to animate — the `value:` parameter tells the modifier precisely which piece of state change should trigger the animated transition on that view.",
+        correctOptionId: "d",
+        explanation: "Without it, unrelated changes would animate too; that form is deprecated.",
       },
       {
         id: "q2",
-        prompt: "What is the key difference between implicit animation (`.animation()`) and explicit animation (`withAnimation()`)?",
+        prompt: "How do `.animation()` and `withAnimation()` differ?",
         options: [
-          { id: "a", text: "They're unconditionally functionally identical, differing only in the syntax used to express them" },
-          { id: "b", text: "`.animation()` watches a value on a view; `withAnimation()` animates effects of a block of state changes" },
-          { id: "c", text: "`.animation()` is structurally unable to ever be combined with `Button` actions, under any case" },
-          { id: "d", text: "`withAnimation()` is restricted to being usable only with spring animations, and nothing else" },
+          { id: "a", text: "The old API vs. the new API" },
+          { id: "b", text: "On a view vs. on a change" },
+          { id: "c", text: "Springs vs. fixed curves" },
+          { id: "d", text: "Fast vs. slow animation speed" },
         ],
         correctOptionId: "b",
-        explanation: "Implicit animation is attached per-view and reacts to a watched value changing. Explicit animation instead wraps the actual state-mutating code, animating whatever visual consequences result from that mutation across the affected views — generally considered more predictable for event-triggered animations.",
+        explanation: "`withAnimation` animates every view the change affects.",
       },
       {
         id: "q3",
-        prompt: "Which standard animation curve starts fast and decelerates toward the end?",
+        prompt: "Which curve starts fast and slows down at the end?",
         options: [
-          { id: "a", text: "`.easeIn`, which starts slow and accelerates toward the end of the animation" },
-          { id: "b", text: "`.linear`, which maintains a constant, unchanging rate of change throughout" },
-          { id: "c", text: "`.easeOut`, which starts fast at the beginning and decelerates smoothly toward the very end" },
-          { id: "d", text: "None of the standard curves unconditionally do this, regardless of their configured parameters" },
+          { id: "a", text: "`.easeIn`" },
+          { id: "b", text: "`.linear`" },
+          { id: "c", text: "`.easeOut`" },
+          { id: "d", text: "`.easeInOut`" },
         ],
         correctOptionId: "c",
-        explanation: "`.easeOut` begins quickly and slows down approaching its end state — often considered the most natural-feeling curve for elements coming to rest, since real-world motion typically decelerates before stopping.",
+        explanation: "It feels like something arriving and stopping.",
       },
       {
         id: "q4",
-        prompt: "In `.spring(response:dampingFraction:)`, what does a lower `dampingFraction` value produce?",
+        prompt: "In `.spring(response:dampingFraction:)`, what does a lower `dampingFraction` give?",
         options: [
-          { id: "a", text: "A slower overall animation with unconditionally and permanently no change in bounce whatsoever" },
-          { id: "b", text: "An animation that unconditionally skips settling entirely and stays in motion forever" },
-          { id: "c", text: "Unconditionally no visible difference at all — `dampingFraction` unconditionally only affects color" },
-          { id: "d", text: "More pronounced oscillation and bounce before the animation finally settles into place" },
+          { id: "a", text: "A slower start to the motion" },
+          { id: "b", text: "A longer delay before moving" },
+          { id: "c", text: "No bounce, just a smooth stop" },
+          { id: "d", text: "More bounce before settling" },
         ],
         correctOptionId: "d",
-        explanation: "`dampingFraction` controls how quickly the spring's oscillation dies down — values near `1.0` settle smoothly with minimal overshoot, while lower values allow more pronounced bouncing back and forth before finally coming to rest.",
+        explanation: "`1.0` means no bounce; lower values overshoot more.",
       },
       {
         id: "q5",
         prompt: "What does `.repeatForever(autoreverses: true)` do?",
         options: [
-          { id: "a", text: "Loops the animation indefinitely, alternating between the start and end states each cycle" },
-          { id: "b", text: "It unconditionally disables the entire animation after just the first single repetition completes" },
-          { id: "c", text: "It unconditionally repeats the animation exactly once, and then permanently stops, with no looping" },
-          { id: "d", text: "It unconditionally and permanently reverses the animation's own easing curve, forever, in every case" },
+          { id: "a", text: "Plays once, then in reverse" },
+          { id: "b", text: "Repeats until the next tap" },
+          { id: "c", text: "Restarts from the start each loop" },
+          { id: "d", text: "Loops forward and back forever" },
         ],
-        correctOptionId: "a",
-        explanation: "With `autoreverses: true`, each completed cycle plays in reverse before repeating forward again, producing a smooth back-and-forth loop (like the pulsing indicator example) rather than an abrupt reset to the starting state after each pass.",
+        correctOptionId: "d",
+        explanation: "Big, small, big, small: the classic pulsing dot.",
       },
       {
         id: "q6",
-        prompt: "What does `.transition()` specifically control, as distinct from `.animation()`?",
+        prompt: "What does `.transition()` control, compared to `.animation()`?",
         options: [
-          { id: "a", text: "`.transition()` is structurally restricted to working only inside a `NavigationStack`, nowhere else" },
-          { id: "b", text: "`.transition()` defines how a view animates into/out of the hierarchy; `.animation()` animates a property" },
-          { id: "c", text: "They're unconditionally two entirely different names referring to the exact same underlying behavior" },
-          { id: "d", text: "`.transition()` unconditionally controls only color changes; `.animation()` controls only size" },
+          { id: "a", text: "How a view appears and disappears" },
+          { id: "b", text: "How fast a view's color changes" },
+          { id: "c", text: "Which views can be tapped" },
+          { id: "d", text: "The order of views in a stack" },
         ],
-        correctOptionId: "b",
-        explanation: "`.transition()` is specifically about the moment a view is added to or removed from the hierarchy — it has no effect on a view that stays present but changes some property. `.animation()`/`withAnimation()` instead handle changes to properties of views that remain in the hierarchy throughout.",
+        correctOptionId: "a",
+        explanation: "`.animation` handles views that stay and change.",
       },
       {
         id: "q7",
-        prompt: "Why does a `.transition()` have no visible effect if the insertion/removal isn't wrapped in `withAnimation()`?",
+        prompt: "Why might a `.transition()` have no visible effect?",
         options: [
-          { id: "a", text: "Transitions are unconditionally and automatically animated regardless of context, so this can't occur, in every case" },
-          { id: "b", text: "`.transition()` is unconditionally purely cosmetic documentation with genuinely no runtime effect" },
-          { id: "c", text: "Transitions only take animated effect within an animated context, like `withAnimation()`, specifically" },
-          { id: "d", text: "`.transition()` unconditionally requires a matching `.animation()` modifier on the exact same view" },
+          { id: "a", text: "Transitions only work on `Text` views" },
+          { id: "b", text: "The view needs an `.id()` modifier" },
+          { id: "c", text: "Transitions only work inside a `List`" },
+          { id: "d", text: "The insert or removal wasn't animated" },
         ],
-        correctOptionId: "c",
-        explanation: "A `.transition()` describes *how* an animated appearance/disappearance should look, but it still needs an animation context (like `withAnimation()`) to actually be animated at all — without one, SwiftUI just adds or removes the view instantly.",
+        correctOptionId: "d",
+        explanation: "Wrap the change in `withAnimation`, or watch it with `.animation(_:value:)`.",
       },
       {
         id: "q8",
-        prompt: "What does `.asymmetric(insertion:removal:)` enable that a single `.transition()` value cannot?",
+        prompt: "What does `.asymmetric(insertion:removal:)` allow?",
         options: [
-          { id: "a", text: "It unconditionally enables animating exactly two views simultaneously, and never any other number, in every case" },
-          { id: "b", text: "It unconditionally allows skipping the entire removal animation, regardless of any configuration" },
-          { id: "c", text: "It unconditionally enables running two entirely separate animations in parallel on the same property" },
-          { id: "d", text: "Different transition effects for a view's appearance versus its disappearance, not just one reversed" },
+          { id: "a", text: "Two views to share one effect" },
+          { id: "b", text: "A transition with no animation" },
+          { id: "c", text: "Running a transition twice" },
+          { id: "d", text: "Different effects in and out" },
         ],
         correctOptionId: "d",
-        explanation: "A plain `.transition(.slide)` uses the same effect (just reversed) for both insertion and removal. `.asymmetric()` lets insertion and removal be defined completely independently — as in the banner example, sliding in on insertion but simply fading out on removal.",
+        explanation: "For example, slide in from the top but just fade out.",
       },
       {
         id: "q9",
-        prompt: "What is the purpose of `@Namespace` in combination with `matchedGeometryEffect`?",
+        prompt: "What is `@Namespace` for with `matchedGeometryEffect`?",
         options: [
-          { id: "a", text: "A shared coordinate context so views tagged with matching `id:` are recognized as the same logical element" },
-          { id: "b", text: "It's unconditionally used only for debugging purposes and has genuinely no effect on animation behavior, in every case" },
-          { id: "c", text: "It unconditionally sets the entire animation's own duration, overriding any other timing value, regardless of context" },
-          { id: "d", text: "It unconditionally and permanently replaces the need for `@State` to exist anywhere in the view, without exception" },
+          { id: "a", text: "It makes the IDs unique across the whole app" },
+          { id: "b", text: "It stores the animation's speed and curve" },
+          { id: "c", text: "A shared space where matching IDs link views" },
+          { id: "d", text: "It names the view in the debug hierarchy" },
         ],
-        correctOptionId: "a",
-        explanation: "`@Namespace` establishes the shared context that `matchedGeometryEffect(id:in:)` calls reference — without a common namespace, SwiftUI would have no way to associate a shrinking/appearing view in one part of the hierarchy with a growing/disappearing view elsewhere as \"the same\" element.",
+        correctOptionId: "c",
+        explanation: "IDs only match inside the same namespace.",
       },
       {
         id: "q10",
-        prompt: "In a hero transition built with `matchedGeometryEffect`, what visually happens when a row's `id` matches a subsequently-shown detail view's `id`?",
+        prompt: "In a hero transition, what happens when a row and the new detail view share an `id`?",
         options: [
-          { id: "a", text: "A crash unconditionally occurs due to the presence of duplicate IDs shared across separate views" },
-          { id: "b", text: "SwiftUI interpolates the frame between the two views, producing a smoothly expanding hero-transition effect" },
-          { id: "c", text: "The row view is deleted outright rather than being animated or transitioned visibly, in every case" },
-          { id: "d", text: "Unconditionally nothing changes at all; the two views remain entirely unrelated, regardless of IDs" },
+          { id: "a", text: "The detail replaces it with a hard cut" },
+          { id: "b", text: "Both views show on screen at once" },
+          { id: "c", text: "The row seems to grow into the detail" },
+          { id: "d", text: "SwiftUI crashes: the IDs are equal" },
         ],
-        correctOptionId: "b",
-        explanation: "Even though only one of the two matched views is actually present in the hierarchy at any moment, sharing the same `id:` within the same namespace lets SwiftUI treat the transition between them as a continuous frame interpolation, producing the recognizable \"hero\" expand/contract effect.",
+        correctOptionId: "c",
+        explanation: "SwiftUI animates from the row's frame to the detail's frame.",
       },
       {
         id: "q11",
-        prompt: "What is `.phaseAnimator()` best suited for?",
+        prompt: "What is `.phaseAnimator()` best for?",
         options: [
-          { id: "a", text: "Animating a single property through unconditionally exactly one isolated transition, nothing more" },
-          { id: "b", text: "Unconditionally managing navigation state across multiple distinct screens, independent of animation, in every case" },
-          { id: "c", text: "Stepping through a sequence of discrete phases, well suited to multi-stage effects like a shake or bounce" },
-          { id: "d", text: "Unconditionally replacing `Form` entirely for building data-entry screens, with no other use" },
+          { id: "a", text: "Multi-step effects like a shake" },
+          { id: "b", text: "Animating a number counting up" },
+          { id: "c", text: "Moving one view into another's frame" },
+          { id: "d", text: "Turning off animation for a view" },
         ],
-        correctOptionId: "c",
-        explanation: "`.phaseAnimator()` is purpose-built for expressive, multi-beat effects — given a sequence of phase values and a content closure describing each phase's appearance, SwiftUI automatically animates through the sequence, avoiding manually chained `withAnimation()` calls with completion handlers.",
+        correctOptionId: "a",
+        explanation: "It steps through a list of phases, animating between each.",
       },
       {
         id: "q12",
-        prompt: "What does the `trigger:` parameter do in `.phaseAnimator(_:trigger:content:animation:)`?",
+        prompt: "What does `trigger:` do in `.phaseAnimator(_:trigger:content:animation:)`?",
         options: [
-          { id: "a", text: "It disables the entire animation, regardless of the trigger value's own state" },
-          { id: "b", text: "It unconditionally has no functional effect whatsoever and is purely documentation, nothing more, in all situations, in every case" },
-          { id: "c", text: "It unconditionally sets the specific color of the animated view, with no other functional role, without exception, regardless of context" },
-          { id: "d", text: "When its value changes, it restarts the phase sequence from the very beginning, every time" },
+          { id: "a", text: "Each change runs all phases once" },
+          { id: "b", text: "Sets how long each phase lasts" },
+          { id: "c", text: "Picks which phase is shown first" },
+          { id: "d", text: "Stops the animation for good" },
         ],
-        correctOptionId: "d",
-        explanation: "`trigger:` is the signal that causes the phase sequence to (re)play — each time the trigger value changes, `.phaseAnimator()` steps through its phases again from the start, as seen with the tap gesture toggling `trigger` to replay the shake effect.",
+        correctOptionId: "a",
+        explanation: "Without a trigger, the phases loop forever.",
       },
       {
         id: "q13",
         prompt: "How does `.keyframeAnimator()` differ from `.phaseAnimator()`?",
         options: [
-          { id: "a", text: "Independent timelines for multiple properties in parallel, versus a simpler sequence of discrete phases" },
-          { id: "b", text: "`.keyframeAnimator()` unconditionally does not support spring-based keyframes under any configuration, without exception" },
-          { id: "c", text: "`.phaseAnimator()` unconditionally can only animate color; `.keyframeAnimator()` can only animate position" },
-          { id: "d", text: "They're unconditionally functionally identical in every regard, differing only in their assigned names, in every case" },
+          { id: "a", text: "It can only animate the view's opacity" },
+          { id: "b", text: "Each property gets its own timeline" },
+          { id: "c", text: "It doesn't need any starting value" },
+          { id: "d", text: "It runs only once per app launch" },
         ],
-        correctOptionId: "a",
-        explanation: "Keyframe animators offer more granular control — each property gets its own independently-timed track of keyframes (as shown with separate `scale`, `verticalOffset`, and `opacity` tracks), enabling more complex choreography than phase animators' simpler \"step through these whole-view states in order\" model.",
+        correctOptionId: "b",
+        explanation: "Separate tracks let scale, offset, and rotation move with different timing.",
       },
       {
         id: "q14",
-        prompt: "Why must a custom type conform to `Animatable` and expose `animatableData` for SwiftUI to smoothly interpolate it during animation?",
+        prompt: "Why must a custom type expose `animatableData`?",
         options: [
-          { id: "a", text: "`Animatable` is unconditionally required only for `Shape` types, never required for `View` types" },
-          { id: "b", text: "Without it, SwiftUI has no way to know which numeric values should be interpolated frame-by-frame" },
-          { id: "c", text: "`Animatable` conformance is only cosmetic and has genuinely no functional effect whatsoever" },
-          { id: "d", text: "Unconditionally, all numeric properties are automatically animatable without needing conformance" },
+          { id: "a", text: "So SwiftUI knows what to interpolate" },
+          { id: "b", text: "So the type can be saved to a database" },
+          { id: "c", text: "So the view's body runs only one time" },
+          { id: "d", text: "So SwiftUI can compare views for equality" },
         ],
-        correctOptionId: "b",
-        explanation: "SwiftUI's animation system needs an explicit, well-defined numeric quantity (or quantities) to interpolate across animation frames — `animatableData` provides exactly that. Without conforming, a changing value simply jumps to its new state instantly rather than transitioning smoothly.",
+        correctOptionId: "a",
+        explanation: "Without it, the value would jump from start to end.",
       },
       {
         id: "q15",
-        prompt: "Why does `WavyShape` use `AnimatablePair<Double, Double>` for its `animatableData` instead of a single `Double`?",
+        prompt: "Why does `WavyShape` use `AnimatablePair<Double, Double>`?",
         options: [
-          { id: "a", text: "`AnimatablePair` is unconditionally required syntax for all `Shape` types, regardless of property count, in every case" },
-          { id: "b", text: "A plain `Double` is unconditionally unable to ever conform to `Animatable` at all, under any case" },
-          { id: "c", text: "Two independently animatable properties both need interpolating, and `AnimatablePair` bundles them together" },
-          { id: "d", text: "`AnimatablePair` is unconditionally and measurably faster to compute than a single plain `Double`" },
+          { id: "a", text: "`Double` alone isn't `VectorArithmetic`" },
+          { id: "b", text: "Pairs animate twice as fast" },
+          { id: "c", text: "Two values must animate together" },
+          { id: "d", text: "`Shape` requires exactly two values" },
         ],
         correctOptionId: "c",
-        explanation: "Since both `amplitude` and `phase` need to animate simultaneously, a single `Double` wouldn't suffice — `AnimatablePair` combines two `VectorArithmetic`-conforming values into one interpolatable unit, letting SwiftUI animate both properties together smoothly.",
+        explanation: "A single `Double` could carry only `amplitude` or `phase`; the other would jump.",
       },
       {
         id: "q16",
-        prompt: "What does `VectorArithmetic` conformance require, conceptually, that makes it suitable for animation interpolation?",
+        prompt: "What does `VectorArithmetic` let SwiftUI do with a value?",
         options: [
-          { id: "a", text: "Unconditional conformance to `Codable`, purely for long-term on-disk persistence, and nothing more" },
-          { id: "b", text: "A `body` property, unconditionally required exactly the same as any conforming `View` type" },
-          { id: "c", text: "Unconditional support only for whole integer values, never for fractional or floating-point values" },
-          { id: "d", text: "Support for addition, scaling, and magnitude, exactly what's needed for smooth in-between values" },
+          { id: "a", text: "Save it and load it from disk" },
+          { id: "b", text: "Compare it with `==` only" },
+          { id: "c", text: "Add, subtract, and scale it" },
+          { id: "d", text: "Convert it to and from text" },
         ],
-        correctOptionId: "d",
-        explanation: "Interpolating between two values across an animation's duration fundamentally requires being able to add, scale, and measure the \"distance\" between values — this is precisely what `VectorArithmetic`'s required operations provide, making it the foundation for any `animatableData` type.",
+        correctOptionId: "c",
+        explanation: "That's what's needed to compute in-between values.",
       },
       {
         id: "q17",
-        prompt: "Given the code below, why does the green rectangle resize instantly while the blue rectangle animates smoothly, even though both respond to the same `withAnimation()`-wrapped state change?",
-        codeExample: `struct TransactionScopingView: View {
-    @State private var isExpanded = false
+        prompt: "Why does the green rectangle resize instantly here?",
+        codeExample: `VStack {
+    RoundedRectangle(cornerRadius: 10)
+        .fill(.blue)
+        .frame(width: isExpanded ? 250 : 100, height: 80)
 
-    var body: some View {
-        VStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.blue)
-                .frame(width: isExpanded ? 250 : 100, height: 80)
-
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.green)
-                .frame(width: isExpanded ? 250 : 100, height: 80)
-                .transaction { transaction in
-                    transaction.animation = nil
-                }
-        }
-        .onTapGesture {
-            withAnimation(.spring) { isExpanded.toggle() }
-        }
-    }
+    RoundedRectangle(cornerRadius: 10)
+        .fill(.green)
+        .frame(width: isExpanded ? 250 : 100, height: 80)
+        .transaction { $0.animation = nil }
+}
+.onTapGesture {
+    withAnimation(.spring) { isExpanded.toggle() }
 }`,
         options: [
-          { id: "a", text: "`RoundedRectangle` unconditionally behaves differently from every other shape type, with no override, in every case" },
-          { id: "b", text: "The green rectangle's `.transaction()` explicitly sets `transaction.animation = nil`, overriding the context" },
-          { id: "c", text: "Unconditionally, only the very first view inside a `VStack` can ever possibly be animated, and no other position" },
-          { id: "d", text: "`.transaction()` unconditionally has no real effect whatsoever here, and this is unconditionally simply a bug" },
+          { id: "a", text: "Green shapes can't be animated at all" },
+          { id: "b", text: "Its transaction's animation is set to `nil`" },
+          { id: "c", text: "It's below the blue one in the `VStack`" },
+          { id: "d", text: "`withAnimation` only affects the first view" },
         ],
         correctOptionId: "b",
-        explanation: "`.transaction()` lets a specific part of the hierarchy override the ambient animation context — by setting `transaction.animation = nil`, the green rectangle explicitly opts out of the animation that would otherwise apply from the enclosing `withAnimation()` call, resizing instantly instead.",
+        explanation: "The blue one keeps the spring; the green one opts out.",
       },
       {
         id: "q18",
-        prompt: "What does `@Environment(\\.accessibilityReduceMotion)` expose, and how should well-designed apps typically respond to it?",
+        prompt: "How should an app respond to Reduce Motion?",
         options: [
-          { id: "a", text: "It unconditionally exposes only the device's current battery level; apps should reduce animation" },
-          { id: "b", text: "It unconditionally disables all animations entirely, with absolutely no code needed at all" },
-          { id: "c", text: "It reflects Reduce Motion; apps should substitute movement-heavy animation with calmer alternatives" },
-          { id: "d", text: "It unconditionally has no relationship to accessibility, and only affects color contrast" },
+          { id: "a", text: "Turn off every animation in the app" },
+          { id: "b", text: "Swap big motion for gentle fades" },
+          { id: "c", text: "Play animations at half speed" },
+          { id: "d", text: "Ignore it; only system views use it" },
         ],
-        correctOptionId: "c",
-        explanation: "Reduce Motion is a stated user preference for a calmer, less motion-heavy interface — reading this environment value lets an app substitute jarring or large-scale animated movement with gentler alternatives, respecting the preference while still communicating state changes.",
+        correctOptionId: "b",
+        explanation: "Users still need a sign that something changed, just with less movement.",
       },
       {
         id: "q19",
-        prompt: "Given the code below, why does calling `.id(count)` on a `Text` view defeat the intended counting animation?",
-        codeExample: `struct BadIdentityExampleView: View {
-    @State private var count = 0
-
-    var body: some View {
-        Text("\\(count)")
-            .id(count) // new identity every change — defeats animation
-            .onTapGesture { withAnimation { count += 1 } }
-    }
-}`,
+        prompt: "Why does `.id(count)` stop this number from animating?",
+        codeExample: `Text("\\(count)")
+    .id(count)
+    .onTapGesture { withAnimation { count += 1 } }`,
         options: [
-          { id: "a", text: "Changing `.id()` alongside the animated value forces SwiftUI to treat the view as an new instance" },
-          { id: "b", text: "`Text` views are unconditionally unable to ever be animated under any circumstance whatsoever" },
-          { id: "c", text: "`.id()` unconditionally has no effect on animation whatsoever, and this is simply a red herring" },
-          { id: "d", text: "`.id()` is unconditionally only valid when used inside a `List` or a `ForEach`, and nowhere else at all" },
+          { id: "a", text: "Each change makes a brand-new view" },
+          { id: "b", text: "`Text` can never be animated" },
+          { id: "c", text: "`withAnimation` ignores integers" },
+          { id: "d", text: "`.id` must come before the `Text`" },
         ],
         correctOptionId: "a",
-        explanation: "`.id()` controls a view's structural identity. Tying it to the very value being animated means every change also changes the view's identity, causing SwiftUI to discard the old view and insert a brand-new one rather than smoothly transitioning the existing view's content — hence the fix uses `.contentTransition(.numericText())` with a stable identity instead.",
+        explanation: "Keep identity stable and use `.contentTransition(.numericText())`.",
       },
       {
         id: "q20",
-        prompt: "What are two common causes of \"the animation just doesn't happen\" bugs mentioned in the debugging discussion?",
+        prompt: "Which is a common reason an animation just doesn't happen?",
         options: [
-          { id: "a", text: "Unconditionally placing the animated view inside a `NavigationStack`, regardless of any other configuration" },
-          { id: "b", text: "Unconditionally using `Form` instead of `List`, regardless of animation-related configuration" },
-          { id: "c", text: "Unconditionally using `Circle` instead of `Rectangle`, and having more than one `@State` property, in every case" },
-          { id: "d", text: "A missing `value:` argument, forgetting `withAnimation()`, or changing a view's `.id()` alongside state" },
+          { id: "a", text: "The view uses a spring, not a curve" },
+          { id: "b", text: "The change isn't in `withAnimation`" },
+          { id: "c", text: "It runs on a device, not a simulator" },
+          { id: "d", text: "The view's body is over ten lines" },
         ],
-        correctOptionId: "d",
-        explanation: "These are the most frequently encountered animation pitfalls: omitting `value:` (or an animation context entirely) means SwiftUI has no directive to animate at all, while an incidental `.id()` change forces a full identity reset that bypasses animation regardless of any correctly-configured animation modifiers.",
+        correctOptionId: "b",
+        explanation: "Also: a missing `value:`, a changing `.id()`, or a change made later in an `async` task.",
       },
     ],
   },

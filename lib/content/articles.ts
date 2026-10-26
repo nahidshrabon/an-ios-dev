@@ -330,7 +330,7 @@ export const articles: Article[] = [
     slug: "animation",
     title: "Animation",
     description:
-      "The full animation toolkit: implicit and explicit animation, curves and springs, transitions, matchedGeometryEffect, the newer phase and keyframe animators, custom Animatable conformance, and practical debugging.",
+      "Animating state changes in SwiftUI: implicit and explicit animation, curves and springs, transitions, matchedGeometryEffect, phase and keyframe animators, Animatable shapes, transactions, Reduce Motion, and fixing animations that jump.",
     tags: ["swiftui","animation"],
     publishedAt: "2026-08-08",
     get content() {
