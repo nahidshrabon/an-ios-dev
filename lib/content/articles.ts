@@ -407,7 +407,7 @@ export const articles: Article[] = [
     slug: "auto-layout",
     title: "Auto Layout",
     description:
-      "UIKit's constraint-based layout system as a system of linear equations: NSLayoutConstraint and anchors, priorities, content hugging and compression resistance, UIStackView, safe area handling, and debugging conflicts and ambiguity.",
+      "UIKit's constraint-based layout: constraints as equations, NSLayoutConstraint and anchors, priorities, content hugging and compression resistance, UIStackView, the safe area and other layout guides, fixing conflicts and ambiguity, and self-sizing.",
     tags: ["uikit", "auto-layout"],
     publishedAt: "2026-08-16",
     get content() {
