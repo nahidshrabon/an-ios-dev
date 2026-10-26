@@ -572,7 +572,7 @@ export const articles: Article[] = [
     slug: "app-intents-and-siri",
     title: "App Intents and Siri",
     description:
-      "The unified App Intents framework powering Siri, Shortcuts, Spotlight, and widgets: AppIntent, parameters and summaries, AppEntity/EntityQuery, AppEnum, App Shortcuts, snippets, relevance, long-running intents, and testing.",
+      "Exposing app actions to the system with App Intents: intents and parameters, entities and queries, App Shortcuts and phrases, snippets, newer relevance, paging, sync, long-running, and execution APIs, testing, controls, Visual Intelligence, and moving from SiriKit.",
     tags: ["platform", "app-intents", "siri"],
     publishedAt: "2026-08-16",
     get content() {
