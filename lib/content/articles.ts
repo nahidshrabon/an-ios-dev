@@ -726,7 +726,7 @@ export const articles: Article[] = [
     slug: "testing-foundations",
     title: "Testing Foundations",
     description:
-      "Why tests exist, Swift Testing's @Test/#expect/#require, @Suite grouping, parameterized and zipped/cross-product tests, test traits and tags, .serialized/.timeLimit, testing async code, confirmation() for callbacks, writing testable code, mock services, XCTest literacy, and incremental migration.",
+      "Swift Testing from the ground up: why tests exist, #expect and #require, suites, parameterized tests, traits, tags, async tests, confirmation(), designing testable code with pure functions and injected dependencies, test doubles, reading XCTest, and migrating step by step.",
     tags: ["testing", "swift-testing", "xctest"],
     publishedAt: "2026-08-16",
     get content() {
