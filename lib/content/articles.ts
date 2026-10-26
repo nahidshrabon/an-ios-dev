@@ -352,7 +352,7 @@ export const articles: Article[] = [
     slug: "swiftui-architecture-and-internals",
     title: "SwiftUI Architecture and Internals",
     description:
-      "How SwiftUI actually works under the hood: ViewBuilder and TupleView, AnyView's real cost, custom ViewModifier and PreferenceKey for upward data flow, the Layout protocol, and diagnosing body invalidation storms.",
+      "How SwiftUI works under the hood: ViewBuilder and TupleView, branch identity, why AnyView costs more, custom ViewModifiers, PreferenceKey and Anchor for data that flows up, the Layout protocol, equatable(), and finding views that redraw too often.",
     tags: ["swiftui", "architecture", "performance"],
     publishedAt: "2026-08-15",
     get content() {
