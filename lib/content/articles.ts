@@ -308,7 +308,7 @@ export const articles: Article[] = [
     slug: "navigation-and-presentation",
     title: "Navigation and Presentation",
     description:
-      "SwiftUI's navigation system (NavigationStack, value-based navigation, split views, tabs) and its presentation mechanisms (sheets, full screen covers, popovers, alerts, toolbars, context menus).",
+      "Moving between screens and showing things on top: NavigationStack, value-based links, paths, deep links, split views, tabs, sheets and detents, full screen covers, popovers, alerts, dialogs, toolbars, context menus, and zoom transitions.",
     tags: ["swiftui","navigation"],
     publishedAt: "2026-08-08",
     get content() {

@@ -1,43 +1,76 @@
-## 27.1 `NavigationStack` and `NavigationLink`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`NavigationStack` manages a stack of views, pushing new views on top as the user navigates deeper and popping them off as they navigate back — `NavigationLink` is the tappable control that triggers a push.
+**Navigation** moves the user **between screens**: pushing onto a stack, picking from a sidebar, or switching tabs. **Presentation** shows something **on top** for a short task: a sheet, an alert, a menu. In SwiftUI, both are driven by **state**. You don't call `push` or `present`; you change a value, and the UI follows.
+
+---
+
+## 27.1 `NavigationStack` and `NavigationLink` 🟢
+
+A **`NavigationStack`** holds a **stack of screens**. A **`NavigationLink`** pushes a new screen when tapped. The back button pops it. This is SwiftUI's `UINavigationController`.
 
 ```swift
 NavigationStack {
     List(items) { item in
         NavigationLink(item.title) {
-            DetailView(item: item)   // pushed onto the stack when tapped
+            DetailView(item: item)   // pushed when the row is tapped
         }
     }
     .navigationTitle("Items")
 }
 ```
 
-This inline form of `NavigationLink` (directly embedding the destination view) works fine for simple cases, but for lists with many rows, it eagerly constructs every destination view up front — the value-based approach in 27.3 avoids this and is generally preferred for data-driven navigation.
+A link's label can be **any view**:
+
+```swift
+NavigationLink {
+    DetailView(item: item)
+} label: {
+    HStack {
+        Image(systemName: item.icon)
+        Text(item.title)
+    }
+}
+```
+
+This **inline** form puts the destination **inside** the link. It's fine for a few links. In a long list, each row creates its destination's **struct** (its `init` runs) even before any tap. And you can't push a screen **from code**. The **value-based** form (27.3) fixes both, and is the usual choice for data.
+
+Put **one** `NavigationStack` at the **root** of a flow. Don't wrap pushed screens in another `NavigationStack`; that creates a stack inside a stack.
 
 ---
 
-## 27.2 Navigation Titles and Display Modes
+## 27.2 Navigation Titles and Display Modes 🟢
 
-`.navigationTitle()` sets the title shown in the navigation bar for a given screen, and `.navigationBarTitleDisplayMode()` controls whether it renders as a large, prominent title or a smaller inline one:
+**`.navigationTitle()`** sets the bar title. Put it on the **content inside** the stack, not on the `NavigationStack` itself. **`.navigationBarTitleDisplayMode()`** picks a **large** or **inline** title:
 
 ```swift
 List(items) { item in /* ... */ }
     .navigationTitle("Items")
-    .navigationBarTitleDisplayMode(.large)     // the large, prominent title style (the default at the top of a stack)
+    .navigationBarTitleDisplayMode(.large)    // big title; the default at the root of a stack
 
 DetailView(item: item)
     .navigationTitle(item.title)
-    .navigationBarTitleDisplayMode(.inline)     // smaller, centered title — common for detail/pushed screens
+    .navigationBarTitleDisplayMode(.inline)   // small, centered title; common for pushed screens
 ```
 
-The large title typically collapses to the inline style automatically as the user scrolls content upward within that screen — this is standard system behavior, not something you need to implement manually.
+A large title **shrinks to inline** by itself when the user scrolls. You don't write any code for that.
+
+More title options:
+
+```swift
+.toolbarTitleDisplayMode(.inlineLarge)        // large, but placed in the bar row (iOS 17)
+
+.toolbar {
+    ToolbarItem(placement: .principal) {      // a fully custom title view
+        Image("logo").resizable().scaledToFit().frame(height: 28)
+    }
+}
+```
 
 ---
 
-## 27.3 Value-Based Navigation with `navigationDestination(for:)`
+## 27.3 Value-Based Navigation with `navigationDestination(for:)` 🟢
 
-Rather than embedding a destination view directly in each `NavigationLink` (27.1), value-based navigation associates a **data type** with a destination view builder once, and each `NavigationLink` simply carries a value of that type — SwiftUI resolves the actual destination view lazily, only when that specific link is actually navigated to.
+With **value-based** navigation, a link carries a **value** (data), not a view. You say **once**, with **`navigationDestination(for:)`**, which view to show for that **type**:
 
 ```swift
 struct Item: Identifiable, Hashable {
@@ -47,21 +80,38 @@ struct Item: Identifiable, Hashable {
 
 NavigationStack {
     List(items) { item in
-        NavigationLink(item.title, value: item)   // carries a VALUE, not a view
+        NavigationLink(item.title, value: item)   // carries a VALUE
     }
     .navigationDestination(for: Item.self) { item in
-        DetailView(item: item)   // resolved lazily, only when this specific item is navigated to
+        DetailView(item: item)   // built only when this item is actually opened
     }
 }
 ```
 
-This is the generally preferred, more scalable pattern — it avoids eagerly constructing every possible destination view up front (as inline `NavigationLink`s from 27.1 do), and it's also what makes programmatic/deep-link navigation (27.4–27.5) straightforward, since a "destination" is just a plain value you can construct and push without needing a `NavigationLink` view at all.
+Why it's better:
+
+- The destination is built **only when needed**.
+- A "destination" is **just a value**, so you can push from **code** (27.4) or from a **deep link** (27.5).
+- Each **type** maps to one screen, in one place.
+
+You can register **several types** on one stack:
+
+```swift
+NavigationStack {
+    HomeView()
+        .navigationDestination(for: Item.self) { ItemDetailView(item: $0) }
+        .navigationDestination(for: User.self) { ProfileView(user: $0) }
+        .navigationDestination(for: Tag.self) { TagView(tag: $0) }
+}
+```
+
+⚠️ Put `.navigationDestination` on a view **that's always there** (like the `List`), **not inside** a row or a lazy container. Rows come and go as you scroll, and the destination would disappear with them.
 
 ---
 
-## 27.4 `NavigationPath` and Programmatic Navigation
+## 27.4 `NavigationPath` and Programmatic Navigation 🟡
 
-`NavigationPath` is a type-erased collection representing a stack's current navigation state, letting you push/pop screens programmatically (not just via `NavigationLink` taps) and mix multiple different value types within a single stack:
+Bind the stack to a **path** to control it **from code**. **`NavigationPath`** is a list of values that can hold **different types**:
 
 ```swift
 struct ContentView: View {
@@ -79,50 +129,120 @@ struct ContentView: View {
     }
 
     func navigateToItem(_ item: Item) {
-        path.append(item)   // programmatically pushes a new screen, without any NavigationLink tap
+        path.append(item)             // push a screen, no tap needed
     }
 
     func popToRoot() {
-        path.removeLast(path.count)   // pops all the way back to the root screen
+        path.removeLast(path.count)   // pop back to the root
     }
 }
 ```
 
-Binding a `NavigationPath` to `NavigationStack(path:)` gives you full external control over the stack's contents — essential for scenarios like "after successfully submitting a form, programmatically navigate three screens deep" or responding to a deep link (27.5) that needs to construct a specific navigation state directly, bypassing normal tap-driven navigation entirely.
+If the stack only holds **one type**, a plain **array** is simpler. You can read it too:
+
+```swift
+@State private var path: [Item] = []
+
+NavigationStack(path: $path) { /* ... */ }
+
+path.append(item)        // push
+path.removeLast()        // pop one
+path = []                // pop to root
+let current = path.last  // which screen is on top
+```
+
+In bigger apps, the path often lives in a **router** object, so any screen can navigate:
+
+```swift
+enum Route: Hashable {
+    case item(Item)
+    case profile(User)
+    case settings
+}
+
+@Observable
+final class Router {
+    var path: [Route] = []
+
+    func open(_ route: Route) { path.append(route) }
+    func popToRoot() { path.removeAll() }
+}
+
+struct RootView: View {
+    @State private var router = Router()
+
+    var body: some View {
+        NavigationStack(path: $router.path) {
+            HomeView()
+                .navigationDestination(for: Route.self) { route in
+                    switch route {
+                    case .item(let item): ItemDetailView(item: item)
+                    case .profile(let user): ProfileView(user: user)
+                    case .settings: SettingsView()
+                    }
+                }
+        }
+        .environment(router)       // any screen can call router.open(...)
+    }
+}
+```
+
+An **enum of routes** (6.22) lists every screen in one place, and the compiler checks the `switch`.
 
 ---
 
-## 27.5 Deep Linking into a Navigation Stack
+## 27.5 Deep Linking into a Navigation Stack 🟡
 
-Deep linking — opening the app directly to a specific screen from a URL (recall the URL scheme/universal link mechanics covered fully in section 49.5–49.7) — combines directly with `NavigationPath` (27.4): parse the incoming URL into the appropriate value(s), then programmatically build the `NavigationPath` to match.
+A **deep link** opens the app on a **specific screen** from a URL (URL schemes and universal links are in 49.5–49.7). With a path, it's simple: **parse the URL into values**, then **set the path**:
 
 ```swift
 struct ContentView: View {
-    @State private var path = NavigationPath()
+    @State private var path: [Route] = []
 
     var body: some View {
         NavigationStack(path: $path) {
             RootView()
-                .navigationDestination(for: Item.self) { item in
-                    DetailView(item: item)
+                .navigationDestination(for: Route.self) { route in
+                    destination(for: route)
                 }
         }
         .onOpenURL { url in
-            if let item = parseItem(from: url) {
-                path = NavigationPath([item])   // jump directly to the deep-linked screen
+            if let routes = parseRoutes(from: url) {
+                path = routes             // jump straight to the linked screen
             }
         }
     }
 }
 ```
 
-For deep links needing to represent a multi-screen path (not just one destination), `NavigationPath([firstItem, secondItem])` constructs a stack with multiple screens pre-pushed at once — letting a single deep link open directly to a screen several levels deep, with the correct intermediate screens already present for the back button to work naturally.
+A link can open **several levels deep**. Set all the screens at once, so the **back button** works naturally:
+
+```swift
+enum Route: Hashable {
+    case user(id: Int)
+    case post(id: Int)
+}
+
+// myapp://users/42/posts/7
+func parseRoutes(from url: URL) -> [Route]? {
+    let parts = url.pathComponents.filter { $0 != "/" }   // ["42", "posts", "7"], host is "users"
+    guard url.host == "users", parts.count >= 1, let userID = Int(parts[0]) else { return nil }
+
+    var routes: [Route] = [.user(id: userID)]
+    if parts.count == 3, parts[1] == "posts", let postID = Int(parts[2]) {
+        routes.append(.post(id: postID))    // the user screen, then the post on top
+    }
+    return routes
+}
+```
+
+Pass **IDs** in routes, not full models. The destination screen loads the data. Then a route is small, `Hashable`, and easy to build from a URL.
 
 ---
 
-## 27.6 `NavigationSplitView` Two-Column
+## 27.6 `NavigationSplitView` Two-Column 🟡
 
-`NavigationSplitView` provides a sidebar-plus-detail layout — collapsing to a single-column, `NavigationStack`-like presentation on compact-width devices (iPhone) while showing both columns side by side on wider devices (iPad, Mac):
+**`NavigationSplitView`** shows a **sidebar** and a **detail** area. On iPad and Mac, both columns show **side by side**. On iPhone, it **collapses** into one column that works like a stack.
 
 ```swift
 struct ContentView: View {
@@ -131,36 +251,68 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             List(items, selection: $selectedItem) { item in
-                Text(item.title).tag(item)
+                NavigationLink(item.title, value: item)   // the value is the selection tag
             }
             .navigationTitle("Items")
         } detail: {
             if let selectedItem {
                 DetailView(item: selectedItem)
             } else {
-                Text("Select an item")
+                ContentUnavailableView("Select an item", systemImage: "doc")
             }
         }
     }
 }
 ```
 
-This single view definition automatically adapts across size classes — on iPhone it behaves essentially like a `NavigationStack` (sidebar list, pushing to detail on selection), while on iPad/Mac it shows both the sidebar and detail simultaneously, without you writing separate layout code for each size class.
+The **selection** drives everything: tapping a row sets `selectedItem`, and the detail column shows it. One view definition works on **every** device size.
+
+You can control **which columns show**, and their width:
+
+```swift
+@State private var columnVisibility: NavigationSplitViewVisibility = .all
+
+NavigationSplitView(columnVisibility: $columnVisibility) {
+    Sidebar()
+        .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 320)
+} detail: {
+    Detail()
+}
+.navigationSplitViewStyle(.balanced)     // or .prominentDetail
+```
+
+The detail column can have its **own** `NavigationStack`, to push more screens inside it:
+
+```swift
+} detail: {
+    NavigationStack {
+        DetailView(item: selectedItem)
+            .navigationDestination(for: Comment.self) { CommentView(comment: $0) }
+    }
+}
+```
 
 ---
 
-## 27.7 `NavigationSplitView` Three-Column
+## 27.7 `NavigationSplitView` Three-Column 🟡
 
-`NavigationSplitView` also supports a three-column configuration — sidebar, content list, and detail — common in apps like Mail (mailbox list → message list → message content):
+With **three** columns you get **sidebar → content → detail**. This is the **Mail** layout: mailboxes → messages → one message.
 
 ```swift
+@State private var selectedFolder: Folder?
+@State private var selectedMessage: Message?
+
 NavigationSplitView {
     List(folders, selection: $selectedFolder) { folder in
-        Text(folder.name)
+        NavigationLink(folder.name, value: folder)
     }
 } content: {
-    List(messagesInFolder, selection: $selectedMessage) { message in
-        Text(message.subject)
+    if let selectedFolder {
+        List(selectedFolder.messages, selection: $selectedMessage) { message in
+            NavigationLink(message.subject, value: message)
+        }
+    } else {
+        Text("Select a folder")
     }
 } detail: {
     if let selectedMessage {
@@ -171,13 +323,21 @@ NavigationSplitView {
 }
 ```
 
-On narrower devices, this three-column configuration typically collapses progressively (showing one or two columns at a time, with back navigation between them) rather than all three simultaneously — exactly the same automatic, size-class-aware adaptation behavior as the two-column variant (27.6), just with an additional intermediate column to manage.
+On smaller widths it **collapses step by step**: two columns, then one, with **back** navigation between them. Same as the two-column version, just with one more level.
+
+Remember to **clear** the inner selection when the outer one changes, so you don't show a message from the wrong folder:
+
+```swift
+.onChange(of: selectedFolder) {
+    selectedMessage = nil
+}
+```
 
 ---
 
-## 27.8 `TabView` and the `Tab` API
+## 27.8 `TabView` and the `Tab` API 🟢
 
-`TabView` presents a tab bar (or sidebar-style tab list on iPad, see 27.9) for switching between top-level sections of an app — the modern `Tab` API (superseding the older `.tabItem()` modifier style) associates each tab with a value for selection tracking and richer configuration:
+**`TabView`** switches between the app's **top-level sections**. The **`Tab`** API (iOS 18) gives each tab a **title**, an **icon**, and a **value** for selection:
 
 ```swift
 struct ContentView: View {
@@ -192,78 +352,114 @@ struct ContentView: View {
             Tab("Home", systemImage: "house", value: .home) {
                 HomeView()
             }
-            Tab("Search", systemImage: "magnifyingglass", value: .search) {
-                SearchView()
+            Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
+                SearchView()         // role: .search gets special placement on iOS 26
             }
             Tab("Profile", systemImage: "person", value: .profile) {
                 ProfileView()
             }
+            .badge(3)                // a red badge on the tab
         }
     }
 }
 ```
 
-Using an enum (recall section 6.22's "model state with enums" theme) for tab selection, rather than a raw `Int` index, is the idiomatic modern pattern — it makes the code self-documenting and immune to bugs from tabs being reordered or added, unlike index-based selection which would silently break if the tab order changed.
+Use an **enum** for the selection, not an `Int` index. `selection = .profile` is **clear**, and it doesn't break if you **reorder** or **add** tabs. An index would silently point to the wrong tab.
+
+Switching tabs **from code** is just setting the value:
+
+```swift
+Button("Go to Profile") { selection = .profile }
+```
+
+Each tab usually has its **own** `NavigationStack`. Then each tab keeps its own back history:
+
+```swift
+Tab("Home", systemImage: "house", value: .home) {
+    NavigationStack { HomeView() }
+}
+```
+
+In older code, you'll see `.tabItem { Label(...) }` and `.tag(...)`. That style still works, but `Tab` is the modern way.
 
 ---
 
-## 27.9 Sidebar-Adaptable Tabs on iPad
+## 27.9 Sidebar-Adaptable Tabs on iPad 🟡
 
-On iPad, tabs declared with the modern `Tab` API can automatically adapt into a sidebar-style presentation (rather than a bottom tab bar) when there's sufficient width, and `TabSection` lets you group related tabs together within that sidebar for larger tab counts:
+With **`.tabViewStyle(.sidebarAdaptable)`**, tabs show as a **tab bar** on iPhone, and on iPad the user can switch to a **sidebar**. **`TabSection`** groups tabs in the sidebar:
 
 ```swift
+enum LibraryTab: Hashable {
+    case home, albums, playlists
+}
+
 TabView(selection: $selection) {
-    Tab("Home", systemImage: "house", value: .home) {
+    Tab("Home", systemImage: "house", value: LibraryTab.home) {
         HomeView()
     }
     TabSection("Library") {
-        Tab("Albums", systemImage: "square.stack", value: .albums) {
+        Tab("Albums", systemImage: "square.stack", value: LibraryTab.albums) {
             AlbumsView()
         }
-        Tab("Playlists", systemImage: "music.note.list", value: .playlists) {
+        Tab("Playlists", systemImage: "music.note.list", value: LibraryTab.playlists) {
             PlaylistsView()
         }
     }
 }
-.tabViewStyle(.sidebarAdaptable)   // opts into sidebar presentation on sufficiently wide displays
+.tabViewStyle(.sidebarAdaptable)
 ```
 
-This automatic adaptation is another instance of the same "one declaration, multiple size-class-appropriate presentations" theme seen with `NavigationSplitView` (27.6–27.7) — you describe the tab structure once, and the system chooses the appropriate visual presentation (bottom bar vs. sidebar) based on available width.
+You describe the tabs **once**. The system picks a **tab bar** or a **sidebar** based on the space. It's the same idea as `NavigationSplitView`: one declaration, the right look for each device.
+
+This style is good for apps with **many** sections, like Music or Files. A sidebar can hold more items than a tab bar's 4–5 slots.
 
 ---
 
-## 27.10 Tab Customization and Persistence
+## 27.10 Tab Customization and Persistence 🟡
 
-Modern `TabView` supports letting users customize which tabs are visible/reordered (similar to apps like the App Store's customizable tab bar), with `.tabViewCustomization()` persisting the user's chosen configuration automatically across app launches.
+With the sidebar-adaptable style, users can **customize** tabs: reorder them, and hide or show them. You keep their choices in a **`TabViewCustomization`** value. To **save** it across launches, store it in **`@AppStorage`**:
 
 ```swift
 struct ContentView: View {
-    @State private var customization = TabViewCustomization()
+    @AppStorage("tabCustomization") private var customization = TabViewCustomization()
+    @State private var selection: AppTab = .home
 
     var body: some View {
-        TabView {
+        TabView(selection: $selection) {
             Tab("Home", systemImage: "house", value: .home) {
                 HomeView()
             }
-            .customizationID("home")   // a stable identifier for this tab's customization state
+            .customizationID("home")         // a stable ID for saving this tab's settings
 
             Tab("Search", systemImage: "magnifyingglass", value: .search) {
                 SearchView()
             }
             .customizationID("search")
+            .customizationBehavior(.disabled, for: .sidebar, .tabBar)   // this one can't be moved or hidden
         }
+        .tabViewStyle(.sidebarAdaptable)
         .tabViewCustomization($customization)
     }
 }
 ```
 
-Each customizable tab needs a stable `.customizationID()` (distinct from its selection `value:`) so the user's saved reordering/visibility preferences can be correctly reapplied across app launches, even if the underlying tab definitions or their order in code changes slightly between app versions.
+Each customizable tab needs a **`.customizationID()`**. It's separate from the selection `value:`. Keep it **the same across app versions**, or users lose their saved setup.
+
+Some tabs can start **hidden**, for the user to add if they want:
+
+```swift
+Tab("Downloads", systemImage: "arrow.down.circle", value: .downloads) {
+    DownloadsView()
+}
+.customizationID("downloads")
+.defaultVisibility(.hidden, for: .tabBar)
+```
 
 ---
 
-## 27.11 Sheets with `.sheet()`
+## 27.11 Sheets with `.sheet()` 🟢
 
-`.sheet()` presents a view modally, sliding up from the bottom, typically for a focused task (like composing a new item) that returns the user to their previous context once dismissed — triggered by a `Bool` or optional-item binding:
+A **sheet** slides up from the bottom for a **focused task**, like creating a new item. When it closes, the user is back where they were. You show it by setting **state**:
 
 ```swift
 struct ContentView: View {
@@ -278,85 +474,176 @@ struct ContentView: View {
         }
     }
 }
+```
 
-// item-based form: automatically presents when "selectedItem" becomes non-nil
-.sheet(item: $selectedItem) { item in
+When the sheet's content **depends on an item**, use **`.sheet(item:)`**. It shows when the value is set, and passes it in:
+
+```swift
+@State private var editingItem: Item?      // nil = no sheet
+
+List(items) { item in
+    Button(item.title) { editingItem = item }
+}
+.sheet(item: $editingItem) { item in       // Item must be Identifiable
     EditItemView(item: item)
 }
 ```
 
-The item-based form (`.sheet(item:)`) is often more convenient than the boolean form when the sheet's content genuinely depends on *which* item triggered it — it avoids needing two separate pieces of state (a boolean *and* the selected item) that could otherwise fall out of sync with each other.
+With `isPresented:` you'd need **two** pieces of state (a `Bool` **and** the item), which can get **out of sync**. With `item:`, there's **one**.
+
+Run code when the sheet closes with **`onDismiss:`**:
+
+```swift
+.sheet(isPresented: $isShowingSheet, onDismiss: reloadData) {
+    AddItemView()
+}
+```
+
+To stop **swipe-down** closing (for example, with unsaved changes):
+
+```swift
+AddItemView()
+    .interactiveDismissDisabled(hasUnsavedChanges)
+```
 
 ---
 
-## 27.12 Presentation Detents
+## 27.12 Presentation Detents 🟢
 
-`.presentationDetents()` controls how tall a sheet renders, supporting fixed heights, fractional heights, or letting the user drag between multiple detent "stops" (like Apple Maps' bottom sheet, which snaps between a small peek, a medium height, and a full-screen presentation):
+**`.presentationDetents()`** sets the **heights** a sheet can have. With several, the user **drags** between them, like the Maps bottom sheet:
 
 ```swift
 .sheet(isPresented: $isShowingSheet) {
     AddItemView()
-        .presentationDetents([.medium, .large])   // user can drag between medium and full-height
+        .presentationDetents([.medium, .large])   // drag between half and full height
 }
 
 .sheet(isPresented: $isShowingSheet) {
     QuickActionView()
-        .presentationDetents([.height(200)])       // a fixed, non-resizable 200pt height
+        .presentationDetents([.height(200)])      // fixed 200 points
+}
+
+.sheet(isPresented: $isShowingSheet) {
+    FiltersView()
+        .presentationDetents([.fraction(0.3), .large])   // 30% of the screen, or full
 }
 ```
 
-Without `.presentationDetents()` specified at all, a sheet defaults to its standard full-height (large) presentation on iPhone — detents are specifically for the increasingly common pattern of a partial-height sheet that still shows some of the underlying content behind it.
+Without detents, a sheet is **full height** (`.large`) on iPhone.
+
+More options for a **Maps-style** sheet:
+
+```swift
+@State private var detent: PresentationDetent = .fraction(0.2)
+
+MapView()
+    .sheet(isPresented: .constant(true)) {
+        PlacesList()
+            .presentationDetents([.fraction(0.2), .medium, .large], selection: $detent)
+            .presentationDragIndicator(.visible)                                 // the small grab bar
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))     // map stays usable behind
+            .interactiveDismissDisabled()                                        // always on screen
+    }
+```
+
+With `selection:`, you can **read** the current height and **change** it from code.
 
 ---
 
-## 27.13 `.presentationBackground()` and `.presentationSizing()`
+## 27.13 `.presentationBackground()` and `.presentationSizing()` 🟡
 
-`.presentationBackground()` customizes a sheet's background (letting it be transparent, a custom color, or a material/blur effect, rather than the default opaque system background); `.presentationSizing()` provides finer control over the presentation's actual sizing behavior beyond what detents alone express.
+**`.presentationBackground()`** changes the sheet's **background**: a color, a material (blur), or even clear. **`.presentationSizing()`** (iOS 18) picks a **size style**, which matters mostly on **iPad and Mac**, where sheets don't fill the screen:
 
 ```swift
 .sheet(isPresented: $isShowingSheet) {
     QuickActionView()
-        .presentationBackground(.thinMaterial)   // a translucent, blurred background instead of opaque
-        .presentationSizing(.form)                 // sizing behavior tuned for form-style content
+        .presentationBackground(.thinMaterial)   // see-through and blurred
+        .presentationSizing(.form)               // the standard form size on iPad/Mac
 }
 ```
 
-These modifiers are typically layered together with `.presentationDetents()` for a fully custom sheet presentation — controlling not just how tall the sheet is, but also its background material and overall sizing strategy, useful for sheets that need to feel more like a floating panel than the standard full-opacity system sheet.
+| Sizing | Look on iPad and Mac |
+|---|---|
+| `.automatic` | The system default |
+| `.form` | A medium, form-sized panel |
+| `.page` | A larger, page-sized panel |
+| `.fitted` | Sized to fit the content |
+
+Other look-and-feel modifiers you can combine:
+
+```swift
+.presentationCornerRadius(24)
+.presentationContentInteraction(.scrolls)   // a scroll inside scrolls first, before resizing the sheet
+```
+
+Use these for sheets that should feel like a **floating panel**. For normal sheets, the **defaults** are usually best.
 
 ---
 
-## 27.14 Full Screen Covers
+## 27.14 Full Screen Covers 🟢
 
-`.fullScreenCover()` is nearly identical to `.sheet()` in API shape, but presents content covering the *entire* screen with no visible underlying context and (by default) no drag-to-dismiss gesture — appropriate for flows that genuinely shouldn't be casually dismissed, like an onboarding sequence or a mandatory sign-in screen.
+**`.fullScreenCover()`** works like `.sheet()`, but covers the **whole screen**. Nothing shows behind it, and there's **no swipe-down** to close. Use it for flows that **must be finished**, like onboarding or sign-in:
 
 ```swift
 .fullScreenCover(isPresented: $isShowingOnboarding) {
     OnboardingView()
 }
+
+struct OnboardingView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack {
+            Text("Welcome!")
+            Button("Get Started") { dismiss() }   // you MUST give a way out
+        }
+    }
+}
 ```
 
-The key behavioral distinction from `.sheet()`: a full screen cover has no built-in swipe-down-to-dismiss gesture by default, and doesn't show any of the presenting view peeking out from behind it — appropriate specifically when you want to fully block interaction with the rest of the app until the covering flow explicitly completes or is dismissed through its own UI.
+| | `.sheet()` | `.fullScreenCover()` |
+|---|---|---|
+| Covers | Part of the screen (on iPhone, the old screen peeks out at the top) | The whole screen |
+| Swipe down to close | ✅ | ❌ |
+| Use for | Short tasks: add, edit, share | Flows the user must complete |
+
+If you only want to **block swipe-down** on a sheet, use `.interactiveDismissDisabled()` instead (27.11).
 
 ---
 
-## 27.15 Popovers
+## 27.15 Popovers 🟢
 
-`.popover()` presents content in a small, anchored floating panel — on iPad/Mac, it renders as a genuine popover with a pointing arrow anchored to its trigger; on iPhone (where a small floating popover would be impractical on a compact screen), it automatically adapts to present as a sheet instead.
+A **popover** is a small floating panel with an **arrow** that points to the button that opened it. On **iPad and Mac**, it's a real popover. On **iPhone**, there isn't room, so it **becomes a sheet** automatically:
 
 ```swift
+@State private var isShowingPopover = false
+
+Button("Info", systemImage: "info.circle") {
+    isShowingPopover = true
+}
 .popover(isPresented: $isShowingPopover) {
     Text("Additional details")
         .padding()
 }
 ```
 
-This automatic adaptation (popover on regular-width devices, sheet on compact-width) is another instance of the same size-class-aware, single-declaration theme seen with `NavigationSplitView` and sidebar-adaptable tabs — you write one `.popover()` call, and the system chooses the presentation style appropriate to the current device/size class.
+You write **one** `.popover()`, and the system picks the right style for the device. It's the same "one declaration, right look" idea as split views and adaptable tabs.
+
+To keep a **real popover** on iPhone too (good for small tips), use **`.presentationCompactAdaptation`**:
+
+```swift
+.popover(isPresented: $isShowingPopover) {
+    Text("Tap to copy the link")
+        .padding()
+        .presentationCompactAdaptation(.popover)   // a popover on iPhone, not a sheet
+}
+```
 
 ---
 
-## 27.16 Alerts
+## 27.16 Alerts 🟢
 
-`.alert()` presents the standard system alert dialog — a title, optional message, and one or more buttons — used for critical, blocking confirmations or error messages that genuinely require the user's immediate attention before continuing.
+An **alert** is a small **centered box** with a title, an optional message, and buttons. It **blocks** the app until the user answers. Use it for **important** questions and **errors**:
 
 ```swift
 .alert("Delete Item?", isPresented: $isShowingDeleteAlert) {
@@ -369,16 +656,45 @@ This automatic adaptation (popover on regular-width devices, sheet on compact-wi
 }
 ```
 
-Alerts also support an item-based form (`.alert(item:)`, mirroring `.sheet(item:)` from 27.11) for cases where the alert's content depends on which specific item triggered it — like showing a different confirmation message depending on which row's delete button was tapped.
+When the alert depends on **which item**, pass it with **`presenting:`**. The item is handed to your buttons and message:
+
+```swift
+@State private var itemToDelete: Item?
+
+.alert(
+    "Delete \(itemToDelete?.title ?? "")?",
+    isPresented: Binding(
+        get: { itemToDelete != nil },
+        set: { if !$0 { itemToDelete = nil } }
+    ),
+    presenting: itemToDelete
+) { item in
+    Button("Delete", role: .destructive) { delete(item) }
+} message: { item in
+    Text("\"\(item.title)\" will be removed from all devices.")
+}
+```
+
+Alerts can also hold a **text field**, for quick input:
+
+```swift
+.alert("Rename", isPresented: $isRenaming) {
+    TextField("Name", text: $newName)
+    Button("Save") { rename(to: newName) }
+    Button("Cancel", role: .cancel) { }
+}
+```
+
+The **older** form, `.alert(item:) { Alert(...) }`, is deprecated. You'll still see it in old code.
 
 ---
 
-## 27.17 Confirmation Dialogs
+## 27.17 Confirmation Dialogs 🟢
 
-`.confirmationDialog()` presents an action sheet — a set of buttons sliding up from the bottom, distinct from `.alert()`'s centered dialog box — typically used for presenting several related action choices at once (rather than a simple confirm/cancel binary).
+A **confirmation dialog** shows a **list of actions**. On iPhone it appears near the **bottom** (or near the button that opened it); on iPad it's shown as a **popover**. It's the SwiftUI version of an **action sheet**:
 
 ```swift
-.confirmationDialog("Choose an action", isPresented: $isShowingActionSheet) {
+.confirmationDialog("Choose an action", isPresented: $isShowingActions, titleVisibility: .visible) {
     Button("Share") { share() }
     Button("Duplicate") { duplicate() }
     Button("Delete", role: .destructive) { delete() }
@@ -388,44 +704,62 @@ Alerts also support an item-based form (`.alert(item:)`, mirroring `.sheet(item:
 }
 ```
 
-The distinction from `.alert()` is largely about how many options are being presented and their visual weight — `.confirmationDialog()`'s bottom-sliding action sheet reads naturally for a list of several possible actions, while `.alert()`'s centered format is better suited to a simple, focused confirm/cancel or error-acknowledgment decision.
+| Use | When |
+|---|---|
+| `.alert()` | A **yes/no** question, or an **error** the user must read |
+| `.confirmationDialog()` | **Several** actions to pick from, or confirming an action the user just started ("Discard draft?") |
+
+A dialog can be **dismissed by tapping outside**, so it shouldn't be the only way to handle an important error.
 
 ---
 
-## 27.18 `@Environment(\.dismiss)`
+## 27.18 `@Environment(\.dismiss)` 🟢
 
-`@Environment(\.dismiss)` provides a way for a presented view (a sheet, full screen cover, or pushed navigation destination) to dismiss *itself*, without needing an explicit binding passed down from its presenter:
+**`@Environment(\.dismiss)`** lets a presented view **close itself**: a sheet, a full screen cover, a popover, or a pushed screen. No binding from the parent is needed:
 
 ```swift
 struct AddItemView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
-            // ... fields ...
-            Button("Save") {
-                saveItem()
-                dismiss()   // dismisses this view, however it was presented
+        NavigationStack {
+            Form {
+                // ... fields ...
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveItem()
+                        dismiss()     // closes the sheet
+                    }
+                }
             }
         }
     }
 }
 ```
 
-This is generally preferable to threading an explicit `@Binding<Bool>` down into every presented view purely so it can set it to `false` to dismiss itself — `dismiss()` works uniformly regardless of *how* the view was presented (sheet, full screen cover, or a pushed `NavigationStack` destination), without the presented view needing any knowledge of its specific presentation mechanism.
+It's better than passing an `isPresented` **binding** down just so the child can set it to `false`. `dismiss()` works **the same** for every presentation style, and the child doesn't need to know **how** it was shown.
+
+⚠️ Read `dismiss` **inside the presented view**. If you read it in the **parent** and call it there, it closes the **parent** (for example, pops the parent screen), not the sheet.
+
+Related: **`@Environment(\.isPresented)`** tells a view whether it's currently presented.
 
 ---
 
-## 27.19 Toolbars and `ToolbarItem` Placements
+## 27.19 Toolbars and `ToolbarItem` Placements 🟢
 
-`.toolbar()` adds buttons and other controls to a screen's navigation bar (or bottom bar), with `ToolbarItem`'s `placement:` parameter determining exactly where each item appears:
+**`.toolbar`** adds buttons to the **navigation bar** or the **bottom bar**. Each **`ToolbarItem`**'s **`placement:`** says **where** it goes:
 
 ```swift
 .toolbar {
-    ToolbarItem(placement: .navigationBarLeading) {
+    ToolbarItem(placement: .topBarLeading) {
         Button("Cancel") { dismiss() }
     }
-    ToolbarItem(placement: .navigationBarTrailing) {
+    ToolbarItem(placement: .topBarTrailing) {
         Button("Save") { save() }
     }
     ToolbarItem(placement: .bottomBar) {
@@ -434,85 +768,195 @@ This is generally preferable to threading an explicit `@Binding<Bool>` down into
 }
 ```
 
-Common placements include `.navigationBarLeading`/`.navigationBarTrailing` (the standard leading/trailing nav bar positions), `.principal` (the title area, for a custom title view), and `.bottomBar` (a separate toolbar area along the bottom edge) — the system also handles adapting these positions sensibly across platforms (iPhone vs. iPad vs. Mac) automatically.
+There are two kinds of placement:
 
----
+| Kind | Examples | Meaning |
+|---|---|---|
+| **Position** | `.topBarLeading`, `.topBarTrailing`, `.bottomBar`, `.principal` | An exact spot |
+| **Meaning** | `.confirmationAction`, `.cancellationAction`, `.primaryAction` | What the button **does**; the system picks the right spot for each platform |
 
-## 27.20 Toolbar Visibility Priority and Auto-Minimizing (iOS 27)
+**Meaning-based** placements are best for sheets and forms. On iPhone, "Save" goes top-right; on Mac, it goes where Mac users expect it.
 
-Recent iOS versions introduced automatic toolbar item prioritization — when there isn't enough horizontal space to show every toolbar item at full size, lower-priority items automatically collapse into a more compact representation (an icon-only button, or folding into an overflow menu, see 27.21) rather than the toolbar simply overflowing or clipping content.
+`.navigationBarLeading` and `.navigationBarTrailing` are the **older names** (deprecated) for `.topBarLeading` and `.topBarTrailing`.
+
+Group several items, and space them:
 
 ```swift
 .toolbar {
-    ToolbarItem(placement: .navigationBarTrailing) {
+    ToolbarItemGroup(placement: .bottomBar) {
+        Button("Back", systemImage: "chevron.left") { }
+        Spacer()
+        Button("Share", systemImage: "square.and.arrow.up") { }
+    }
+    ToolbarSpacer(.fixed, placement: .topBarTrailing)   // a gap between glass groups (iOS 26)
+}
+```
+
+---
+
+## 27.20 Toolbar Visibility Priority and Auto-Minimizing (iOS 27) 🔴
+
+When a bar has **too many items** for its width (a narrow iPad window, or large Dynamic Type), something must give. **Visibility priority** says **which items shrink or hide first**. It's the toolbar version of `.layoutPriority()` (24.10).
+
+```swift
+.toolbar {
+    ToolbarItem(placement: .topBarTrailing) {
         Button("Share", systemImage: "square.and.arrow.up") { share() }
-            .toolbarItemVisibilityPriority(.high)   // protected from auto-minimizing first
+            .toolbarItemVisibilityPriority(.high)   // kept visible the longest
     }
-    ToolbarItem(placement: .navigationBarTrailing) {
+    ToolbarItem(placement: .topBarTrailing) {
         Button("More Options", systemImage: "ellipsis.circle") { }
-            .toolbarItemVisibilityPriority(.low)     // collapses/hides first under space pressure
+            .toolbarItemVisibilityPriority(.low)    // minimized or hidden first
     }
 }
 ```
 
-This directly parallels `.layoutPriority()`'s role in stack layout (recall section 24.10) — applied specifically to toolbar items, letting you designate which controls should be protected from automatic space-driven compression and which should yield first when the toolbar genuinely can't fit everything at its ideal size.
+⚠️ These are **new APIs**, from the iOS 27 SDK in this lesson's title. Names and details can change between betas, so **check the current SDK documentation** before you depend on them.
+
+Bars that **minimize** to give content more room already exist. The iOS 26 **tab bar** can shrink while the user scrolls down:
+
+```swift
+TabView { /* ... */ }
+    .tabBarMinimizeBehavior(.onScrollDown)    // tab bar shrinks while reading, returns on scroll up
+```
+
+Whatever the API, the design rule is the same: put the **most important** action where it **always fits**, and expect the less important ones to **move or hide** on small screens.
 
 ---
 
-## 27.21 Toolbar Overflow Menus and Pinned Placements (iOS 27)
+## 27.21 Toolbar Overflow Menus and Pinned Placements (iOS 27) 🔴
 
-Complementing 27.20's auto-minimizing behavior, toolbar items that don't fit can automatically collapse into a system-provided overflow menu (rather than being hidden entirely), and specific items can be explicitly **pinned** to always remain visible regardless of available space, never candidates for overflow collapse.
+Items that don't fit don't have to **disappear**. They can move into an **overflow menu** (the "•••" button). And an item can be **pinned**, so it **never** moves there:
 
 ```swift
 .toolbar {
-    ToolbarItem(placement: .navigationBarTrailing) {
+    ToolbarItem(placement: .topBarTrailing) {
         Button("Search", systemImage: "magnifyingglass") { }
-            .toolbarItemPinning(.pinned)   // always visible, never collapses into overflow
+            .toolbarItemPinning(.pinned)    // always visible; never goes into overflow
     }
-    ToolbarItem(placement: .navigationBarTrailing) {
+    ToolbarItem(placement: .topBarTrailing) {
         Button("Filter", systemImage: "line.3.horizontal.decrease.circle") { }
-            // eligible for overflow collapse if space runs short
+        // may move into the overflow menu when space is short
     }
 }
 ```
 
-This gives fine-grained control over toolbar degradation under space pressure — critical actions (like a persistent search button) can be pinned to guarantee they're always immediately accessible, while less critical, secondary actions gracefully fold into an overflow menu rather than competing for the same limited toolbar space.
+⚠️ As in 27.20, the pinning API is **new** in the iOS 27 SDK. Check the current docs for the exact names.
+
+An overflow menu has existed on iPad since **iPadOS 16**, with **customizable** toolbars. **Secondary actions** go into it when there's no room:
+
+```swift
+.toolbar(id: "editor") {
+    ToolbarItem(id: "bold", placement: .secondaryAction) {
+        Button("Bold", systemImage: "bold") { }
+    }
+    ToolbarItem(id: "italic", placement: .secondaryAction) {
+        Button("Italic", systemImage: "italic") { }
+    }
+}
+.toolbarRole(.editor)    // an editor-style bar: title on the leading side, actions in the middle
+```
+
+| Item kind | Behavior when space is short |
+|---|---|
+| Pinned | Always stays in the bar |
+| Normal | May move into the overflow menu |
+| Low priority | Minimized or moved first |
+
+Pin only **one or two** key actions (like Search or Compose). If everything is pinned, nothing can move, and the bar gets crowded again.
 
 ---
 
-## 27.22 Context Menus
+## 27.22 Context Menus 🟢
 
-`.contextMenu()` attaches a long-press-triggered menu of actions to any view, commonly used for row-level actions in a list as an alternative (or supplement) to swipe actions (recall section 26.8):
+**`.contextMenu`** adds a menu that opens on **long press** (or right-click on Mac and iPad with a mouse). It's great for row actions, next to swipe actions (26.8):
 
 ```swift
 Text(item.title)
     .contextMenu {
         Button("Edit", systemImage: "pencil") { edit(item) }
         Button("Duplicate", systemImage: "doc.on.doc") { duplicate(item) }
+        Divider()
         Button("Delete", systemImage: "trash", role: .destructive) { delete(item) }
     }
 ```
 
-Context menus can also include a `preview:` closure showing an enlarged, non-interactive preview of the content above the menu itself (commonly seen with link/image previews throughout iOS) — providing additional visual context for what the menu's actions will actually apply to, before the user commits to a choice.
-
----
-
-## 27.23 Zoom Navigation Transitions
-
-The `.navigationTransition(.zoom(...))` modifier (paired with a matching `.matchedTransitionSource()` on the triggering element) produces a smooth zoom effect when navigating from a source element (like a grid thumbnail) into a detail view, visually connecting the two rather than using a plain slide/push transition.
+Add a **`preview:`** to show a **bigger preview** of the content above the menu, like Photos and Safari links do:
 
 ```swift
-NavigationLink(value: item) {
-    ItemThumbnail(item: item)
-        .matchedTransitionSource(id: item.id, in: namespace)
-}
-.navigationDestination(for: Item.self) { item in
-    DetailView(item: item)
-        .navigationTransition(.zoom(sourceID: item.id, in: namespace))
+PhotoThumbnail(photo: photo)
+    .contextMenu {
+        Button("Share", systemImage: "square.and.arrow.up") { share(photo) }
+        Button("Favorite", systemImage: "heart") { favorite(photo) }
+    } preview: {
+        Image(photo.name)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 300)          // a large view of the photo
+    }
+```
+
+Menus can have **submenus** and **sections**:
+
+```swift
+.contextMenu {
+    Menu("Move to", systemImage: "folder") {
+        ForEach(folders) { folder in
+            Button(folder.name) { move(item, to: folder) }
+        }
+    }
+    Section("Danger Zone") {
+        Button("Delete", role: .destructive) { delete(item) }
+    }
 }
 ```
 
-This is conceptually closely related to `matchedGeometryEffect` (covered fully in section 29.8–29.9), but purpose-built specifically for navigation transitions — producing the polished "thumbnail grows into full detail view" effect seen throughout Apple's own apps (like Photos), without needing to hand-roll the geometry-matching animation yourself.
+On a **`List` with selection**, `.contextMenu(forSelectionType:)` gives you **all selected rows** at once, and a primary action for double-click on Mac.
+
+---
+
+## 27.23 Zoom Navigation Transitions 🟡
+
+The **zoom** transition (iOS 18) makes a **thumbnail grow** into the detail screen, like in Photos. You mark the **source** with **`.matchedTransitionSource()`**, and the **destination** with **`.navigationTransition(.zoom(...))`**. Both use the **same ID** and **namespace**:
+
+```swift
+struct PhotoGrid: View {
+    @Namespace private var namespace
+    let photos: [Photo]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
+                    ForEach(photos) { photo in
+                        NavigationLink(value: photo) {
+                            PhotoThumbnail(photo: photo)
+                                .matchedTransitionSource(id: photo.id, in: namespace)   // where it zooms from
+                        }
+                    }
+                }
+            }
+            .navigationDestination(for: Photo.self) { photo in
+                PhotoDetailView(photo: photo)
+                    .navigationTransition(.zoom(sourceID: photo.id, in: namespace))     // zooms in from the source
+            }
+        }
+    }
+}
+```
+
+When the user goes **back**, it zooms **back into** the thumbnail. Users can also **swipe down** or **pinch** to close it.
+
+It works for **sheets** and **full screen covers** too:
+
+```swift
+.fullScreenCover(item: $selectedPhoto) { photo in
+    PhotoDetailView(photo: photo)
+        .navigationTransition(.zoom(sourceID: photo.id, in: namespace))
+}
+```
+
+It's related to **`matchedGeometryEffect`** (29.8–29.9), but built **for navigation**. You get the polished effect without writing the animation yourself.
 
 ---
 
@@ -520,25 +964,25 @@ This is conceptually closely related to `matchedGeometryEffect` (covered fully i
 
 | Topic | One-line takeaway |
 |---|---|
-| `NavigationStack`/`NavigationLink` | Push-based navigation; inline links eagerly construct destinations |
-| Navigation titles | `.navigationTitle()` plus `.navigationBarTitleDisplayMode()` for large vs. inline styling |
-| Value-based navigation | `navigationDestination(for:)` resolves destinations lazily from plain data values — the preferred pattern |
-| `NavigationPath` | Type-erased, programmatically controllable stack state, mixing multiple value types |
-| Deep linking | Parse a URL, then construct a `NavigationPath` matching the intended destination(s) |
-| `NavigationSplitView` (2/3-column) | Sidebar-plus-detail (or sidebar/content/detail) layout, auto-adapting across size classes |
-| `TabView`/`Tab` API | Modern, value-based tab selection using an enum rather than raw indices |
-| Sidebar-adaptable tabs | Tabs auto-present as a sidebar on wide iPad displays; `TabSection` groups related tabs |
-| Tab customization | `.tabViewCustomization()` persists user-reordered/hidden tabs via stable `.customizationID()`s |
-| `.sheet()` | Modal, bottom-sliding presentation; item-based form avoids desynced boolean+item state |
-| Presentation detents | Fixed/fractional/multi-stop sheet heights, for partial-height presentations |
-| `.presentationBackground()`/`.presentationSizing()` | Customize a sheet's background material and sizing strategy |
-| Full screen covers | Like sheets, but covering the entire screen with no default dismiss gesture |
-| Popovers | Anchored floating panel on iPad/Mac; automatically becomes a sheet on iPhone |
-| Alerts | Centered, blocking dialog for critical confirmations or errors |
-| Confirmation dialogs | Bottom-sliding action sheet for presenting several related action choices |
-| `@Environment(\.dismiss)` | Lets a presented view dismiss itself, uniformly regardless of presentation mechanism |
-| Toolbars/`ToolbarItem` | `placement:` determines where controls appear; adapts sensibly across platforms |
-| Toolbar visibility priority | Auto-minimizes lower-priority items under space pressure, mirroring `.layoutPriority()` |
-| Toolbar overflow/pinning | Items collapse into an overflow menu or stay explicitly pinned, never overflow-eligible |
-| Context menus | Long-press-triggered action menu, with an optional enlarged preview of the content |
-| Zoom navigation transitions | Smooth zoom effect connecting a source element to its detail view during navigation |
+| `NavigationStack`/`NavigationLink` | Push screens; inline links are fine for a few static links |
+| Navigation titles | Large at the root, inline for pushed screens; large shrinks on scroll |
+| Value-based navigation | Links carry values; `navigationDestination(for:)` maps types to screens |
+| `NavigationPath` | Control the stack from code; an array or a router for bigger apps |
+| Deep linking | Parse the URL into routes, then set the path |
+| `NavigationSplitView` (2/3-column) | Sidebar and detail side by side; collapses on iPhone |
+| `TabView`/`Tab` API | Value-based tabs with an enum; one `NavigationStack` per tab |
+| Sidebar-adaptable tabs | Tab bar or sidebar from one declaration; `TabSection` groups |
+| Tab customization | `TabViewCustomization` in `@AppStorage`, with stable `customizationID`s |
+| `.sheet()` | Short modal tasks; `item:` keeps one source of truth |
+| Presentation detents | Sheet heights, with drag between them |
+| `.presentationBackground()`/`.presentationSizing()` | Sheet background and size style (iPad/Mac) |
+| Full screen covers | Whole screen, no swipe-down; give your own way out |
+| Popovers | Arrow panel on iPad/Mac; a sheet on iPhone unless told otherwise |
+| Alerts | Centered, blocking yes/no or error; `presenting:` for items |
+| Confirmation dialogs | A list of actions to pick from |
+| `@Environment(\.dismiss)` | A presented view closes itself; read it inside that view |
+| Toolbars/`ToolbarItem` | Position or meaning-based placements; `topBar…` replaces `navigationBar…` |
+| Toolbar visibility priority | Decides what shrinks first; new API, check the SDK |
+| Toolbar overflow/pinning | Overflow menu for extras; pin only key actions |
+| Context menus | Long-press actions, with an optional big preview |
+| Zoom navigation transitions | A thumbnail zooms into its detail screen |
