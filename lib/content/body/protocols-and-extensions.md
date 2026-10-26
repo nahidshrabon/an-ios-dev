@@ -1,6 +1,8 @@
-## 7.1 Defining and Conforming to a Protocol
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A protocol declares a set of requirements — properties and methods — that a conforming type must implement, without providing the implementation itself:
+## 7.1 Defining and Conforming to a Protocol 🟢
+
+A **protocol** is a **contract**: a list of properties and methods that a type **promises** to have. The protocol says **what**, not **how**. A type that keeps the promise **conforms** to the protocol.
 
 ```swift
 protocol Greetable {
@@ -19,7 +21,7 @@ let person = Person(name: "Alex")
 print(person.greet())   // "Hello, I'm Alex"
 ```
 
-Any type — struct, class, or enum — can conform to a protocol, listed after `:` (or after the superclass, for classes) separated by commas if conforming to multiple protocols:
+**Any** type can conform: a struct, a class, or an enum. List the protocols after `:`. For a class, the superclass comes first:
 
 ```swift
 class Employee: Greetable {
@@ -29,19 +31,39 @@ class Employee: Greetable {
 }
 ```
 
-A protocol itself has no storage and no implementation — it's purely a contract; conforming types must supply the actual behavior.
+If a type forgets a requirement, the compiler tells you, and Xcode offers a **Fix** button that adds stubs:
+
+```swift
+struct Robot: Greetable {
+    var name: String
+}   // ❌ error: type 'Robot' does not conform to protocol 'Greetable'
+```
+
+**Why protocols matter:** code can work with **any** conforming type, without knowing the concrete type:
+
+```swift
+func welcomeAll(_ guests: [any Greetable]) {
+    for guest in guests {
+        print(guest.greet())
+    }
+}
+
+welcomeAll([Person(name: "Alex"), Employee(name: "Sam")])
+```
+
+(`any Greetable` means "some value of any type that conforms". Section 11 explains `any` and `some`.)
 
 ---
 
-## 7.2 Protocol Properties and Method Requirements
+## 7.2 Protocol Properties and Method Requirements 🟢
 
-Protocol property requirements specify whether they need to be gettable (`{ get }`) or gettable-and-settable (`{ get set }`) — the conforming type can use a stored property, a computed property, or (for `get`-only) even a `let` constant, as long as it satisfies the requirement:
+A **property requirement** says whether the property must be **readable** (`{ get }`) or **readable and writable** (`{ get set }`). The conforming type can satisfy it with a stored property, a computed property, or (for `{ get }`) even a `let`:
 
 ```swift
 protocol Vehicle {
     var speed: Double { get set }   // conformer must support both reading and writing
     var maxSpeed: Double { get }     // conformer only needs to support reading
-    func accelerate(by amount: Double)
+    mutating func accelerate(by amount: Double)
 }
 
 struct Car: Vehicle {
@@ -54,19 +76,46 @@ struct Car: Vehicle {
 }
 ```
 
-Method requirements just declare the signature — parameters, return type, and whether the method is expected to mutate `self` (marked with `mutating` in the protocol itself if a struct/enum conformer needs to be able to mutate):
+Notice `mutating` in the **protocol**. A struct can only change itself in a requirement that the protocol marks `mutating`. Without it, `Car` would not compile:
+
+```swift
+protocol Vehicle {
+    func accelerate(by amount: Double)        // not mutating
+}
+struct Car: Vehicle {
+    var speed = 0.0
+    mutating func accelerate(by amount: Double) { speed += amount }
+}   // ❌ error: type 'Car' does not conform to protocol 'Vehicle'
+    //    (candidate is marked 'mutating' but protocol does not allow it)
+```
+
+Classes don't need `mutating` (they're reference types), so a class can still conform to a protocol with `mutating` requirements.
 
 ```swift
 protocol Resettable {
     mutating func reset()
 }
+
+struct Score: Resettable {
+    var value = 10
+    mutating func reset() { value = 0 }
+}
+```
+
+Protocols can also require **initializers** and **static** members:
+
+```swift
+protocol Defaultable {
+    init()
+    static var placeholder: Self { get }
+}
 ```
 
 ---
 
-## 7.3 Protocol Inheritance and Composition
+## 7.3 Protocol Inheritance and Composition 🟢
 
-A protocol can inherit from one or more other protocols, requiring conformers to satisfy the combined set of requirements:
+A protocol can **inherit** from other protocols. A conforming type must then meet **all** the requirements together:
 
 ```swift
 protocol Named {
@@ -88,7 +137,7 @@ struct Student: Person {
 }
 ```
 
-**Protocol composition** lets you require conformance to *multiple* protocols at once, right at the point of use, without needing to declare a new combined protocol — using `&`:
+**Protocol composition** with `&` asks for **several protocols at once**, right where you need them, without creating a new protocol:
 
 ```swift
 func printProfile(_ value: Named & Aged) {
@@ -98,13 +147,21 @@ func printProfile(_ value: Named & Aged) {
 printProfile(Student(name: "Ada", age: 22))
 ```
 
-This is especially useful for function parameters that need just a slice of behavior from several different protocols, without forcing every caller's type into a rigid inheritance hierarchy.
+This keeps functions **flexible**: they ask only for the pieces they need. Any type with a `name` and an `age` works, even if it has nothing to do with `Person`.
+
+A `typealias` gives a composition a name. `Codable` is exactly this:
+
+```swift
+typealias Codable = Decodable & Encodable   // how the standard library defines it
+```
+
+Keep protocols **small and focused**. Many small protocols, combined with `&`, are easier to reuse than one big protocol with everything.
 
 ---
 
-## 7.4 Extensions: Adding Methods to Existing Types
+## 7.4 Extensions: Adding Methods to Existing Types 🟢
 
-`extension` adds new functionality — methods, computed properties, initializers, subscripts, protocol conformances — to an *existing* type, including ones you don't own the source code for, like `Int` or `String`:
+An **extension** adds new features to an **existing** type, even one you don't have the source for, like `Int` or `String`. It can add methods, computed properties, initializers, subscripts, nested types, and protocol conformances:
 
 ```swift
 extension Int {
@@ -129,7 +186,30 @@ print(5.squared)   // 25
 // Hello!
 ```
 
-Extensions **cannot** add new stored properties (only computed ones) to a type, since that would require changing the type's memory layout after the fact:
+Real-world extensions you'll write often:
+
+```swift
+extension String {
+    var isValidEmail: Bool {
+        contains("@") && contains(".")       // simple check for illustration
+    }
+}
+
+extension Date {
+    var isWeekend: Bool {
+        Calendar.current.isDateInWeekend(self)
+    }
+}
+
+extension Color {
+    static let brand = Color(red: 0.2, green: 0.4, blue: 0.9)
+}
+
+"alex@example.com".isValidEmail   // true
+Text("Hi").foregroundStyle(Color.brand)
+```
+
+Extensions **can't add stored properties**. That would change the type's memory layout after it was defined. Only computed properties are allowed:
 
 ```swift
 extension Int {
@@ -139,11 +219,24 @@ extension Int {
 }
 ```
 
+Extensions are also great for **organizing your own types**. Many teams put each protocol conformance in its own extension:
+
+```swift
+struct RecipeListView: View {
+    var body: some View { /* ... */ }
+}
+
+// MARK: - Helpers
+extension RecipeListView {
+    private func formattedTime(_ minutes: Int) -> String { "\(minutes) min" }
+}
+```
+
 ---
 
-## 7.5 Protocol Extensions and Default Implementations
+## 7.5 Protocol Extensions and Default Implementations 🟡
 
-Extending a protocol itself (rather than a specific conforming type) lets you provide **default implementations** for its requirements — any conforming type gets that behavior automatically, and can still override it with its own implementation if needed:
+You can extend a **protocol itself**. This gives **default implementations** to its requirements. Every conforming type gets them **for free**, and can still write **its own version** instead:
 
 ```swift
 protocol Greetable {
@@ -165,7 +258,7 @@ struct Robot: Greetable {
 print(Robot(name: "R2D2").greet())   // "Hello, I'm R2D2"
 ```
 
-Protocol extensions can also add entirely new methods **not** declared as requirements at all — utility methods built purely in terms of the protocol's actual requirements, available to every conformer for free:
+A protocol extension can also add **new methods** that are **not** requirements. They're built from the requirements, and every conforming type gets them:
 
 ```swift
 extension Greetable {
@@ -177,25 +270,49 @@ extension Greetable {
 print(Robot(name: "R2D2").shout())   // "HELLO, I'M R2D2"
 ```
 
----
+This is how much of the standard library works. Conform to `Sequence` by providing **one** method (`makeIterator()`), and you get `map`, `filter`, `contains`, `first(where:)`, and dozens more from protocol extensions.
 
-## 7.6 Conditional Conformance
-
-Conditional conformance lets a generic type conform to a protocol only when its type parameter itself satisfies some condition — expressed with a `where` clause on the extension:
+You can limit a protocol extension with `where`:
 
 ```swift
-protocol Summable {
-    static func + (lhs: Self, rhs: Self) -> Self
+extension Collection where Element: Numeric {
+    var total: Element { reduce(0, +) }
 }
 
-extension Array: Summable where Element: Summable {
-    static func + (lhs: [Element], rhs: [Element]) -> [Element] {
-        zip(lhs, rhs).map { $0 + $1 }
-    }
-}
+[1, 2, 3].total       // 6
+[1.5, 2.5].total      // 4.0
+// ["a"].total        // ❌ not available: String is not Numeric
 ```
 
-The standard library itself uses this heavily — for example, `Array` conforms to `Equatable` only when its `Element` type is itself `Equatable`:
+(Careful with methods that are **not** requirements. Their behavior can surprise you; see 7.12.)
+
+---
+
+## 7.6 Conditional Conformance 🟡
+
+**Conditional conformance** means a generic type conforms to a protocol **only when** its type parameter meets a condition. Write the condition with `where` on the extension:
+
+```swift
+protocol Describable {
+    var summary: String { get }
+}
+
+extension Int: Describable {
+    var summary: String { "#\(self)" }
+}
+
+// An array is Describable only if its elements are Describable
+extension Array: Describable where Element: Describable {
+    var summary: String {
+        map(\.summary).joined(separator: ", ")
+    }
+}
+
+print([1, 2, 3].summary)    // "#1, #2, #3"
+// ["a", "b"].summary       // ❌ String is not Describable, so [String] isn't either
+```
+
+The standard library uses this everywhere. For example, an `Array` is `Equatable` **only if** its elements are `Equatable`:
 
 ```swift
 // This works because Int: Equatable
@@ -208,11 +325,15 @@ let c = [NotEquatable(), NotEquatable()]
 // c == c   // ❌ error: NotEquatable doesn't conform to Equatable, so [NotEquatable] doesn't either
 ```
 
+The same goes for `Optional`, `Dictionary`, and `Set` with `Equatable`, `Hashable`, `Codable`, and more. That's why an array of `Codable` structs is itself `Codable`.
+
 ---
 
-## 7.7 `Equatable` and Custom Equality
+## 7.7 `Equatable` and Custom Equality 🟢
 
-`Equatable` requires a type to implement `==`, enabling comparison with `==`/`!=` and usage in APIs that require equality (like `Array.contains`, or `firstIndex(of:)`). For simple structs and enums with all-`Equatable` members, Swift **synthesizes** `==` automatically — you don't need to write it yourself:
+**`Equatable`** lets you compare values with `==` and `!=`. Many APIs need it, like `Array.contains(_:)` and `firstIndex(of:)`.
+
+For structs and enums whose properties are **all** `Equatable`, Swift **writes `==` for you** (it **synthesizes** it). Just add the conformance:
 
 ```swift
 struct Point: Equatable {
@@ -225,7 +346,7 @@ let p2 = Point(x: 1, y: 2)
 print(p1 == p2)   // true — synthesized automatically
 ```
 
-When you need custom equality logic (e.g. comparing only some properties, or case-insensitive string comparison), implement `==` yourself:
+When you need **custom** rules (compare only some properties, ignore case, ...), write `==` yourself:
 
 ```swift
 struct User: Equatable {
@@ -242,11 +363,21 @@ let u2 = User(id: 1, name: "Alicia")
 print(u1 == u2)   // true — same ID, despite different names
 ```
 
+**Be careful with custom `==`.** SwiftUI uses `Equatable` to decide whether a view needs to update. If `==` ignores `name`, a name change may not be noticed. Only customize when you're sure what "equal" should mean.
+
+Equatable unlocks many helpers:
+
+```swift
+let users = [u1, User(id: 2, name: "Bob")]
+users.contains(u2)               // true
+users.firstIndex(of: u2)         // Optional(0)
+```
+
 ---
 
-## 7.8 `Hashable` and Custom Hashing
+## 7.8 `Hashable` and Custom Hashing 🟡
 
-`Hashable` (which itself requires `Equatable`) is needed for a type to be used as a `Dictionary` key or stored in a `Set` (recall sections 3.4 and 3.6). Like `Equatable`, Swift synthesizes `hash(into:)` automatically for structs/enums whose members are all `Hashable`:
+**`Hashable`** is needed to use a type as a **`Dictionary` key** or in a **`Set`** (see 3.4 and 3.6). It builds on `Equatable`. Again, Swift **synthesizes** it when all properties are `Hashable`:
 
 ```swift
 struct Point: Hashable {
@@ -258,7 +389,9 @@ let points: Set<Point> = [Point(x: 1, y: 2), Point(x: 1, y: 2), Point(x: 3, y: 4
 print(points.count)   // 2 — duplicates collapse, since Point is Hashable
 ```
 
-For custom hashing (usually to match custom `==` logic — hash and equality must stay consistent, so equal values *must* produce the same hash), implement `hash(into:)` yourself:
+A **hash** is a number computed from a value. Sets and dictionaries use it to **find items fast**.
+
+If you write a **custom `==`**, you must write a **matching `hash(into:)`**. Hash **exactly the properties that `==` compares**:
 
 ```swift
 struct User: Hashable {
@@ -275,13 +408,25 @@ struct User: Hashable {
 }
 ```
 
-**Critical rule:** if two values are `==`, they must produce the same hash. Violating this breaks `Set` and `Dictionary` in ways that are hard to debug (lookups silently failing, duplicates not collapsing).
+**The critical rule: if two values are `==`, they must have the same hash.**
+
+What happens if you break it? Imagine `==` compares only `id`, but the hash also uses `name`:
+
+```plaintext
+u1 = User(id: 1, name: "Alice")   hash → bucket 7
+u2 = User(id: 1, name: "Alicia")  hash → bucket 3
+
+u1 == u2 is true, but the Set looks in bucket 3 and never finds u1.
+→ set.contains(u2) can be false, and "duplicates" stay in the Set.
+```
+
+These bugs are silent and very hard to find. Keep `==` and `hash(into:)` in sync. (Two **different** values may share a hash; that's fine.)
 
 ---
 
-## 7.9 `Comparable` and Sortable Types
+## 7.9 `Comparable` and Sortable Types 🟢
 
-`Comparable` (which requires `Equatable`) enables `<`, `>`, `<=`, `>=`, and lets a type be used with `sorted()` without a custom closure (recall 3.8). You implement `<`; Swift derives the rest:
+**`Comparable`** enables `<`, `>`, `<=`, `>=`, and lets you call `sorted()` **without a closure** (see 3.8). It builds on `Equatable`. You write **only `<`**; Swift provides the rest:
 
 ```swift
 struct Version: Comparable {
@@ -299,33 +444,80 @@ let sorted = versions.sorted()   // works directly, no closure needed
 print(sorted.map { "\($0.major).\($0.minor)" })   // ["1.5", "2.0", "2.1"]
 ```
 
-Swift can also synthesize `Comparable` automatically for simple structs where you don't need custom ordering logic beyond declaration order of properties (as of recent Swift versions, though this synthesis is narrower than `Equatable`/`Hashable`'s — for full control, implementing `<` yourself as shown remains the standard approach).
+Comparing tuples makes `<` shorter:
+
+```swift
+static func < (lhs: Version, rhs: Version) -> Bool {
+    (lhs.major, lhs.minor) < (rhs.major, rhs.minor)
+}
+```
+
+Comparable also gives you `min()`, `max()`, and ranges:
+
+```swift
+versions.max()                                           // the 2.1 version
+let supported = Version(major: 1, minor: 0)...Version(major: 2, minor: 0)
+supported.contains(Version(major: 1, minor: 5))          // true
+```
+
+Swift **synthesizes** `Comparable` only for **enums** (without associated values, or with `Comparable` ones). The order is the **order of the cases**:
+
+```swift
+enum Size: Comparable { case small, medium, large }
+
+Size.small < Size.large   // true
+[Size.large, .small].sorted()   // [.small, .large]
+```
+
+For structs, you always write `<` yourself.
 
 ---
 
-## 7.10 `Identifiable` and Stable IDs
+## 7.10 `Identifiable` and Stable IDs 🟢
 
-`Identifiable` requires a single property, `id`, providing a stable identity for a value distinct from its equality — crucial for SwiftUI's `List`/`ForEach` (sections 26+), which need to track *which* item is which even as its other properties change.
+**`Identifiable`** requires one property, **`id`**: a **stable identity** for a value. SwiftUI's `List` and `ForEach` (section 26) need it, to know **which item is which**, even when the item's other data changes.
 
 ```swift
-struct Task: Identifiable {
-    let id: UUID = UUID()
+struct TodoItem: Identifiable {
+    let id = UUID()
     var title: String
     var isDone: Bool
 }
 
-let task1 = Task(title: "Write code", isDone: false)
-let task2 = Task(title: "Write code", isDone: false)
+let task1 = TodoItem(title: "Write code", isDone: false)
+let task2 = TodoItem(title: "Write code", isDone: false)
 print(task1.id == task2.id)   // false — distinct identities, even with identical other properties
 ```
 
-The key distinction from `Equatable`: two `Identifiable` values can be "the same thing" (same `id`) even while their other properties have changed over time (e.g. `isDone` flips from `false` to `true`), whereas `Equatable` compares the *current* values, not identity over time.
+**Identity vs equality:**
+
+| | `Identifiable` (`id`) | `Equatable` (`==`) |
+|---|---|---|
+| Question | "Is this the **same thing**?" | "Do they have the **same values right now**?" |
+| After `isDone` flips | Same `id`, same item | No longer `==` to the old value |
+
+So when a todo is checked off, SwiftUI knows it's the **same row** (same `id`), and just updates it, with a nice animation instead of a delete and insert.
+
+```swift
+List(todos) { todo in            // no `id:` needed, because TodoItem is Identifiable
+    Text(todo.title)
+}
+```
+
+**Use a real, stable ID**, like the server's ID. If you create a new `UUID()` every time you decode data, every refresh looks like all-new items.
+
+```swift
+struct Recipe: Identifiable, Decodable {
+    let id: Int            // from the server: stays the same across refreshes
+    let title: String
+}
+```
 
 ---
 
-## 7.11 `CustomStringConvertible` for Better Printing
+## 7.11 `CustomStringConvertible` for Better Printing 🟢
 
-By default, `print()`-ing a custom struct/class gives an unhelpful, generic description. Conforming to `CustomStringConvertible` and implementing `description` lets you control exactly what gets printed:
+Make a type conform to **`CustomStringConvertible`** and implement **`description`**, to control what `print()` shows:
 
 ```swift
 struct Point {
@@ -349,13 +541,31 @@ print(BetterPoint(x: 3, y: 4))
 // (3, 4) — uses your custom description
 ```
 
-This is also exactly what powers string interpolation of custom types (recall 1.6) — `"\(myBetterPoint)"` uses the same `description` property. A related protocol, `CustomDebugStringConvertible` (with `debugDescription`), controls output specifically for `debugPrint()` and Xcode's debugger variable view.
+String interpolation (1.6) uses the same `description`:
+
+```swift
+let p = BetterPoint(x: 1, y: 2)
+let message = "Tapped at \(p)"   // "Tapped at (1, 2)"
+```
+
+A related protocol, **`CustomDebugStringConvertible`** (with `debugDescription`), controls the output of `debugPrint()` and the debugger's `po` command. Use it for **developer** details:
+
+```swift
+extension BetterPoint: CustomDebugStringConvertible {
+    var debugDescription: String { "BetterPoint(x: \(x), y: \(y))" }
+}
+```
+
+(Don't use `description` as text for **users**. It isn't localized. Build user-facing text separately.)
 
 ---
 
-## 7.12 Protocol Witness Dispatch vs Extension Static Dispatch
+## 7.12 Protocol Witness Dispatch vs Extension Static Dispatch 🔴
 
-This is a subtler but important distinction: methods satisfying a protocol *requirement* use **dynamic (witness table) dispatch** — the correct implementation is looked up at runtime based on the concrete type. Methods added purely in a protocol *extension*, without being declared as a requirement, use **static dispatch** — resolved at compile time based on the *static* type of the reference.
+This is subtle, but important. It is about **which version** of a method runs:
+
+- A method that is a protocol **requirement** uses **dynamic dispatch** (through a "witness table"). At **runtime**, Swift looks up the **real type's** version.
+- A method that exists **only in a protocol extension** (not a requirement) uses **static dispatch**. The **compiler** picks the version based on the **declared type** of the variable.
 
 ```swift
 protocol Greeter {
@@ -382,13 +592,32 @@ print(concrete.farewell())   // "See you soon!"   — static type is FriendlyGre
 print(abstracted.farewell()) // "Default farewell" — static type is Greeter, uses the protocol extension's version!
 ```
 
-The `farewell()` discrepancy is the classic gotcha: because `farewell()` was never declared as a protocol *requirement*, calling it through a variable typed as the protocol (`abstracted`) always resolves to the protocol extension's implementation, ignoring `FriendlyGreeter`'s own version — even though the object is genuinely a `FriendlyGreeter` at runtime. The fix, if dynamic behavior is wanted, is to declare `farewell()` as an actual protocol requirement.
+| Call | `greet()` (requirement) | `farewell()` (extension only) |
+|---|---|---|
+| On `FriendlyGreeter` | Its own | Its own |
+| On `Greeter` | **Its own** (looked up at runtime) | **The default** (chosen at compile time) |
+
+The surprise: `abstracted` **is** a `FriendlyGreeter` at runtime, but `farewell()` still runs the default. Swift only knows `abstracted` as a `Greeter`, and `Greeter` has no `farewell` **requirement** to look up.
+
+**The fix**, if you want the real type's version: make `farewell()` a **requirement**:
+
+```swift
+protocol Greeter {
+    func greet() -> String
+    func farewell() -> String    // now a requirement → dynamic dispatch
+}
+// abstracted.farewell() now prints "See you soon!"
+```
+
+**Rule of thumb:** if conforming types are expected to **customize** a method, declare it in the protocol. Extension-only methods are for helpers that should behave the **same for everyone**.
 
 ---
 
-## 7.13 `@retroactive` Conformance
+## 7.13 `@retroactive` Conformance 🔴
 
-Adding a protocol conformance to a type you don't own (e.g. a type from a third-party library or Apple's own frameworks) from your own module is called a **retroactive conformance**. Since Swift 6, doing this without marking it explicitly produces a warning, because retroactive conformances can silently conflict if two different modules each add the same conformance independently — `@retroactive` marks the conformance as an intentional, acknowledged choice.
+Adding a protocol conformance to a type you **don't own** (from Apple or a third-party library), using a protocol you also don't own, is a **retroactive conformance**. Since Swift 6, this gives a **warning** unless you mark it with **`@retroactive`**.
+
+**Why the warning?** If two modules each add the same conformance in different ways, the app can behave **unpredictably**: which `<` wins? `@retroactive` says: "I know the risk, and I'm doing this on purpose."
 
 ```swift
 // Suppose SomeThirdPartyType doesn't conform to Comparable, and you want to sort an array of them.
@@ -399,7 +628,31 @@ extension SomeThirdPartyType: @retroactive Comparable {
 }
 ```
 
-This is purely a documentation/safety annotation for the compiler — it doesn't change runtime behavior, but it makes explicit (both to the compiler's conflict-detection and to future readers) that you're deliberately extending a type you don't control, accepting the risk that another module might do the same thing incompatibly.
+A real example: `CLLocationCoordinate2D` (from Core Location) is not `Equatable`:
+
+```swift
+import CoreLocation
+
+extension CLLocationCoordinate2D: @retroactive Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
+```
+
+| You own the type? | You own the protocol? | Needs `@retroactive`? |
+|---|---|---|
+| Yes | Any | No |
+| No | Yes | No |
+| No | No | **Yes** |
+
+`@retroactive` **changes nothing at runtime**. It's a clear signal to the compiler and to readers.
+
+**Often a safer alternative:** don't add the conformance. Wrap the type, or pass a closure:
+
+```swift
+let sorted = items.sorted { $0.someProperty < $1.someProperty }   // no conformance needed
+```
 
 ---
 
@@ -407,16 +660,16 @@ This is purely a documentation/safety annotation for the compiler — it doesn't
 
 | Topic | One-line takeaway |
 |---|---|
-| Protocol basics | A contract of property/method requirements; any struct, class, or enum can conform |
-| Property/method requirements | `{ get }` vs `{ get set }`; mutating methods must say so in the protocol |
-| Protocol inheritance/composition | Protocols can inherit from others; `&` combines multiple protocols at the point of use |
-| Extensions | Add methods, computed properties, initializers, and conformances to existing types — no new stored properties |
-| Protocol extensions | Provide default implementations conformers can use as-is or override |
-| Conditional conformance | A generic type conforms to a protocol only when its type parameter also satisfies a condition |
-| `Equatable` | Enables `==`; synthesized automatically for simple types, or implement `==` for custom logic |
-| `Hashable` | Needed for Set/Dictionary keys; equal values must always produce equal hashes |
-| `Comparable` | Implement `<`; unlocks `sorted()` and the other ordering operators |
-| `Identifiable` | A stable `id` distinct from equality — critical for SwiftUI lists |
-| `CustomStringConvertible` | Controls `print()`/interpolation output via a custom `description` |
-| Witness vs static dispatch | Requirement methods dispatch dynamically; extension-only methods dispatch statically based on the static type |
-| `@retroactive` | Marks an intentional conformance added to a type you don't own, flagging potential cross-module conflicts |
+| Protocol basics | A contract of requirements; structs, classes, and enums can conform |
+| Property/method requirements | `{ get }` vs `{ get set }`; the protocol must mark `mutating` methods |
+| Protocol inheritance/composition | Protocols inherit from others; `&` combines them where needed |
+| Extensions | Add methods, computed properties, inits, and conformances; no stored properties |
+| Protocol extensions | Default implementations and free helper methods for every conformer |
+| Conditional conformance | Conform only when the type parameter meets a condition |
+| `Equatable` | Enables `==`; synthesized for simple types |
+| `Hashable` | For Set and Dictionary keys; equal values must have equal hashes |
+| `Comparable` | Write `<`, get sorting and the other operators |
+| `Identifiable` | A stable `id`, separate from equality; key for SwiftUI lists |
+| `CustomStringConvertible` | Controls what `print()` and interpolation show |
+| Witness vs static dispatch | Requirements are looked up at runtime; extension-only methods are not |
+| `@retroactive` | Marks a conformance of a type and protocol you don't own |

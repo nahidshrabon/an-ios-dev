@@ -88,7 +88,7 @@ export const articles: Article[] = [
     slug: "protocols-and-extensions",
     title: "Protocols and Extensions",
     description:
-      "Protocols as contracts for shared behavior across unrelated types, and extensions that add functionality to existing types — the foundation behind Equatable, Hashable, and Comparable.",
+      "Protocols as contracts that unrelated types can share, and extensions that add features to existing types: default implementations, conditional conformance, Equatable, Hashable, Comparable, Identifiable, dispatch rules, and @retroactive.",
     tags: ["swift","protocols","extensions"],
     publishedAt: "2026-08-04",
     get content() {
