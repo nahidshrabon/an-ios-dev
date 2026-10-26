@@ -627,7 +627,7 @@ export const articles: Article[] = [
     slug: "storekit-and-monetization",
     title: "StoreKit and Monetization",
     description:
-      "In-app purchase product types, StoreKit 2's async product fetching and purchasing, Transaction.updates and verification, SubscriptionStoreView, subscription groups and offers, server notifications, receipt validation, restoring, refunds, and testing.",
+      "Selling digital content with StoreKit 2: product types, loading and buying products, entitlements and verification, ready-made paywalls, subscription groups and offers, server notifications and validation, restores, refunds, testing, and common purchase bugs.",
     tags: ["platform", "storekit", "monetization"],
     publishedAt: "2026-08-16",
     get content() {
