@@ -165,7 +165,7 @@ export const articles: Article[] = [
     slug: "standard-library-deep-dive",
     title: "Standard Library Deep Dive",
     description:
-      "Underneath the collection protocols, Codable in depth, and a tour of modern standard-library additions for regex, formatting, time, and observation.",
+      "Beneath the collection protocols, Codable in depth (keys, custom decoding, polymorphic JSON, strategies), and modern standard-library tools for regex, formatting, units, rich text, time, observation, and locking.",
     tags: ["swift","standard-library"],
     publishedAt: "2026-08-04",
     get content() {
