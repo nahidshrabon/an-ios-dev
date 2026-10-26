@@ -594,7 +594,7 @@ export const articles: Article[] = [
     slug: "app-extensions",
     title: "App Extensions",
     description:
-      "The sandboxed extension process model: share and action extensions, custom keyboards, photo editing extensions, Safari web extensions, SFSafariViewController, App Clips, Network Extension, and extension memory limits.",
+      "How extensions run and what each type does: share and action extensions, custom keyboards, photo editing, Safari web extensions, choosing a web view, App Clips and their invocations, Network Extension, and the tight memory limits.",
     tags: ["platform", "extensions", "app-clips"],
     publishedAt: "2026-08-16",
     get content() {
