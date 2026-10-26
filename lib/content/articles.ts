@@ -374,7 +374,7 @@ export const articles: Article[] = [
     slug: "multiplatform-swiftui",
     title: "Multiplatform SwiftUI",
     description:
-      "Targeting multiple Apple platforms from a shared codebase: size classes and adaptive layout, iPad multitasking, macOS scene types and menu bar apps, Mac Catalyst vs. native macOS, watchOS and tvOS, and sharing code cleanly across platforms.",
+      "One SwiftUI app on many platforms: size classes and adaptive layout, iPad windows, macOS scenes, menu bar apps and commands, openWindow, Mac Catalyst vs. native macOS, watchOS and the Digital Crown, tvOS focus, and sharing code cleanly.",
     tags: ["swiftui", "multiplatform", "macos", "watchos", "tvos"],
     publishedAt: "2026-08-16",
     get content() {

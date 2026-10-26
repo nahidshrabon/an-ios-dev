@@ -1,6 +1,12 @@
-## 33.1 Size Classes and Adaptive Layout
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`@Environment(\.horizontalSizeClass)` and `@Environment(\.verticalSizeClass)` expose whether the current context is `.compact` or `.regular`, letting a single view adapt its layout to available space rather than needing platform-specific branches.
+SwiftUI runs on **iPhone, iPad, Mac, Apple Watch, Apple TV, and Vision Pro**. Much of your code can be **shared**, but each platform has its own **screen size**, **input** (touch, mouse, Digital Crown, remote), and **conventions** (menus, windows, focus). This section covers how to **adapt** one app to many platforms without making a mess of the code.
+
+---
+
+## 33.1 Size Classes and Adaptive Layout 🟢
+
+A **size class** describes the available space in **broad** terms: **`.compact`** (narrow) or **`.regular`** (wide). Read it from the environment and adapt the layout:
 
 ```swift
 struct AdaptiveLayoutView: View {
@@ -24,16 +30,49 @@ struct AdaptiveLayoutView: View {
 }
 ```
 
-Size classes abstract away the specific device — an iPhone in portrait and a small multitasking Slide Over window on iPad might both report `.compact`, while an iPad in full-screen landscape and a Mac window report `.regular`. Designing against size class (rather than checking `UIDevice` model or screen dimensions directly) is the idiomatic SwiftUI approach, and it's exactly the same mechanism underlying `NavigationSplitView`'s automatic single-column-vs-multi-column adaptation (section 27.5).
+| Context | Horizontal size class |
+|---|---|
+| iPhone, portrait | `.compact` |
+| Large iPhone, landscape | `.regular` |
+| iPad, full screen | `.regular` |
+| iPad, narrow window or side-by-side | `.compact` |
+| Mac window | `.regular` |
+
+Size classes describe **space**, not **devices**. That's why they're better than checking the device model or screen size: an iPad in a narrow window **is** compact, even though it's an iPad. The same idea powers `NavigationSplitView`'s switch between one and several columns (27.6).
+
+⚠️ The `if`/`else` above makes **two different views** (25.14): when the size class changes, `ImagePane` and `DetailPane` are **rebuilt** and lose their `@State`. To **keep** them, switch the **layout** instead, with **`AnyLayout`** (23.13):
+
+```swift
+struct AdaptiveLayoutView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    var body: some View {
+        let layout = horizontalSizeClass == .compact
+            ? AnyLayout(VStackLayout())
+            : AnyLayout(HStackLayout())
+
+        layout {
+            ImagePane()      // same identity in both layouts: state is kept
+            DetailPane()
+        }
+    }
+}
+```
+
+Size classes only have **two** values. For finer decisions, use **`ViewThatFits`** (24.17) or **`.onGeometryChange`** (24.20) to react to the **real** width.
 
 ---
 
-## 33.2 iPad-Specific Layout Considerations
+## 33.2 iPad-Specific Layout Considerations 🟡
 
-Beyond size classes, iPad introduces specific considerations: multitasking (Split View, Slide Over), external keyboard/pointer support, and significantly more available screen real estate that often calls for genuinely different information density than a phone layout.
+The iPad isn't just a "big iPhone". It has:
+
+- **Resizable windows** and **multitasking**: your window can be any size, and change size **at any time**.
+- **Keyboard and trackpad** support: users expect **shortcuts** and **pointer** effects.
+- **More space**: often room for **more information** at once, like a sidebar plus content plus details.
 
 ```swift
-struct iPadAwareView: View {
+struct IPadAwareView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
@@ -41,50 +80,93 @@ struct iPadAwareView: View {
             SidebarList()
         } detail: {
             if horizontalSizeClass == .regular {
-                DetailWithSupplementaryPane()
+                DetailWithSupplementaryPane()    // extra info when there's room
             } else {
                 DetailPane()
             }
         }
-        .navigationSplitViewStyle(.balanced)
+        .navigationSplitViewStyle(.balanced)     // sidebar and detail share the width
     }
 }
 ```
 
-Because iPad windows can be resized via multitasking, a layout that looks correct at launch must keep responding correctly as `horizontalSizeClass` changes live during the app's lifetime — this is one reason size-class-driven layout (33.1) is preferable to a one-time layout decision made only at launch. `.navigationSplitViewStyle(.balanced)` is one of several styles controlling how `NavigationSplitView`'s columns share available width, particularly relevant on iPad's wider layouts.
+Because windows **resize live**, never decide the layout **once at launch**. Read the size class (or geometry) in `body`, so the view updates **whenever** it changes.
+
+Make the iPad feel **at home** with keyboard and pointer support:
+
+```swift
+Button("New Note", systemImage: "square.and.pencil") { createNote() }
+    .keyboardShortcut("n", modifiers: .command)     // ⌘N; listed when the user holds ⌘
+
+Image(systemName: "star")
+    .padding(8)
+    .hoverEffect(.highlight)                       // reacts when the trackpad pointer is over it
+```
+
+From iPadOS 26, iPad apps also get a **menu bar** at the top of the screen. Your **`.commands`** (33.4) appear there, just like on the Mac.
+
+Test on **several** window sizes: full screen, half, and the smallest allowed. Xcode Previews can help (23.15).
 
 ---
 
-## 33.3 macOS: WindowGroup, Window, and Settings
+## 33.3 macOS: WindowGroup, Window, and Settings 🟢
 
-On macOS, `WindowGroup` (also used on iOS) supports multiple simultaneous windows of the same document/scene type, `Window` declares a single unique window instance, and `Settings` provides the standard macOS Preferences/Settings window.
+On the Mac, your `App` declares **scenes**, and each scene type behaves differently:
 
 ```swift
 @main
 struct MyMacApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView()                 // File → New Window opens another one
         }
 
         Window("About", id: "about") {
-            AboutView()
+            AboutView()                   // only one can be open
         }
 
         Settings {
-            SettingsView()
+            SettingsView()                // App menu → Settings… (⌘,)
         }
     }
 }
 ```
 
-`WindowGroup` is appropriate for document-style or repeatable content where the user might reasonably want several windows open at once (like multiple text documents). `Window` is for singleton utility windows, like an "About" panel, that should never have more than one instance open. `Settings` is specifically recognized by macOS as the app's Preferences window, automatically wired into the standard `App Name > Settings…` menu location and its conventional `Cmd+,` keyboard shortcut.
+| Scene | How many windows | Use for |
+|---|---|---|
+| `WindowGroup` | **Many**, of the same kind | The main content; documents; one window per item |
+| `Window` | Exactly **one** | Utility windows: About, Activity, Inspector |
+| `Settings` | One, special | The app's **Settings** window |
+
+**`Settings`** is recognized by macOS: it's added to the **app menu** as "Settings…" with the standard **⌘,** shortcut, automatically. A typical settings view uses a `TabView` with `Form`s:
+
+```swift
+struct SettingsView: View {
+    var body: some View {
+        TabView {
+            Tab("General", systemImage: "gear") { GeneralSettings() }
+            Tab("Accounts", systemImage: "person.crop.circle") { AccountSettings() }
+        }
+        .frame(width: 450, height: 300)
+    }
+}
+```
+
+Control window **size** with scene modifiers:
+
+```swift
+WindowGroup {
+    ContentView()
+}
+.defaultSize(width: 900, height: 600)        // the first size
+.windowResizability(.contentMinSize)          // can't shrink below the content's minimum size
+```
 
 ---
 
-## 33.4 macOS: MenuBarExtra and Commands
+## 33.4 macOS: MenuBarExtra and Commands 🟡
 
-`MenuBarExtra` declares a persistent menu bar icon/menu (the kind used by utility apps that live primarily in the menu bar), and `Commands` lets an app customize its menu bar's command menus (File, Edit, View, etc.).
+**`MenuBarExtra`** puts an **icon in the menu bar** (top right of the Mac screen), with a menu or a small panel. **`Commands`** customize the app's **menus** (File, Edit, View, and so on).
 
 ```swift
 @main
@@ -110,13 +192,43 @@ struct MenuBarUtilityApp: App {
 }
 ```
 
-`.menuBarExtraStyle(.window)` renders the menu bar extra's content as a floating window-style panel rather than a plain dropdown menu, appropriate for richer interactive content. `Commands` (via `.commands { }` on a `Scene`) lets an app insert, replace, or remove standard menu items — here replacing the default "New" menu item's behavior entirely with a custom action and its own keyboard shortcut, letting apps integrate deeply with macOS's traditional menu bar conventions.
+**`MenuBarExtra`** styles:
+
+| Style | Looks like |
+|---|---|
+| `.menu` (default) | A normal **dropdown menu** of items |
+| `.window` | A **floating panel** under the icon, for rich content: charts, sliders, text fields |
+
+A `MenuBarExtra` is **always there** while the app runs, even with no windows open. Many utility apps live **only** in the menu bar. To hide the Dock icon for such an app, set **`LSUIElement`** ("Application is agent") to `YES` in Info.plist.
+
+**`Commands`** change the menus:
+
+```swift
+.commands {
+    CommandGroup(replacing: .newItem) {           // replace File → New
+        Button("New Report") { }
+            .keyboardShortcut("n", modifiers: [.command, .shift])
+    }
+    CommandGroup(after: .sidebar) {               // add to the View menu, after the sidebar item
+        Button("Show Inspector") { }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+    }
+    CommandMenu("Report") {                       // a whole new top-level menu
+        Button("Export PDF…") { }
+        Button("Print…") { }
+    }
+}
+```
+
+`CommandGroup(replacing: .newItem)` **removes** the standard "New" items and puts **yours** in their place. `before:` and `after:` **add** items next to standard ones without removing them.
+
+Mac users expect **every** action to be in a **menu**, with a **shortcut** for common ones. Menus also make actions **discoverable** and **searchable** (Help → Search).
 
 ---
 
-## 33.5 openWindow and Window Management
+## 33.5 openWindow and Window Management 🟡
 
-The `openWindow` environment action programmatically opens a new window (by scene ID or value-based identity), letting code — rather than only direct user interaction with the Window menu — trigger new window creation.
+The **`openWindow`** environment action opens a window **from code**. You can open a window **for a value**, like a specific document:
 
 ```swift
 struct DocumentListView: View {
@@ -136,6 +248,10 @@ struct DocumentListView: View {
 @main
 struct DocumentApp: App {
     var body: some Scene {
+        WindowGroup {
+            DocumentListView(documents: Document.all)
+        }
+
         WindowGroup(id: "documentWindow", for: Document.ID.self) { $documentID in
             if let documentID {
                 DocumentDetailView(documentID: documentID)
@@ -145,29 +261,65 @@ struct DocumentApp: App {
 }
 ```
 
-`openWindow(id:value:)` pairs with a `WindowGroup(id:for:)` scene declaration that accepts a value type (here `Document.ID`) — tapping a row programmatically opens a new window scoped to that specific document's identity, with `WindowGroup`'s closure receiving the value as a binding. This value-based window opening mirrors the value-based navigation pattern from section 27.2, extended to the level of entire windows rather than in-window navigation destinations.
+How it fits:
+
+1. **`WindowGroup(id:for:)`** declares windows that take a **value** of a type (here `Document.ID`).
+2. **`openWindow(id:value:)`** opens one with a **specific value**.
+3. The window's closure gets the value as a **binding**.
+
+If a window for **the same value** is already open, SwiftUI **brings it to the front** instead of opening a duplicate.
+
+This is **value-based navigation** (27.3), but for **whole windows**: you pass **data** (an ID), not a view, and the scene decides what to show. The value must be **`Codable`** and **`Hashable`**, so the system can **restore** windows after relaunch. Pass **IDs**, not big models.
+
+Related actions:
+
+```swift
+@Environment(\.dismissWindow) private var dismissWindow     // close a window by id
+@Environment(\.openSettings) private var openSettings       // macOS: open the Settings scene
+
+Button("Close Inspector") { dismissWindow(id: "inspector") }
+Button("Preferences…") { openSettings() }
+```
+
+`openWindow` works on **iPad** too, when the app supports **multiple windows** (`UIApplicationSupportsMultipleScenes` in Info.plist), and on **visionOS**.
 
 ---
 
-## 33.6 Mac Catalyst vs. Native macOS SwiftUI
+## 33.6 Mac Catalyst vs. Native macOS SwiftUI 🟡
 
-Mac Catalyst runs an iPad app's UIKit/SwiftUI code on macOS with adaptations (traffic-light window controls, pointer support, menu bar integration), while native macOS SwiftUI is written and compiled specifically targeting macOS's own AppKit-backed platform layer — the two represent different trade-offs for bringing an app to the Mac.
+There are **three** ways to get an iOS app onto the Mac:
+
+| Option | What it is | Effort | Feels native |
+|---|---|---|---|
+| **"Designed for iPad"** | The **unchanged** iPad app, run on Apple silicon Macs | None | Least |
+| **Mac Catalyst** | Your **iPad** app, rebuilt for Mac, with Mac adaptations (menus, pointer, window controls) | Low–medium | Medium |
+| **Native macOS** | A real **macOS** target, built on AppKit, sharing SwiftUI code | Medium–high | Most |
+
+You can tell them apart **at compile time**:
 
 ```swift
 #if targetEnvironment(macCatalyst)
-// Mac Catalyst-specific adjustments — running iOS/iPadOS code on macOS
+// Mac Catalyst: iOS code running on the Mac
 #elseif os(macOS)
-// Native macOS SwiftUI — genuinely macOS-targeted build
+// Native macOS
+#elseif os(iOS)
+// iPhone and iPad
 #endif
 ```
 
-Mac Catalyst is generally the faster path to a Mac version of an existing iPad app, since it reuses the same UIKit/SwiftUI codebase largely unmodified, but can feel less "genuinely native" in subtle interaction details. A dedicated native macOS SwiftUI target (a separate platform target in the same Xcode project, sharing SwiftUI view code where practical) gives access to macOS-specific scene types (`MenuBarExtra`, `Settings`) and typically produces a more polished, platform-idiomatic result, at the cost of more implementation and testing effort maintaining platform-specific behavior.
+⚠️ Under **Mac Catalyst**, `os(iOS)` is **also true**, because Catalyst compiles the **iOS** SDK. That's why the **`macCatalyst`** check must come **first**.
+
+**Catalyst** is the **fastest** path for an existing iPad app: the same UIKit and SwiftUI code mostly just works. But some details can feel **"iPad-like"** on the Mac: control sizes, window behavior, menus.
+
+A **native macOS** target (in the same Xcode project, sharing view code) gets **Mac-only** features like `MenuBarExtra` (33.4), `Settings` (33.3), and native AppKit controls. It feels the **most** at home, but needs **more** platform-specific work and testing.
+
+A common path: **start** with Catalyst or "Designed for iPad", then move to a **native** target if the Mac version becomes important. With SwiftUI, much of the **view** code can be shared either way.
 
 ---
 
-## 33.7 watchOS App Structure and Digital Crown
+## 33.7 watchOS App Structure and Digital Crown 🟢
 
-A watchOS app follows the same `App`/`Scene`/`View` structure as other Apple platforms, but with UI patterns adapted for a much smaller display, and the Digital Crown available as a distinctive input mechanism for fine-grained scrolling or value adjustment.
+A watchOS app uses the **same** `App`, `Scene`, and `View` structure. The difference is the **tiny screen**: show **one thing** at a time, use **big** text and **few** taps. The **Digital Crown** is a great input for fine adjustments:
 
 ```swift
 struct WatchCounterView: View {
@@ -180,39 +332,92 @@ struct WatchCounterView: View {
             Text("Rotate Crown")
                 .font(.caption2)
         }
-        .focusable()
+        .focusable()                                         // needed to receive Crown input
         .digitalCrownRotation($value, from: 0, through: 100, by: 1)
     }
 }
 ```
 
-`.digitalCrownRotation()` binds a value to the physical Digital Crown's rotation, letting users make fine, tactile adjustments without needing to tap small on-screen targets — well suited to the watch's constrained display. `.focusable()` is required for a view to actually receive Digital Crown input, since the crown's rotation needs a specific focused element to direct its input toward, similar in spirit to `@FocusState`'s role in directing keyboard input (section 28.15) but for this platform-specific input mechanism.
+**`.digitalCrownRotation()`** binds a value to the **Crown**. Turning it changes the value smoothly, with **haptic** clicks at each step. It's easier than tapping tiny buttons.
+
+**`.focusable()`** is **required**. The Crown sends its input to the **focused** view. If nothing is focusable, the Crown has nowhere to go. It's the same "who gets the input?" idea as `@FocusState` for the keyboard (28.15).
+
+More options:
+
+```swift
+.digitalCrownRotation(
+    $value,
+    from: 0, through: 100, by: 5,
+    sensitivity: .medium,             // how much turning is needed
+    isContinuous: false,              // stop at the ends (true = wrap around)
+    isHapticFeedbackEnabled: true
+)
+```
+
+Common watchOS layouts:
+
+```swift
+TabView {
+    SummaryView()
+    DetailsView()
+}
+.tabViewStyle(.verticalPage)          // swipe or turn the Crown to move between pages
+```
 
 ---
 
-## 33.8 watchOS Complications
+## 33.8 watchOS Complications 🟡
 
-Complications are the small, glanceable pieces of app data shown directly on a watch face — implemented via WidgetKit on modern watchOS, sharing much of the same timeline-based architecture used for iOS/iPadOS home screen widgets.
+**Complications** are the small pieces of data on a **watch face**: steps, weather, the next meeting. On modern watchOS, they're **WidgetKit widgets** (52), with special **accessory** families:
 
 ```swift
 struct StepCountComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "StepCount", provider: StepCountProvider()) { entry in
+            StepCountView(entry: entry)
+        }
+        .configurationDisplayName("Steps")
+        .supportedFamilies([.accessoryCircular, .accessoryCorner, .accessoryInline, .accessoryRectangular])
+    }
+}
+
+struct StepCountView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: StepEntry
+
+    var body: some View {
+        switch family {
+        case .accessoryCircular:
+            Gauge(value: Double(entry.stepCount), in: 0...10_000) {
+                Image(systemName: "figure.walk")
+            }
+            .gaugeStyle(.accessoryCircularCapacity)
+        case .accessoryInline:
+            Text("\(entry.stepCount) steps")
+        default:
             Text("\(entry.stepCount)")
                 .font(.caption2.bold())
         }
-        .supportedFamilies([.accessoryCircular, .accessoryCorner, .accessoryInline])
     }
 }
 ```
 
-Modern watchOS complications are built as WidgetKit `Widget`s using families like `.accessoryCircular`, `.accessoryCorner`, and `.accessoryInline` — specifically shaped for watch face placement — rather than a separate, watch-only complication API. This unification means much of the timeline-provider and entry-view logic used for other widget contexts (home screen, Lock Screen) can be shared or closely mirrored for watch face complications.
+| Family | Where on the face |
+|---|---|
+| `.accessoryCircular` | A small circle |
+| `.accessoryCorner` | A face corner, curved |
+| `.accessoryInline` | One line of text, often at the top |
+| `.accessoryRectangular` | A wider box with a few lines |
+
+Because complications **are** widgets, much of the code (the **timeline provider**, the **entry**, even some **views**) can be **shared** with iPhone **Lock Screen** widgets, which use the **same** accessory families. One widget extension can serve both.
+
+Watch faces often show complications in **one color** (tinted). Use `.widgetAccentable()` to mark the parts that should get the accent color.
 
 ---
 
-## 33.9 tvOS Focus Engine Basics
+## 33.9 tvOS Focus Engine Basics 🟡
 
-tvOS has no touch input — navigation happens entirely through the Siri Remote's directional swipes, and the system's focus engine determines which on-screen element is currently "focused" and eligible to be activated.
+Apple TV has **no touch screen**. Users move around with the **Siri Remote**: swipe to move, click to select. The **focus engine** decides **which** element is **focused** (highlighted), and moves focus based on the swipe **direction** and the **layout** on screen.
 
 ```swift
 struct TVFocusDemoView: View {
@@ -225,39 +430,43 @@ struct TVFocusDemoView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(focusedItem == index ? .blue : .gray)
                     .frame(width: 200, height: 120)
-                    .focusable()
-                    .focused($focusedItem, equals: index)
-                    .scaleEffect(focusedItem == index ? 1.1 : 1.0)
+                    .focusable()                                    // can receive focus
+                    .focused($focusedItem, equals: index)           // track which one has it
+                    .prefersDefaultFocus(index == 0, in: namespace) // start on the first item
+                    .scaleEffect(focusedItem == index ? 1.1 : 1.0)  // the usual "lift" on focus
                     .animation(.spring, value: focusedItem)
             }
         }
+        .focusScope(namespace)
     }
 }
 ```
 
-Since there's no cursor or touch point on tvOS, every interactive element must be genuinely focusable, and the system automatically moves focus between elements based on remote swipe direction and on-screen spatial layout. `@FocusState` (the same mechanism from section 28.15's keyboard focus management) tracks which element currently holds focus, letting the UI apply the platform-conventional visual treatment for focused elements — commonly a scale-up and highlight, as shown, giving users clear visual feedback about which element the remote's next click will activate.
+The rules are different from iOS:
+
+- **Only focusable views** can be reached. On iOS, users can tap **anything**; on tvOS, if a view can't get focus, the user **can't get to it** at all.
+- Users must always **see** what's focused. Use a clear change: **scale**, **shadow**, **highlight**.
+
+**`@FocusState`** works the same as for text fields (28.15): it **tracks** which element has focus, and you can **set** it to move focus from code. On tvOS, it's how you **style** the focused item and **react** when focus moves (for example, to show a preview).
+
+Standard controls handle focus **for you**. A `Button` is focusable, and the **`.card`** style gives it the familiar tvOS lift-and-shine look:
+
+```swift
+Button { play(movie) } label: {
+    MoviePoster(movie: movie)
+}
+.buttonStyle(.card)
+```
+
+Use **`.focusSection()`** to group items, so swiping from far away moves focus **into** the group naturally.
 
 ---
 
-## 33.10 Platform Conditionals and anyAppleOS
+## 33.10 Platform Conditionals and anyAppleOS 🟢
 
-Compile-time platform conditionals (`#if os(iOS)`, `#if os(macOS)`, etc.) let shared code branch for platform-specific APIs, while cross-platform availability checks (informally referred to as "anyAppleOS" patterns) help write code that compiles cleanly everywhere a shared module targets.
+**`#if os(...)`** includes code **only** for certain platforms. It's checked at **compile time**:
 
 ```swift
-struct PlatformAwareToolbar: ToolbarContent {
-    var body: some ToolbarContent {
-        #if os(iOS)
-        ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Share", systemImage: "square.and.arrow.up") { }
-        }
-        #elseif os(macOS)
-        ToolbarItem(placement: .automatic) {
-            Button("Share", systemImage: "square.and.arrow.up") { }
-        }
-        #endif
-    }
-}
-
 func platformName() -> String {
     #if os(iOS)
     "iOS"
@@ -267,22 +476,66 @@ func platformName() -> String {
     "watchOS"
     #elseif os(tvOS)
     "tvOS"
+    #elseif os(visionOS)
+    "visionOS"
     #else
     "Unknown"
     #endif
 }
 ```
 
-`#if os(...)` conditionals are resolved entirely at compile time, meaning platform-unavailable code is never even compiled into a given platform's build — essential for referencing genuinely platform-exclusive APIs like `MenuBarExtra` (macOS-only) or `.digitalCrownRotation()` (watchOS-only) from within an otherwise-shared source file, without breaking builds on platforms where those APIs don't exist.
+The code in the **other** branches is **never compiled** for that platform. That's **essential** for **platform-only** APIs: `MenuBarExtra` (macOS) and `.digitalCrownRotation()` (watchOS) don't **exist** on iOS, so they must be inside `#if`, or the iOS build fails.
+
+Before reaching for `#if`, check if a **cross-platform** API already does the job. For toolbars, a **meaning-based** placement (27.19) works everywhere, with no `#if`:
+
+```swift
+// ❌ Two branches for the same button
+#if os(iOS)
+ToolbarItem(placement: .topBarTrailing) { shareButton }
+#elseif os(macOS)
+ToolbarItem(placement: .automatic) { shareButton }
+#endif
+
+// ✅ One line: the system places it right on each platform
+ToolbarItem(placement: .primaryAction) { shareButton }
+```
+
+Other useful checks:
+
+```swift
+#if canImport(UIKit)          // any platform with UIKit (iOS, iPadOS, tvOS, visionOS, Catalyst)
+import UIKit
+#endif
+
+#if targetEnvironment(simulator)
+let useMockLocation = true
+#endif
+```
+
+**`#if`** is for **compile time**. **`if #available`** is for **run time**, on the **same** platform: "is this device's OS **new enough**?"
+
+```swift
+if #available(iOS 26, macOS 26, *) {
+    content.glassEffect()
+} else {
+    content.background(.ultraThinMaterial)
+}
+```
+
+Since 2025, all Apple platforms share **one version number** (iOS 26, macOS 26, watchOS 26, tvOS 26, visionOS 26). There's a Swift proposal for an **`anyAppleOS`** shorthand, so one availability check could cover all Apple platforms at that version. Check whether **your** Swift version supports it; if not, list the platforms, as above.
 
 ---
 
-## 33.11 Sharing a Codebase Across Platforms Cleanly 🟠
+## 33.11 Sharing a Codebase Across Platforms Cleanly 🟡
 
-Beyond scattered `#if os()` blocks, a cleaner architecture for genuinely multiplatform apps typically separates platform-agnostic business logic and data models (shared unconditionally) from platform-specific UI, isolated behind small, well-defined protocol or view abstractions.
+`#if os()` blocks **everywhere** make code hard to read. A cleaner design has **layers**:
+
+1. **Shared, with no platform code at all**: models, business logic, networking, persistence.
+2. **Mostly shared**: SwiftUI views that work everywhere.
+3. **Platform-specific**: a **few** small views or files, kept apart on purpose.
 
 ```swift
-// Shared, platform-agnostic (no #if needed at all)
+// 1. Shared, platform-agnostic: no #if needed at all
 struct TaskItem: Identifiable, Codable {
     let id: UUID
     var title: String
@@ -290,19 +543,22 @@ struct TaskItem: Identifiable, Codable {
 }
 
 @Observable
-class TaskStore {
+final class TaskStore {
     var tasks: [TaskItem] = []
-    func toggle(_ task: TaskItem) { /* shared logic */ }
+    func toggle(_ task: TaskItem) {
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+        tasks[index].isComplete.toggle()
+    }
 }
 
-// Platform-specific presentation, isolated to its own small surface
+// 3. Platform-specific presentation, isolated in one small view
 struct TaskRowView: View {
     let task: TaskItem
     let onToggle: () -> Void
 
     var body: some View {
         #if os(watchOS)
-        Text(task.title).font(.caption)
+        Text(task.title).font(.caption)          // tiny screen: just the title
             .onTapGesture(perform: onToggle)
         #else
         HStack {
@@ -315,7 +571,26 @@ struct TaskRowView: View {
 }
 ```
 
-The general principle: business logic, data models, and networking (like `TaskItem` and `TaskStore` above) rarely need any platform awareness at all and should be written once, shared unconditionally across every target. Platform-specific concerns are then pushed down to the smallest possible surface — often a handful of individual view files — rather than scattering `#if os()` blocks broadly throughout the codebase. This keeps the majority of the app's logic genuinely platform-agnostic, with platform differences concentrated in a few clearly-identified, intentionally-isolated locations.
+A typical **project layout**:
+
+```
+Shared/                 ← in every target
+  Models/TaskItem.swift
+  Stores/TaskStore.swift
+  Networking/APIClient.swift
+  Views/TaskListView.swift
+iOS/                    ← iOS target only
+  TaskRowView+iOS.swift
+macOS/                  ← macOS target only
+  MenuBarView.swift
+  SettingsView.swift
+watchOS/                ← watchOS target only
+  ComplicationViews.swift
+```
+
+Files in a platform folder belong **only** to that target (set in Xcode's **target membership**), so they need **no `#if`** at all. For bigger apps, put the shared layer in a **Swift package** (73) that every target imports.
+
+The rule: business logic **almost never** needs to know the platform. Push platform differences **down** to the **fewest, smallest** places, so most of the app is written **once**.
 
 ---
 
@@ -323,17 +598,17 @@ The general principle: business logic, data models, and networking (like `TaskIt
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Adaptive layout | `horizontalSizeClass`/`verticalSizeClass` | Layout that responds to available space, not device |
-| iPad multitasking | Live size class changes | Layout must adapt during app lifetime, not just at launch |
-| Multiple windows | `WindowGroup` | Repeatable document/scene-style windows |
-| Singleton windows | `Window` | Single-instance utility windows (e.g. About panel) |
-| Preferences | `Settings` | Standard macOS Settings/Preferences window |
-| Menu bar apps | `MenuBarExtra` | Persistent menu bar icon and menu |
-| Menu customization | `Commands`, `CommandGroup` | Customize File/Edit/View menu bar menus |
-| Programmatic windows | `openWindow`, `WindowGroup(id:for:)` | Value-based window opening |
-| Bringing apps to Mac | Mac Catalyst vs. native macOS | Reuse vs. platform-idiomatic trade-off |
-| Watch input | `.digitalCrownRotation()` | Tactile fine-grained value adjustment |
-| Watch face data | WidgetKit complications | Timeline-based glanceable watch face content |
-| TV navigation | Focus engine, `@FocusState` | Remote-driven, focus-based interaction |
-| Compile-time branching | `#if os(...)` | Platform-exclusive code without breaking other targets |
-| Clean multiplatform architecture | Shared logic + isolated platform views | Minimize scattered platform conditionals |
+| Adaptive layout | `horizontalSizeClass`, `AnyLayout` | Adapt to space, not device; keep state when switching |
+| iPad multitasking | Live size changes, shortcuts, hover | Re-layout any time; support keyboard and pointer |
+| Multiple windows | `WindowGroup` | Many windows of the same kind |
+| Singleton windows | `Window` | Exactly one window, like About |
+| Preferences | `Settings` | The Mac Settings window, with ⌘, |
+| Menu bar apps | `MenuBarExtra` | An always-there menu bar icon; `.window` for rich panels |
+| Menu customization | `Commands`, `CommandGroup`, `CommandMenu` | Replace, add, or create menus with shortcuts |
+| Programmatic windows | `openWindow`, `WindowGroup(id:for:)` | Value-based windows; reuses an open one |
+| Bringing apps to Mac | Designed for iPad, Catalyst, native macOS | Effort vs. native feel; check `macCatalyst` first |
+| Watch input | `.digitalCrownRotation()` + `.focusable()` | Fine adjustments with the Crown |
+| Watch face data | WidgetKit accessory families | Complications shared with Lock Screen widgets |
+| TV navigation | Focus engine, `@FocusState`, `.card` | Everything reachable must be focusable and visibly focused |
+| Compile-time branching | `#if os(...)`, `#if canImport` | Platform-only APIs; prefer cross-platform APIs first |
+| Clean multiplatform architecture | Shared logic + small platform views | Few, isolated platform differences |
