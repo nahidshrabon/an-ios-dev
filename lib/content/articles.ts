@@ -913,7 +913,7 @@ export const articles: Article[] = [
     slug: "engineering-craft",
     title: "Engineering Craft",
     description:
-      "Technical design documents, architecture decision records, code review judgment, estimation and breaking down epics, managing tech debt, mobile incident response, rollback vs. hotfix, blameless postmortems, mentoring, interview loops and preparation, portfolios, staying current, open-source contribution, and technical writing.",
+      "The skills around the code: design docs, ADRs, code review, estimation, tech debt, mobile incident response, rollback vs. hotfix, blameless postmortems, mentoring, interviews, portfolios, staying current, open source, and technical writing.",
     tags: ["career", "engineering-craft", "mentoring"],
     publishedAt: "2026-08-16",
     get content() {
