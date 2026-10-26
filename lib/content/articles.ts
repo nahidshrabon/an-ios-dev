@@ -781,7 +781,7 @@ export const articles: Article[] = [
     slug: "accessibility",
     title: "Accessibility",
     description:
-      "VoiceOver navigation and testing, accessibility labels/values/hints/traits, grouping and custom actions, the rotor, accessibilityRepresentation, reading order, Dynamic Type, Reduce Motion/Transparency, Increase Contrast, Differentiate Without Color, tap target sizes, Switch/Voice Control, Full Keyboard Access, the Accessibility Inspector, Nutrition Labels, and media captions.",
+      "Making the app work for everyone: testing with VoiceOver, labels, values, hints, traits, grouping, actions, the rotor, custom controls, reading order, Dynamic Type, motion, contrast, and color settings, tap targets, Voice Control, keyboard access, tools, Nutrition Labels, and media.",
     tags: ["accessibility", "voiceover", "dynamic-type"],
     publishedAt: "2026-08-16",
     get content() {
