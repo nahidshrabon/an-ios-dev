@@ -33,7 +33,7 @@ export const articles: Article[] = [
     slug: "control-flow",
     title: "Control Flow",
     description:
-      "How Swift makes decisions and repeats work: if/switch branching, every loop form, early-exit tools (guard, break, continue), and defer for guaranteed cleanup.",
+      "How Swift makes decisions and repeats work: if and switch (also as expressions), patterns and where clauses, every loop form, labels, stride, guard for early exit, and defer for cleanup.",
     tags: ["swift", "control-flow"],
     publishedAt: "2026-08-02",
     get content() {
