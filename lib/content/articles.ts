@@ -297,7 +297,7 @@ export const articles: Article[] = [
     slug: "lists-and-collections",
     title: "Lists and Collections",
     description:
-      "List (rows, sections, styles, swipe actions, selection), search and pull-to-refresh, ScrollView/LazyVStack/grids for custom scrolling layouts, programmatic scroll control, and what actually causes scrolling performance problems.",
+      "Lists and scrolling: List rows, identity, sections and styles, delete, move, and swipe actions, selection, search and pull to refresh, lazy stacks and grids, scroll position and snapping, and what makes scrolling slow.",
     tags: ["swiftui","lists"],
     publishedAt: "2026-08-08",
     get content() {
