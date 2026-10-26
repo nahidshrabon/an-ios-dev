@@ -1,18 +1,30 @@
-## 4.1 What `nil` Means and Why Optionals Exist
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-In Swift, a variable can only be `nil` if its type is explicitly marked as optional — plain types can never silently hold "no value." This is enforced entirely at compile time.
+## 4.1 What `nil` Means and Why Optionals Exist 🟢
+
+**`nil`** means "**no value**". In Swift, a value can be `nil` **only if its type says so**, with a `?`. A plain `String` can never secretly be empty of a value. The compiler checks this.
 
 ```swift
 var name: String = "Alex"
-name = nil    // ❌ error: nil cannot be assigned to type 'String'
+name = nil    // ❌ error: 'nil' cannot be assigned to type 'String'
 
 var middleName: String? = "Ahmed"
 middleName = nil   // ✅ fine — String? explicitly allows the absence of a value
 ```
 
-This distinction eliminates an entire category of runtime crashes common in Objective-C, Java, or C — you cannot accidentally call a method on something that turns out to be null, because the compiler forces you to prove a value exists (via unwrapping) before you can use it as its underlying type.
+**Why this matters:** in Objective-C, Java, or C, calling a method on a null value is a very common crash. Swift removes that whole group of bugs. Before you can use an optional as a real `String`, the compiler makes you **prove the value exists** (this is called **unwrapping**).
 
-`Optional` is actually a generic enum under the hood, with two cases (a preview of section 6):
+A real case: not every user has a middle name. The type says so honestly:
+
+```swift
+struct User {
+    let firstName: String        // always present
+    let middleName: String?      // may be missing
+    let lastName: String
+}
+```
+
+Under the hood, `Optional` is just a **generic enum** with two cases (a preview of section 6):
 
 ```swift
 enum Optional<Wrapped> {
@@ -28,25 +40,44 @@ let c: Int? = 5
 let d: Int? = Optional.some(5)
 ```
 
+`nil` is just a short way to write `.none`.
+
 ---
 
-## 4.2 Declaring and Unwrapping an Optional
+## 4.2 Declaring and Unwrapping an Optional 🟢
 
-An optional type is written with a trailing `?`:
+Write an optional type with a `?` after the type:
 
 ```swift
 var age: Int? = 25
 var score: Double? = nil
 ```
 
-You cannot use an optional's value directly as though it were the underlying type — every operation must go through an unwrapping step first:
+You **can't use an optional directly** as its inner type. You must unwrap it first:
 
 ```swift
 let age: Int? = 25
-let doubled = age * 2   // ❌ error: value of optional type 'Int?' must be unwrapped
+let doubled = age * 2   // ❌ error: value of optional type 'Int?' must be unwrapped to a value of type 'Int'
 ```
 
-The simplest (and least safe) unwrap is force-unwrapping with `!`, covered fully in 4.7 — but the idiomatic, safe approaches are `if let` (4.3), `guard let` (4.4), and nil-coalescing (4.6).
+Many Swift APIs return optionals, because they can fail:
+
+```swift
+let number = Int("42")                    // Int?   — the text may not be a number
+let first = [1, 2, 3].first               // Int?   — the array may be empty
+let url = URL(string: "https://apple.com") // URL?  — the text may not be a valid URL
+let value = ["a": 1]["b"]                 // Int?   — the key may be missing
+```
+
+Ways to unwrap, from safest to riskiest:
+
+| Way | Section | What happens if `nil` |
+|---|---|---|
+| `if let` | 4.3 | Skips the block |
+| `guard let` | 4.4 | Leaves the function early |
+| `?.` optional chaining | 4.5 | The result is `nil` |
+| `??` nil-coalescing | 4.6 | Uses a default value |
+| `!` force unwrap | 4.7 | **Crashes** |
 
 ```swift
 let age: Int? = 25
@@ -57,9 +88,9 @@ if let unwrappedAge = age {
 
 ---
 
-## 4.3 `if let` and Shorthand `if let name`
+## 4.3 `if let` and Shorthand `if let name` 🟢
 
-`if let` binds the unwrapped value to a new (or, with the shorthand, same-named) constant, and only enters the block if the optional actually held a value:
+`if let` unwraps the optional into a **new constant**, and runs the block **only if there is a value**:
 
 ```swift
 let username: String? = "alex"
@@ -71,7 +102,7 @@ if let unwrapped = username {
 }
 ```
 
-Since Swift 5.7, you can shadow the same name for concise unwrapping — no need to invent a new variable name:
+Since Swift 5.7 there is a **shorthand**: reuse the same name. Inside the block, the name means the **unwrapped** value:
 
 ```swift
 if let username {
@@ -79,7 +110,7 @@ if let username {
 }
 ```
 
-Multiple optionals can be unwrapped in a single `if let`, comma-separated, and later bindings can depend on earlier ones — the whole condition only proceeds if **all** succeed:
+You can unwrap **several optionals** at once, separated by commas. Later ones can use earlier ones. The block runs only if **all** of them succeed:
 
 ```swift
 let first: String? = "Ada"
@@ -95,7 +126,7 @@ if let dict = optionalDict, let count = dict["count"] {
 }
 ```
 
-You can also mix in plain boolean conditions alongside the bindings:
+You can add normal `Bool` conditions too:
 
 ```swift
 if let username, username.count > 3 {
@@ -103,11 +134,21 @@ if let username, username.count > 3 {
 }
 ```
 
+Use `if var` when you need to **change** the unwrapped copy:
+
+```swift
+let input: String? = "  hello  "
+if var text = input {
+    text = text.trimmingCharacters(in: .whitespaces)
+    print(text)   // "hello" — the original `input` is unchanged
+}
+```
+
 ---
 
-## 4.4 `guard let` and Early Return Style
+## 4.4 `guard let` and Early Return Style 🟢
 
-`guard let` is the mirror image of `if let`: state what **must** unwrap successfully to continue, with a mandatory `else` that exits the current scope. This was introduced already in 2.11, but it's worth revisiting specifically for optionals, since it's their single most common use.
+`guard let` is the mirror of `if let`. It says what **must unwrap** to continue. Its `else` is **required** and **must leave** the scope. You saw `guard` in 2.11; optionals are its most common use.
 
 ```swift
 func summary(for age: Int?) -> String {
@@ -119,7 +160,7 @@ func summary(for age: Int?) -> String {
 }
 ```
 
-The structural win over `if let` is scope: bindings from `guard let` remain available for the rest of the function, not just an indented block — which is why `guard let` dominates in real codebases for validating multiple inputs at the top of a function:
+The big win over `if let`: the unwrapped value stays available for the **rest of the function**, not just inside a block. That's why `guard let` is so common for checking inputs at the top of a function:
 
 ```swift
 func createUser(name: String?, email: String?, age: Int?) -> String {
@@ -131,11 +172,26 @@ func createUser(name: String?, email: String?, age: Int?) -> String {
 }
 ```
 
+Each check has **its own failure message**, and the happy path at the bottom stays flat.
+
+In a throwing function, `guard` pairs well with `throw`:
+
+```swift
+enum ProfileError: Error { case missingAvatar }
+
+func avatarURL(from string: String?) throws -> URL {
+    guard let string, let url = URL(string: string) else {
+        throw ProfileError.missingAvatar
+    }
+    return url
+}
+```
+
 ---
 
-## 4.5 Optional Chaining with `?.`
+## 4.5 Optional Chaining with `?.` 🟢
 
-Optional chaining lets you call a method, access a property, or subscript through an optional, short-circuiting to `nil` the moment any link in the chain is `nil` — instead of crashing or requiring nested `if let`s at every step.
+**Optional chaining** (`?.`) lets you read a property, call a method, or use a subscript **through** an optional. If **any** link in the chain is `nil`, the whole result is `nil`. No crash, and no nested `if let` at every step.
 
 ```swift
 struct Address {
@@ -155,7 +211,9 @@ let noAddressPerson = Person(address: nil)
 let missingStreet = noAddressPerson.address?.street   // nil — no crash
 ```
 
-Chains can be arbitrarily long, and the whole expression is nil-propagating — any single `nil` anywhere in the chain makes the entire expression `nil`:
+Note that the result is **always optional** (`String?`), even though `street` itself is a plain `String`. The chain might have stopped early.
+
+Chains can be long. One `nil` anywhere makes the whole result `nil`:
 
 ```swift
 struct Company { var address: Address? }
@@ -165,7 +223,7 @@ let employee = Employee(company: Company(address: nil))
 let city = employee.company?.address?.street   // nil — short-circuits at the second link
 ```
 
-Optional chaining also works on method calls and subscripts, and combines naturally with `if let` to unwrap the final result:
+It works on **method calls** and **subscripts** too, and pairs well with `if let`:
 
 ```swift
 struct Library {
@@ -182,17 +240,33 @@ if let title = library?.firstTitle() {
 let firstBook = library?.books[0]   // String? → Optional("Swift Basics")
 ```
 
-Assigning through an optional chain works the same way — the assignment simply does nothing if any part of the chain is `nil`:
+(Careful: `?.` only protects against `library` being `nil`. `books[0]` still crashes if `books` is empty.)
+
+**Assigning** through a chain does nothing if any link is `nil`:
 
 ```swift
-person.address?.street = "New Street"   // no-op if person.address is nil, otherwise mutates it
+var someone = Person(address: nil)
+someone.address?.street = "New Street"   // no-op: address is nil
+
+someone.address = Address(street: "Old Street")
+someone.address?.street = "New Street"   // now it changes
+```
+
+A very common iOS use, with a weak reference:
+
+```swift
+weak var delegate: ProfileDelegate?
+
+func save() {
+    delegate?.profileDidSave()   // does nothing if no delegate is set
+}
 ```
 
 ---
 
-## 4.6 Nil-Coalescing with `??`
+## 4.6 Nil-Coalescing with `??` 🟢
 
-`??` provides a default value to fall back on when the left-hand optional is `nil`, unwrapping the result to a non-optional type in one expression:
+**`??`** gives a **default value** for when the optional is `nil`. The result is **not optional**:
 
 ```swift
 let username: String? = nil
@@ -204,7 +278,7 @@ let finalScore = score ?? 0
 print(finalScore)   // 85 — the real value, since it wasn't nil
 ```
 
-`??` chains, evaluating left to right and stopping at the first non-nil value — handy for a prioritized list of fallbacks:
+You can **chain** `??`. It goes left to right and stops at the first value that is not `nil`:
 
 ```swift
 let preferred: String? = nil
@@ -215,7 +289,7 @@ let result = preferred ?? secondary ?? fallback
 print(result)   // "Default"
 ```
 
-It also combines directly with optional chaining, which is one of the most common idioms in real Swift code:
+It combines with optional chaining. This is one of the most common lines in real Swift code:
 
 ```swift
 struct Profile { var nickname: String? }
@@ -225,7 +299,7 @@ let name = profile?.nickname ?? "Anonymous"
 print(name)   // "Anonymous"
 ```
 
-Like `&&`/`||`, the right-hand side of `??` is only evaluated if needed (short-circuiting), so it's safe to put an expensive or side-effecting default on the right:
+Like `&&` and `||`, the right side **only runs when needed** (short-circuiting). So an expensive default is fine:
 
 ```swift
 func expensiveDefault() -> String {
@@ -237,11 +311,20 @@ let cached: String? = "cached value"
 let value = cached ?? expensiveDefault()   // "computing default" never prints
 ```
 
+In SwiftUI, `??` keeps views simple:
+
+```swift
+Text(user.bio ?? "No bio yet")
+    .foregroundStyle(user.bio == nil ? .secondary : .primary)
+```
+
+**Choose the default carefully.** `?? 0` for a price can hide a real problem (a missing price shows as free). Sometimes it's better to handle `nil` explicitly.
+
 ---
 
-## 4.7 Force Unwrapping `!` and Why It Crashes
+## 4.7 Force Unwrapping `!` and Why It Crashes 🟢
 
-The `!` operator forcibly extracts an optional's value, asserting to the compiler "I guarantee this holds a value." If you're wrong, the app crashes immediately with a runtime trap — there's no recoverable error, no exception to catch.
+The **`!` operator** takes the value out **without checking**. It tells the compiler: "I promise this is not `nil`." If you're wrong, the app **crashes immediately**. There is no error to catch.
 
 ```swift
 let age: Int? = 25
@@ -251,24 +334,54 @@ let missing: Int? = nil
 let crash = missing!         // 💥 fatal error: Unexpectedly found nil while unwrapping an Optional value
 ```
 
-Force unwrapping is appropriate only when you have a genuine, structural guarantee the value exists — for example, immediately after checking `isEmpty`, or with a value hardcoded at compile time that you control:
+Use `!` only when there is a **real guarantee** that the value exists. For example, a hard-coded value you control:
+
+```swift
+let url = URL(string: "https://apple.com")!   // acceptable: a hardcoded, known-valid literal
+```
+
+Even after a check, a safe form usually reads better:
 
 ```swift
 let numbers = [1, 2, 3]
 if !numbers.isEmpty {
-    print(numbers.first!)   // arguably safe here, but first ?? still reads better
+    print(numbers.first!)   // works, but...
 }
-
-let url = URL(string: "https://apple.com")!   // acceptable: a hardcoded, known-valid literal
+if let first = numbers.first {
+    print(first)            // ...this is clearer and can't crash
+}
 ```
 
-In application code processing external or user-provided data (network responses, user input, file contents), force unwrapping is a liability — it turns a recoverable "missing data" situation into an unconditional crash. Prefer `if let`, `guard let`, or `??` in nearly every case; treat `!` as a deliberate, rare escape hatch rather than a default habit.
+With **data from outside** (network, user input, files), `!` is dangerous. It turns "some data is missing", which you could handle, into a **crash**:
+
+```swift
+// ❌ crashes if the server ever sends a bad URL
+let avatar = URL(string: response.avatarURL)!
+
+// ✅ handles it
+guard let avatar = URL(string: response.avatarURL) else {
+    showPlaceholderAvatar()
+    return
+}
+```
+
+If a value is truly "impossible" to be missing, say **why** with a clear message:
+
+```swift
+guard let configURL = Bundle.main.url(forResource: "Config", withExtension: "plist") else {
+    fatalError("Config.plist is missing from the app bundle")
+}
+```
+
+The crash log then explains the problem, instead of a generic "found nil".
+
+**Key takeaway:** prefer `if let`, `guard let`, or `??`. Treat `!` as a rare, deliberate exception, not a habit.
 
 ---
 
-## 4.8 Implicitly Unwrapped Optionals: Recognize, Don't Write
+## 4.8 Implicitly Unwrapped Optionals: Recognize, Don't Write 🟡
 
-An implicitly unwrapped optional is declared with `!` instead of `?`, and behaves like a regular optional except it's automatically force-unwrapped whenever used as its underlying type — while still allowing explicit `if let` unwrapping when needed.
+An **implicitly unwrapped optional (IUO)** is declared with `!` instead of `?`. It is still an optional, but Swift **force-unwraps it automatically** whenever you use it as the inner type:
 
 ```swift
 var name: String! = "Alex"
@@ -278,21 +391,43 @@ name = nil
 let crash = name.count       // 💥 crash — still traps on nil, just without the visible `!`
 ```
 
-They exist almost entirely for interoperability with Objective-C APIs (which lack optionals) and for a narrow set of framework patterns — most famously, `@IBOutlet` properties in UIKit, which are nil at declaration time but guaranteed to be set before use once the view loads:
+The crash is the same as `!`, but **hidden**: nothing in the line warns you.
+
+IUOs exist mainly for **Objective-C interop** (old APIs had no optionals) and a few UIKit patterns. The best-known example is **`@IBOutlet`**: the property is `nil` when the object is created, and set by the storyboard before you use it:
 
 ```swift
 class ViewController: UIViewController {
     @IBOutlet var titleLabel: UILabel!   // nil until the storyboard connects it, then always set
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        titleLabel.text = "Hello"        // safe after the view loads
+    }
 }
 ```
 
-**In modern Swift code you write yourself, there is essentially no reason to declare a new implicitly unwrapped optional** — use a regular optional (`?`) and unwrap it safely, or restructure so the value is guaranteed non-optional from the start. The main practical skill here is *recognizing* `!`-declared types when reading legacy or UIKit-adjacent code, not reaching for the pattern yourself.
+**In new code, there is almost never a reason to write an IUO.** Use a normal optional, or design the type so the value is set in `init`:
+
+```swift
+// ❌ IUO: crashes if someone forgets to set it
+final class ProfileViewModel {
+    var service: ProfileService!
+}
+
+// ✅ Required in init: can never be missing
+final class ProfileViewModel {
+    let service: ProfileService
+    init(service: ProfileService) { self.service = service }
+}
+```
+
+The real skill here is **recognizing** `!` types when you read older UIKit code.
 
 ---
 
-## 4.9 Optional Patterns in `switch`
+## 4.9 Optional Patterns in `switch` 🟡
 
-`switch` can match directly against `.some`/`.none` (or the equivalent shorthand), which is especially useful when an optional needs different handling for more than the binary "has a value or not":
+`switch` can match an optional's cases directly: `.some` and `.none`. This helps when there are **more than two** situations to handle:
 
 ```swift
 let response: Int? = 404
@@ -309,7 +444,7 @@ case .none:
 }
 ```
 
-The more idiomatic shorthand uses `?` directly in the pattern instead of spelling out `.some`:
+The shorter, more common form puts `?` in the pattern instead of `.some`:
 
 ```swift
 switch response {
@@ -324,7 +459,13 @@ case nil:
 }
 ```
 
-This becomes especially powerful combined with tuple patterns and `where` clauses (recall 2.3–2.4) when switching over multiple related optionals at once:
+| Pattern | Matches |
+|---|---|
+| `200?` | The optional holds exactly `200` |
+| `let code?` | Any value; binds it to `code` |
+| `nil` | No value |
+
+With **tuples** (2.3), you can handle combinations of several optionals:
 
 ```swift
 let username: String? = "alex"
@@ -341,11 +482,20 @@ case (nil, _):
 // "alex, age unknown"
 ```
 
+The same `?` pattern works in a `for` loop, to skip `nil`s:
+
+```swift
+let maybeScores: [Int?] = [90, nil, 75]
+for case let score? in maybeScores {
+    print(score)   // 90, 75
+}
+```
+
 ---
 
-## 4.10 `map` and `flatMap` on Optionals
+## 4.10 `map` and `flatMap` on Optionals 🟡
 
-Optionals support `map` and `flatMap` just like collections do (recall 3.9 and 3.13) — transforming the wrapped value only if it exists, and doing nothing (propagating `nil`) otherwise. This avoids an `if let` just to apply one transformation.
+Optionals have `map` and `flatMap`, like collections (3.9 and 3.13). They transform the value **only if it exists**. If it's `nil`, the result is `nil` and the closure never runs. This saves an `if let` for a simple transform.
 
 ```swift
 let age: Int? = 25
@@ -358,7 +508,9 @@ let name: String? = "swift"
 let uppercased = name.map { $0.uppercased() }   // Optional("SWIFT")
 ```
 
-`flatMap` on an optional is for when your transformation *itself* returns an optional — using plain `map` here would produce a nested optional (`Int??`), which `flatMap` flattens back to a single level:
+Think of an optional as a box with **zero or one** item. `map` changes the item, if there is one.
+
+**`flatMap`** is for when your closure **itself returns an optional**. With `map`, you'd get a **nested** optional (`Int??`). `flatMap` flattens it to one level:
 
 ```swift
 let numberString: String? = "42"
@@ -367,7 +519,12 @@ let mapped = numberString.map { Int($0) }       // Int?? → Optional(Optional(4
 let flatMapped = numberString.flatMap { Int($0) } // Int? → Optional(42) — flattened, correct
 ```
 
-This is the key rule: use `map` when your closure returns a plain value; use `flatMap` when your closure itself returns an optional.
+**The rule:**
+
+| Closure returns | Use |
+|---|---|
+| A plain value (`Int`, `String`) | `map` |
+| An optional (`Int?`, `URL?`) | `flatMap` |
 
 ```swift
 struct User { let profileImageURLString: String? }
@@ -376,11 +533,20 @@ let user = User(profileImageURLString: "https://example.com/pic.png")
 let url = user.profileImageURLString.flatMap { URL(string: $0) }   // URL?, not URL??
 ```
 
+The same thing written with `if let`, for comparison:
+
+```swift
+var url2: URL? = nil
+if let string = user.profileImageURLString {
+    url2 = URL(string: string)
+}
+```
+
 ---
 
-## 4.11 Nested Optionals and How to Flatten Them
+## 4.11 Nested Optionals and How to Flatten Them 🔴
 
-A nested optional (`Int??`, an "optional optional") most often shows up from double-wrapping — for example, subscripting a dictionary of optional values, or applying `map` where `flatMap` was needed (as just shown in 4.10).
+A **nested optional** (`Int??`, an "optional of an optional") usually comes from **double wrapping**. Two common causes: reading a dictionary whose **values are optional**, or using `map` where `flatMap` was needed (4.10).
 
 ```swift
 let dict: [String: Int?] = ["score": nil]   // values are themselves optional
@@ -389,9 +555,19 @@ let nested = dict["score"]       // Int?? — outer optional from the subscript,
 print(nested)                     // Optional(nil) — a value exists (the key is present)... and it's nil
 ```
 
-`Optional(nil)` versus plain `nil` is a real, distinguishable state: the outer optional being `.some` while wrapping `.none` means "the key exists, but the value stored is nil" — different from the key not existing at all, where the subscript would produce a plain `nil` outer optional.
+`Optional(nil)` and plain `nil` are **different states**:
 
-Flatten a nested optional using `flatMap` with an identity closure, or double unwrapping:
+| `dict[key]` gives | Meaning |
+|---|---|
+| `nil` (outer) | The key does **not exist** |
+| `Optional(nil)` | The key **exists**, but its stored value is `nil` |
+| `Optional(Optional(5))` | The key exists, and the value is 5 |
+
+```swift
+let other = dict["missing"]   // nil — no such key at all
+```
+
+Flatten it with `flatMap { $0 }`, or unwrap twice:
 
 ```swift
 let flattened = nested.flatMap { $0 }   // Int? → nil (collapsed to a single optional level)
@@ -403,13 +579,19 @@ if let outer = dict["score"], let inner = outer {
 }
 ```
 
-In practice, nested optionals are usually a sign to restructure the data model (e.g. avoid `[String: Int?]` in favor of simply omitting the key when there's no value) rather than something you'll flatten routinely — but recognizing `??` (double question mark) types is essential for debugging when they do appear, especially from dictionary subscripts or chained `map` calls.
+`??` can flatten too, when you have a default:
+
+```swift
+let score = (dict["score"] ?? nil) ?? 0   // 0
+```
+
+**In practice**, a nested optional is often a sign to **change the data model**. Instead of `[String: Int?]`, just leave the key out when there's no value. But you must **recognize** `??` types (here: two question marks in the type) when debugging, especially from dictionaries or chained `map` calls.
 
 ---
 
-## 4.12 Optional Comparison and Sorting Pitfalls
+## 4.12 Optional Comparison and Sorting Pitfalls 🟡
 
-Optionals of a `Comparable` type support `==` directly, comparing the wrapped values (and treating `nil == nil` as `true`):
+Optionals of an `Equatable` type support **`==`**. Two `nil`s are equal:
 
 ```swift
 let a: Int? = 5
@@ -422,14 +604,21 @@ print(c == d)   // true — nil equals nil
 print(a == c)   // false
 ```
 
-The pitfall is with `<`, `>`, and `sorted()`: optionals are **not** `Comparable` by default, because there's no universally correct answer for whether `nil` sorts before or after a real value.
+You can even compare an optional with a plain value:
+
+```swift
+let selectedID: Int? = 3
+if selectedID == 3 { print("Item 3 is selected") }
+```
+
+**The trap is ordering:** `<`, `>`, and `sorted()`. Optionals are **not `Comparable`**, because there is no single right answer for whether `nil` goes **before or after** real values:
 
 ```swift
 let scores: [Int?] = [3, nil, 1, nil, 2]
-scores.sorted()   // ❌ error: value of optional type 'Int?' must be unwrapped... / no '<' for Int?
+scores.sorted()   // ❌ error: referencing instance method 'sorted()' on 'Sequence' requires that 'Int?' conform to 'Comparable'
 ```
 
-You resolve this by explicitly deciding how `nil` should sort, typically with `sorted(by:)` and a custom comparison that defines nil's position:
+So **you decide** where `nil` goes, with `sorted(by:)`:
 
 ```swift
 let sortedNilsLast = scores.sorted { lhs, rhs in
@@ -442,14 +631,24 @@ let sortedNilsLast = scores.sorted { lhs, rhs in
 print(sortedNilsLast)   // [1, 2, 3, nil, nil]
 ```
 
-A simpler common approach: substitute a sentinel default just for the purposes of sorting, using `??`:
+A shorter way: use a stand-in value **only for sorting**, with `??`:
 
 ```swift
 let sortedWithDefault = scores.sorted { ($0 ?? Int.max) < ($1 ?? Int.max) }
 print(sortedWithDefault)   // [1, 2, 3, nil, nil] — nils pushed to the end via Int.max
 ```
 
-**Key takeaway:** `==` works out of the box for optionals, but ordering comparisons require you to explicitly decide where `nil` belongs — Swift refuses to guess.
+A real example: tasks without a due date go last:
+
+```swift
+struct TodoItem { let title: String; let dueDate: Date? }
+
+let ordered = todos.sorted {
+    ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture)
+}
+```
+
+**Key takeaway:** `==` just works for optionals. For ordering, **you** must decide where `nil` belongs. Swift refuses to guess.
 
 ---
 
@@ -457,15 +656,15 @@ print(sortedWithDefault)   // [1, 2, 3, nil, nil] — nils pushed to the end via
 
 | Topic | One-line takeaway |
 |---|---|
-| What `nil` means | Only optional types (`T?`) can hold `nil`; enforced at compile time |
-| Declaring/unwrapping | Can't use an optional as its wrapped type without unwrapping first |
-| `if let` | Safely unwraps into a scoped binding; shorthand `if let name` shadows the name |
-| `guard let` | Unwraps with a mandatory early-exit `else`; bindings live for the rest of the scope |
-| Optional chaining `?.` | Short-circuits to `nil` the instant any link in the chain is `nil` |
-| Nil-coalescing `??` | Provides a default; short-circuits, so the right side isn't evaluated needlessly |
-| Force unwrap `!` | Crashes immediately if `nil` — use only with a genuine structural guarantee |
-| Implicitly unwrapped optionals | Recognize `!`-declared types in legacy/UIKit code; don't write new ones |
-| Optional patterns in `switch` | `case let x?` / `case nil` match directly, combine with tuples and `where` |
-| `map`/`flatMap` on optionals | `map` for plain-value closures, `flatMap` when the closure itself returns optional |
-| Nested optionals | `T??` usually comes from dictionary subscripts or a misused `map`; flatten with `flatMap { $0 }` |
-| Optional comparison | `==` works by default; `<`/`sorted()` require you to define where `nil` belongs |
+| What `nil` means | Only optional types (`T?`) can be `nil`; checked at compile time |
+| Declaring/unwrapping | You must unwrap an optional before using its value |
+| `if let` | Unwraps for one block; `if let name` reuses the name |
+| `guard let` | Unwraps or leaves early; the value stays usable afterwards |
+| Optional chaining `?.` | One `nil` anywhere makes the whole result `nil` |
+| Nil-coalescing `??` | A default value; the right side runs only if needed |
+| Force unwrap `!` | Crashes on `nil`; only with a real guarantee |
+| Implicitly unwrapped optionals | Recognize them in UIKit code; don't write new ones |
+| Optional patterns in `switch` | `case let x?` and `case nil`; also `for case let x?` |
+| `map`/`flatMap` on optionals | `map` for plain results; `flatMap` when the closure returns an optional |
+| Nested optionals | `T??` often comes from dictionaries of optionals; flatten with `flatMap { $0 }` |
+| Optional comparison | `==` works; for sorting, you decide where `nil` goes |

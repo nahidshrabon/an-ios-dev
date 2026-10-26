@@ -55,7 +55,7 @@ export const articles: Article[] = [
     slug: "optionals",
     title: "Optionals",
     description:
-      "Swift's answer to the billion-dollar mistake of null references: optionals as a first-class part of the type system, every way to safely unwrap them, and the pitfalls of forcing your way past that safety.",
+      "How Swift handles missing values safely: optionals, if let and guard let, optional chaining, ??, why force unwrapping crashes, implicitly unwrapped optionals, optional patterns, map and flatMap, nested optionals, and sorting with nil.",
     tags: ["swift", "optionals"],
     publishedAt: "2026-08-02",
     get content() {
