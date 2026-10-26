@@ -748,7 +748,7 @@ export const articles: Article[] = [
     slug: "ui-testing",
     title: "UI Testing",
     description:
-      "XCUITest setup and recording, element queries and predicates, accessibility identifiers as stable selectors, waiting strategies, handling system permission dialogs, launch arguments for test-only state, the page object pattern, diagnosing flaky UI tests, the accessibility audit API, and screenshots in test reports.",
+      "Testing the app like a user with XCUITest: queries and stable identifiers, waiting instead of sleeping, system alerts, launch arguments for clean test state, page objects, fixing flaky tests, accessibility audits, and screenshots and videos in reports.",
     tags: ["testing", "xcuitest", "ui-testing"],
     publishedAt: "2026-08-16",
     get content() {
