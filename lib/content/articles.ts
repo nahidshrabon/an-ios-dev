@@ -253,7 +253,7 @@ export const articles: Article[] = [
     slug: "legacy-concurrency",
     title: "Legacy Concurrency",
     description:
-      "The concurrency tools that predate Swift Concurrency — GCD, locks, OperationQueue, and Combine — which you'll still regularly encounter in existing codebases, third-party libraries, and Apple documentation.",
+      "The tools before Swift concurrency that you'll still meet in real code: GCD queues and QoS, DispatchGroup, OperationQueue, locks, deadlocks, and Combine, plus how to migrate each one to async/await.",
     tags: ["swift","concurrency","gcd","combine"],
     publishedAt: "2026-08-08",
     get content() {
