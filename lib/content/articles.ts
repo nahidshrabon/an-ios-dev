@@ -275,7 +275,7 @@ export const articles: Article[] = [
     slug: "layout",
     title: "Layout",
     description:
-      "SwiftUI's layout system: the three basic stacks, spacing and alignment, .frame() and .padding(), the parent-proposes/child-decides negotiation model underlying all of it, shapes and clipping, safe areas, and GeometryReader.",
+      "How SwiftUI layout works: stacks, spacers, alignment, padding and frames, the parent-proposes/child-decides rule behind all of it, shapes and clipping, safe areas, ViewThatFits, GeometryReader, and its newer alternatives.",
     tags: ["swiftui","layout"],
     publishedAt: "2026-08-08",
     get content() {
