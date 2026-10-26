@@ -1,161 +1,433 @@
-## 63.1 Why and When to Reach for Metal
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Metal provides direct, low-level access to the GPU — appropriate when an app's graphics or compute needs genuinely exceed what higher-level frameworks (SwiftUI's `Canvas`, Core Animation, Core Image, or even RealityKit, covered in section 64) can provide, such as a custom game engine, a highly specialized rendering technique, or GPU-accelerated general computation beyond image filtering.
+**Metal** is Apple's **low-level GPU** API. Everything visual on Apple platforms (SwiftUI, Core Animation, Core Image, RealityKit) ends up as Metal work. This section shows when to use Metal **directly**, the core objects, a complete "hello triangle", the **Metal Shading Language**, **compute** shaders, ready-made **MPS** kernels, **MetalFX** upscaling, and the GPU **debugging** tools.
+
+---
+
+## 63.1 Why and When to Reach for Metal 🟢
+
+Metal gives you **full control** of the GPU. That also means **you** do the work the higher-level frameworks normally do for you. So first check if a higher level fits:
+
+| Need | Try first |
+|---|---|
+| Custom 2D drawing in a view | SwiftUI `Canvas`, `Shape` (30.1, 30.5) |
+| A per-pixel effect on a **view** | SwiftUI **shaders**: `.colorEffect`, `.layerEffect` (30.9) — these **are** Metal, in a small form |
+| Photo filters | **Core Image** (62.10) |
+| 3D scenes, AR, visionOS | **RealityKit** (64) |
+| Machine-learning models | **Core ML** (59) |
+
+Reach for Metal **directly** when:
+
+- you build a **game engine** or a custom **renderer** (your own lighting, particles, terrain),
+- you need **GPU compute** for big parallel number crunching (simulations, signal processing, custom ML layers),
+- you need a rendering technique the higher-level frameworks **can't** express,
+- you're **porting** an existing engine or GPU code from another platform.
+
+| | Higher-level frameworks | Metal |
+|---|---|---|
+| Control | Limited to what they offer | **Total** |
+| Work for you | Memory, sync, pipeline setup are **handled** | **You** manage them |
+| Bugs | Rare and visible | Can be **subtle** (a black screen, a GPU hang) |
+
+Metal is the right tool when the automation of the higher-level frameworks is **what stands in the way**. Otherwise, it's a lot of extra code.
+
+---
+
+## 63.2 Devices, Command Queues, and Buffers 🟢
+
+Three objects are the base of all Metal work:
+
+| Object | Represents | How many |
+|---|---|---|
+| **`MTLDevice`** | The **GPU** | **One**, for the whole app |
+| **`MTLCommandQueue`** | A line where you **submit** work to the GPU | Usually **one**, reused |
+| **`MTLBuffer`** | A block of **memory** the GPU can read and write | As many as your data needs |
 
 ```swift
 import Metal
 
-// Metal is appropriate when higher-level frameworks genuinely can't meet the need:
-// - Custom game rendering with full control over the graphics pipeline
-// - GPU compute for large-scale parallel numerical work (beyond Core Image's filter model)
-// - Specialized rendering techniques not expressible through Core Animation/Core Image
-```
+final class GPU {
+    let device: MTLDevice
+    let commandQueue: MTLCommandQueue
 
-Reaching for Metal directly is a meaningful escalation in both power and responsibility compared to every higher-level graphics framework covered elsewhere in this curriculum (Core Animation's layer tree, section 62; Core Image's filter graph, section 62.10; RealityKit's entity-component model, section 64.1) — Metal provides essentially complete control over the GPU, but also requires the developer to correctly handle far more of what those higher-level frameworks otherwise manage automatically, making it the right choice specifically when that higher-level automation is what's actually standing in the way of a genuine requirement.
+    init() {
+        guard let device = MTLCreateSystemDefaultDevice(),        // the GPU
+              let queue = device.makeCommandQueue() else {         // create ONCE, reuse
+            fatalError("Metal isn't available")
+        }
+        self.device = device
+        self.commandQueue = queue
+    }
 
----
-
-## 63.2 Devices, Command Queues, and Buffers
-
-`MTLDevice` represents the actual GPU hardware, `MTLCommandQueue` schedules work for that device to execute, and `MTLBuffer` holds data (vertex data, uniforms, compute input/output) accessible to GPU code — the foundational objects underlying essentially all Metal work.
-
-```swift
-guard let device = MTLCreateSystemDefaultDevice() else {
-    fatalError("Metal is not supported on this device")
-}
-let commandQueue = device.makeCommandQueue()!
-
-let vertexData: [Float] = [0, 1, 0, -1, -1, 0, 1, -1, 0]
-let buffer = device.makeBuffer(bytes: vertexData, length: vertexData.count * MemoryLayout<Float>.size, options: [])
-```
-
-This trio of core objects establishes Metal's fundamental execution model — a `MTLDevice` is typically created once per app (the GPU itself doesn't change during a session), a `MTLCommandQueue` is created once and reused to submit work over the app's lifetime, and `MTLBuffer` instances are created as needed to hold the actual data the GPU will read from or write to, forming the basic building blocks every subsequent Metal concept (render pipelines, shaders, compute) is built on top of.
-
----
-
-## 63.3 Your First Render Pipeline
-
-A Metal render pipeline (`MTLRenderPipelineState`) describes the complete configuration for a drawing operation — which vertex and fragment shader functions to use, pixel format, and other fixed-function state — compiled once and reused across many actual draw calls for efficiency.
-
-```swift
-func buildPipeline(device: MTLDevice, library: MTLLibrary) throws -> MTLRenderPipelineState {
-    let descriptor = MTLRenderPipelineDescriptor()
-    descriptor.vertexFunction = library.makeFunction(name: "vertexShader")
-    descriptor.fragmentFunction = library.makeFunction(name: "fragmentShader")
-    descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-    return try device.makeRenderPipelineState(descriptor: descriptor)
+    func makeVertexBuffer() -> MTLBuffer? {
+        let vertices: [SIMD2<Float>] = [[0, 0.8], [-0.8, -0.8], [0.8, -0.8]]   // a triangle
+        return device.makeBuffer(bytes: vertices,
+                                 length: MemoryLayout<SIMD2<Float>>.stride * vertices.count,
+                                 options: .storageModeShared)                 // CPU and GPU share it
+    }
 }
 ```
 
-Compiling a `MTLRenderPipelineState` is a genuinely expensive operation relative to the cost of actually using it to draw — the pipeline state should be built once (typically at setup time) and reused across every subsequent frame's draw calls, rather than rebuilt per-frame, mirroring a similar "pay the setup cost once, reuse repeatedly" principle seen elsewhere in this curriculum, like `AVAssetExportSession`'s presets (section 55.12) being configured once rather than reconstructed for every export.
+How work flows, every frame:
+
+```
+CommandQueue ──► makeCommandBuffer()           (one "package" of GPU work)
+                    └─► makeRenderCommandEncoder / makeComputeCommandEncoder
+                           set pipeline, set buffers, draw / dispatch
+                           endEncoding()
+                 commit() ──► the GPU runs it, in order
+```
+
+On Apple silicon, the CPU and GPU share the **same memory** (unified memory), so a `.storageModeShared` buffer needs **no copying**. Use `MemoryLayout<T>.stride` (not `.size`) for array lengths: it includes **padding**.
 
 ---
 
-## 63.4 Metal Shading Language Basics
+## 63.3 Your First Render Pipeline 🟡
 
-Metal Shading Language (MSL) is a C++-based language for writing GPU shader and compute code, compiled either at build time or (less commonly) at runtime into a `MTLLibrary` containing the actual GPU-executable functions a render or compute pipeline references by name.
+A **render pipeline state** bundles everything **fixed** about a draw: which **shaders** to run (63.4) and the **pixel format** of the target. Building it **compiles** shaders for the GPU, which is **slow**, so build it **once** at setup:
+
+```swift
+import MetalKit
+
+final class TriangleRenderer: NSObject, MTKViewDelegate {
+    private let commandQueue: MTLCommandQueue
+    private let pipeline: MTLRenderPipelineState
+    private let vertexBuffer: MTLBuffer
+
+    init?(view: MTKView) {
+        guard let device = view.device,
+              let queue = device.makeCommandQueue(),
+              let library = device.makeDefaultLibrary() else { return nil }   // all .metal files in the app
+
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = library.makeFunction(name: "vertexShader")
+        descriptor.fragmentFunction = library.makeFunction(name: "fragmentShader")
+        descriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat     // must match the target
+
+        let vertices: [SIMD2<Float>] = [[0, 0.8], [-0.8, -0.8], [0.8, -0.8]]
+        guard let pipeline = try? device.makeRenderPipelineState(descriptor: descriptor),  // SLOW: once!
+              let buffer = device.makeBuffer(bytes: vertices,
+                                             length: MemoryLayout<SIMD2<Float>>.stride * vertices.count,
+                                             options: .storageModeShared) else { return nil }
+
+        self.commandQueue = queue
+        self.pipeline = pipeline
+        self.vertexBuffer = buffer
+        super.init()
+    }
+
+    // Called every frame
+    func draw(in view: MTKView) {
+        guard let passDescriptor = view.currentRenderPassDescriptor,           // where to draw
+              let drawable = view.currentDrawable,
+              let commandBuffer = commandQueue.makeCommandBuffer(),
+              let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor)
+        else { return }
+
+        encoder.setRenderPipelineState(pipeline)                                // FAST: reuse
+        encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)              // → [[buffer(0)]]
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        encoder.endEncoding()
+
+        commandBuffer.present(drawable)                                         // show when done
+        commandBuffer.commit()
+    }
+
+    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
+}
+```
+
+Show it in SwiftUI with a small `UIViewRepresentable` (38.1):
+
+```swift
+struct MetalTriangleView: UIViewRepresentable {
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> MTKView {
+        let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
+        view.clearColor = MTLClearColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1)
+        context.coordinator.renderer = TriangleRenderer(view: view)
+        view.delegate = context.coordinator.renderer                 // the view keeps it weakly
+        return view
+    }
+
+    func updateUIView(_ view: MTKView, context: Context) {}
+
+    final class Coordinator { var renderer: TriangleRenderer? }      // keeps the renderer alive
+}
+```
+
+| Cost | Object | When |
+|---|---|---|
+| **Expensive** | `MTLDevice`, `MTLCommandQueue`, `MTLRenderPipelineState`, `MTLLibrary` | Create **once**, at setup |
+| **Cheap** | Command buffers, encoders | Create **every frame** |
+
+It's the same "pay setup once, reuse many times" rule as a shared `CIContext` (62.10).
+
+---
+
+## 63.4 Metal Shading Language Basics 🟡
+
+GPU code is written in **Metal Shading Language** (MSL), in `.metal` files. MSL is based on **C++**, with extra **types** (`float2`, `float4`, `float4x4`) and **attributes** in `[[double brackets]]` that connect data between the CPU and GPU. Xcode compiles `.metal` files at **build time** into the app's **default library**.
 
 ```cpp
-// MSL, typically in a .metal file compiled as part of the Xcode build:
+// Shaders.metal
 #include <metal_stdlib>
 using namespace metal;
 
 struct VertexOut {
-    float4 position [[position]];
-    float4 color;
+    float4 position [[position]];   // REQUIRED: where this vertex lands on screen
+    float4 color;                   // extra data, interpolated for the fragment shader (63.5)
 };
 
-vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
-                                constant float3 *vertices [[buffer(0)]]) {
+vertex VertexOut vertexShader(uint vertexID [[vertex_id]],                  // which vertex: 0, 1, 2
+                              constant float2 *positions [[buffer(0)]]) {   // setVertexBuffer(index: 0)
     VertexOut out;
-    out.position = float4(vertices[vertexID], 1.0);
-    out.color = float4(1.0, 0.0, 0.0, 1.0);
+    out.position = float4(positions[vertexID], 0.0, 1.0);
+
+    // A different color for each corner
+    float3 colors[3] = { float3(1, 0.4, 0), float3(1, 0.8, 0), float3(0.9, 0.1, 0.2) };
+    out.color = float4(colors[vertexID], 1.0);
     return out;
 }
 ```
 
-MSL's C++ foundation, combined with attribute annotations like `[[position]]`, `[[vertex_id]]`, and `[[buffer(0)]]`, explicitly declares how data flows between the CPU-side Swift code (which buffers get bound where) and the GPU-side shader function — this explicit, attribute-driven binding is meaningfully more low-level and manual than, say, `@Generable`'s implicit structural binding in Foundation Models (section 58.7), reflecting Metal's position at the opposite end of the abstraction spectrum from high-level, declarative frameworks.
+| Attribute | Meaning |
+|---|---|
+| `[[position]]` | The output **screen position** of a vertex |
+| `[[vertex_id]]` | The **index** of the current vertex |
+| `[[buffer(n)]]` | The buffer bound at **index n** from Swift |
+| `[[stage_in]]` | Interpolated data from the previous stage (63.5) |
+| `[[thread_position_in_grid]]` | This thread's index in a compute grid (63.6) |
+
+Address spaces tell the GPU how memory is used:
+
+| Keyword | Memory |
+|---|---|
+| `constant` | **Read-only** data, same for all threads (fast) |
+| `device` | **Read-write** GPU memory |
+| `thread` | Private to one thread (local variables) |
+| `threadgroup` | Shared between threads of a group (63.6) |
+
+Everything is **explicit**: you decide which buffer goes to which index, in both Swift and MSL. If the indices or the **memory layout** don't match (`SIMD2<Float>` in Swift ↔ `float2` in MSL), you get garbage, not an error. Many teams keep shared structs in a **C header** imported by both sides, so they can't drift apart.
 
 ---
 
-## 63.5 Vertex and Fragment Shaders
+## 63.5 Vertex and Fragment Shaders 🟡
 
-The graphics pipeline's two primary programmable stages are the vertex shader (runs once per vertex, transforming vertex positions and computing per-vertex data like color or texture coordinates) and the fragment shader (runs once per pixel/fragment, computing the final color to be written to the screen).
+The render pipeline has two **programmable** stages:
+
+```
+vertices ──► VERTEX SHADER ──► (GPU builds triangles, finds covered pixels) ──► FRAGMENT SHADER ──► pixels
+             once per vertex        rasterization + interpolation                 once per pixel
+             "where is it?"                                                       "what color?"
+```
+
+| Stage | Runs | Job |
+|---|---|---|
+| **Vertex shader** | Once per **vertex** | Compute the **position** (apply camera and model transforms), pass data along |
+| **Fragment shader** | Once per **pixel** covered | Compute the final **color** (lighting, textures) |
+
+The fragment shader for our triangle:
 
 ```cpp
 fragment float4 fragmentShader(VertexOut in [[stage_in]]) {
-    return in.color;  // simplest possible fragment shader: just output the interpolated color
+    return in.color;     // already interpolated across the triangle
 }
 ```
 
-The `[[stage_in]]` attribute signals that this fragment shader receives its input via automatic interpolation of the vertex shader's per-vertex outputs across each triangle's surface — a vertex shader might set a different color at each of a triangle's three corners, and the GPU automatically interpolates that color smoothly across the triangle's interior before the fragment shader runs for each covered pixel, which is precisely how smooth color gradients across a triangle's surface are achieved without any explicit interpolation code in the fragment shader itself.
+**`[[stage_in]]`** means "the vertex outputs, **interpolated**". Our vertex shader set **orange**, **yellow**, and **red** at the three corners. For a pixel in the middle, the GPU **blends** the three colors by distance. So you get a smooth **gradient** with no blending code at all.
 
----
-
-## 63.6 Compute Shaders
-
-Beyond the graphics-specific vertex/fragment pipeline, Metal compute shaders (`MTLComputePipelineState`, kernel functions) provide general-purpose GPU computation — massively parallel numerical work not tied to rendering a triangle to the screen, appropriate for tasks like image processing, physics simulation, or any problem naturally expressible as many independent, parallel operations.
+A slightly richer fragment shader, sampling a **texture**:
 
 ```cpp
-kernel void doubleValues(device float *data [[buffer(0)]],
-                          uint index [[thread_position_in_grid]]) {
-    data[index] = data[index] * 2.0;
+struct TexturedVertexOut {
+    float4 position [[position]];
+    float2 uv;                        // texture coordinate, 0...1
+};
+
+fragment float4 texturedFragment(TexturedVertexOut in [[stage_in]],
+                                 texture2d<float> photo [[texture(0)]]) {
+    constexpr sampler linearSampler(filter::linear);
+    float4 color = photo.sample(linearSampler, in.uv);
+    return float4(color.rgb * 0.9, color.a);    // a little darker
 }
 ```
 
-Compute shaders reflect a genuinely different execution model than the vertex/fragment pipeline — rather than being tied to rendering geometry, a compute kernel is dispatched across a grid of threads (each identified by `thread_position_in_grid`), with each thread independently processing its own slice of the data, making compute shaders appropriate for problems that are fundamentally about parallel data processing rather than drawing pixels, a distinction worth keeping clear when deciding which pipeline type a given GPU task actually needs.
+On Apple GPUs, fragment work is usually the **most expensive** part: a full-screen pass on a 120 Hz iPad Pro runs the fragment shader for millions of pixels, 120 times a second. Keep fragment shaders **simple**.
 
 ---
 
-## 63.7 Metal Performance Shaders
+## 63.6 Compute Shaders 🔴
 
-Metal Performance Shaders (MPS) provides a library of pre-built, highly optimized GPU kernels for common operations — image processing (blur, resize, convolution), matrix operations, and neural network primitives — sparing developers from hand-writing and tuning their own MSL kernels for these frequently-needed operations.
+**Compute shaders** use the GPU for **general** work, not drawing. You launch a **grid** of threads; each thread handles **one piece** of the data, all in **parallel**:
+
+```cpp
+// Compute.metal
+kernel void scaleValues(device float *values      [[buffer(0)]],
+                        constant float &factor    [[buffer(1)]],
+                        constant uint &count      [[buffer(2)]],
+                        uint index [[thread_position_in_grid]]) {   // which element am I?
+    if (index >= count) return;                                     // stay inside the array
+    values[index] *= factor;
+}
+```
+
+Run it from Swift:
+
+```swift
+func scaleOnGPU(_ input: [Float], by factor: Float, gpu: GPU) throws -> [Float] {
+    let library = gpu.device.makeDefaultLibrary()!
+    let function = library.makeFunction(name: "scaleValues")!
+    let pipeline = try gpu.device.makeComputePipelineState(function: function)   // build once in real code
+
+    var factor = factor
+    var count = UInt32(input.count)
+    let buffer = gpu.device.makeBuffer(bytes: input,
+                                       length: MemoryLayout<Float>.stride * input.count,
+                                       options: .storageModeShared)!
+
+    let commandBuffer = gpu.commandQueue.makeCommandBuffer()!
+    let encoder = commandBuffer.makeComputeCommandEncoder()!
+    encoder.setComputePipelineState(pipeline)
+    encoder.setBuffer(buffer, offset: 0, index: 0)
+    encoder.setBytes(&factor, length: MemoryLayout<Float>.stride, index: 1)   // small values: setBytes
+    encoder.setBytes(&count, length: MemoryLayout<UInt32>.stride, index: 2)
+
+    let threadsPerGroup = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
+    encoder.dispatchThreads(MTLSize(width: input.count, height: 1, depth: 1),  // one thread per value
+                            threadsPerThreadgroup: threadsPerGroup)
+    encoder.endEncoding()
+
+    commandBuffer.commit()
+    commandBuffer.waitUntilCompleted()             // OK off the main thread; never block main on the GPU
+
+    let result = buffer.contents().bindMemory(to: Float.self, capacity: input.count)
+    return Array(UnsafeBufferPointer(start: result, count: input.count))
+}
+```
+
+| | Render pipeline | Compute pipeline |
+|---|---|---|
+| Input | **Vertices** | Any **data** (buffers, textures) |
+| Unit of work | A **vertex**, then a **pixel** | A **thread** in a grid you choose |
+| Output | **Pixels** on a render target | Whatever you **write** to buffers or textures |
+| Example | Drawing a 3D scene | Physics, image analysis, audio FFT, particles |
+
+Compute is worth it for **large**, **independent** work: thousands to millions of elements. For 100 numbers, the setup costs more than it saves; the CPU (or Accelerate's vectorized functions) is faster.
+
+Threads in the same **threadgroup** can share fast `threadgroup` memory and **synchronize**. That's how advanced kernels (blurs, reductions, sorting) get their speed.
+
+---
+
+## 63.7 Metal Performance Shaders 🟡
+
+**Metal Performance Shaders (MPS)** is a library of **ready-made**, highly tuned GPU kernels: blurs, resizing, convolution, histograms, matrix math, and neural-network building blocks. Apple tunes them for **each GPU family**, so they're usually faster than code you write yourself.
 
 ```swift
 import MetalPerformanceShaders
 
-func applyGaussianBlur(to texture: MTLTexture, device: MTLDevice, commandBuffer: MTLCommandBuffer) -> MTLTexture {
-    let blur = MPSImageGaussianBlur(device: device, sigma: 4.0)
-    let outputTexture = /* allocate output texture matching input dimensions */ texture
-    blur.encode(commandBuffer: commandBuffer, sourceTexture: texture, destinationTexture: outputTexture)
-    return outputTexture
+func blurred(_ source: MTLTexture, sigma: Float, gpu: GPU) -> MTLTexture? {
+    // The output must be a SEPARATE texture with the same size and format
+    let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+        pixelFormat: source.pixelFormat,
+        width: source.width,
+        height: source.height,
+        mipmapped: false
+    )
+    descriptor.usage = [.shaderRead, .shaderWrite]
+    guard let output = gpu.device.makeTexture(descriptor: descriptor),
+          let commandBuffer = gpu.commandQueue.makeCommandBuffer() else { return nil }
+
+    let blur = MPSImageGaussianBlur(device: gpu.device, sigma: sigma)     // create once in real code
+    blur.encode(commandBuffer: commandBuffer, sourceTexture: source, destinationTexture: output)
+
+    commandBuffer.commit()
+    return output                                    // ready when the command buffer completes
 }
 ```
 
-MPS's relationship to raw Metal programming parallels Core ML's relationship to raw neural network implementation (recall section 59) — in both cases, a higher-level, pre-optimized library handles the substantial engineering effort of correctly and efficiently implementing a common operation, letting a developer reach for a well-tested, already-tuned kernel (like Gaussian blur) rather than writing and tuning custom MSL from scratch for functionality that's already been solved well.
+MPS kernels **encode into your command buffer**, next to your own shaders, so you can mix them: render a scene → MPS blur → your custom color-grading kernel, all in **one** submission.
+
+| Library | Gives you |
+|---|---|
+| **MPS** image kernels | Blur, Sobel edges, resampling, morphology, histogram |
+| **MPS** matrix kernels | Fast matrix multiply and linear algebra |
+| **MPSGraph** | A whole graph of ML/tensor operations, compiled for the GPU |
+
+It's the same idea as Core ML (59) relative to writing neural networks by hand: use the **well-tested, tuned** version of a common operation, and spend your own effort on what's **unique** to your app. (Core ML itself runs on Metal and MPS when it uses the GPU.)
 
 ---
 
-## 63.8 MetalFX Upscaling
+## 63.8 MetalFX Upscaling 🔴
 
-MetalFX provides GPU-accelerated upscaling (`MTLFXSpatialScaler`, `MTLFXTemporalScaler`) — rendering a scene at a lower internal resolution for better performance, then intelligently upscaling to the target display resolution, trading a controlled amount of image quality for a meaningful performance gain, particularly valuable for demanding real-time rendering like games.
+**MetalFX** lets a game **render at a lower resolution**, then **upscale** smartly to the screen's resolution. Fewer pixels to shade (63.5) means a **higher frame rate**, with only a small loss in sharpness.
+
+```
+Render at 1280 × 720 (fast)  ──► MetalFX upscaler ──► show at 2560 × 1440
+          4× fewer pixels to shade                    looks close to native
+```
+
+| Scaler | Input | Quality |
+|---|---|---|
+| **`MTLFXSpatialScaler`** | Just the **color** image of this frame | Good; simple to add |
+| **`MTLFXTemporalScaler`** | Color + **depth** + **motion vectors**, using **previous** frames too | **Better**; needs more engine work |
 
 ```swift
-let scalerDescriptor = MTLFXSpatialScalerDescriptor()
-scalerDescriptor.inputWidth = 960
-scalerDescriptor.inputHeight = 540
-scalerDescriptor.outputWidth = 1920
-scalerDescriptor.outputHeight = 1080
-scalerDescriptor.colorTextureFormat = .bgra8Unorm
-let scaler = scalerDescriptor.makeSpatialScaler(device: device)
+import MetalFX
+
+func makeUpscaler(device: MTLDevice) -> MTLFXSpatialScaler? {
+    let descriptor = MTLFXSpatialScalerDescriptor()
+    descriptor.inputWidth = 1280
+    descriptor.inputHeight = 720
+    descriptor.outputWidth = 2560
+    descriptor.outputHeight = 1440
+    descriptor.colorTextureFormat = .bgra8Unorm
+    descriptor.outputTextureFormat = .bgra8Unorm
+    descriptor.colorProcessingMode = .perceptual
+    return descriptor.makeSpatialScaler(device: device)          // create once
+}
+
+// Every frame, after rendering the low-resolution scene:
+upscaler.colorTexture = lowResolutionSceneTexture
+upscaler.outputTexture = fullResolutionTexture
+upscaler.encode(commandBuffer: commandBuffer)
 ```
 
-This performance/quality trade-off directly parallels the quantization/palettization trade-off discussed for Core ML models (section 59.5) — just as compressing a model's weights trades some prediction accuracy for meaningfully reduced size, rendering at a lower internal resolution and upscaling trades some image fidelity for meaningfully improved frame rate, with MetalFX's intelligent upscaling algorithms specifically designed to minimize the perceptible quality cost relative to naive, simple upscaling approaches.
+It's a **quality vs. performance** trade-off, like **quantizing** a Core ML model (59.5): give up a little fidelity, gain a lot of speed. Newer OS versions add more MetalFX features (such as frame interpolation); ⚠️ check the documentation for what your target OS supports.
 
 ---
 
-## 63.9 Profiling with the Metal Debugger
+## 63.9 Profiling with the Metal Debugger 🟡
 
-Xcode's Metal debugger (accessed via the GPU frame capture tool) lets a developer step through an individual captured frame's actual GPU commands, inspect resource bindings, and visualize performance bottlenecks — the Metal-specific analog to Instruments' Core Animation instrument (section 62.7) for diagnosing rendering performance.
+GPU bugs and slowdowns are hard to find by **reading code**. Xcode's GPU tools show what **really** happened on the GPU.
 
-```plaintext
-// Not a Swift API — accessed via Xcode's GPU frame capture button during a debug session:
-// Capturing a frame reveals the actual sequence of draw calls, resource bindings,
-// and per-stage GPU timing for that specific frame, letting a developer pinpoint
-// exactly which draw call or shader stage is consuming the most GPU time.
+**Capture a frame**: while debugging, click the **Metal capture** button (the "M" icon) in the debug bar. Xcode records **one frame** of GPU work, and you can:
+
+- step through **every** command buffer, encoder, and **draw call**, in order,
+- inspect every **buffer** and **texture** bound to a draw (see the actual data and images),
+- see **GPU time** per draw and per shader, and which shader lines are **hot**,
+- **debug a shader**: pick a pixel or vertex and step through the shader code, with variable values,
+- view **dependencies** between passes.
+
+More tools:
+
+| Tool | Use for |
+|---|---|
+| **Metal API Validation** (scheme ▸ Diagnostics) | Catches wrong API use: bad indices, wrong formats. **Keep it on** while developing |
+| **Shader Validation** | Catches out-of-bounds memory access **inside** shaders |
+| **Metal Performance HUD** (`MTL_HUD_ENABLED=1`) | Live FPS, GPU time, and memory overlay |
+| **Instruments ▸ Metal System Trace** | CPU and GPU **timelines** together: who is waiting for whom |
+
+```
+Typical investigation:
+1. HUD shows 45 FPS instead of 60 → is it the CPU or the GPU?
+2. Metal System Trace: the GPU is busy the whole frame → GPU-bound
+3. Frame capture: one fragment shader takes 70% of GPU time
+4. Shader profiler: a texture sample inside a loop is the hot line → fix it
 ```
 
-Frame capture's ability to inspect the *actual* sequence of GPU commands and their measured timing — rather than reasoning about performance purely from source code — mirrors the same "measure, don't guess" principle underlying the Core ML performance report (section 59.7) and the Core Animation instrument (section 62.7): for GPU-bound work specifically, the Metal debugger's frame capture is the authoritative tool for identifying which specific draw call, shader, or resource binding is actually responsible for a given frame's performance cost.
+This is the same "**measure, don't guess**" rule as the Core ML performance report (59.7) and the Animation Hitches instrument (62.7). The capture is the **source of truth** for which draw call or shader actually costs the time.
 
 ---
 
@@ -163,12 +435,12 @@ Frame capture's ability to inspect the *actual* sequence of GPU commands and the
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| When to use Metal | Low-level GPU access | For needs exceeding higher-level graphics frameworks |
-| Foundational objects | `MTLDevice`, `MTLCommandQueue`, `MTLBuffer` | GPU handle, work scheduling, and data storage |
-| Pipeline configuration | `MTLRenderPipelineState` | Compiled once, reused across many draw calls |
-| Shader language | Metal Shading Language (MSL) | C++-based GPU code with explicit CPU/GPU data binding |
-| Per-vertex/per-pixel stages | Vertex and fragment shaders | Geometry transformation and final pixel color computation |
-| General GPU computation | Compute shaders, `MTLComputePipelineState` | Massively parallel, non-rendering-specific work |
-| Pre-built GPU operations | Metal Performance Shaders (MPS) | Optimized kernels for common image/compute operations |
-| Resolution/performance trade-off | MetalFX (`MTLFXSpatialScaler`) | Lower internal render resolution with intelligent upscaling |
-| Frame-level diagnostics | Metal debugger, GPU frame capture | Authoritative, measured GPU performance inspection |
+| When to use Metal | Custom renderers, GPU compute | Only when higher-level frameworks can't do it |
+| Core objects | `MTLDevice`, `MTLCommandQueue`, `MTLBuffer` | The GPU, a work queue, and shared memory |
+| Render pipeline | `MTLRenderPipelineState`, `MTKView` | Build once (slow); draw every frame (fast) |
+| Shader language | MSL, `[[attributes]]`, address spaces | C++-based GPU code with explicit data binding |
+| Vertex and fragment | `vertex`, `fragment`, `[[stage_in]]` | Where things go, then what color each pixel is |
+| Compute | `kernel`, `dispatchThreads`, `thread_position_in_grid` | Parallel work on large data |
+| Ready-made kernels | MPS, MPSGraph | Tuned blur, matrix, and ML operations |
+| Upscaling | MetalFX spatial and temporal scalers | Render fewer pixels, upscale smartly |
+| Debugging | Frame capture, validation, HUD, Metal System Trace | Measure what the GPU really did |

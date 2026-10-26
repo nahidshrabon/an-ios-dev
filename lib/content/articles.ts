@@ -704,7 +704,7 @@ export const articles: Article[] = [
     slug: "metal",
     title: "Metal",
     description:
-      "Apple's low-level GPU programming framework: devices, command queues, and buffers, building a render pipeline, Metal Shading Language basics, vertex and fragment shaders, compute shaders, Metal Performance Shaders, MetalFX upscaling, and profiling with the Metal debugger.",
+      "Apple's low-level GPU API: when to use it, devices, queues, and buffers, a complete render pipeline with MTKView, Metal Shading Language, vertex, fragment, and compute shaders, Metal Performance Shaders, MetalFX upscaling, and GPU debugging.",
     tags: ["graphics", "metal", "gpu"],
     publishedAt: "2026-08-16",
     get content() {
