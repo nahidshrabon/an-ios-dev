@@ -176,7 +176,7 @@ export const articles: Article[] = [
     slug: "low-level-swift",
     title: "Low-Level Swift",
     description:
-      "Unsafe pointer types, newer memory-safe alternatives like Span and InlineArray, custom storage management, and interoperability with C, C++, and Objective-C.",
+      "Swift close to the metal: unsafe pointers, scoped buffer access, safe Span and InlineArray, ContiguousArray, ManagedBuffer, memory rebinding, and calling C, C++, and Objective-C.",
     tags: ["swift","low-level","unsafe"],
     publishedAt: "2026-08-04",
     get content() {
