@@ -220,7 +220,7 @@ export const articles: Article[] = [
     slug: "actors-and-isolation",
     title: "Actors and Isolation",
     description:
-      "Actors — Swift's mechanism for eliminating data races on shared mutable state — reentrancy, global actors and @MainActor, and the newer isolation-control tools that refine how isolation actually behaves.",
+      "Actors, Swift's tool against data races: reentrancy and how to handle it, isolated parameters, @MainActor and its inference, global actors, nonisolated and its variants, @concurrent, main actor by default, custom executors, and isolated conformances.",
     tags: ["swift","concurrency","actors"],
     publishedAt: "2026-08-08",
     get content() {
