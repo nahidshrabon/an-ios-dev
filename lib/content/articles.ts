@@ -22,7 +22,7 @@ export const articles: Article[] = [
     slug: "swift-basics",
     title: "Swift Basics",
     description:
-      "The twelve foundational Swift concepts: variables and constants, type inference, integers and floating point, booleans, strings, tuples, type conversion, and documentation comments.",
+      "The basics of Swift: let and var, type inference, integers and floating point, booleans, strings and string indices, Unicode characters, tuples, type conversion, and comments.",
     tags: ["swift", "basics"],
     publishedAt: "2026-08-02",
     get content() {
