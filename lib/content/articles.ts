@@ -110,7 +110,7 @@ export const articles: Article[] = [
     slug: "error-handling",
     title: "Error Handling",
     description:
-      "Swift's typed, explicit error-handling model: custom error types, throws/try/catch, the difference between try, try?, and try!, and the Result type as an alternative representation.",
+      "Swift's explicit error handling: custom error types, throws and do/catch, try vs. try? vs. try!, rethrows, typed throws, the Result type, organizing errors in layers, and showing safe messages to users.",
     tags: ["swift","error-handling"],
     publishedAt: "2026-08-04",
     get content() {
