@@ -363,7 +363,7 @@ export const articles: Article[] = [
     slug: "liquid-glass-and-modern-design",
     title: "Liquid Glass and Modern Design",
     description:
-      "Apple's modern cross-platform material and design language: .glassEffect() and GlassEffectContainer, glass morphing, where glass is and isn't appropriate, accessibility fallbacks, SF Symbols 7, and building a design token system.",
+      "Apple's Liquid Glass design in SwiftUI: glassEffect and GlassEffectContainer, glass morphing, glass in bars, concentric corners, when not to use glass, accessibility fallbacks, SF Symbols 7, custom symbols, Icon Composer, and design tokens.",
     tags: ["swiftui", "liquid-glass", "design"],
     publishedAt: "2026-08-15",
     get content() {
