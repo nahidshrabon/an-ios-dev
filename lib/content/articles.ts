@@ -66,7 +66,7 @@ export const articles: Article[] = [
     slug: "functions-and-closures",
     title: "Functions and Closures",
     description:
-      "Declaring and calling functions with Swift's label system, the full spectrum of parameter behaviors, and closures — from long-form syntax down to shorthand, including capture semantics and escaping.",
+      "Writing and calling functions with Swift's label system, default, variadic, and inout parameters, and closures from the full form to $0, including trailing closures, capturing, [weak self], escaping, and autoclosures.",
     tags: ["swift", "functions", "closures"],
     publishedAt: "2026-08-02",
     get content() {
