@@ -1,342 +1,709 @@
-## 69.1 Measure Before Optimizing: The Discipline
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-The single most important performance principle, underlying every tool covered in this section, is measuring actual performance data before making optimization changes — intuition about what's "probably slow" is frequently wrong, and optimizing an already-fast piece of code while leaving the genuine bottleneck untouched wastes effort while providing no real user-facing improvement.
-
-```swift
-// The discipline, concretely:
-// 1. Measure actual performance with real tooling (Instruments, MetricKit) — not guesswork
-// 2. Identify the genuine bottleneck from that data
-// 3. Make a targeted change addressing that specific bottleneck
-// 4. Re-measure to confirm the change actually improved the metric that matters
-```
-
-This measure-first discipline is a recurring theme threaded throughout this curriculum's performance-adjacent material — the Core Animation instrument flagging offscreen rendering (section 62.7), the Core ML performance report (section 59.7), and the Metal debugger's frame capture (section 63.9) all embody this same "measure, don't guess" principle, and this section's tools extend that same discipline to general app-wide performance concerns beyond any single specialized framework.
+Performance work starts with **measuring**, not guessing. This section covers the main **Instruments** tools, custom **signposts**, **launch** time, **scrolling** and frame budgets, ProMotion, **image** costs, **hangs**, **memory** limits, **app size**, real-world data from **MetricKit** and the Organizer, **energy**, and protecting performance with **budgets** in CI.
 
 ---
 
-## 69.2 Instruments: Time Profiler
+## 69.1 Measure Before Optimizing: The Discipline 🟢
 
-The Time Profiler instrument samples an app's call stacks at regular intervals across all threads, building a statistical picture of where CPU time is actually being spent — surfacing the specific functions consuming the most cumulative time, which is the primary tool for diagnosing genuine CPU-bound performance problems.
+**Short answer:** find the **real** bottleneck with a tool **before** changing code.
 
-```swift
-// Not a Swift API — accessed via Instruments' Time Profiler template.
-// The resulting call tree shows, e.g.:
-// - calculateRecommendations(): 42% of sampled time
-//   - sortByRelevance(): 38% of that (a likely optimization target)
+Intuition about "what's slow" is often **wrong**. Developers optimize a sort that takes 2 ms while a synchronous file read takes 400 ms on the line above. The user sees **no** difference, and the code got more complex.
+
+The loop:
+
+```
+1. MEASURE   – record the slow scenario with a tool (Instruments, signposts, MetricKit)
+2. FIND      – identify the biggest cost in the data
+3. CHANGE    – fix THAT one thing, as simply as possible
+4. MEASURE   – same scenario, same device: did the number actually improve?
+   → repeat, or stop when it's fast enough
 ```
 
-Time Profiler's statistical sampling approach (rather than tracing every single function call) is a deliberate design trade-off — sampling introduces comparatively little overhead to the profiled app's actual execution (unlike a full tracing profiler, which can meaningfully slow down the very code being measured), at the cost of statistical rather than perfectly exhaustive accuracy, a trade-off that's generally the right one for identifying genuine hot spots without the profiling process itself distorting the very performance characteristics being measured.
+Rules that make measurements **trustworthy**:
+
+| Rule | Why |
+|---|---|
+| Profile a **Release** build (Product ▸ Profile does this) | Debug builds are unoptimized; their slow spots can be different |
+| Use a **real device**, ideally an **older** one | The Simulator uses your Mac's CPU; users have slower phones |
+| Measure the **same scenario** before and after | Otherwise you're comparing different work |
+| Decide what "**fast enough**" means | Without a goal, optimization never ends |
+
+You've already seen this idea for specific frameworks: offscreen rendering (62.7), Metal frame capture (63.9), the Core ML performance report (59.7). This section applies it to the **whole** app.
 
 ---
 
-## 69.3 Instruments: Allocations
+## 69.2 Instruments: Time Profiler 🟢
 
-The Allocations instrument tracks every memory allocation an app makes over time — object counts by type, allocation/deallocation events, and overall memory growth — appropriate for diagnosing excessive memory usage or understanding an app's actual allocation behavior under real usage patterns.
+**Time Profiler** answers: "**Where does the CPU time go?**" It takes a snapshot of every thread's **call stack** about every millisecond, then counts which functions appear most:
 
-```swift
-// Allocations reveals patterns like:
-// - UIImage instances: 1,200 live, growing steadily during scrolling
-//   (suggesting images aren't being released as cells are reused, section 37)
+```
+Call Tree (Invert Call Tree ☑, Hide System Libraries ☑)
+Weight     Symbol
+412 ms     RecipeSearch.rank(_:query:)          ← most time spent HERE, in your code
+  398 ms     String.lowercased()                ← called 200,000 times inside the loop
+ 96 ms     JSONDecoder.decode(_:from:)
+ 31 ms     RecipeCell.configure(with:)
 ```
 
-Allocations is particularly effective at surfacing a specific, common class of bug: memory growing steadily over time during a repeated operation (like scrolling through a table view, recall section 37) that should genuinely be memory-neutral once a steady state is reached — a live object count that keeps climbing rather than stabilizing during repeated scrolling is a strong, measurable signal of a systemic memory issue, distinct from Leaks' (69.4) more specific focus on objects that become genuinely unreachable yet remain allocated.
+How to read it:
+
+- **Invert Call Tree**: shows the functions that **themselves** use the most time (the leaves) at the top.
+- **Hide System Libraries**: shows **your** code that calls into slow system work.
+- Select a time range in the timeline (for example, the moment the UI froze) to see **only** that part.
+- Double-click a function to see **which lines** cost the most.
+
+In the example, the fix isn't "make sorting faster": it's "**don't lowercase every string in every comparison**":
+
+```swift
+// Before: lowercases both strings on every comparison
+recipes.filter { $0.title.lowercased().contains(query.lowercased()) }
+
+// After: prepare once
+let needle = query.lowercased()
+recipes.filter { $0.searchKey.contains(needle) }   // searchKey = title.lowercased(), stored once
+```
+
+Why **sampling** instead of recording every call? It adds **very little** overhead, so the app runs almost normally while measured. The price: tiny functions may not show up exactly, but the **hot spots** always do, and those are what matter.
 
 ---
 
-## 69.4 Instruments: Leaks
+## 69.3 Instruments: Allocations 🟡
 
-The Leaks instrument specifically detects memory that's become unreachable (no remaining strong reference path from any root) yet was never deallocated — a genuine memory leak, distinct from the Memory Graph Debugger's (section 68.13) point-in-time, developer-triggered snapshot, since Leaks continuously monitors for leaks throughout a recorded profiling session.
+**Allocations** records every **memory allocation**: how many objects of each type are alive, how much memory they use, and how that changes over time.
 
-```swift
-// Leaks flags objects meeting the strict definition of "leaked":
-// genuinely unreachable, yet still allocated — as opposed to merely
-// "still alive longer than expected," which Allocations (69.3) is better suited to surface
+Its best feature for finding growth: **Mark Generation**. Repeat an action that should be **memory-neutral**, and mark between repetitions:
+
+```
+1. Open the app, go to the recipe list
+2. Mark Generation A
+3. Open a recipe, go back             ← should leave NO new objects behind
+4. Mark Generation B
+5. Open a recipe, go back again
+6. Mark Generation C
+
+Generation B: +4.2 MB   RecipeDetailViewModel ×1, UIImage ×12, …
+Generation C: +4.1 MB   RecipeDetailViewModel ×1, UIImage ×12, …   ← grows EVERY time: a problem
 ```
 
-The distinction between Leaks and Allocations matters for choosing the right tool for a given memory investigation — Leaks specifically targets the stricter, well-defined case of genuinely unreachable-yet-allocated memory (a true leak, often from a retain cycle, recall section 68.14), while Allocations is the better tool for the broader, softer question of "is memory usage growing more than expected," which can include cases (like an oversized cache never evicting old entries) that don't technically meet the strict definition of a leak yet still represent a genuine memory problem worth investigating.
+Each generation shows objects created in that step and **still alive**. If every round leaves the same objects behind, memory grows without limit.
+
+| View | Shows |
+|---|---|
+| **Statistics** | Live count and size per type ("UIImage: 1,200 live") |
+| **Generations** | What each repetition left behind |
+| **Call Trees** | **Where** in your code the memory was allocated |
+| Persistent vs. Transient | Still alive vs. already freed |
+
+Allocations finds **any** unexpected growth: leaks, but also caches that never **evict**, images kept at full size (69.12), or view models kept by a long-lived object. Leaks (69.4) only finds the strict kind.
 
 ---
 
-## 69.5 Instruments: Animation Hitches
+## 69.4 Instruments: Leaks 🟢
 
-The Animation Hitches instrument specifically measures dropped or delayed frames during animation and scrolling, quantifying "hitchiness" — how much actual visible stutter occurred, and precisely which frames were affected — directly connecting to the offscreen rendering cost concerns raised in section 62.7 and the frame-budget concerns of scroll performance (69.10).
+**Leaks** finds memory that is **unreachable**, nothing points to it anymore, but was **never freed**. In Swift, that's almost always a **retain cycle** (68.14):
 
-```swift
-// Animation Hitches reports a "hitch time ratio" — the proportion of
-// time spent hitching relative to total animation duration — along with
-// the specific frames where hitches occurred, correlatable with other
-// simultaneously recorded instruments (like Time Profiler) to find the cause
+```
+Leaks: 3 leaked objects
+  RecipeDetailViewModel   ── cycle ──►  CookTimer  ──►  closure context  ──► RecipeDetailViewModel
 ```
 
-Correlating Animation Hitches' flagged problem frames with simultaneously recorded Time Profiler data (69.2) is a genuinely powerful diagnostic combination — rather than knowing only *that* stuttering occurred, cross-referencing exactly *when* a hitch happened against what the CPU was doing at that precise moment (perhaps an expensive layout pass, or the offscreen rendering discussed in section 62.7) directly connects the visible symptom to its actual, specific root cause.
+Leaks checks the heap **periodically** while you record, and shows the **cycle** graphically, with the allocation stack of each object.
+
+| Tool | Finds |
+|---|---|
+| **Leaks** | Strict leaks: **unreachable** but still allocated (cycles) |
+| **Allocations** (69.3) | **Any** growth: leaks, plus caches and objects held too long |
+| **Memory Graph** (68.13) | A one-moment **snapshot** while debugging |
+
+Leaks can miss "**abandoned memory**": objects that are still **reachable** (a singleton keeps them in an array) but will never be used again. Technically not a leak, but just as wasteful. For those, use Allocations generations.
+
+A practical routine: before each release, run Leaks while using your **main flows**, and fix anything it reports. Most leaks are a missing `[weak self]` or `weak var delegate`.
+
+---
+
+## 69.5 Instruments: Animation Hitches 🟡
+
+A **hitch** is a frame shown **later** than it should be: the user sees a stutter. **Animation Hitches** measures them during scrolling and animations.
+
+The key number is the **hitch time ratio**: milliseconds of hitching per second of scrolling.
+
+| Hitch ratio | Feels |
+|---|---|
+| **< 5 ms/s** | Smooth |
+| **5–10 ms/s** | Users notice now and then |
+| **> 10 ms/s** | Clearly janky |
+
+Each hitch is classified by **where** the time went (62.6):
+
+| Type | Means | Typical cause |
+|---|---|---|
+| **Commit** hitch | Your **app** took too long preparing the frame | Heavy layout, `draw(_:)`, image decoding, cell setup |
+| **Render** hitch | The **render server/GPU** took too long | Offscreen rendering (62.7), blur, huge layers |
+
+The powerful move: record **Animation Hitches together with Time Profiler** (the Animation Hitches template includes both). Select a hitch in the timeline, and the call tree shows what the main thread was doing **during that frame**:
+
+```
+Hitch at 3.21 s (34 ms, commit)
+  Time Profiler for 3.19–3.23 s:
+    RecipeCell.configure(with:)
+      UIImage(data:)                ← decoding a full-size photo on the main thread
+```
+
+Now you know **what** stuttered **and why**.
 
 ---
 
 ## 69.6 Instruments: System Trace 🔴
 
-System Trace provides the broadest, lowest-level view of system activity — CPU scheduling across every process (not just the profiled app), thread state transitions, system call activity, and inter-process communication — appropriate for diagnosing genuinely system-level performance issues that a single-app-focused instrument like Time Profiler wouldn't reveal.
+Time Profiler shows where **your** code spends CPU time. But sometimes your code isn't **running** at all: it's **waiting**. **System Trace** shows everything the **system** is doing: every thread of every process, when it runs, when it's **blocked**, and why.
 
-```swift
-// System Trace is appropriate when suspecting the app's performance is being
-// affected by something outside its own code entirely — thread contention,
-// scheduling delays caused by other system activity, or unexpected
-// blocking on a system-level resource
+```
+Main thread, 2.10–2.45 s:
+  ███ running  ░░░░░░░░░░░░ blocked (waiting on lock in DatabaseQueue)  ███ running
+                ↑ 300 ms of NOTHING in Time Profiler: the thread wasn't running
+Background thread "sync":
+  ████████████ holding the database lock during a big import
 ```
 
-Reaching for System Trace represents a genuine escalation beyond app-focused profiling tools, appropriate specifically when a performance problem's root cause is suspected to lie in the broader system context surrounding the app rather than in the app's own code logic — much like reaching for a sysdiagnose (section 68.23) escalates beyond app-level logging when a system-level cause is suspected, System Trace provides the equivalent escalation specifically for performance (rather than crash/error) diagnosis.
+Use it when Time Profiler doesn't explain the slowness:
+
+| Symptom | System Trace shows |
+|---|---|
+| Main thread "**idle**" but the UI is frozen | It's **blocked**: on a lock, a semaphore, a sync dispatch |
+| Work is slow only **sometimes** | Other processes using the CPU; your thread **preempted** |
+| A high-priority thread waits for a low-priority one | **Priority inversion** |
+| Slow first access to data | **Virtual memory** faults: pages loaded from disk |
+
+It's the deepest (and most detailed) view, like a sysdiagnose (68.23) for performance. Record **short** sessions (a few seconds around the problem): the data is huge.
 
 ---
 
-## 69.7 os_signpost for Custom Measurement
+## 69.7 os_signpost for Custom Measurement 🟡
 
-`os_signpost` lets a developer mark custom, named intervals or events directly in code, which then appear as first-class entries within Instruments' timeline — appropriate for measuring the actual duration of a specific, meaningful operation (like "loading the recommendations feed") that wouldn't otherwise be distinguishable from surrounding code in a generic profiling view.
+Profilers show **functions**. But you care about **operations**: "open a recipe", "sync", "load the feed". **Signposts** mark those operations in your code, and Instruments shows them as named intervals on the timeline:
 
 ```swift
 import os
 
-let signposter = OSSignposter(subsystem: "com.example.app", category: "feed-loading")
+extension OSSignposter {
+    static let recipes = OSSignposter(subsystem: "com.example.recipes", category: .pointsOfInterest)
+}
 
-func loadRecommendations() async throws -> [Recommendation] {
-    let state = signposter.beginInterval("Load Recommendations")
-    defer { signposter.endInterval("Load Recommendations", state) }
-    return try await fetchRecommendations()
+func loadFeed() async throws -> [Recipe] {
+    let state = OSSignposter.recipes.beginInterval("Load Feed")
+    defer { OSSignposter.recipes.endInterval("Load Feed", state) }
+
+    let data = try await api.feed()                       // network
+    OSSignposter.recipes.emitEvent("Feed downloaded")     // a single moment
+    return try decodeAndRank(data)                        // CPU work
+}
+
+// Shorter form for synchronous work
+let ranked = OSSignposter.recipes.withIntervalSignpost("Rank Recipes") {
+    rank(recipes, for: query)
 }
 ```
 
-Custom signposts bridge the gap between a profiler's generic, code-structure-based view and the actual, meaningful operations a developer cares about measuring — while Time Profiler shows which *functions* consume time, a signpost interval spanning "loading the recommendations feed" (potentially involving several function calls, network requests, and processing steps) provides a measurement aligned with an actual user-facing operation's meaning, considerably easier to reason about than reconstructing that same duration manually from a generic function-level call tree.
+In Instruments, add the **os_signpost** instrument (or use **Points of Interest**). You see:
 
----
-
-## 69.8 App Launch: Pre-Main vs Post-Main
-
-App launch time splits into two genuinely distinct phases with different causes and different mitigation strategies — pre-main time (before the app's own `main` function even begins executing, dominated by dynamic linker work loading frameworks and libraries) and post-main time (the app's own code actually executing, from `main` through the first frame being displayed).
-
-```swift
-// Pre-main time is dominated by:
-// - Number of dynamic frameworks/libraries linked (more frameworks = more linker work)
-// - Objective-C class/category registration overhead
-// Post-main time is dominated by:
-// - The app's own launch-path code: what actually runs in application(_:didFinishLaunchingWithOptions:)
-//   or the SwiftUI App's initial view construction
+```
+Load Feed       |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━| 840 ms
+                     ↑ Feed downloaded (610 ms)
+Rank Recipes                                        |━━━━| 190 ms
 ```
 
-Distinguishing these two phases matters because their mitigation strategies are genuinely different — reducing pre-main time typically means reducing the number of dynamically linked frameworks or consolidating them (since each additional framework adds real linker overhead independent of any of the app's own code), while reducing post-main time means auditing and streamlining the app's own launch-path code specifically, meaning correctly diagnosing which phase is actually the bottleneck (measurable via Instruments' App Launch template) is a prerequisite to applying the right category of fix.
+Now "the feed is slow" becomes "**610 ms network, 190 ms ranking**": you know which part to work on. Signposts are very cheap when nobody is recording, so they can stay in **release** builds. The same signposts can also drive **automated** performance tests (69.19).
 
 ---
 
-## 69.9 Reducing Launch Time
+## 69.8 App Launch: Pre-Main vs Post-Main 🟡
 
-Building on the phase distinction from 69.8, concrete launch-time reduction techniques include deferring non-essential work until after the first frame is displayed (rather than blocking launch on it), lazily initializing expensive singletons only when actually first needed, and auditing what genuinely must happen before the user sees anything versus what can happen afterward.
+Launch time has **two** phases, with different causes:
+
+```
+Tap icon
+  │  PRE-MAIN  (before your code)
+  │   - load the app binary and its dynamic frameworks (dyld)
+  │   - run static initializers, Objective-C +load
+  ▼
+main()
+  │  POST-MAIN (your code)
+  │   - App.init / application(_:didFinishLaunchingWithOptions:)
+  │   - build the first screen, load its data
+  ▼
+First frame shown  ← "launch time" as users (and the Organizer) see it
+```
+
+| Phase | Mostly affected by | Fixes |
+|---|---|---|
+| **Pre-main** | **Number of dynamic frameworks**; static initializers | Fewer dynamic frameworks; static linking or **mergeable libraries**; remove `+load` work |
+| **Post-main** | **Your** launch code | Do less before the first frame (69.9) |
+
+Measure with the **App Launch** template in Instruments: it shows the phases, and what each thread does during them.
+
+Kinds of launch:
+
+| Launch | When | Usually |
+|---|---|---|
+| **Cold** | After a reboot or a long time; nothing cached | Slowest |
+| **Warm** | App was quit recently; parts still in memory | Faster |
+| **Resume** | App was only suspended in the background | Not a launch: almost instant |
+
+Measure **cold** and **warm** launches separately. Also note **prewarming**: iOS may start your app's process **before** the user taps the icon, so don't assume "the process started" means "the user opened the app" (and don't do user-visible work, like analytics "app opened", in early initializers).
+
+---
+
+## 69.9 Reducing Launch Time 🟢
+
+The main rule: **only do what the first screen needs** before showing it. Everything else waits.
 
 ```swift
-// Deferred, non-blocking initialization pattern:
 @main
-struct MyApp: App {
+struct RecipeApp: App {
+    @State private var store = RecipeStore()          // cheap: no disk access in init
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(store)
                 .task {
-                    // non-essential setup deferred until after the first frame renders,
-                    // rather than blocking the entire launch sequence on it
-                    await AnalyticsService.shared.initialize()
+                    await store.loadFirstPage()        // just what the first screen shows
+                }
+                .task(priority: .background) {
+                    await Analytics.shared.start()     // not needed for the first frame
+                    await ImageCache.shared.trimIfNeeded()
+                    await SearchIndex.shared.warmUp()
                 }
         }
     }
 }
 ```
 
-The underlying principle here directly parallels the pre-warming and latency-budgeting discipline discussed for Foundation Models sessions (section 58.16) and background task budgets (section 49.5) — launch time, like those other latency-sensitive contexts, benefits from a deliberate audit of what genuinely needs to happen synchronously before the user can interact with the app versus what can reasonably be deferred to run afterward without the user noticing or being blocked by it.
+| ❌ Before the first frame | ✅ Instead |
+|---|---|
+| Synchronous **disk** reads of big files | Load async; show a placeholder |
+| **Network** calls the screen waits for | Show cached data first, refresh after |
+| Starting **every** SDK (analytics, ads, crash reporting) | Start the critical one (crash reporting); defer the rest |
+| Creating **all** singletons eagerly | `lazy`/`static let`: created on first use |
+| Migrating the **whole** database | Migrate in the background, or on first access |
+
+A good target: the first frame in **well under a second** on a typical device. The system's launch **watchdog** (68.11) kills apps that take far too long (many seconds), so a slow launch on old devices can become a **crash**.
+
+Same idea as background budgets (49.13) and model warm-up (58.16): decide what **must** happen now, and move the rest **later**.
 
 ---
 
-## 69.10 Scroll Performance and Frame Budgets
+## 69.10 Scroll Performance and Frame Budgets 🟡
 
-Smooth scrolling requires each frame to be prepared within a strict time budget — at 60Hz, roughly 16.67ms per frame, and at ProMotion's up to 120Hz (69.11), roughly 8.33ms — with any frame exceeding this budget manifesting as a visible, dropped-frame stutter, directly measurable via the Animation Hitches instrument (69.5).
+Smooth scrolling means a **new frame** every refresh:
+
+| Refresh rate | Time per frame |
+|---|---|
+| 60 Hz | **16.7 ms** |
+| 120 Hz (ProMotion, 69.11) | **8.3 ms** |
+
+And your app doesn't get all of it: the system and the render server need their part (62.6). Any frame that takes longer is a **hitch** (69.5).
+
+The classic mistake is heavy work in **cell setup**, on the main thread:
 
 ```swift
-// A cell configuration exceeding the frame budget is a common scroll-jank cause:
-func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-    cell.imageView?.image = decodeAndResizeImage(rawData)  // expensive, synchronous, blocks the frame budget
-    return cell
+// ❌ Decodes a full-size photo synchronously, for every cell that appears
+func configure(with recipe: Recipe) {
+    titleLabel.text = recipe.title
+    photoView.image = UIImage(contentsOfFile: recipe.photoPath)   // 20–60 ms on the main thread!
+}
+
+// ✅ Decode a small thumbnail off the main thread, then show it
+func configure(with recipe: Recipe) {
+    titleLabel.text = recipe.title
+    photoView.image = nil
+    loadTask?.cancel()
+    loadTask = Task {
+        let thumbnail = await UIImage(contentsOfFile: recipe.photoPath)?
+            .byPreparingThumbnail(ofSize: CGSize(width: 120, height: 120))   // decoded in the background
+        guard !Task.isCancelled else { return }
+        photoView.image = thumbnail
+    }
 }
 ```
 
-Understanding the frame budget's actual numeric constraint (roughly 16ms or roughly 8ms, depending on refresh rate) clarifies why seemingly minor per-cell work can produce visible jank at scale — a single cell configuration taking even a few extra milliseconds might seem trivial in isolation, but if it consistently exceeds the available per-frame budget during fast scrolling, the cumulative effect across many cells scrolling past is precisely the kind of visible stutter Animation Hitches is designed to surface and quantify.
+Checklist for smooth lists:
+
+- **No** synchronous disk or network work in cell setup.
+- Decode and **downsize** images off the main thread (69.12); cache the results.
+- Use **prefetching** (`UICollectionViewDataSourcePrefetching`) to start loading before cells appear.
+- Keep cell **layouts** simple; avoid offscreen rendering (62.7).
+- In SwiftUI: use `List` / `LazyVStack` (lazy), keep row `body`s **cheap**, and give rows **stable IDs** (26.2).
 
 ---
 
-## 69.11 ProMotion and Variable Refresh Implications
+## 69.11 ProMotion and Variable Refresh Implications 🟡
 
-ProMotion displays support variable refresh rates up to 120Hz, meaning the actual frame budget available to an app isn't a single fixed number — it can adapt based on content and system state, and an app targeting genuinely smooth ProMotion-rate scrolling faces a meaningfully tighter per-frame budget (roughly 8ms) than the traditional 60Hz assumption (roughly 16ms) that older performance intuition might still be anchored to.
+**ProMotion** screens (iPad Pro, iPhone Pro models) change their refresh rate **dynamically**, up to **120 Hz**: fast while scrolling, low (down to 10 Hz or less) when nothing moves, to save power.
+
+What this means for you:
+
+1. **Half the time per frame.** Code that fit in 16.7 ms at 60 Hz may **not** fit in 8.3 ms. "It was smooth on my old phone" isn't proof anymore: profile on a **ProMotion** device.
+2. **System scrolling** and UIKit/SwiftUI animations use high rates **automatically**.
+3. **Your own** frame-driven animations must **ask** for higher rates:
 
 ```swift
-// Code that was "fast enough" for a comfortable 16ms 60Hz budget
-// may still cause visible hitches at ProMotion's tighter ~8ms budget —
-// performance headroom that felt generous at 60Hz can evaporate at 120Hz
+// A CADisplayLink (62.5) that prefers 120 Hz, but accepts less
+displayLink.preferredFrameRateRange = CAFrameRateRange(minimum: 80, maximum: 120, preferred: 120)
+
+// A Core Animation animation with a preferred rate
+let animation = CABasicAnimation(keyPath: "position")
+animation.preferredFrameRateRange = CAFrameRateRange(minimum: 80, maximum: 120, preferred: 120)
 ```
 
-This has a genuine, practical implication for performance work on ProMotion-capable devices — code that comfortably fit within a traditional 60Hz frame budget doesn't automatically fit within ProMotion's tighter budget, meaning performance testing and profiling on ProMotion hardware specifically (rather than assuming 60Hz-era performance intuition still applies) is necessary to actually validate smooth scrolling and animation on the devices where users will experience the app at its full refresh-rate potential.
+On **iPhone**, custom animations are limited to 60 Hz unless the Info.plist key **`CADisableMinimumFrameDurationOnPhone`** is `YES`.
+
+4. **Don't** ask for 120 Hz when it doesn't help: a slow fade looks the same at 60 Hz and uses **less battery**. The system may also lower the rate itself (Low Power Mode, heat).
+5. Always compute animation progress from **elapsed time**, never "per frame" (62.5), because the frame length **changes**.
 
 ---
 
-## 69.12 Image Decoding and Downsampling Cost
+## 69.12 Image Decoding and Downsampling Cost 🟡
 
-Decoding a large image (converting compressed data like JPEG/HEIC into raw, displayable pixel data) is a genuinely expensive operation, and naively decoding a full-resolution image only to display it at a much smaller size wastes both CPU time during decoding and memory holding the unnecessarily large decoded result — downsampling during decode (rather than decoding full-size and scaling afterward) avoids both costs.
+A photo file is **compressed** (JPEG, HEIC). To show it, it must be **decoded** into raw pixels, and that costs **CPU time** and **memory**:
+
+```
+12 MP photo: 4032 × 3024 pixels × 4 bytes = 48.8 MB of memory once decoded
+              (the file on disk may be only 2–3 MB)
+Shown as a 120 × 120 pt thumbnail at 3× = 360 × 360 pixels × 4 bytes = 0.5 MB
+```
+
+Decoding the **full** image just to display it small wastes ~**100×** the memory, plus the decode time. The fix: **downsample while decoding** with ImageIO, so the full image is **never** created:
 
 ```swift
-func downsampledImage(from url: URL, to pointSize: CGSize, scale: CGFloat) -> UIImage? {
-    let options: [CFString: Any] = [kCGImageSourceShouldCache: false, kCGImageSourceShouldCacheImmediately: false]
-    guard let source = CGImageSourceCreateWithURL(url as CFURL, options as CFDictionary) else { return nil }
+import ImageIO
+import UIKit
 
-    let maxDimension = max(pointSize.width, pointSize.height) * scale
-    let downsampleOptions: [CFString: Any] = [
+func downsampledImage(at url: URL, pointSize: CGSize, scale: CGFloat) -> UIImage? {
+    let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary    // don't decode yet
+    guard let source = CGImageSourceCreateWithURL(url as CFURL, sourceOptions) else { return nil }
+
+    let maxPixels = max(pointSize.width, pointSize.height) * scale
+    let options = [
         kCGImageSourceCreateThumbnailFromImageAlways: true,
-        kCGImageSourceShouldCacheImmediately: true,
-        kCGImageSourceCreateThumbnailWithTransform: true,
-        kCGImageSourceThumbnailMaxPixelSize: maxDimension
-    ]
-    guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions as CFDictionary) else { return nil }
-    return UIImage(cgImage: cgImage)
+        kCGImageSourceShouldCacheImmediately: true,          // decode now (call this off the main thread)
+        kCGImageSourceCreateThumbnailWithTransform: true,    // apply the photo's rotation
+        kCGImageSourceThumbnailMaxPixelSize: maxPixels
+    ] as CFDictionary
+
+    guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else { return nil }
+    return UIImage(cgImage: cgImage, scale: scale, orientation: .up)
 }
 ```
 
-This directly connects to the memory/performance concerns raised throughout media-adjacent sections of this curriculum (recall section 55.3's guidance about avoiding full-resolution loads within extensions' tighter memory budgets) — the same principle applies more broadly to any context displaying images at a smaller size than their source resolution: a photo grid displaying thumbnails, for instance, gains nothing from decoding each source image at full resolution only to immediately scale it down, making downsample-during-decode a genuinely impactful, broadly applicable optimization for any image-heavy interface.
+If you already have a `UIImage`, UIKit has helpers (iOS 15+): `image.preparingThumbnail(of:)` (sync) and `await image.byPreparingThumbnail(ofSize:)` (async), plus `prepareForDisplay()` to decode **before** the image hits the main thread.
+
+Where this matters: photo grids, feeds, avatars, widgets (52.10), and especially **extensions** with tight memory limits (53.11). Note that SwiftUI's `AsyncImage` does **not** downsample: for big images, load and downsample yourself.
 
 ---
 
-## 69.13 Main Thread Hangs and Detection
+## 69.13 Main Thread Hangs and Detection 🟡
 
-A main thread hang occurs when the main thread is blocked long enough that the app becomes genuinely unresponsive to user interaction — distinct from a dropped animation frame (a brief, momentary stutter), a hang represents a more severe, sustained unresponsiveness, detectable both via Instruments (the Time Profiler or a dedicated Hangs instrument) and via `MetricKit`'s (69.16) hang rate reporting from real user devices.
+A **hang** is when the main thread is busy (or blocked) long enough that the app **doesn't respond** to touches: generally about **250 ms** or more. That's worse than a hitch (69.5): a hitch is a stutter in motion, a hang is "**the app froze**".
+
+Common causes:
 
 ```swift
-// A common hang cause: synchronous, blocking work directly on the main thread
-func viewDidLoad() {
-    super.viewDidLoad()
-    let data = try? Data(contentsOf: largeFileURL)  // blocking I/O directly on the main thread — a hang risk
+// ❌ Synchronous I/O on the main thread
+let data = try Data(contentsOf: bigFileURL)
+
+// ❌ Waiting for other work on the main thread
+let result = semaphore.wait()                 // or DispatchQueue.sync onto a busy queue
+
+// ❌ Heavy CPU work in a @MainActor method
+@MainActor func importCookbook(_ text: String) {
+    recipes = Parser.parseAll(text)            // 2 seconds of parsing
+}
+
+// ✅ Move the heavy part off the main actor, update UI at the end
+@MainActor func importCookbook(_ text: String) async {
+    let parsed = await Task.detached(priority: .userInitiated) {
+        Parser.parseAll(text)
+    }.value
+    recipes = parsed
 }
 ```
 
-Main thread hangs are a genuinely severe category of performance problem specifically because they directly affect the app's basic responsiveness to touch and interaction, distinct from a merely visually imperfect dropped frame — a sufficiently long hang can even trigger a watchdog termination (recall section 68.11) if it persists long enough during a lifecycle-sensitive phase, making hang detection and elimination a meaningfully higher-priority performance concern than more cosmetic frame-rate issues.
+How to **find** hangs:
+
+| Tool | When |
+|---|---|
+| Instruments **Hangs** instrument (in Time Profiler) | Development: shows each hang and the main thread's work during it |
+| **Thread Performance Checker** (scheme ▸ Diagnostics) | Development: warns about patterns like priority inversions |
+| **Settings ▸ Developer ▸ Hang Detection** on a device | Testing: shows a notification when a hang happens, with a log |
+| **MetricKit** hang diagnostics (69.16) and **Organizer** hang rate (69.17) | Production: real users' hangs, with stack traces |
+
+A long hang during **launch** or **resume** gets the app **killed** by the watchdog (`0x8badf00d`, 68.11). So hangs aren't only a "feel" problem: they become **crashes**.
 
 ---
 
-## 69.14 Memory Footprint and Jetsam Limits
+## 69.14 Memory Footprint and Jetsam Limits 🟡
 
-iOS enforces per-app memory limits, and exceeding them triggers "jetsam" — the system forcibly terminating the app to reclaim memory for the rest of the system — with the specific limit varying by device (generally more generous on devices with more total RAM) and by app state (a foreground app typically has a more generous limit than a background app).
+iOS has **no swap file** for apps. When memory runs low, the system **kills** processes: this is called **jetsam**. Background apps go first; a **foreground** app that goes over its **own limit** is killed too.
+
+The limit depends on the **device** (more RAM, higher limit) and the app's **state**. There's **no crash report**: users just see the app **disappear** (and, on the next launch, start from scratch).
+
+Watch and react to memory pressure:
 
 ```swift
-// Memory footprint should be actively monitored, particularly for:
-// - Image-heavy features (recall downsampling, 69.12)
-// - Large in-memory caches without eviction policies
-// - Accumulating state that should have been released but wasn't (recall Leaks, 69.4)
+import os
+
+// How much more memory can this process use before hitting the limit? (bytes)
+let remaining = os_proc_available_memory()
+if remaining < 150 * 1_024 * 1_024 {
+    imageCache.removeAll()                  // under 150 MB left: free what we can
+}
+
+// Respond to system memory warnings
+NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
+                                       object: nil, queue: .main) { _ in
+    ImageCache.shared.removeAll()
+}
 ```
 
-Jetsam termination is a genuinely distinct failure mode from a conventional crash — there's no crash report pointing to a specific crashing line of code, since the app was simply terminated externally by the system for using too much memory, meaning diagnosing a jetsam-related termination requires actively monitoring memory footprint during development and testing (via Instruments' Allocations, 69.3) rather than waiting to discover the problem only through user-reported "the app just closes" complaints with no accompanying crash report to investigate.
+| Big memory users | Fix |
+|---|---|
+| Full-size decoded **images** | Downsample (69.12) |
+| **Caches** that only grow | Limits and eviction (43.12); `NSCache` evicts automatically |
+| **Leaks** and abandoned objects | Leaks and Allocations (69.3, 69.4) |
+| Loading **whole** files or datasets | Stream, page, or memory-map them |
+
+How to **see** jetsam in the field:
+
+- **MetricKit**'s `MXAppExitMetric` counts exits for **memory limit** (foreground and background).
+- On devices, **JetsamEvent** reports appear in Settings ▸ Privacy & Security ▸ Analytics Data.
+- The Xcode debug **memory gauge** shows your footprint live while you test.
+
+Use **less** memory when going to the **background** (drop caches): smaller background apps are killed **less** often, so users return to where they left off.
 
 ---
 
 ## 69.15 Binary Size Reduction Techniques 🔴
 
-A larger app binary means a longer download/install time and more on-device storage consumed — techniques for reducing binary size include enabling dead code stripping, using on-demand resources for content not needed immediately at install time, avoiding unnecessarily large embedded frameworks, and auditing asset catalogs for unused or oversized images.
+App size matters to users: bigger apps take longer to **download**, may need Wi-Fi (the App Store asks before large downloads over cellular, by default above **200 MB**), and use **storage** that users clean up by deleting the biggest apps.
+
+First, **measure** what users really download. Export an archive with **App Thinning: All compatible device variants**; Xcode writes an **App Thinning Size Report** with the download and install size per device.
+
+Then reduce:
+
+| Technique | Effect |
+|---|---|
+| **Asset catalogs** for all images | App Thinning sends each device **only** its own scale (2× or 3×) |
+| Compress and right-size images; prefer **HEIC** or vector (SF Symbols, PDF) | Often the **biggest** win |
+| Remove **unused** images, fonts, sounds, localizations | Tools and scripts can find unreferenced files |
+| **Optimize for Size** (`-Osize`) for Swift | Smaller code, usually with little speed cost |
+| **Dead Code Stripping** and **Strip Symbols** (release) | Removes unused code and debug symbols from the binary |
+| Fewer / smaller **third-party SDKs** | Some SDKs add many megabytes each |
+| **On-Demand Resources** or **Background Assets** | Download level packs, videos, or ML models **later**, when needed |
+
+On-demand content in practice:
 
 ```swift
-// Build setting considerations for binary size:
-// - "Dead Code Stripping": removes genuinely unreferenced code from the final binary
-// - On-Demand Resources: defer downloading content not needed immediately at launch
-// - App thinning: the App Store delivers only the specific assets needed for a given device
+// Download the "baking" video lessons only when the user opens that section
+let request = NSBundleResourceRequest(tags: ["baking-lessons"])
+try await request.beginAccessingResources()
+// ... use the files from Bundle.main ...
+request.endAccessingResources()               // the system may purge them later
 ```
 
-Binary size reduction connects to genuine user-facing outcomes beyond pure technical tidiness — a smaller download is faster and more likely to complete successfully on a poor network connection, and on-demand resources specifically let an app defer downloading content (like additional levels in a game, or rarely-used feature assets) until actually needed, rather than forcing every user to download the complete superset of all possible content regardless of whether they'll ever use most of it.
+Check app size **in CI** (69.19): it tends to creep up one SDK and one image at a time.
 
 ---
 
-## 69.16 MetricKit Payloads
+## 69.16 MetricKit Payloads 🟡
 
-`MetricKit` delivers aggregated, privacy-preserving performance and diagnostic data collected from real users' devices in production — launch time, hang rate, memory usage, disk writes, and crash/diagnostic reports — providing visibility into real-world performance that Instruments profiling during development, run on a developer's own device under artificial testing conditions, simply cannot replicate.
+Instruments shows performance on **your** devices. **MetricKit** shows it on **users'** devices: thousands of phone models, network conditions, and usage patterns you can't reproduce.
 
 ```swift
 import MetricKit
 
-class MetricsSubscriber: NSObject, MXMetricManagerSubscriber {
+final class MetricsReceiver: NSObject, MXMetricManagerSubscriber {
+    func start() {
+        MXMetricManager.shared.add(self)              // early in launch
+    }
+
+    // About once per day: aggregated metrics for the previous 24 hours
     func didReceive(_ payloads: [MXMetricPayload]) {
         for payload in payloads {
-            if let launchMetrics = payload.applicationLaunchMetrics {
-                // aggregated launch time data from real users' actual devices and conditions
+            if let launch = payload.applicationLaunchMetrics {
+                print(launch.histogrammedTimeToFirstDraw)          // launch time distribution
+            }
+            if let hangs = payload.applicationResponsivenessMetrics {
+                print(hangs.histogrammedApplicationHangTime)       // hang durations
+            }
+            upload(payload.jsonRepresentation())                    // send to your server
+        }
+    }
+
+    // Diagnostics: crashes, hangs, CPU and disk-write exceptions, WITH call stacks
+    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        for payload in payloads {
+            for hang in payload.hangDiagnostics ?? [] {
+                upload(hang.callStackTree.jsonRepresentation())   // where the main thread was stuck
             }
         }
     }
 }
 ```
 
-`MetricKit`'s genuine value lies precisely in capturing performance data from the full diversity of real devices, network conditions, and usage patterns that a developer's own testing (however thorough) can never fully replicate — a performance issue that only manifests on specific older device models, under specific memory pressure conditions, or during specific real-world usage patterns might be entirely invisible during development testing yet clearly visible in aggregated `MetricKit` data collected across an app's actual user base.
+| Payload | Contains |
+|---|---|
+| `MXMetricPayload` | Launch time, hang time, memory, CPU, disk writes, animation hitches, app exits (including jetsam), battery |
+| `MXDiagnosticPayload` | Crash, hang, CPU-exception, and disk-write-exception reports, with **call stacks** |
+
+The data is **aggregated** and **anonymous**: no user identity, just numbers and stacks. Process it on your own server, or rely on the Organizer (69.17), which shows the same kind of data with no code at all.
 
 ---
 
-## 69.17 Xcode Organizer Metrics and Regressions
+## 69.17 Xcode Organizer Metrics and Regressions 🟢
 
-Xcode's Organizer window surfaces `MetricKit`-sourced metrics (69.16) in an aggregated, trend-visualizing form directly within Xcode, including automatic regression detection that flags when a specific metric (launch time, hang rate, memory usage) has measurably worsened following a specific app version's release.
+**Window ▸ Organizer** shows real-world data from users who agreed to share analytics, **with no code** in your app:
 
-```swift
-// Organizer surfaces trends like:
-// "Hang Rate increased 23% in version 4.2.0 compared to version 4.1.0"
-// — correlatable with what actually changed between those two releases
+| Section | Shows |
+|---|---|
+| **Metrics** | Launch time, hang rate, memory, disk writes, battery, scrolling hitches, terminations, per **app version** |
+| **Crashes**, **Hangs**, **Energy**, **Disk Writes** reports | Grouped reports with **stack traces** (symbolicated, 68.22) |
+| **Regressions** | Metrics that got **worse** in a new version |
+
+Metrics show the **typical** user and the **worst** ones (high percentiles). The bad tail often matters most: "launch takes 0.8 s for most users but **4 s** on older devices".
+
+A regression notice looks like:
+
+```
+Hang Rate ▲ 23% in version 4.2.0 (compared to 4.1.0)
 ```
 
-This regression-flagging capability closes the loop on the measure-first discipline established in 69.1 — rather than performance regressions only being discovered reactively through user complaints or app store reviews, Organizer's trend visualization and automatic regression detection surfaces a metric's actual, measured degradation directly tied to a specific release, letting a team correlate a flagged regression against what actually changed in that version and investigate the genuine root cause using the other tools covered throughout this section.
+Then ask: **what changed** in 4.2.0? Look at the release's changes, check the **Hangs** report for 4.2.0's top stacks, reproduce with Instruments (69.13), fix, and watch the metric come back down in the next version.
+
+Make it a habit: check the Organizer a few days after **every** release. It turns "users say it feels slower" into **numbers**, tied to a **version**.
 
 ---
 
 ## 69.18 Energy Impact and Battery Cost 🔴
 
-Beyond raw CPU/memory performance, energy impact (measurable via Instruments' Energy Log) reflects an app's actual battery consumption — driven by CPU usage, but also independently by network radio usage, GPS/location usage, screen brightness triggered by content, and background activity, meaning a CPU-light app can still have poor energy impact if it uses these other power-hungry subsystems carelessly.
+**Energy** isn't just CPU. An app with **low** CPU use can still **drain** the battery through:
+
+| Power user | Example | Better |
+|---|---|---|
+| **Radios** (cellular, Wi-Fi) | Polling the server every 10 seconds; many small requests | Push notifications (50); **batch** requests; background `URLSession` with `isDiscretionary` |
+| **Location** | Continuous precise GPS | The least precise mode that works (54.3, 54.5) |
+| **Timers** | Many timers waking the CPU | Fewer timers; set `tolerance` so the system can group them |
+| **GPU** and **screen** | Animations at 120 Hz that don't need it (69.11); always-moving UI | Animate only when useful |
+| **Background work** | Long background tasks, frequent refreshes | Within budgets (49.13), only when valuable |
+
+Why radios matter so much: each network request **wakes** the radio, and it stays in a high-power state for several **seconds** after. Ten small requests spread over a minute cost far more than **one** batched request.
 
 ```swift
-// Common energy impact contributors beyond raw CPU time:
-// - Frequent network polling instead of push-based updates (recall section 50)
-// - Continuous, high-accuracy location tracking when a coarser mode would suffice (recall 54.3)
-// - Keeping the device awake unnecessarily via disabled idle timer settings
+// ❌ Wakes the CPU every second, even when nothing changes
+Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in refreshClock() }
+
+// ✅ Lets the system group timer wake-ups (and use Text(date, style:) where possible, 52.3)
+let timer = Timer(timeInterval: 60, repeats: true) { _ in refreshClock() }
+timer.tolerance = 10                          // fire any time within 10 s: saves power
+RunLoop.main.add(timer, forMode: .common)
 ```
 
-This broader view of energy impact matters because a narrow focus purely on CPU profiling (Time Profiler, 69.2) can miss genuinely significant battery cost drivers entirely — an app polling a network endpoint every few seconds might show low CPU usage in Time Profiler while still meaningfully draining battery through radio wake-ups, meaning genuinely comprehensive performance work needs to consider energy impact as a related but distinct concern from pure CPU/memory efficiency, using tooling specifically designed to measure it rather than assuming CPU efficiency alone implies good battery behavior.
+Measure it:
+
+- Xcode's **Energy Impact** gauge while debugging.
+- Instruments' power tools (newer Xcode versions include a **Power Profiler**), and the **Energy Log** recorded on a device (Settings ▸ Developer).
+- **Organizer ▸ Energy** reports and MetricKit battery metrics from real users.
+
+Users notice battery drain, and iOS shows which apps use the most in **Settings ▸ Battery**. Being at the top of that list leads to deletions.
 
 ---
 
 ## 69.19 Building a Performance Regression Budget 🔴
 
-A performance regression budget formalizes acceptable thresholds for key metrics (launch time, hang rate, memory footprint, binary size) and integrates automated checking of those thresholds into CI, failing a build or flagging a warning when a change would push a metric beyond its established budget — proactively catching regressions before release rather than relying solely on Organizer's after-the-fact detection (69.17).
+The Organizer (69.17) finds regressions **after** release. A **performance budget** catches them **before**: agreed limits for key metrics, checked automatically in **CI**:
+
+| Metric | Example budget |
+|---|---|
+| Cold launch to first frame (reference device) | ≤ 600 ms |
+| Scroll hitch ratio on the recipe feed | ≤ 5 ms/s |
+| Memory after opening 20 recipes | ≤ 250 MB |
+| App download size | ≤ 60 MB |
+
+XCTest has **performance tests** with system metrics:
 
 ```swift
-// Conceptual CI integration checking a performance budget:
-// if measuredLaunchTime > budgetedLaunchTime * 1.10 {
-//     fail("Launch time regression: 340ms measured vs. 300ms budget (+13%)")
-// }
+import XCTest
+
+final class PerformanceTests: XCTestCase {
+    func testColdLaunch() {
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            XCUIApplication().launch()
+        }
+    }
+
+    func testFeedScrolling() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]                  // fixed data (67.6)
+        app.launch()
+        let feed = app.collectionViews["feed.list"]
+
+        let options = XCTMeasureOptions()
+        options.invocationOptions = [.manuallyStop]
+        measure(metrics: [XCTOSSignpostMetric.scrollingAndDecelerationMetric], options: options) {
+            feed.swipeUp(velocity: .fast)
+            stopMeasuring()
+            feed.swipeDown(velocity: .fast)                     // reset, not measured
+        }
+    }
+
+    func testRankingSpeed() {
+        let recipes = Recipe.samples(count: 5_000)
+        measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
+            _ = rank(recipes, for: "pasta")
+        }
+    }
+}
 ```
 
-Building an explicit, enforced performance budget represents the most proactive point on a spectrum of performance discipline covered throughout this section — from Organizer's reactive, after-release regression detection (69.17), to MetricKit's real-world production monitoring (69.16), to a CI-enforced budget that catches a regression *before* it ever reaches users at all, reflecting a genuine maturity progression in how seriously and how early a team chooses to treat performance as a measured, actively-protected property of the app rather than an occasional, reactive concern.
+In Xcode, set a **baseline** for each test (per device) and an allowed **deviation** (for example 10%). A run that's slower than the baseline plus the deviation **fails**.
+
+Making it reliable:
+
+- Run on **dedicated**, consistent hardware (not a busy shared machine), with the same OS version.
+- Run each measurement **several** times (XCTest does 5 by default) and compare **averages**.
+- Check app **size** with a simple script on the archive (it's deterministic, so no noise).
+- When a budget fails, either **fix** the regression, or **consciously** raise the budget (a new feature may be worth 50 ms). Never let it drift silently.
+
+The maturity ladder:
+
+```
+Users complain  →  Organizer regressions (69.17)  →  MetricKit monitoring (69.16)  →  CI budgets (here)
+   too late           after release                    after release, detailed         BEFORE release
+```
 
 ---
 
 ## Summary
 
-| Concept | Key Tool | Purpose |
+| Concept | Key tool | Purpose |
 |---|---|---|
-| Core discipline | Measure before optimizing | Prevents wasted effort on non-bottlenecks |
-| CPU hotspots | Time Profiler | Statistical sampling of where CPU time goes |
-| Memory growth | Allocations | Tracks allocation patterns and growth over time |
-| True leaks | Leaks | Detects genuinely unreachable, still-allocated memory |
-| Scroll/animation jank | Animation Hitches | Quantifies dropped-frame stutter |
-| System-level issues | System Trace | Broadest, cross-process performance view |
-| Meaningful measurement | `os_signpost` | Custom intervals aligned with real operations |
-| Launch phases | Pre-main vs. post-main | Distinct causes requiring distinct mitigations |
-| Launch optimization | Deferred initialization | Reduces blocking work before first frame |
-| Frame timing | Frame budgets (~16ms/~8ms) | Numeric basis for visible stutter |
-| Variable refresh | ProMotion (up to 120Hz) | Tighter budgets than traditional 60Hz intuition |
-| Image cost | Downsampling during decode | Avoids wasted CPU/memory on oversized decodes |
-| Responsiveness | Main thread hang detection | More severe than a dropped frame; risks jetsam/watchdog |
-| Memory enforcement | Jetsam limits | System-triggered termination, distinct from crashes |
-| Download/storage | Binary size reduction | Faster installs, less on-device storage |
-| Real-world data | `MetricKit` | Production performance data beyond dev testing |
-| Aggregated trends | Xcode Organizer | Automatic regression detection tied to releases |
-| Battery behavior | Energy impact | Distinct from CPU efficiency; radio/location/screen matter |
-| Proactive enforcement | CI performance budgets | Catches regressions before release, not after |
+| Discipline | Measure → find → change → measure | Fix the real bottleneck |
+| CPU | Time Profiler (inverted call tree) | Where CPU time goes |
+| Memory growth | Allocations, Mark Generation | What each repeated action leaves behind |
+| Leaks | Leaks instrument | Unreachable, never-freed objects |
+| Stutters | Animation Hitches + Time Profiler | Which frames hitched, and why |
+| Waiting and blocking | System Trace | Locks, preemption, priority inversion |
+| Operations | `OSSignposter` intervals and events | Measure what users actually wait for |
+| Launch phases | App Launch template; pre-main vs. post-main | Different causes, different fixes |
+| Launch speed | Defer non-essential work | First frame fast |
+| Scrolling | 16.7 / 8.3 ms budgets, off-main decoding | Smooth lists |
+| ProMotion | `preferredFrameRateRange`, Info.plist key | 120 Hz when useful, less when not |
+| Images | ImageIO downsampling, `byPreparingThumbnail` | Avoid giant decodes |
+| Hangs | Hangs instrument, Hang Detection, MetricKit | Keep the main thread free |
+| Memory limits | `os_proc_available_memory`, warnings, exit metrics | Avoid jetsam kills |
+| App size | Thinning report, assets, `-Osize`, on-demand content | Faster downloads, less storage |
+| Real-world data | MetricKit payloads | Users' devices, not just yours |
+| Trends | Organizer metrics and regressions | Tie changes to versions |
+| Energy | Radios, location, timers, GPU | Battery is more than CPU |
+| Budgets | XCTest metrics, baselines, CI | Catch regressions before release |

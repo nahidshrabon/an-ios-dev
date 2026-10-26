@@ -770,7 +770,7 @@ export const articles: Article[] = [
     slug: "performance",
     title: "Performance",
     description:
-      "Measuring before optimizing, Instruments' Time Profiler/Allocations/Leaks/Animation Hitches/System Trace, os_signpost, launch time phases, scroll performance and frame budgets, ProMotion, image downsampling, main thread hangs, jetsam limits, binary size, MetricKit, Organizer, energy impact, and performance budgets.",
+      "Measuring and fixing performance: Instruments tools, signposts, launch time, scrolling and frame budgets, ProMotion, image downsampling, hangs, memory limits, app size, MetricKit and the Organizer, energy, and performance budgets in CI.",
     tags: ["performance", "instruments", "metrickit"],
     publishedAt: "2026-08-16",
     get content() {
