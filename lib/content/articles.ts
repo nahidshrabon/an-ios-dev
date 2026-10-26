@@ -132,7 +132,7 @@ export const articles: Article[] = [
     slug: "advanced-type-system",
     title: "Advanced Type System",
     description:
-      "Swift's more specialized type-system features: key paths, dynamic member/callable lookup, operator overloading, ownership and noncopyable types, access control, and library-evolution attributes.",
+      "Swift's more specialized type features: key paths, dynamic member lookup and dynamic calls, custom operators and precedence, noncopyable types and ownership, ~Escapable and Span, access control with package, and library evolution.",
     tags: ["swift","type-system"],
     publishedAt: "2026-08-04",
     get content() {
