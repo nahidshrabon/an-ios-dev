@@ -143,7 +143,7 @@ export const articles: Article[] = [
     slug: "result-builders-and-property-wrappers",
     title: "Result Builders and Property Wrappers",
     description:
-      "The mechanism behind SwiftUI's declarative view syntax and behind @State/@Published — building a minimal result builder and property wrapper from scratch to demystify both.",
+      "The features behind SwiftUI's view syntax and @State: building a result builder and a property wrapper from scratch, with buildBlock, buildOptional, buildEither, buildArray, wrappedValue, projectedValue, and composition.",
     tags: ["swift","result-builders","property-wrappers"],
     publishedAt: "2026-08-04",
     get content() {

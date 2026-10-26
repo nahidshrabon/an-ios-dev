@@ -1,6 +1,10 @@
-## 12.1 What a Result Builder Is
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A result builder (marked `@resultBuilder`) is a type that transforms a specially-formatted block of statements — one that looks like plain sequential code — into a single combined value, by intercepting the block at compile time and rewriting it into a series of method calls. This is exactly what makes SwiftUI's view syntax work:
+## 12.1 What a Result Builder Is 🟢
+
+A **result builder** (a type marked `@resultBuilder`) turns a **block of statements**, which looks like normal code, into **one combined value**. The compiler **rewrites** the block into a series of method calls on the builder.
+
+This is exactly what makes SwiftUI's view syntax work:
 
 ```swift
 struct ContentView: View {
@@ -13,13 +17,30 @@ struct ContentView: View {
 }
 ```
 
-That `VStack { ... }` closure doesn't just execute two statements and discard their results — the compiler rewrites it, behind the scenes, into a call combining both `Text` views into a single value the `VStack` can lay out. The rest of this section builds a minimal version of this mechanism from scratch to demystify it.
+In a normal closure, `Text("Hello")` on its own line would create a value and **throw it away**. Here, the compiler **collects** both `Text` values and combines them into one value the `VStack` can lay out. Roughly:
+
+```swift
+// What you write:
+VStack {
+    Text("Hello")
+    Text("World")
+}
+
+// Roughly what the compiler turns it into:
+VStack {
+    let v0 = Text("Hello")
+    let v1 = Text("World")
+    return ViewBuilder.buildBlock(v0, v1)
+}
+```
+
+The rest of this section builds a small version **from scratch**, so there is no magic left.
 
 ---
 
-## 12.2 Building a Minimal `@resultBuilder`
+## 12.2 Building a Minimal `@resultBuilder` 🟡
 
-A result builder is declared with the `@resultBuilder` attribute on a type (usually an empty `enum`, since it only needs static methods) and must implement at least `buildBlock(_:)`, which combines a list of individual component values into one:
+Declare a result builder with **`@resultBuilder`** on a type. It's usually an empty `enum`, because it only needs **static methods**. The one required method is **`buildBlock`**: it combines the separate pieces into one result.
 
 ```swift
 @resultBuilder
@@ -44,13 +65,33 @@ print(result)
 // from Swift
 ```
 
-The `@StringBuilder` attribute on the `content` parameter tells the compiler to apply the result-builder transformation to whatever closure is passed there — each bare statement inside the closure (`"Hello"`, `"World"`, etc.) becomes one component, which `buildBlock` then combines into the final `String`.
+`@StringBuilder` on the `content` parameter tells the compiler: "transform any closure passed here with this builder". Each line in the closure (`"Hello"`, `"World"`, ...) becomes one **component**, and `buildBlock` joins them.
+
+You can also put the builder on a **computed property** or a **function**, the same way `body` uses `@ViewBuilder`:
+
+```swift
+struct Email {
+    let name: String
+
+    @StringBuilder
+    var text: String {
+        "Hi \(name),"
+        "Thanks for signing up!"
+        "— The Team"
+    }
+}
+
+print(Email(name: "Ada").text)
+// Hi Ada,
+// Thanks for signing up!
+// — The Team
+```
 
 ---
 
-## 12.3 `buildBlock`, `buildOptional`, `buildEither`
+## 12.3 `buildBlock`, `buildOptional`, `buildEither` 🟡
 
-A minimal result builder only needs `buildBlock`, but supporting `if`, `if/else`, and other control flow inside the builder's block requires additional methods the compiler calls automatically when it encounters that syntax:
+`buildBlock` alone handles plain lists of lines. To support **control flow** (`if`, `if`/`else`, `for`) inside the block, the builder needs **more methods**. The compiler calls them automatically when it sees that syntax:
 
 ```swift
 @resultBuilder
@@ -93,13 +134,46 @@ print(result)
 // Footer
 ```
 
-Each control-flow construct you want to support inside the builder's block (loops, `switch`, availability checks) requires its own corresponding `build...` method — `buildArray` for `for` loops, `buildLimitedAvailability` for `#available` checks, and so on.
+| Syntax in the block | Builder method needed |
+|---|---|
+| Lines of values | `buildBlock` |
+| `if` (no `else`) | `buildOptional` |
+| `if`/`else`, `switch` | `buildEither(first:)` and `buildEither(second:)` |
+| `for ... in` | `buildArray` |
+| `if #available(...)` | `buildLimitedAvailability` |
+
+Adding **`for` loop** support:
+
+```swift
+extension StringBuilder {
+    static func buildArray(_ components: [String]) -> String {
+        components.joined(separator: "\n")
+    }
+}
+
+let list = makeText {
+    "Shopping list:"
+    for item in ["milk", "eggs", "bread"] {
+        "- \(item)"
+    }
+}
+// Shopping list:
+// - milk
+// - eggs
+// - bread
+```
+
+If a method is **missing**, the compiler tells you which syntax isn't supported:
+
+```plaintext
+error: closure containing control flow statement cannot be used with result builder 'StringBuilder'
+```
 
 ---
 
-## 12.4 How `ViewBuilder` Works Internally
+## 12.4 How `ViewBuilder` Works Internally 🔴
 
-SwiftUI's `@ViewBuilder` is a result builder exactly like the ones you've just built — its `buildBlock` combines multiple `View`-conforming values into a single combined view (often using an internal tuple-view wrapper type), and it implements `buildOptional`/`buildEither` to support `if`/`if-else` inside a view hierarchy, and `buildArray` to support `for` loops:
+SwiftUI's **`@ViewBuilder`** is a result builder **exactly like** the ones above. Its `buildBlock` combines several views into **one** view (often wrapped in a `TupleView`). It has `buildOptional` and `buildEither` for `if` and `if`/`else`:
 
 ```swift
 // conceptually, roughly what @ViewBuilder's buildBlock does (simplified):
@@ -111,13 +185,51 @@ enum SimpleViewBuilder {
 }
 ```
 
-This is why a `VStack { }`'s closure body can contain a sequence of view expressions that *look* like independent statements — the compiler is actually assembling them into one nested, strongly-typed composite view value via exactly the mechanism from 12.2–12.3, just with many more overloads (for 2, 3, 4... up to 10 components) and view-specific combining logic instead of simple string concatenation.
+So a `VStack { }` body that **looks** like separate statements is actually **assembled** into one nested, strongly-typed view value. You can see the real type:
+
+```swift
+let stack = VStack {
+    Text("Title")
+    if isLoggedIn {
+        Text("Welcome back")
+    } else {
+        Button("Log in") { }
+    }
+}
+print(type(of: stack))
+// VStack<TupleView<(Text, _ConditionalContent<Text, Button<Text>>)>>
+```
+
+Notice `_ConditionalContent`: that's what `buildEither` produces for `if`/`else`. Both branches are part of the **type**, which helps SwiftUI know the view's structure.
+
+(Older SwiftUI versions had `buildBlock` overloads for up to **10** child views, which is why you once saw "extra argument" errors past 10. Newer versions use parameter packs (8.12), so that limit is gone.)
+
+You can use `@ViewBuilder` in **your own** code, so callers can pass views the same way:
+
+```swift
+struct Card<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            content
+        }
+        .padding()
+        .background(.thinMaterial, in: .rect(cornerRadius: 12))
+    }
+}
+
+Card {
+    Text("Pancakes").font(.headline)
+    Text("20 minutes")
+}
+```
 
 ---
 
-## 12.5 Property Wrapper Anatomy: `wrappedValue`
+## 12.5 Property Wrapper Anatomy: `wrappedValue` 🟡
 
-A property wrapper is a type (usually a `struct`) annotated with `@propertyWrapper`, which must define a `wrappedValue` property — this is what gets exposed whenever you access the property the wrapper is attached to, letting the wrapper interpose custom storage or logic around every read and write.
+A **property wrapper** is a type (usually a struct) marked **`@propertyWrapper`**. It **must** have a **`wrappedValue`** property. Every read and write of the wrapped property goes **through** `wrappedValue`, so the wrapper can add its own logic.
 
 ```swift
 @propertyWrapper
@@ -146,13 +258,37 @@ settings.volume = -20
 print(settings.volume)   // 0 — clamped by the wrapper's setter
 ```
 
-The `@Clamped(0...100) var volume: Int = 150` syntax is sugar — under the hood, Swift actually stores a hidden `_volume: Clamped` property and routes every access to `volume` through `_volume.wrappedValue`, entirely transparently to code using `settings.volume`.
+`@Clamped(0...100) var volume: Int = 150` is **shorthand**. The compiler really generates something like this:
+
+```swift
+struct Settings {
+    private var _volume = Clamped(wrappedValue: 150, 0...100)   // the hidden storage
+
+    var volume: Int {                                              // what you use
+        get { _volume.wrappedValue }
+        set { _volume.wrappedValue = newValue }
+    }
+}
+```
+
+That also explains the **`init(wrappedValue:)`** name: the `= 150` default is passed in as the `wrappedValue:` argument, and the `(0...100)` part becomes the other arguments.
+
+Property wrappers work on **local variables** too:
+
+```swift
+func demo() {
+    @Clamped(0...100) var level = 250
+    print(level)       // 100
+}
+```
 
 ---
 
-## 12.6 `projectedValue` and the `$` Prefix
+## 12.6 `projectedValue` and the `$` Prefix 🟡
 
-A property wrapper can optionally expose a second, secondary value — the **projected value** — accessed with a `$` prefix, via a `projectedValue` property on the wrapper. This is exactly how SwiftUI's `@State`'s `$` produces a `Binding`:
+A property wrapper can expose a **second** value: the **projected value**. You read it with a **`$` prefix**. Define it with a **`projectedValue`** property.
+
+This is how `$` on SwiftUI's `@State` gives you a `Binding`:
 
 ```swift
 @propertyWrapper
@@ -187,13 +323,55 @@ counter.count = 5              // "count changed from 0 to 5"
 print(counter.$count)           // "Wrapper watching: count" — accessed via the $ prefix
 ```
 
-`$count` accesses `_count.projectedValue`, exactly parallel to how `count` accesses `_count.wrappedValue` — this is precisely the mechanism behind writing `$isEnabled` in SwiftUI to get a `Binding<Bool>` from an `@State private var isEnabled: Bool`.
+| You write | Swift reads |
+|---|---|
+| `counter.count` | `counter._count.wrappedValue` |
+| `counter.$count` | `counter._count.projectedValue` |
+
+The projected value can be **any type**. A useful choice is to return the **wrapper itself**, or something with extra features. Here, `$` gives a "reset" control:
+
+```swift
+@propertyWrapper
+struct Resettable<Value> {
+    private let initial: Value
+    var wrappedValue: Value
+
+    init(wrappedValue: Value) {
+        self.initial = wrappedValue
+        self.wrappedValue = wrappedValue
+    }
+
+    var projectedValue: Resettable<Value> {
+        get { self }
+        set { self = newValue }
+    }
+
+    mutating func reset() { wrappedValue = initial }
+}
+
+struct Filters {
+    @Resettable var maxPrice = 100
+}
+
+var filters = Filters()
+filters.maxPrice = 20
+filters.$maxPrice.reset()
+print(filters.maxPrice)   // 100
+```
+
+In SwiftUI:
+
+```swift
+@State private var isOn = false
+
+Toggle("Wi-Fi", isOn: $isOn)   // $isOn is the projected value: a Binding<Bool>
+```
 
 ---
 
-## 12.7 Writing a Custom Property Wrapper
+## 12.7 Writing a Custom Property Wrapper 🟡
 
-Combining everything from 12.5–12.6, here's a complete, realistic custom property wrapper — one that persists a value to `UserDefaults` automatically on every write, a common real-world use case:
+Putting 12.5 and 12.6 together: a complete, realistic property wrapper that **saves a value to `UserDefaults`** every time it's set.
 
 ```swift
 @propertyWrapper
@@ -223,46 +401,86 @@ print(settings.username)     // "Guest" (or whatever was previously saved)
 settings.launchCount += 1     // automatically persisted to UserDefaults on write
 ```
 
-This pattern — wrap a cross-cutting concern (persistence, validation, logging, thread-safety) once inside a reusable property wrapper — is exactly why property wrappers exist: it lets you attach that behavior declaratively (`@UserDefault("key")`) to any property, without repeating the underlying get/set logic by hand at every use site.
+**Why property wrappers exist:** wrap a **cross-cutting concern** (saving, validation, logging, thread safety) **once**, then attach it anywhere with one word. No repeated get/set code.
 
----
+(SwiftUI ships a ready-made version of this exact idea: **`@AppStorage("username")`**, which also refreshes the view when the value changes.)
 
-## 12.8 Property Wrapper Limitations and Composition
-
-Property wrappers have a few notable constraints worth knowing. They generally cannot be applied to computed properties (only stored ones), since the wrapper itself needs to own the actual storage. Accessing `self` or other properties from within the wrapper's own `init`/`wrappedValue` implementation is restricted in certain contexts, since the wrapper is initialized as part of the enclosing type's own initialization sequence.
-
-Multiple property wrappers *can* be composed (stacked) on a single property, applied in the order written, though this quickly becomes hard to reason about and is used sparingly in practice:
+Another common example: **trimming** text input automatically:
 
 ```swift
 @propertyWrapper
-struct Capitalized {
-    var wrappedValue: String {
-        didSet { wrappedValue = wrappedValue.capitalized }
-    }
-    init(wrappedValue: String) {
-        self.wrappedValue = wrappedValue.capitalized
-    }
-}
-
-@propertyWrapper
 struct Trimmed {
+    private var value = ""
+
     var wrappedValue: String {
-        didSet { wrappedValue = wrappedValue.trimmingCharacters(in: .whitespaces) }
+        get { value }
+        set { value = newValue.trimmingCharacters(in: .whitespacesAndNewlines) }
     }
+
     init(wrappedValue: String) {
-        self.wrappedValue = wrappedValue.trimmingCharacters(in: .whitespaces)
+        self.wrappedValue = wrappedValue     // goes through the setter: trimmed
     }
 }
 
-struct Form {
-    @Capitalized @Trimmed var name: String = "  ada  "
+struct SignUpForm {
+    @Trimmed var email = ""
 }
 
-var form = Form()
-print(form.name)   // "Ada" — Trimmed runs first (innermost), then Capitalized wraps its result
+var form = SignUpForm()
+form.email = "  ada@example.com \n"
+print(form.email)   // "ada@example.com"
 ```
 
-Composition order matters (innermost wrapper applies first, closest to the raw value), and debugging deeply-stacked wrappers can become confusing quickly — in practice, most real-world code uses at most one property wrapper per property, reserving composition for narrow, well-understood cases.
+---
+
+## 12.8 Property Wrapper Limitations and Composition 🔴
+
+Some limits to know:
+
+- They work on **stored** properties, not **computed** ones: the wrapper itself **is** the storage.
+- A wrapper **can't easily see the object that contains it**. (SwiftUI's wrappers like `@State` work closely with SwiftUI itself to do that.)
+- A wrapped property can't be `lazy`, `weak`, or `unowned`.
+
+```swift
+struct Broken {
+    @Clamped(0...10) var computed: Int { 5 }
+    // ❌ error: property wrapper cannot be applied to a computed property
+}
+```
+
+You **can stack** several wrappers on one property. The **outer** wrapper wraps the **inner wrapper**, not the plain value. So the outer one must be **generic** over what it wraps:
+
+```swift
+@propertyWrapper
+struct Counted<Value> {
+    var wrappedValue: Value { didSet { changes += 1 } }
+    private(set) var changes = 0
+    var projectedValue: Int { changes }
+
+    init(wrappedValue: Value) { self.wrappedValue = wrappedValue }
+}
+
+struct Player {
+    @Counted @Clamped(0...100) var health: Int = 100
+}
+
+var player = Player()
+player.health = 150     // the inner Clamped keeps it at 100
+player.health = 40
+print(player.health)    // 40
+print(player.$health)   // 2 — `$` gives the OUTER wrapper's projected value
+```
+
+```plaintext
+@Counted @Clamped(0...100) var health
+
+storage:  Counted< Clamped >      ← outer wraps inner
+                   └── Int        ← the inner wrapper is closest to the value
+```
+
+The **innermost** wrapper is **closest to the value**, and is applied first.
+
+Stacked wrappers get **hard to understand and debug** quickly. Most real code uses **at most one** wrapper per property. Stack them only in small, well-understood cases.
 
 ---
 
@@ -270,11 +488,11 @@ Composition order matters (innermost wrapper applies first, closest to the raw v
 
 | Topic | One-line takeaway |
 |---|---|
-| Result builders | Transform a block of statements into a single combined value at compile time |
-| `buildBlock` | The minimum required method — combines a sequence of components into one result |
-| `buildOptional`/`buildEither` | Enable `if` and `if/else` support inside a result-builder-annotated closure |
-| `@ViewBuilder` | SwiftUI's own result builder — the exact same mechanism, applied to combining `View` values |
-| Property wrapper anatomy | A `@propertyWrapper` struct with a required `wrappedValue`, intercepting every read/write |
-| Projected value (`$`) | An optional secondary value exposed via `$property`, e.g. how `@State` produces a `Binding` |
-| Custom wrappers | Package cross-cutting concerns (persistence, validation, logging) into a reusable, declarative attribute |
-| Limitations | Only stored properties, not computed ones; composing multiple wrappers works but adds complexity |
+| Result builders | Turn a block of lines into one combined value, at compile time |
+| `buildBlock` | The required method: combines the pieces into one result |
+| `buildOptional`/`buildEither`/`buildArray` | Support `if`, `if`/`else`, and `for` in the block |
+| `@ViewBuilder` | SwiftUI's result builder; you can use it for your own container views |
+| Property wrapper anatomy | `@propertyWrapper` with a `wrappedValue`; the compiler stores it as `_name` |
+| Projected value (`$`) | A second value via `$name`, like `@State`'s `Binding` |
+| Custom wrappers | Package a repeated concern (saving, trimming, clamping) into one attribute |
+| Limitations and composition | Stored properties only; the outer wrapper wraps the inner one; use rarely |
