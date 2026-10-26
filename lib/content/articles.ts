@@ -198,7 +198,7 @@ export const articles: Article[] = [
     slug: "async-await-foundations",
     title: "Async/Await Foundations",
     description:
-      "The problem async/await solves, writing and calling async functions, what actually happens at a suspension point, entering async code from synchronous contexts with Task, and the cooperative thread pool that powers all of it.",
+      "Why async/await replaced callbacks, writing and calling async functions, what happens at a suspension point, Task and the .task modifier, Task.sleep, the cooperative thread pool, why blocking it is dangerous, Task.detached, and priority.",
     tags: ["swift","concurrency","async-await"],
     publishedAt: "2026-08-08",
     get content() {
