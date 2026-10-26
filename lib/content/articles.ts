@@ -451,7 +451,7 @@ export const articles: Article[] = [
     slug: "advanced-networking",
     title: "Advanced Networking",
     description:
-      "Production-grade networking: a reusable generic API client, retry with exponential backoff, request cancellation and deduplication, caching and ETags, background transfers, WebSockets and SSE, certificate pinning, ATS, connectivity monitoring, and OAuth 2.0 with PKCE.",
+      "Production networking: a reusable API client, retries with backoff and jitter, cancellation, request coalescing, caching and ETags, background transfers, WebSockets and server-sent events, streaming, certificate pinning, ATS, connectivity, and OAuth with PKCE.",
     tags: ["networking", "urlsession", "advanced"],
     publishedAt: "2026-08-16",
     get content() {
