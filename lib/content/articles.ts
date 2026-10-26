@@ -77,7 +77,7 @@ export const articles: Article[] = [
     slug: "structs-classes-enums",
     title: "Structs, Classes, and Enums",
     description:
-      "Swift's three core custom type kinds — struct value semantics, class reference semantics and inheritance, and enums with raw or associated values — plus computed properties, observers, static members, and subscripts.",
+      "Swift's three kinds of custom types: structs (values), classes (references and inheritance), and enums with raw or associated values, plus initializers, computed and lazy properties, observers, static members, subscripts, and modeling state.",
     tags: ["swift","structs","classes","enums"],
     publishedAt: "2026-08-04",
     get content() {
