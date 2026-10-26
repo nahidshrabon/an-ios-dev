@@ -792,7 +792,7 @@ export const articles: Article[] = [
     slug: "localization",
     title: "Localization",
     description:
-      "String Catalogs and extraction, translation states and comments, pluralization, device/width variations, AttributedString/Markdown localization, FormatStyle for dates and numbers, locale-aware sorting, RTL layout and mirroring, non-Gregorian calendars, time zone/DST edge cases, pseudolocalization, App Store metadata, and AI-assisted localization.",
+      "Making the app feel native everywhere: String Catalogs, translator comments, plurals and variations, Markdown strings, formatting dates, numbers, money, and units, sorting and search, right-to-left layout, calendars, time zones and DST, pseudolanguages, App Store metadata, and AI drafts.",
     tags: ["localization", "internationalization", "rtl"],
     publishedAt: "2026-08-16",
     get content() {

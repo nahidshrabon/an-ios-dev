@@ -1,227 +1,561 @@
-## 71.1 String Catalogs and Extraction
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-String Catalogs (`.xcstrings` files) are Xcode's modern, unified format for managing all of an app's localizable strings — automatically extracted from `Text`, `String(localized:)`, and similar source code usage, with each string's translations across every supported language stored and editable together in one structured, Xcode-integrated file.
-
-```swift
-Text("Welcome back, \(userName)")  // automatically extracted into the String Catalog
-Text("welcome_message", comment: "Greeting shown on the home screen after login")
-```
-
-Automatic extraction is a genuinely significant improvement over the older, separate `.strings`-file-per-language workflow — rather than a developer manually maintaining string keys across parallel files that can easily drift out of sync as code changes, Xcode scans source code directly and keeps the String Catalog synchronized with actual usage, surfacing newly added strings needing translation and flagging strings whose source has changed since it was last translated, considerably reducing the bookkeeping burden of keeping localization actually current with a codebase's real content.
+**Localization** makes the app feel native in every language and region: not just translated words, but correct **plurals**, **dates**, **numbers**, **sorting**, **right-to-left** layout, **calendars**, and **time zones**. This section covers String Catalogs, helping translators, formatting with `FormatStyle`, RTL, date and time pitfalls, testing with pseudolanguages, App Store metadata, and AI-assisted translation.
 
 ---
 
-## 71.2 Translation States and Comments for Translators
+## 71.1 String Catalogs and Extraction 🟢
 
-Each string entry in a String Catalog carries an explicit translation state (new, needs review, translated) per language, and an optional developer-provided comment giving a translator context that the string's raw text alone might not convey — genuinely important for strings that are short, ambiguous, or context-dependent in ways only the surrounding code and UI truly clarify.
+A **String Catalog** (`Localizable.xcstrings`) holds **all** your app's strings and **all** their translations in one file, with an editor in Xcode. You don't add keys by hand: when you **build**, Xcode **extracts** strings from your code automatically.
 
 ```swift
-Text("Close", comment: "Button that dismisses the current modal sheet, not a verb meaning 'nearby'")
+// SwiftUI: string literals in these APIs are localized automatically
+Text("Recipes")
+Button("Add Recipe") { addRecipe() }
+Label("Favorites", systemImage: "heart")
+Text("Welcome back, \(userName)")          // key in the catalog: "Welcome back, %@"
+
+// Outside views: String(localized:) and LocalizedStringResource
+let title = String(localized: "New Recipe")
+let message: LocalizedStringResource = "Recipe saved"     // can be passed around, localized later
 ```
 
-Comments matter because a short string in isolation is frequently genuinely ambiguous out of context — "Close" could mean the verb (dismissing something) or the adjective (physically nearby), and a translator working purely from a spreadsheet of isolated strings has no way to disambiguate this without the developer's comment providing that missing context, meaning comments are a meaningfully high-leverage investment for exactly the strings most likely to otherwise be mistranslated.
+⚠️ The classic bug: a **`String` variable** is **not** localized:
+
+```swift
+let key = "Recipes"
+Text(key)                     // ❌ shows "Recipes" in every language (String → verbatim)
+Text(LocalizedStringKey(key)) // ✅ looks it up
+
+// For your own views, take LocalizedStringKey (or LocalizedStringResource), not String
+struct SectionHeader: View {
+    let title: LocalizedStringKey           // ✅ SectionHeader(title: "Breakfast") gets localized
+    var body: some View { Text(title).font(.headline) }
+}
+```
+
+Why catalogs beat the old `.strings` files:
+
+| Old `.strings` files | String Catalog |
+|---|---|
+| One file per language, keys added **by hand** | **One** file, filled **automatically** at build |
+| Files drift out of sync with the code | New strings appear; removed ones are marked **stale** |
+| No overview | Shows how complete each language is (a percentage) |
+| Plurals in a separate `.stringsdict` | Plurals and variations **built in** (71.3, 71.4) |
+
+Already have `.strings` files? Right-click them ▸ **Migrate to String Catalog**.
+
+Use `Text(verbatim:)` for text that must **never** be translated, like a user's own content or a code.
 
 ---
 
-## 71.3 Pluralization Rules
+## 71.2 Translation States and Comments for Translators 🟢
 
-Different languages have genuinely different, sometimes surprisingly complex pluralization rules (English distinguishes only singular/plural, while some languages have distinct forms for one, few, many, and other counts) — String Catalogs support this via `.stringsdict`-style plural variation rules, letting `String(localized:)` automatically select the grammatically correct form based on a provided count.
+Each string in the catalog has a **state** per language:
+
+| State | Meaning |
+|---|---|
+| **New** | Not translated yet |
+| **Needs Review** | Translated, but someone must check it (e.g. the source changed, or an AI draft, 71.15) |
+| **Translated** | Done |
+| **Stale** | The string no longer exists in the code |
+
+Translators often see strings **without** the app: just a list. A short string can be **ambiguous**:
+
+| English | Could mean | German |
+|---|---|---|
+| "Close" | Shut the sheet (verb) | "Schließen" |
+| "Close" | Near (adjective) | "Nah" |
+| "Book" | A cookbook (noun) | "Buch" |
+| "Book" | Reserve a class (verb) | "Buchen" |
+
+So add a **comment** that explains **where** and **how** it's used:
 
 ```swift
-Text("^[\(itemCount) item](inflect: true)")
-// Or via explicit plural rule definitions in the String Catalog covering
-// the "zero," "one," "two," "few," "many," and "other" categories
-// that different languages require in varying combinations
+Button(String(localized: "Close", comment: "Button: dismisses the recipe detail sheet")) {
+    dismiss()
+}
+
+Text("Book", comment: "Button: reserves a seat in a live cooking class (verb)")
+
+Text("\(count) servings", comment: "Shown under the recipe title. %lld = number of servings")
 ```
 
-Correctly handling pluralization is more genuinely complex than English speakers might assume purely from their own language's simple singular/plural distinction — languages like Arabic or Polish require several distinct grammatical plural categories depending on the exact count, and String Catalogs' plural rule support exists specifically to handle this genuine linguistic complexity correctly across every supported language, rather than an app awkwardly hardcoding English-style pluralization logic that would simply be grammatically wrong when applied to other languages.
+Comments appear in the catalog editor and in the files you **export** for translators (Product ▸ **Export Localizations** creates `.xcloc` packages, using the standard XLIFF format inside). Newer Xcode versions can even **suggest** comments from how a string is used; check and improve them.
+
+Comments are **cheap** to write and prevent the **most common** translation mistakes. Write one for every short, single-word, or ambiguous string.
 
 ---
 
-## 71.4 Device and Variable-Width Variations
+## 71.3 Pluralization Rules 🟡
 
-Beyond pluralization, String Catalogs also support device-specific variations (a shorter string for watchOS given its limited screen space, a longer one for macOS) and width variations (a compact string when space is limited, an expanded version when more room is available) — letting one logical string concept adapt its actual wording to context, not just to language.
+English has **two** forms: "1 recipe", "2 recipes". Many languages have **more**:
+
+| Language | Plural categories |
+|---|---|
+| English, German | one, other |
+| French | one (0 **and** 1), other |
+| Russian, Polish | one, **few**, **many**, other |
+| Arabic | **zero**, one, **two**, few, many, other |
+| Japanese, Chinese | **other** only (no plural forms) |
+
+So never build plurals with `if count == 1`. Let the system choose:
+
+**Option 1: a plural variation in the String Catalog.** Write the string with the number:
 
 ```swift
-// Width variation example: the same string concept, adapted to available space
-// "Delete" for expanded/normal contexts
-// "Del" for compact-width contexts where space is genuinely constrained
+Text("\(recipeCount) recipes")      // catalog key: "%lld recipes"
 ```
 
-This device/width variation capability addresses a genuine limitation of treating localization purely as a language-translation problem — the *right* wording for a given UI element can depend on available space just as much as on language, and String Catalogs' variation support lets this context-sensitivity be handled through the same structured mechanism as language translation itself, rather than requiring ad hoc, manually-conditioned string selection logic scattered throughout the app's own code.
+In the catalog, right-click the string ▸ **Vary by Plural**. Xcode shows **exactly** the categories each language needs (one/other for English, one/few/many/other for Russian), and translators fill each one:
+
+```
+English:  one   → "%lld recipe"
+          other → "%lld recipes"
+Russian:  one   → "%lld рецепт"      (1, 21, 31…)
+          few   → "%lld рецепта"     (2–4, 22–24…)
+          many  → "%lld рецептов"    (5–20, 25–30…)
+          other → "%lld рецепта"
+```
+
+**Option 2: automatic grammar agreement** for supported languages (English, French, German, Spanish, Italian, Portuguese, and more):
+
+```swift
+Text("^[\(recipeCount) recipe](inflect: true)")   // "1 recipe" / "3 recipes", agreement done for you
+```
+
+The plural form can also affect **other** words in the sentence (adjectives, verbs) in some languages. With catalog variations, translators control the **whole** sentence for each category.
 
 ---
 
-## 71.5 Localizing with AttributedString and Markdown
+## 71.4 Device and Variable-Width Variations 🟡
 
-`AttributedString` supports Markdown-formatted localized strings (bold, italics, links) directly, letting translators work with and preserve meaningful formatting within a translated string without requiring separate, error-prone concatenation of multiple distinct localized string fragments around fixed formatting.
+Sometimes the right **wording** depends on the **device**, not only the language. A String Catalog can **vary by device**:
 
 ```swift
-let attributedGreeting = try! AttributedString(
-    localized: "Welcome to **\(appName)**! [Learn more](https://example.com/help)."
-)
-Text(attributedGreeting)
+Text("Tap a recipe to see the steps")
+// Catalog ▸ right-click ▸ Vary by Device:
+//   iPhone / iPad:  "Tap a recipe to see the steps"
+//   Mac:            "Click a recipe to see the steps"
+//   Apple Watch:    "Tap for steps"            (tiny screen)
+//   Apple Vision:   "Pinch a recipe to see the steps"
 ```
 
-This is a meaningful improvement over the older, more brittle pattern of manually concatenating separately-localized string fragments around hardcoded formatting (`Text("Welcome to ") + Text(appName).bold() + Text("!")`) — that concatenation approach can produce grammatically incorrect results in languages with different word order, while Markdown-embedded localization lets the entire sentence (including its formatting) be translated as one coherent, natural unit, letting a translator naturally reorder words as their language's grammar actually requires while still preserving the intended bold emphasis or link placement correctly.
+Older `.stringsdict` files also supported **width variations** (`NSStringVariableWidthRuleType`): several versions of one string by **length**, picked with `variantFittingPresentationWidth(_:)` in UIKit.
+
+In modern SwiftUI, the more flexible tool is to let the **layout** choose between strings that **fit**:
+
+```swift
+ViewThatFits {
+    Text("Add to Shopping List")            // used when it fits
+    Text("Add to List")                     // shorter fallback
+    Image(systemName: "cart.badge.plus")    // last resort
+        .accessibilityLabel("Add to Shopping List")
+}
+```
+
+`ViewThatFits` picks the **first** child that fits the available space, for **each** language: German's longer "Zur Einkaufsliste hinzufügen" may fall back to the short form, while English keeps the long one.
+
+Prefer layouts that **grow** (wrapping, flexible widths) over abbreviations: abbreviations are often **unclear**, especially when translated.
 
 ---
 
-## 71.6 FormatStyle for Locale-Aware Dates
+## 71.5 Localizing with AttributedString and Markdown 🟡
 
-`Date.FormatStyle` produces locale-appropriate date formatting automatically — date component order, separators, month name conventions, and calendar system (71.11) all adapt to the current locale without a developer needing to manually construct locale-specific format strings.
+Never build a sentence by **gluing** localized pieces together:
 
 ```swift
-let date = Date.now
-Text(date.formatted(date: .long, time: .shortened))
-// U.S. locale: "August 22, 2026 at 3:45 PM"
-// German locale: "22. August 2026 um 15:45"
-// automatically, with no locale-specific branching in app code
+// ❌ Word order is fixed to English; translators can't fix it
+Text("Welcome to ") + Text("RecipeApp").bold() + Text("!")
 ```
 
-Manually constructing date format strings per locale (the older `DateFormatter` pattern, still requiring explicit format string knowledge) is genuinely error-prone and incomplete — date conventions vary in ways far more subtle than most developers would think to handle manually (component order, whether a leading zero is used, which calendar era conventions apply), and `Date.FormatStyle`'s automatic, locale-driven formatting handles this correctly without requiring the app's own code to encode locale-specific formatting knowledge at all.
+In Japanese, the app name comes **first**; in German, the verb may move. Translators need the **whole sentence**.
+
+Instead, use **Markdown** inside **one** localized string. `Text` with a string literal supports it directly:
+
+```swift
+Text("Welcome to **\(appName)**! [Learn more](https://example.com/help)")
+// Catalog key: "Welcome to **%@**! [Learn more](https://example.com/help)"
+// German:      "Willkommen bei **%@**! [Mehr erfahren](https://example.com/de/help)"
+```
+
+The translator moves the **bold** part and the **link** wherever their language needs them, and can even point the link to a **localized** page.
+
+Outside `Text` literals, create an `AttributedString`:
+
+```swift
+let banner = AttributedString(localized: "Your recipe **\(recipe.title)** was saved.")
+Text(banner)
+
+// Style parts of it in code, e.g. color the bold run
+var styled = AttributedString(localized: "Only **\(minutesLeft) minutes** left")
+for run in styled.runs where run.inlinePresentationIntent == .stronglyEmphasized {
+    styled[run.range].foregroundColor = .orange
+}
+```
+
+Supported Markdown: **bold**, *italic*, `code`, ~~strikethrough~~, and links. Keep it simple: translators must understand and keep the markup.
 
 ---
 
-## 71.7 FormatStyle for Numbers and Currency
+## 71.6 FormatStyle for Locale-Aware Dates 🟢
 
-Similarly, `FormatStyle` extends locale-aware formatting to numbers and currency — decimal separators, digit grouping, and currency symbol placement all vary meaningfully by locale, and `.formatted()` handles this correctly without manual locale-specific logic.
+Date formats differ **a lot** between regions: order, separators, month names, 12/24-hour time. **`Date.FormatStyle`** gets them right automatically:
 
 ```swift
-let price = 1234.56
-Text(price.formatted(.currency(code: "USD")))
-// U.S. locale: "$1,234.56"
-// German locale: "1.234,56 $"
-// — note both the grouping/decimal separator swap AND currency symbol placement
+let classDate = Date.now
+
+classDate.formatted(date: .long, time: .shortened)
+// 🇺🇸 "January 12, 2026 at 6:30 PM"
+// 🇩🇪 "12. Januar 2026 um 18:30"
+// 🇯🇵 "2026年1月12日 18:30"
+
+classDate.formatted(.dateTime.weekday(.wide).day().month(.wide))
+// 🇺🇸 "Monday, January 12"   🇫🇷 "lundi 12 janvier"   ← you choose the PARTS; the locale picks the ORDER
+
+classDate.formatted(.relative(presentation: .named))
+// "tomorrow", "in 3 days", "demain", "morgen"
+
+(classStart..<classEnd).formatted(.interval.hour().minute())
+// 🇺🇸 "6:30 – 8:00 PM"   🇩🇪 "18:30–20:00"
+
+Duration.seconds(5_400).formatted(.units(allowed: [.hours, .minutes], width: .wide))
+// "1 hour, 30 minutes"   "1 Stunde und 30 Minuten"
 ```
 
-The decimal/grouping separator swap between locales (a comma versus a period serving opposite roles) is a classic, genuinely consequential localization pitfall if handled manually or incorrectly — a price displayed with the wrong separator convention isn't merely stylistically off but can be genuinely misread by a user as a completely different numeric value, making `FormatStyle`'s correct, automatic handling of this specific distinction a meaningfully important correctness concern, not just a cosmetic one.
+| ❌ Don't, for display | ✅ Do |
+|---|---|
+| `formatter.dateFormat = "MM/dd/yyyy"` | `.formatted(date: .numeric, time: .omitted)` |
+| Hard-coded "AM"/"PM" | Let the format style decide (many regions use 24-hour time) |
+| Building "Monday, Jan 12" by hand | `.dateTime.weekday().month().day()` |
+
+**But** for data exchanged with **servers** and files, use a **fixed** format that never changes with the user's settings:
+
+```swift
+let wire = classDate.formatted(.iso8601)            // "2026-01-12T17:30:00Z": same everywhere
+let parsed = try Date(wire, strategy: .iso8601)
+```
+
+Rule: **ISO 8601** for machines, **`FormatStyle`** for people.
 
 ---
 
-## 71.8 Locale-Aware Sorting and Searching
+## 71.7 FormatStyle for Numbers and Currency 🟢
 
-Sorting strings correctly for a given locale requires more than simple byte-wise or codepoint comparison — `String.localizedStandardCompare` and locale-aware `Collator`-style comparison account for language-specific alphabetical ordering, accent/diacritic handling, and case-insensitive comparison conventions that differ across languages.
+Numbers are just as regional:
 
 ```swift
-let names = ["Émile", "Émilie", "Émir"]
-let sorted = names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-// produces locale-appropriate ordering, correctly handling accented characters
-// according to the current locale's actual alphabetical conventions
+let price: Decimal = 1234.56
+
+price.formatted(.currency(code: "USD"))
+// 🇺🇸 "$1,234.56"    🇩🇪 "1.234,56 $"    🇫🇷 "1 234,56 $US"    🇮🇳 "$1,234.56"
+
+(0.25).formatted(.percent)                 // "25%"  (🇩🇪 "25 %",  🇫🇷 "25 %")
+1_500_000.formatted(.number.notation(.compactName))   // "1.5M"  (🇩🇪 "1,5 Mio.")
 ```
 
-Naive, simple string comparison (comparing raw Unicode codepoint values directly) frequently produces genuinely wrong sort orders for real-world text — accented characters, different alphabetical traditions, and locale-specific collation rules (like how German sorts umlauted characters) all require locale-aware comparison to produce a result that actually matches what a user of that locale would consider correctly, intuitively sorted.
+Look at the German result: the **comma and period swap** roles. "1.234" means **one thousand two hundred thirty-four** in Germany, but **one point two** in the US. Formatting by hand doesn't just look wrong: it shows the wrong **number**.
+
+Two rules for money:
+
+- The **currency code** comes from your **data** (the price is in USD), not from the user's locale. A German user looking at a USD price must still see dollars.
+- Store and compute money with **`Decimal`**, not `Double` (no rounding surprises).
+
+For a **recipe app**, units matter too. **`Measurement`** can convert to the user's preferred system:
+
+```swift
+let flour = Measurement(value: 250, unit: UnitMass.grams)
+
+flour.formatted(.measurement(width: .abbreviated, usage: .asProvided))   // "250 g" everywhere
+flour.formatted(.measurement(width: .abbreviated, usage: .general))      // 🇺🇸 converted (oz/lb)   🇩🇪 "250 g"
+```
+
+When **reading** numbers the user types, parse them with the **locale** too: `TextField("Price", value: $price, format: .currency(code: "EUR"))` accepts "12,50" in Germany and "12.50" in the US.
 
 ---
 
-## 71.9 RTL Layout and Mirroring
+## 71.8 Locale-Aware Sorting and Searching 🟡
 
-Right-to-left languages (Arabic, Hebrew) require an app's entire layout to mirror — not just text alignment, but the whole interface's directional flow (navigation stack push direction, leading/trailing edge placement, icon positioning) — and SwiftUI's leading/trailing-based layout APIs (rather than explicit left/right) automatically support this mirroring when the app's layout direction is RTL.
+Plain `<` compares **Unicode code points**, which gives wrong results for real text:
+
+```swift
+let names = ["banana", "Apple", "éclair", "cherry", "Step 10", "Step 2"]
+
+names.sorted()
+// ["Apple", "Step 10", "Step 2", "banana", "cherry", "éclair"]
+// ❌ uppercase before lowercase, "é" after "z", "10" before "2"
+
+names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+// ["Apple", "banana", "cherry", "éclair", "Step 2", "Step 10"]
+// ✅ like Finder: case-insensitive, accents in place, numbers by value
+```
+
+With key paths (iOS 15+):
+
+```swift
+recipes.sorted(using: KeyPathComparator(\.title, comparator: .localizedStandard))
+```
+
+The **right** order also depends on the **language**:
+
+| Language | Rule |
+|---|---|
+| Swedish | å, ä, ö come **after** z |
+| German | ä is sorted with a (dictionary order) |
+| Spanish (traditional) | ñ is its own letter, after n |
+
+Localized comparison follows the user's locale automatically.
+
+**Searching** needs the same care. Users type "creme" and expect "Crème brûlée":
+
+```swift
+"Crème brûlée".localizedStandardContains("creme")      // true: ignores case and accents
+"Crème brûlée".contains("creme")                         // false
+
+let results = recipes.filter { $0.title.localizedStandardContains(query) }
+```
+
+Use `localizedStandard…` methods for anything the **user** sees or types: lists, search, sorting by name.
+
+---
+
+## 71.9 RTL Layout and Mirroring 🟢
+
+**Right-to-left** (RTL) languages like **Arabic** and **Hebrew** flip the **whole** interface: reading starts on the right, navigation pushes from the left, the back button is on the right.
+
+SwiftUI does this **automatically** if you use **leading/trailing** instead of left/right:
 
 ```swift
 HStack {
-    Image(systemName: "chevron.left")
-    Text("Back")
+    Image(systemName: "chevron.backward")      // ✅ "backward" flips in RTL ("chevron.left" doesn't)
+    Text("Recipes")
+    Spacer()
 }
-// Using .leading/.trailing (not .left/.right) throughout layout code lets
-// SwiftUI automatically mirror this entire arrangement correctly for RTL locales,
-// without any locale-specific conditional layout code
+.padding(.leading, 16)                         // leading = left in English, right in Arabic
+.frame(maxWidth: .infinity, alignment: .leading)
 ```
 
-This is precisely why consistently using semantic leading/trailing (rather than literal left/right) throughout an app's layout code matters so significantly for RTL support — leading/trailing are direction-relative concepts that SwiftUI automatically flips appropriately based on the current layout direction, while explicit left/right positioning would require the app to manually detect RTL and conditionally swap positioning throughout the codebase, a considerably more error-prone and maintenance-heavy approach than simply using the direction-aware layout primitives consistently from the start.
+| ❌ Fixed direction | ✅ Direction-aware |
+|---|---|
+| "left", "right" | **leading**, **trailing** |
+| `chevron.left`, `arrow.right` | `chevron.backward`, `arrow.forward` |
+| `.offset(x: 20)` for layout | Alignment and padding (offsets don't flip) |
+| Custom `Path` / `Canvas` drawing assumes left-to-right | Check `@Environment(\.layoutDirection)` and flip yourself |
+| UIKit `leftAnchor` | `leadingAnchor` |
 
----
-
-## 71.10 Image and Symbol Flipping for RTL
-
-Beyond layout mirroring, some images and SF Symbols should also visually flip for RTL locales (a "forward" arrow pointing left instead of right) while others genuinely shouldn't (a photo of a person's face, a brand logo) — `.flipsForRightToLeftLayoutDirection` and SF Symbols' built-in RTL-aware variants control this per-image behavior explicitly.
+**Test** without knowing Arabic: in the scheme, set **App Language ▸ Right-to-Left Pseudolanguage** (71.13), or preview with:
 
 ```swift
-Image(systemName: "arrow.right")
-    .flipsForRightToLeftLayoutDirection(true)  // becomes a leftward arrow under RTL
-
-Image("companyLogo")
-    .flipsForRightToLeftLayoutDirection(false)  // logos should never mirror
+#Preview("RTL") {
+    RecipeRow(recipe: .sample)
+        .environment(\.layoutDirection, .rightToLeft)
+}
 ```
 
-Correctly distinguishing which images genuinely need RTL mirroring from which shouldn't ever mirror is a real design judgment call, not a rule that can be applied uniformly — directional imagery (arrows indicating forward progress, a "next" chevron) conveys meaning through its direction and should flip to preserve that meaning under RTL, while non-directional imagery (a logo, a photograph) has no directional meaning to preserve and would look genuinely wrong or nonsensical if mirrored, making this per-image judgment an important part of a genuinely thoughtful RTL implementation rather than a purely mechanical, blanket setting.
+Text alignment also follows the language: `.multilineTextAlignment(.leading)` means "start of the line", whichever side that is.
 
 ---
 
-## 71.11 Non-Gregorian Calendars
+## 71.10 Image and Symbol Flipping for RTL 🟡
 
-Beyond the Gregorian calendar assumed by many Western-centric apps by default, users in various locales may prefer other calendar systems (Islamic, Hebrew, Buddhist, Japanese era-based) for date display — `Calendar` and locale-aware `FormatStyle` (71.6) support these automatically when the user's locale/calendar preference indicates a non-Gregorian system.
+Layout mirrors automatically, but **images** are a **judgment call**: flip what has a **direction meaning**, keep what doesn't:
+
+| Flip in RTL | Don't flip |
+|---|---|
+| Arrows for "forward"/"back", "next" chevrons | **Logos** and brand marks |
+| Progress that moves "forward" | **Photos** of people and things |
+| A list icon with bullets on the left | **Clocks** (they turn the same way everywhere) |
+| A "reply" or "undo" arrow | **Media playback** controls (play ▶ always points right) |
+| | Checkmarks, numbers, most symbols |
+
+For **SF Symbols**, many directional symbols flip **automatically** (use the `forward`/`backward` names). For your **own** images:
 
 ```swift
-var calendar = Calendar(identifier: .islamicUmmAlQura)
-let components = calendar.dateComponents([.year, .month, .day], from: .now)
-// correctly represents the current date within the Islamic calendar system,
-// rather than assuming Gregorian dates are universal
+Image("swipe-hint-arrow")
+    .flipsForRightToLeftLayoutDirection(true)      // mirrors in RTL
+
+Image("recipe-app-logo")                           // default: never mirrored
 ```
 
-Apps that hardcode Gregorian-specific date logic (assuming exactly 12 months named a specific way, or a specific year-numbering convention) can produce genuinely incorrect or confusing results for users whose actual calendar preference differs — properly using `Calendar` and locale-aware formatting throughout, rather than manually constructing Gregorian-specific date logic, is what actually respects users' real calendar preferences rather than silently imposing a Western-centric assumption on every user regardless of their actual locale and calendar convention.
+In the **asset catalog**, you can set an image's **Direction** to "Left to Right, Mirrors" so it flips everywhere it's used, or provide a **separate** RTL image when simple mirroring looks wrong (for example, an illustration with text in it).
+
+Ask "**does this image point somewhere?**" If it shows a **direction** of movement or reading, flip it. If it shows a **thing**, don't.
 
 ---
 
-## 71.12 Time Zones and DST Edge Cases
+## 71.11 Non-Gregorian Calendars 🟡
 
-Time zone handling introduces genuine edge cases beyond simple offset arithmetic — daylight saving time transitions create an hour that's genuinely ambiguous (occurring twice, during a "fall back" transition) or entirely nonexistent (skipped during a "spring forward" transition), and correct time zone-aware code (using `TimeZone` and `Calendar` properly rather than naive fixed-offset math) must account for these genuinely tricky boundary conditions.
+Not everyone uses the **Gregorian** calendar for daily life. Users can choose the **Islamic**, **Hebrew**, **Buddhist**, **Japanese**, and other calendars in Settings, and in Thailand the Buddhist calendar is standard (2026 is year **2569**).
+
+If you use **`Calendar.current`** and **`FormatStyle`** (71.6) for display, this works **automatically**:
 
 ```swift
-// Naive, incorrect approach: treating a time zone as a fixed offset
-let wrongOffset = date.addingTimeInterval(-5 * 3600)  // breaks during DST transitions
-
-// Correct approach: let Calendar/TimeZone handle the actual, non-fixed offset correctly
-let calendar = Calendar.current
-let localDate = calendar.date(byAdding: .day, value: 1, to: date)!
+let today = Date.now
+today.formatted(date: .long, time: .omitted)
+// Gregorian:  "January 12, 2026"
+// Buddhist:   "January 12, 2569 BE"
+// Japanese:   "Reiwa 8 January 12"   (era-based year)
+// Islamic:    "Rajab 23, 1447 AH"
 ```
 
-DST transition bugs are a classic, recurring category of subtle date/time bug precisely because they only manifest during the specific, narrow windows when a transition actually occurs (twice a year in regions observing DST) — code that works correctly for 363 days of the year can still contain a genuine bug that only surfaces during those specific transition windows, making deliberate testing around DST boundaries (not just "does date math generally work") a genuinely necessary part of thorough time zone-aware code validation.
-
----
-
-## 71.13 Pseudolocalization for Testing
-
-Pseudolocalization generates a synthetic "locale" that transforms strings in ways deliberately designed to surface localization bugs early — commonly, expanding string length (since translated text is frequently longer than English source text) and replacing standard characters with accented look-alikes, without requiring actual translation into a real target language.
-
-```plaintext
-// A pseudolocalized version of "Save Changes" might render as something like:
-// "[Šàvéé Çhàñĝéš !!!]" — deliberately longer and using accented characters,
-// surfacing layout truncation/wrapping issues and hardcoded-string assumptions
-// without needing real German, French, or Japanese translations yet
-```
-
-Pseudolocalization's genuine value is catching localization-readiness problems *before* real translations even exist — a layout that breaks under pseudolocalized, artificially lengthened text would almost certainly also break under a real, similarly-lengthened French or German translation, meaning pseudolocalization testing can happen early in development (well before actual translation work is complete or even commissioned) and still surface genuine, actionable layout and hardcoding issues that would otherwise only be discovered much later, once real translated strings are finally available.
-
----
-
-## 71.14 Localizing App Store Metadata
-
-Beyond in-app string localization, App Store Connect separately supports localizing an app's actual store listing — name, subtitle, description, keywords, and screenshots — for each supported market, a genuinely distinct localization surface from the in-app String Catalog work covered throughout the rest of this section.
-
-```plaintext
-// App Store Connect metadata localization is configured per-locale, not via Swift code:
-// - App name and subtitle (each with per-locale character limits)
-// - Description and "what's new" release notes
-// - Keywords (affecting App Store search visibility in that locale)
-// - Screenshots (which can and often should show localized in-app content)
-```
-
-This metadata localization matters for genuinely practical business reasons beyond simple app usability — an app's actual App Store discoverability and conversion rate in a given market depend heavily on whether its store listing itself (not just its in-app content) is properly localized, meaning even a perfectly, thoroughly localized in-app experience can underperform in a given market if the store listing that convinces someone to actually download it in the first place remains untranslated or poorly localized.
-
----
-
-## 71.15 AI-Assisted Localization in Xcode 27
-
-As introduced in section 61.5, Xcode 27's AI-assisted localization can draft initial translations for new or changed String Catalog entries directly within Xcode — providing a meaningful head start on the localization workflow covered throughout this section, while still requiring the same human review discipline emphasized in 61.5 before any AI-drafted translation ships.
+Bugs come from **hard-coding** Gregorian assumptions:
 
 ```swift
-// AI-drafted translations populate directly into the String Catalog editor,
-// marked with an appropriate "needs review" translation state (71.2)
-// rather than being treated as already-final, human-verified translations
+// ❌ Assumes the Gregorian year, 12 months, and a fixed month name list
+let year = Calendar.current.component(.year, from: today)    // 2569 for a Buddhist-calendar user!
+let label = "Recipes from \(monthNames[month - 1]) \(year)"
+
+// ✅ Display: let the user's calendar decide
+let label = today.formatted(.dateTime.month(.wide).year())
+
+// ✅ Logic and storage that must be Gregorian: say so explicitly
+let gregorian = Calendar(identifier: .gregorian)
+let storedYear = gregorian.component(.year, from: today)      // 2026, always
 ```
 
-Placing AI-drafted translations into the same "needs review" state (71.2) that any other unreviewed translation would carry is a meaningful, deliberate design choice — it ensures AI-assisted localization integrates into the existing, already-established String Catalog review workflow (rather than bypassing it), meaning the genuine value of AI assistance here is accelerating the *first draft* of translation work across this section's entire localization surface (plurals, variations, Markdown-formatted strings, and more), not replacing the human review step that remains essential before any translation, AI-drafted or otherwise, actually ships to real users.
+Other calendar facts that differ by **region**:
+
+| Setting | Varies |
+|---|---|
+| `calendar.firstWeekday` | Week starts **Sunday** (US), **Monday** (most of Europe), **Saturday** (parts of the Middle East) |
+| Weekend days | Saturday–Sunday, or Friday–Saturday |
+| Number of months | 12, or **13** in a leap year (Hebrew calendar) |
+
+Use `Calendar.current` for anything **shown** (week views, "this month"), and an explicit Gregorian/ISO calendar for **data**.
+
+---
+
+## 71.12 Time Zones and DST Edge Cases 🔴
+
+**Daylight saving time** (DST) makes days **not** always 24 hours long:
+
+```
+US, 8 March 2026 (spring forward): 02:00 → 03:00   the day has 23 hours; 02:30 doesn't EXIST
+US, 1 November 2026 (fall back):   02:00 → 01:00   the day has 25 hours; 01:30 happens TWICE
+```
+
+So "**add 86,400 seconds**" is not "**add one day**":
+
+```swift
+let calendar = Calendar.current                        // the user's time zone, e.g. America/New_York
+let saturday6pm = makeDate(year: 2026, month: 3, day: 7, hour: 18)   // a Saturday, New York time
+
+// ❌ Fixed seconds: lands at 19:00 on Sunday (the day only had 23 hours)
+let wrong = saturday6pm.addingTimeInterval(86_400)
+
+// ✅ Calendar math: 18:00 on Sunday, as the user expects
+let right = calendar.date(byAdding: .day, value: 1, to: saturday6pm)!
+```
+
+Rules for date and time code:
+
+| Situation | Store | Why |
+|---|---|---|
+| A **moment** ("the order was paid") | A `Date` (an absolute instant) | Same moment for everyone |
+| An **event at a place** ("cooking class, 18:00 Paris") | The `Date` **plus** the **time zone identifier** ("Europe/Paris") | Rules change; offsets aren't enough |
+| A **floating** date ("birthday: 14 May", "every day at 07:00") | `DateComponents` | Means "local time, wherever I am" |
+
+More traps:
+
+- A time zone is **not** a fixed offset. "New York = UTC−5" is wrong half the year (it's UTC−4 in summer), and countries **change** their rules.
+- Repeating reminders at a **nonexistent** time (02:30 on spring-forward day) need a decision: use `calendar.nextDate(after:matching:matchingPolicy:)` with `.nextTime` or `.previousTimePreservingSmallerComponents`.
+- **Test** with fixed time zones and the **transition dates**, not just "today":
+
+```swift
+@Test func addingADayAcrossSpringForwardKeepsTheClockTime() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+
+    let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 3, day: 7, hour: 18)))
+    let next = try #require(calendar.date(byAdding: .day, value: 1, to: start))
+
+    #expect(calendar.component(.hour, from: next) == 18)
+    #expect(next.timeIntervalSince(start) == 23 * 3600)       // only 23 real hours passed
+}
+```
+
+DST bugs hide for **363 days** a year and appear on the two transition days, often at night, in production. Tests with **fixed** dates and zones (65.12) catch them in seconds.
+
+---
+
+## 71.13 Pseudolocalization for Testing 🟢
+
+You can find most localization **bugs** before a single real translation exists, with **pseudolanguages**. In the scheme: **Edit Scheme ▸ Run ▸ Options ▸ App Language**:
+
+| Pseudolanguage | Shows | Finds |
+|---|---|---|
+| **Double-Length** | Every string repeated: "Save Save" | **Truncation** and layouts that can't grow (German and Finnish are often 30–50% longer than English) |
+| **Accented** | "Šàvé Çhàñĝéš" | Fonts or code that mishandle accents; strings you forgot to localize stay plain |
+| **Bounded String** | "[# Save #]" | Text that's **cut off** (you'd lose the closing bracket) and strings built from pieces |
+| **Right-to-Left** | Mirrored layout (71.9) | Hard-coded left/right, images that should flip |
+
+Also turn on **Show non-localized strings** (same Options tab): strings that aren't localized appear in **UPPERCASE**, so you spot hard-coded text at a glance.
+
+```
+Typical findings:
+- "SAVE CHANGES" in caps         → a String variable passed to Text (71.1)
+- "[# Add to Shopping Li"        → a fixed-width button; let it wrap or use ViewThatFits (71.4)
+- Price label stays on the left  → .offset or .left used instead of .leading
+```
+
+Make it a routine: run your main screens in **Double-Length** and **RTL** before each release. The same works in **UI tests** (67.6) by passing `-AppleLanguages (...)` launch arguments, and in **test plans** with one configuration per language (66.14).
+
+---
+
+## 71.14 Localizing App Store Metadata 🟢
+
+Your **App Store page** is localized separately, in **App Store Connect**, not in the String Catalog. For each language you choose:
+
+| Field | Limit | Notes |
+|---|---|---|
+| **App name** | 30 characters | Can differ per market |
+| **Subtitle** | 30 characters | A short value statement |
+| **Keywords** | 100 characters | Affects **search** in that country's store; research local terms |
+| **Promotional text** | 170 characters | Can be updated without a new app version |
+| **Description** | 4,000 characters | |
+| **What's New** | | Per release |
+| **Screenshots** and previews | | Should show the app **in that language** |
+
+Why it matters: people decide to download from the **store page**. A perfectly localized app with an **English-only** page and English screenshots loses many users in, say, Japan or Brazil before they ever open it.
+
+Practical tips:
+
+- Generate **localized screenshots** automatically: UI tests (67) launched with each language, taking screenshots with fixed demo data.
+- **Keywords** aren't translations: research what people **search** for locally ("recetas" vs. "cocina").
+- In-app purchase **names** and descriptions (56.2) are localized in App Store Connect too.
+- Keep **privacy** and **accessibility** information (70.18) accurate for every market.
+
+---
+
+## 71.15 AI-Assisted Localization in Xcode 27 🟡
+
+The Xcode 27 tools (introduced in 61.5) can **draft** translations for new and changed String Catalog entries. That speeds up the **first** step a lot. But a draft is not a finished translation.
+
+⚠️ Check the documentation for the exact feature set in your Xcode version.
+
+The safe workflow:
+
+```
+1. AI drafts translations for new strings
+2. Drafts get the "Needs Review" state (71.2), never "Translated"
+3. A native speaker reviews them in context (the app running in that language)
+4. Only then: mark as Translated and ship
+```
+
+What reviewers should check, because AI drafts often get these **wrong**:
+
+| Check | Example problem |
+|---|---|
+| **Context** | "Book" translated as a noun instead of the verb (71.2: comments help the AI too) |
+| **Placeholders** | `%@` or `%lld` dropped, duplicated, or in a broken order |
+| **Plurals** | Missing "few"/"many" forms (71.3) |
+| **Tone** | Formal vs. informal "you" (German *Sie/du*, French *vous/tu*) mixed in one app |
+| **Terminology** | Your feature names or brand terms translated when they shouldn't be |
+| **Length** | Correct but far too long for the button (71.13) |
+
+Good **comments** (71.2) and a **glossary** of your terms make AI drafts much better: the model gets the same context a human translator would.
+
+The value of AI here is **speed** on the first draft across everything in this section: plurals, variations, Markdown strings. The human **review** step stays, exactly as for any other unreviewed translation.
 
 ---
 
@@ -229,18 +563,18 @@ Placing AI-drafted translations into the same "needs review" state (71.2) that a
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| String management | String Catalog (`.xcstrings`) | Unified, auto-extracted, synchronized string management |
-| Translator context | Translation states, comments | Disambiguates short/ambiguous strings for translators |
-| Grammatical correctness | Plural variation rules | Handles per-language plural category complexity |
-| Contextual wording | Device/width variations | Adapts wording to available space, not just language |
-| Formatted translation | `AttributedString`, Markdown | Preserves natural word order and formatting together |
-| Date formatting | `Date.FormatStyle` | Locale-correct component order and conventions |
-| Numeric formatting | `FormatStyle` (numbers/currency) | Correct separator and currency symbol conventions |
-| Correct ordering | `localizedStandardCompare` | Locale-appropriate sorting and searching |
-| Directional layout | Leading/trailing, RTL mirroring | Automatic whole-interface RTL support |
-| Directional imagery | `.flipsForRightToLeftLayoutDirection` | Per-image judgment on RTL mirroring appropriateness |
-| Calendar systems | `Calendar` (non-Gregorian identifiers) | Respects users' actual calendar preferences |
-| Time correctness | `TimeZone`/`Calendar`-aware math | Avoids DST transition edge-case bugs |
-| Early bug detection | Pseudolocalization | Surfaces layout/hardcoding issues before real translation |
-| Store discoverability | App Store Connect metadata localization | A distinct, business-critical localization surface |
-| Accelerated drafting | Xcode 27 AI-assisted localization | First-draft speed without bypassing human review |
+| String Catalogs | `.xcstrings`, `String(localized:)`, `LocalizedStringKey` | One file, auto-extracted; avoid `String` variables in `Text` |
+| Translator help | States, comments, Export Localizations | Context prevents mistranslation |
+| Plurals | Vary by Plural, `inflect: true` | Correct forms for every language |
+| Variations | Vary by Device, `ViewThatFits` | The right wording for the space |
+| Rich text | Markdown in one localized string | Translators control word order |
+| Dates | `Date.FormatStyle`; ISO 8601 for data | Local formats for people, fixed for machines |
+| Numbers and money | `.currency(code:)`, `Decimal`, `Measurement` | Correct separators, currencies, and units |
+| Sorting and search | `localizedStandardCompare`, `localizedStandardContains` | Order and matching users expect |
+| RTL layout | leading/trailing, `forward`/`backward` symbols | The whole UI mirrors automatically |
+| Image flipping | `flipsForRightToLeftLayoutDirection`, asset Direction | Flip directions, not things |
+| Calendars | `Calendar.current` for display, Gregorian for data | Respect the user's calendar |
+| Time zones and DST | Calendar math, time zone identifiers, fixed-date tests | Days aren't always 24 hours |
+| Pseudolanguages | Double-Length, Accented, Bounded, RTL | Find bugs before translations exist |
+| Store page | App Store Connect localized metadata | Where download decisions happen |
+| AI drafts | Needs Review + native-speaker review | Faster first drafts, same quality bar |
