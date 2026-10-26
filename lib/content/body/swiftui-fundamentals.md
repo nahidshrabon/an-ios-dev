@@ -1,6 +1,8 @@
-## 23.1 The `View` Protocol and `body`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Every SwiftUI view is a type conforming to the `View` protocol, which has exactly one requirement: a computed property named `body` describing what the view displays, in terms of other views.
+## 23.1 The `View` Protocol and `body` 🟢
+
+Every SwiftUI view is a type that conforms to the **`View`** protocol. It has **one requirement**: a computed property named **`body`** that describes what the view shows, **built from other views**.
 
 ```swift
 struct GreetingView: View {
@@ -10,13 +12,34 @@ struct GreetingView: View {
 }
 ```
 
-`body`'s return type, `some View` (recall the opaque return type mechanism from section 8.7), means "some specific, concrete view type, determined by what's actually written inside — but callers don't need to know exactly which type." This is precisely why `body` can return wildly different concrete types (a `Text`, a `VStack` containing several other views, and so on) across different views, all expressed with the exact same `some View` signature.
+The return type **`some View`** (an opaque type, 8.7) means: "**one specific view type**, decided by what's written inside, but callers don't need to know which." That's why every view can use the same `some View` signature, whether `body` returns a `Text`, or a `VStack` holding ten other views.
+
+Views are usually small **structs** with **inputs** (properties) and a `body`:
+
+```swift
+struct RecipeRow: View {
+    let title: String
+    let minutes: Int
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(title).font(.headline)
+            Text("\(minutes) min").foregroundStyle(.secondary)
+        }
+    }
+}
+
+// Using it:
+RecipeRow(title: "Pancakes", minutes: 20)
+```
+
+**Small views are cheap.** Split big `body`s into small, named views. It's easier to read, and SwiftUI can update each piece separately.
 
 ---
 
-## 23.2 Views Are Descriptions, Not Objects
+## 23.2 Views Are Descriptions, Not Objects 🟢
 
-Unlike UIKit's `UIView` (a genuine, persistent object that lives on screen and can be mutated after creation), a SwiftUI `View` value is a lightweight, disposable **description** of what should appear — SwiftUI creates and discards these description values constantly, computing a new `body` any time the underlying state changes, and then diffing the result against the previous description to decide what actually needs to change on screen.
+In UIKit, a `UIView` is a **real object** that lives on screen; you **change** it after creating it. A SwiftUI `View` is a **lightweight description** of what should appear. SwiftUI **creates and throws away** these descriptions all the time: whenever the state changes, it computes a **new `body`**, **compares** it with the old one, and updates only what changed on screen.
 
 ```swift
 struct CounterView: View {
@@ -28,13 +51,32 @@ struct CounterView: View {
 }
 ```
 
-This is a genuine mental model shift from UIKit: you never mutate a `Text` view's string after creating it the way you'd set `label.text = "new value"` on a `UILabel` — instead, you describe what the view *should* look like for the current state, and SwiftUI recomputes and re-renders that description automatically whenever the state driving it changes (the full mechanics of what triggers this recomputation are covered in section 25).
+The mental shift from UIKit:
+
+```swift
+// UIKit: change the object
+label.text = "Count: \(count)"
+
+// SwiftUI: describe the screen for the current state; SwiftUI does the rest
+Text("Count: \(count)")
+```
+
+```plaintext
+state changes  →  SwiftUI calls body  →  new description  →  compare with old  →  update the screen
+```
+
+So in SwiftUI you **never** "update the label". You change the **state**, and the description follows. Section 25 covers which state changes trigger a new `body`.
+
+Two consequences:
+
+- `body` can run **often**. Keep it **fast** and **free of side effects** (no network calls inside `body`).
+- Don't keep references to views to change them later. There's nothing to keep.
 
 ---
 
-## 23.3 `Text` and Text Styling
+## 23.3 `Text` and Text Styling 🟢
 
-`Text` displays a string, and supports a chainable set of modifiers for basic text-specific styling — separate from the general-purpose modifiers covered in 23.7, though visually similar in usage:
+**`Text`** shows a string. It has modifiers for text styling:
 
 ```swift
 Text("Hello, World!")
@@ -46,17 +88,36 @@ Text("Hello, World!")
     .strikethrough()
 ```
 
-`Text` also accepts an `AttributedString` directly (recall section 14.17), letting you author rich text with mixed formatting — bold words, links — using Markdown syntax rather than manually chaining modifiers over an entire string:
+A **string literal** in `Text` supports **Markdown**, for mixed styles and links (14.17):
 
 ```swift
 Text("This is **bold** and this is *italic*")   // Markdown syntax works directly in Text's string literal
+Text("Read the [terms](https://example.com/terms).")   // a tappable link
+```
+
+Useful text modifiers for real layouts:
+
+```swift
+Text(recipe.description)
+    .lineLimit(2)                       // at most 2 lines, then "…"
+    .multilineTextAlignment(.leading)
+    .truncationMode(.tail)
+
+Text(price, format: .currency(code: "USD"))   // formatting built in (14.14)
+Text(date, style: .relative)                  // "5 minutes ago", updates itself
+```
+
+You can even join `Text` values with `+`, each with its own style:
+
+```swift
+Text("Total: ").foregroundStyle(.secondary) + Text("$12.50").bold()
 ```
 
 ---
 
-## 23.4 `Image` and Image Scaling Modes
+## 23.4 `Image` and Image Scaling Modes 🟢
 
-`Image` displays either an asset-catalog image, an SF Symbol (see 23.5), or a system-provided image, and requires explicit configuration to control how it fits into whatever frame it's given:
+**`Image`** shows an image from the asset catalog, an **SF Symbol** (23.5), or a system image. You must **configure** how it fits its frame:
 
 ```swift
 Image("myPhoto")           // from the asset catalog
@@ -71,13 +132,35 @@ Image("myPhoto")
     .clipped()                          // without this, the overflowing portion still renders outside the frame
 ```
 
-The `.resizable()` modifier is easy to forget and a common source of "my image isn't respecting `.frame()`" confusion — without it, `Image` always renders at its underlying asset's native pixel dimensions, entirely ignoring any `.frame()` modifier applied afterward.
+| Mode | Result |
+|---|---|
+| `.fit` (`.scaledToFit()`) | The whole image is visible; may leave empty space |
+| `.fill` (`.scaledToFill()`) | The frame is full; the image may be **cropped** (add `.clipped()`) |
+
+**Forgetting `.resizable()`** is the classic mistake: without it, an image always draws at its **original size**, and `.frame()` seems to do nothing.
+
+A common pattern: a round profile picture:
+
+```swift
+Image("avatar")
+    .resizable()
+    .scaledToFill()
+    .frame(width: 64, height: 64)
+    .clipShape(.circle)
+```
+
+Decorative images should be hidden from VoiceOver; meaningful ones need a label (section 70):
+
+```swift
+Image(decorative: "background-pattern")
+Image("chart").accessibilityLabel("Sales grew 20% this month")
+```
 
 ---
 
-## 23.5 SF Symbols and Symbol Configuration
+## 23.5 SF Symbols and Symbol Configuration 🟢
 
-SF Symbols are Apple's built-in icon library, referenced by name via `Image(systemName:)`, and support their own configuration options distinct from photo images:
+**SF Symbols** are Apple's built-in icons, thousands of them, used with **`Image(systemName:)`**. Browse them in the free **SF Symbols** Mac app.
 
 ```swift
 Image(systemName: "star.fill")
@@ -91,13 +174,39 @@ Image(systemName: "wifi")
     .symbolVariant(.slash)              // applies a variant, e.g. "wifi.slash" without hardcoding the string
 ```
 
-Because SF Symbols are vector-based and scale with the current font/Dynamic Type setting (recall section 23.13's connection to Dynamic Type), they automatically respect accessibility text-size preferences in a way that a fixed-pixel-size photo asset never could, without any extra work required.
+Symbols are **vectors**, sized like **text**. They follow the font and **Dynamic Type** (23.13), so they grow for users with larger text, with no extra work. A fixed-size photo can't do that.
+
+Rendering modes:
+
+| Mode | Look |
+|---|---|
+| `.monochrome` | One color (the default) |
+| `.hierarchical` | One color in several opacities, for depth |
+| `.palette` | Your own color per layer |
+| `.multicolor` | The symbol's built-in colors |
+
+Symbols can also **animate**:
+
+```swift
+Image(systemName: "bell.fill")
+    .symbolEffect(.bounce, value: notificationCount)   // bounces each time the count changes
+
+Image(systemName: "wifi")
+    .symbolEffect(.variableColor.iterative)            // a "searching" animation
+```
+
+Match symbols to text with `.imageScale`:
+
+```swift
+Label("Downloads", systemImage: "arrow.down.circle")
+    .imageScale(.large)
+```
 
 ---
 
-## 23.6 `Label` and Its Layout Styles
+## 23.6 `Label` and Its Layout Styles 🟢
 
-`Label` pairs an icon with text as a single semantic unit — more than just visual convenience, since it also carries accessibility meaning as one combined element rather than two separate ones a screen reader would announce independently:
+**`Label`** combines an **icon** and **text** into **one unit**. It's more than a shortcut: for **VoiceOver**, it's **one element** with a clear name, not two separate things.
 
 ```swift
 Label("Settings", systemImage: "gear")
@@ -109,28 +218,79 @@ Label("Favorites", systemImage: "star.fill")
     .labelStyle(.titleOnly)    // shows only the text, hides the icon
 ```
 
-`Label` is used extensively throughout system UI (tab bar items, list rows with leading icons, toolbar buttons) precisely because it bundles icon + text as one coherent, accessibility-aware unit, rather than requiring you to manually compose an `HStack { Image(...); Text(...) }` and separately manage its accessibility behavior yourself.
+The system uses `Label` everywhere: tab bar items, list rows with icons, toolbar buttons. Often the **container** decides the style for you:
+
+```swift
+TabView {
+    HomeView()
+        .tabItem { Label("Home", systemImage: "house") }    // icon + title in the tab bar
+}
+
+.toolbar {
+    Button { share() } label: {
+        Label("Share", systemImage: "square.and.arrow.up")  // icon in the toolbar, text for VoiceOver
+    }
+}
+```
+
+Compare with building it yourself:
+
+```swift
+// ❌ Two separate elements; VoiceOver may read "gear, image" and "Settings" separately
+HStack { Image(systemName: "gear"); Text("Settings") }
+
+// ✅ One element named "Settings"; the style adapts to where it's used
+Label("Settings", systemImage: "gear")
+```
 
 ---
 
-## 23.7 What a View Modifier Is
+## 23.7 What a View Modifier Is 🟢
 
-A view modifier is a method that takes an existing view and returns a **new** view wrapping it with additional behavior or appearance — modifiers don't mutate the original view in place (recall 23.2's "views are descriptions" point); they produce a new, wrapped description each time.
+A **view modifier** is a method that takes a view and returns a **new view** that **wraps** it, adding behavior or appearance. Modifiers **don't change** the original view (views are descriptions, 23.2). Each one makes a **new, wrapped** description.
 
 ```swift
 Text("Hello")
     .padding()              // wraps Text in a new view adding padding around it
     .background(.blue)       // wraps that padded view in a new view adding a blue background
-    .cornerRadius(8)          // wraps that in a new view clipping corners
+    .clipShape(.rect(cornerRadius: 8))   // wraps that in a new view clipping corners
 ```
 
-Each modifier call in this chain produces a distinct, nested view type under the hood — this chain's actual type is something like `_ClipEffect<_BackgroundStyleModifier<_PaddingLayout<Text>>>`, a deeply nested composition the `some View` opaque return type (23.1) conveniently hides from you, letting you write and reason about the chain without ever needing to spell out that type yourself.
+Under the hood, each step creates a nested type. You can see it:
+
+```swift
+let view = Text("Hello").padding().background(.blue)
+print(type(of: view))
+// ModifiedContent<ModifiedContent<Text, _PaddingLayout>, _BackgroundStyleModifier<Color>>
+```
+
+`some View` (23.1) hides this long type, so you never have to write it.
+
+You can make **your own** modifiers for styles you repeat:
+
+```swift
+struct CardStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .background(.background.secondary)
+            .clipShape(.rect(cornerRadius: 12))
+            .shadow(radius: 2)
+    }
+}
+
+extension View {
+    func cardStyle() -> some View { modifier(CardStyle()) }
+}
+
+Text("Pancakes").cardStyle()
+```
 
 ---
 
-## 23.8 Modifier Order Matters — A Demo
+## 23.8 Modifier Order Matters — A Demo 🟢
 
-Since each modifier wraps the *previous* result (rather than all applying simultaneously to the original view), **the order modifiers are applied in changes the actual visual result** — this is one of the most common sources of SwiftUI confusion for newcomers.
+Each modifier wraps the **result so far**. They don't all apply to the original view at once. So **the order changes the result**. This confuses many newcomers.
 
 ```swift
 // Padding BEFORE background: the background color extends to cover the padding too
@@ -147,13 +307,31 @@ Text("Hello")
 // Result: a small blue rectangle tightly around the text, with transparent padding around THAT
 ```
 
-The mental model that resolves this confusion: read a modifier chain from top to bottom (or left to right) as "wrap the previous result in this new behavior," not as "apply all of these properties to the base view simultaneously" — each step operates on the *cumulative* result of everything above it, not on the original `Text` alone.
+```plaintext
+.padding().background(.blue)          .background(.blue).padding()
+
+┌───────────────┐                      ┌───────────────┐
+│███████████████│                      │               │
+│███ Hello █████│                      │   ███████     │
+│███████████████│                      │   █Hello█     │
+└───────────────┘                      │   ███████     │
+                                       └───────────────┘
+```
+
+Another classic: a frame and a border:
+
+```swift
+Text("Hi").border(.red).frame(width: 200)   // border hugs the text
+Text("Hi").frame(width: 200).border(.red)   // border is 200 wide
+```
+
+**The mental model:** read the chain **top to bottom** as "**wrap** the previous result in this". Each step works on everything **above** it, not on the original `Text`.
 
 ---
 
-## 23.9 Colors and Semantic System Colors
+## 23.9 Colors and Semantic System Colors 🟢
 
-SwiftUI's `Color` type supports both fixed values (`.red`, `.blue`, a custom `Color(red:green:blue:)`) and **semantic system colors** that automatically adapt to context — most importantly, automatically adjusting between light and dark mode (recall section 23.16) without any extra code.
+SwiftUI's **`Color`** has **fixed** colors (`.red`, `.blue`, `Color(red:green:blue:)`) and **semantic** colors that **adapt** automatically, most importantly between **light and dark mode** (23.16).
 
 ```swift
 Text("Hello")
@@ -164,13 +342,33 @@ Text("Subtitle")
     .foregroundStyle(.secondary)     // a dimmer, adaptive variant of .primary, for de-emphasized text
 ```
 
-Preferring semantic colors (`.primary`, `.secondary`, `Color(.systemBackground)`) over hardcoded fixed values (`.black`, `.white`) is what makes a view automatically correct in both light and dark mode, and is also what respects system-wide accessibility settings like Increase Contrast, without any conditional logic checking the current color scheme yourself.
+| Use | Instead of |
+|---|---|
+| `.primary`, `.secondary`, `.tertiary` | `.black`, `.gray` |
+| `.background`, `Color(.systemBackground)` | `.white` |
+| `.tint` (the app's accent color) | A hard-coded blue |
+
+**Prefer semantic colors.** Your view is then correct in **light and dark mode**, and respects settings like **Increase Contrast**, with no `if` checks.
+
+Your **own brand colors** can adapt too: add a **Color Set** in the asset catalog with a light and a dark variant, then use it by name:
+
+```swift
+Text("Welcome").foregroundStyle(Color("BrandPrimary"))   // light/dark versions from the asset catalog
+// Xcode also generates a symbol: .foregroundStyle(.brandPrimary)
+```
+
+Set the app-wide accent color with `.tint`:
+
+```swift
+ContentView()
+    .tint(.orange)          // buttons, links, toggles use orange
+```
 
 ---
 
-## 23.10 `.foregroundStyle()` and Hierarchical Styles
+## 23.10 `.foregroundStyle()` and Hierarchical Styles 🟡
 
-`.foregroundStyle()` (the modern replacement for the older `.foregroundColor()`) accepts not just a single color, but a **style** — including hierarchical styles that automatically derive complementary shades from a single base color, useful for symbols/views with multiple layered parts:
+**`.foregroundStyle()`** (the modern replacement for `.foregroundColor()`) takes a **style**, not just a color. That includes **hierarchical** styles that build matching shades from one base, and gradients.
 
 ```swift
 Image(systemName: "cloud.sun.fill")
@@ -183,13 +381,38 @@ Text("Subtitle")
     .foregroundStyle(.secondary)   // hierarchical: automatically a dimmer variant relative to .primary
 ```
 
-`.foregroundStyle()` can accept up to three style arguments for multi-layered symbols (primary, secondary, tertiary layers), letting a single SF Symbol render with a coordinated, automatically-harmonious multi-tone appearance rather than requiring separate manual color configuration for each visual layer.
+For multi-layer SF Symbols, it accepts up to **three** styles (primary, secondary, tertiary layers):
+
+```swift
+Image(systemName: "person.crop.circle.badge.plus")
+    .symbolRenderingMode(.palette)
+    .foregroundStyle(.white, .blue, .green)
+```
+
+A style set on a **container** flows down to its children. Children can then use `.secondary` **relative to it**:
+
+```swift
+VStack {
+    Text("Order shipped")             // uses the container's style (orange)
+    Text("Arrives Friday")
+        .foregroundStyle(.secondary)  // a dimmer orange
+}
+.foregroundStyle(.orange)
+```
+
+Gradients work too, anywhere a style is accepted:
+
+```swift
+Text("Premium")
+    .font(.largeTitle.bold())
+    .foregroundStyle(.linearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing))
+```
 
 ---
 
-## 23.11 Gradients: Linear, Radial, Angular
+## 23.11 Gradients: Linear, Radial, Angular 🟢
 
-SwiftUI provides three gradient types, usable anywhere a `ShapeStyle` is expected (backgrounds, foreground styles, shape fills):
+SwiftUI has three gradient types. Use them anywhere a **`ShapeStyle`** is expected: backgrounds, foreground styles, shape fills.
 
 ```swift
 LinearGradient(
@@ -215,13 +438,38 @@ Text("Hello")
     .background(LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing))
 ```
 
-`LinearGradient` transitions along a straight line between two points; `RadialGradient` transitions outward from a center point; `AngularGradient` sweeps around a center point like a color wheel — each accepting either a plain color array or a `Gradient` value (which supports precise per-color "stop" positions for finer control over the transition).
+| Gradient | Changes color |
+|---|---|
+| `LinearGradient` | Along a straight line |
+| `RadialGradient` | Outward from a center point |
+| `AngularGradient` | Around a center, like a color wheel |
+
+For exact control, use **stops** (where each color is placed, from 0 to 1):
+
+```swift
+LinearGradient(
+    stops: [
+        .init(color: .clear, location: 0),
+        .init(color: .black.opacity(0.7), location: 1),
+    ],
+    startPoint: .top,
+    endPoint: .bottom
+)
+```
+
+That one is a classic: a **dark fade** at the bottom of a photo, so white text on top stays readable.
+
+There's also a quick, subtle system gradient from any color:
+
+```swift
+Rectangle().fill(.blue.gradient)
+```
 
 ---
 
-## 23.12 Fonts and Text Styles
+## 23.12 Fonts and Text Styles 🟢
 
-SwiftUI's `.font()` modifier accepts both fixed-size fonts and **text styles** — semantic sizes (`.largeTitle`, `.title`, `.headline`, `.body`, `.caption`, and others) that automatically scale with the user's Dynamic Type accessibility setting (see 23.13), rather than a fixed point size that ignores it entirely.
+**`.font()`** accepts fixed sizes and **text styles**. Text styles (`.largeTitle`, `.title`, `.headline`, `.body`, `.caption`, ...) are **semantic** sizes that **scale with Dynamic Type** (23.13). A fixed point size doesn't.
 
 ```swift
 Text("Heading")
@@ -237,26 +485,77 @@ Text("Custom design")
     .font(.body.monospaced())     // or a monospaced/rounded/serif design variant
 ```
 
-**Prefer semantic text styles over fixed point sizes** for the vast majority of app text — this single choice is what makes text automatically respect a user's accessibility text-size preferences, a significant, low-effort accessibility win covered in full in section 70.
+The text styles, from biggest to smallest:
+
+```plaintext
+.largeTitle  .title  .title2  .title3  .headline  .body  .callout  .subheadline  .footnote  .caption  .caption2
+```
+
+**Use text styles for almost all app text.** It's the easiest big accessibility win (section 70).
+
+If you need a **custom font** or size, make it scale **relative to** a text style:
+
+```swift
+Text("Brand heading")
+    .font(.custom("Avenir-Heavy", size: 28, relativeTo: .title))   // scales like .title
+
+@ScaledMetric(relativeTo: .body) private var iconSize = 24.0       // a number that scales too
+Image(systemName: "star").font(.system(size: iconSize))
+```
 
 ---
 
-## 23.13 Dynamic Type and Scalable Text
+## 23.13 Dynamic Type and Scalable Text 🟢
 
-Dynamic Type is the system-wide setting (in Settings → Accessibility → Display & Text Size) letting users scale all supporting text larger or smaller across every app — SwiftUI's semantic text styles (23.12) automatically participate in this scaling with zero additional code required.
+**Dynamic Type** is the system setting (**Settings → Accessibility → Display & Text Size → Larger Text**) that lets users make text **bigger or smaller** in every app. SwiftUI's text styles (23.12) follow it **automatically**:
 
 ```swift
 Text("This text scales automatically")
     .font(.body)   // will grow noticeably larger if the user has increased their Dynamic Type setting
 ```
 
-You can preview how a view behaves at different Dynamic Type sizes directly in Xcode Previews (see 23.14–23.15) using the `.environment(\.sizeCategory, ...)` modifier, or by testing with the Accessibility Inspector — verifying your layout doesn't break, truncate awkwardly, or overlap at the larger accessibility sizes is an important, often-overlooked part of building genuinely accessible SwiftUI views, expanded on further in section 70.10.
+Test larger sizes in Previews with **`.dynamicTypeSize`**:
+
+```swift
+#Preview("Accessibility size") {
+    RecipeRow(title: "Pancakes with maple syrup", minutes: 20)
+        .dynamicTypeSize(.accessibility3)
+}
+```
+
+Check that at large sizes your layout **doesn't break, cut off text, or overlap**. A common fix is switching from horizontal to vertical:
+
+```swift
+struct InfoRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading))
+            : AnyLayout(HStackLayout())
+
+        layout {
+            Text("Prep time")
+            Spacer()
+            Text("20 min").foregroundStyle(.secondary)
+        }
+    }
+}
+```
+
+You can also limit the range for a specific view, when a design truly can't grow:
+
+```swift
+Text("Tab").dynamicTypeSize(...DynamicTypeSize.xxxLarge)   // use sparingly
+```
+
+More in section 70.10.
 
 ---
 
-## 23.14 Xcode Previews with `#Preview`
+## 23.14 Xcode Previews with `#Preview` 🟢
 
-`#Preview` is a macro (recall section 13.2's freestanding macro coverage) that generates a live, interactive preview of a view directly inside Xcode's canvas, without needing to build and run the full app on a simulator or device for every small UI iteration.
+**`#Preview`** is a macro (13.2) that shows a **live preview** of a view in Xcode's **canvas**, without building and running the whole app:
 
 ```swift
 struct GreetingView: View {
@@ -270,13 +569,36 @@ struct GreetingView: View {
 }
 ```
 
-Previews render using the same rendering engine as the actual app, update live as you edit source code, and support interaction (tapping buttons, scrolling) directly within Xcode's canvas — dramatically shortening the iteration loop compared to older UIKit-era workflows that typically required a full simulator relaunch to see even a small visual change.
+Previews use the **real rendering engine**, update **as you type**, and are **interactive** (tap buttons, scroll). That makes UI work **much faster** than relaunching a simulator for every small change.
+
+Give previews **sample data**, so they don't need a network or database:
+
+```swift
+extension Recipe {
+    static let sample = Recipe(title: "Pancakes", minutes: 20)
+}
+
+#Preview {
+    RecipeRow(title: Recipe.sample.title, minutes: Recipe.sample.minutes)
+}
+```
+
+For views that need **state** (like a binding), use **`@Previewable`**:
+
+```swift
+#Preview {
+    @Previewable @State var isOn = true
+    Toggle("Notifications", isOn: $isOn)
+}
+```
+
+Tip: if previews are slow or crash, check that the view doesn't start **real** network calls or heavy work on appear. Inject a fake service instead (section 47).
 
 ---
 
-## 23.15 Multiple Previews and Preview Traits
+## 23.15 Multiple Previews and Preview Traits 🟡
 
-A single view can have multiple `#Preview` blocks, each configured differently — useful for simultaneously checking a view's appearance across different states, devices, or configurations without switching context:
+One file can have **several** `#Preview` blocks, each set up differently. You can check many **states**, **devices**, and **settings** side by side:
 
 ```swift
 #Preview("Light Mode") {
@@ -290,17 +612,41 @@ A single view can have multiple `#Preview` blocks, each configured differently �
 
 #Preview("Large Text", traits: .sizeThatFitsLayout) {
     GreetingView()
-        .environment(\.sizeCategory, .accessibilityExtraLarge)
+        .dynamicTypeSize(.accessibility2)
 }
 ```
 
-Preview **traits** (like `.sizeThatFitsLayout`, `.fixedLayout(width:height:)`, or device-specific traits) configure the preview's canvas behavior itself — independent from the view's own content/modifiers — letting you constrain how much space the preview canvas allocates, which device it simulates, or other environment-level presentation details.
+Preview **traits** set up the **canvas** itself, separate from the view's content:
+
+| Trait | Effect |
+|---|---|
+| `.sizeThatFitsLayout` | The canvas is just as big as the view (great for rows and cards) |
+| `.fixedLayout(width:height:)` | A fixed canvas size |
+| `.landscapeLeft` | Rotated device |
+
+Preview **states** that are hard to reach in the running app:
+
+```swift
+#Preview("Loading") { RecipeListView(state: .loading) }
+#Preview("Empty")   { RecipeListView(state: .loaded([])) }
+#Preview("Error")   { RecipeListView(state: .failed("No connection")) }
+```
+
+Previews for **other languages** and **right-to-left** layout:
+
+```swift
+#Preview("Arabic") {
+    GreetingView()
+        .environment(\.locale, Locale(identifier: "ar"))
+        .environment(\.layoutDirection, .rightToLeft)
+}
+```
 
 ---
 
-## 23.16 Dark Mode and `.colorScheme`
+## 23.16 Dark Mode and `.colorScheme` 🟢
 
-SwiftUI automatically adapts semantic colors (23.9) to the system's current appearance setting, but you can also explicitly read or override the color scheme when a view genuinely needs different, non-color logic depending on light/dark mode:
+SwiftUI adapts **semantic colors** (23.9) to light and dark mode by itself. Sometimes a view needs **different logic** (not just colors) per mode. Read the current mode from the **environment**, or force a mode:
 
 ```swift
 struct AdaptiveView: View {
@@ -317,7 +663,17 @@ SomeView()
     .preferredColorScheme(.dark)
 ```
 
-`@Environment(\.colorScheme)` (a preview of section 25.6's broader environment-value coverage) is the mechanism for reading the current appearance inside a view's `body` — reserve explicit `colorScheme` checks for cases where semantic colors alone genuinely aren't sufficient (like choosing between two entirely different image assets, not just a color), since relying on semantic colors directly (23.9) is simpler and handles the vast majority of light/dark adaptation automatically.
+`@Environment(\.colorScheme)` (environment values are covered in 25.6) reads the current appearance in `body`.
+
+**Use explicit checks only when colors aren't enough**, for example choosing a **different image**:
+
+```swift
+Image(colorScheme == .dark ? "logo-dark" : "logo-light")
+```
+
+Even this can often be done in the **asset catalog**, with light and dark variants of the same image. Then `Image("logo")` picks the right one automatically, with **no code**.
+
+`.preferredColorScheme` affects the **whole presentation** (the window or sheet), not just one view. Use it for a deliberately dark screen, like a video player, or for previews.
 
 ---
 
@@ -325,19 +681,19 @@ SomeView()
 
 | Topic | One-line takeaway |
 |---|---|
-| `View` protocol/`body` | One requirement — a `some View`-returning computed property describing the view's content |
-| Views as descriptions | Lightweight, disposable value descriptions, not persistent mutable objects like `UIView` |
-| `Text` | Displays strings; supports both chained styling modifiers and `AttributedString`/Markdown |
-| `Image` | Requires `.resizable()` before `.frame()` has any visual effect; scaling modes control fit vs. fill |
-| SF Symbols | Vector-based, scale with font size and Dynamic Type automatically, unlike fixed-pixel photo assets |
-| `Label` | Bundles icon + text as one accessibility-aware semantic unit |
-| View modifiers | Wrap the previous view in a new one — never mutate in place |
-| Modifier order | Each modifier wraps the cumulative result so far — order changes the actual visual outcome |
-| Semantic colors | `.primary`/`.secondary`/`Color(.systemBackground)` auto-adapt to light/dark mode and contrast settings |
-| `.foregroundStyle()` | Accepts hierarchical, multi-layer styles beyond a single flat color |
-| Gradients | `LinearGradient`/`RadialGradient`/`AngularGradient`, usable anywhere a `ShapeStyle` is expected |
-| Fonts/text styles | Prefer semantic styles (`.title`, `.body`) over fixed sizes to automatically support Dynamic Type |
-| Dynamic Type | System-wide text-scaling accessibility setting; semantic text styles participate automatically |
-| `#Preview` | Generates a live, interactive Xcode canvas preview without a full simulator build/run cycle |
-| Multiple previews/traits | Configure several previews per view for different states/appearances/canvas layouts at once |
-| `.colorScheme` | Reserve explicit checks for non-color logic; semantic colors handle most light/dark adaptation alone |
+| `View` protocol/`body` | One requirement: a `some View` property built from other views |
+| Views as descriptions | Cheap values recreated on each change, not objects you mutate |
+| `Text` | Styling modifiers, Markdown, formatting, and line limits |
+| `Image` | `.resizable()` first; `.fit` shows all, `.fill` crops |
+| SF Symbols | Vector icons that scale with text; rendering modes and effects |
+| `Label` | Icon + text as one accessible unit |
+| View modifiers | Each wraps the previous view; make your own with `ViewModifier` |
+| Modifier order | Order changes the result; read the chain top to bottom |
+| Semantic colors | `.primary`, `.secondary`, `.background` adapt to light, dark, and contrast |
+| `.foregroundStyle()` | Hierarchical, multi-layer, and gradient styles |
+| Gradients | Linear, radial, angular; stops for exact control |
+| Fonts/text styles | Text styles scale with Dynamic Type; custom fonts use `relativeTo:` |
+| Dynamic Type | Test big sizes; switch layouts with `AnyLayout` when needed |
+| `#Preview` | Live, interactive previews; use sample data and `@Previewable` |
+| Multiple previews/traits | Preview states, sizes, languages, and modes side by side |
+| `.colorScheme` | Read it only when colors alone aren't enough |

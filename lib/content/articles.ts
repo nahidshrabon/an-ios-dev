@@ -264,7 +264,7 @@ export const articles: Article[] = [
     slug: "swiftui-fundamentals",
     title: "SwiftUI Fundamentals",
     description:
-      "The View protocol, why views are descriptions rather than objects, the core content views (Text, Image, SF Symbols, Label), view modifiers and why their order matters, color and font systems, and Xcode Previews.",
+      "SwiftUI basics: the View protocol, views as descriptions, Text, Image, SF Symbols, and Label, view modifiers and why their order matters, colors, fonts, Dynamic Type, Previews, and dark mode.",
     tags: ["swiftui","fundamentals"],
     publishedAt: "2026-08-08",
     get content() {
