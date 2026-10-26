@@ -484,7 +484,7 @@ export const articles: Article[] = [
     slug: "other-persistence",
     title: "Other Persistence",
     description:
-      "Lighter-weight persistence tools: UserDefaults, App Groups, Codable JSON files, the Documents/Caches/temp directory structure, FileManager, the Keychain and biometric-gated items, data protection classes, GRDB/SQLite, and cache eviction design.",
+      "Lighter storage tools and security: UserDefaults, App Groups, Codable JSON files, the standard folders, FileManager, the Keychain and biometric-protected items, file data protection, GRDB and SQLite, full-text search with FTS5, and cache cleanup rules.",
     tags: ["persistence", "userdefaults", "keychain"],
     publishedAt: "2026-08-16",
     get content() {
