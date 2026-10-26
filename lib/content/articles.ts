@@ -242,7 +242,7 @@ export const articles: Article[] = [
     slug: "async-sequence-and-streams",
     title: "AsyncSequence and Streams",
     description:
-      "AsyncSequence, the async counterpart to Sequence — AsyncStream for bridging callback-based event sources, buffering and back-pressure, writing a custom async sequence, and the swift-async-algorithms package.",
+      "AsyncSequence, the async version of Sequence: for await, AsyncStream for wrapping callbacks and delegates, buffering policies, writing your own async sequence, swift-async-algorithms operators, and Observations.",
     tags: ["swift","concurrency","async-sequence"],
     publishedAt: "2026-08-08",
     get content() {
