@@ -902,7 +902,7 @@ export const articles: Article[] = [
     slug: "swift-outside-ios",
     title: "Swift Outside iOS",
     description:
-      "Server-side Swift with Vapor and Hummingbird, SwiftNIO event loops, sharing model code between app and server, Swift on Linux, the static Linux SDK, Swift for WebAssembly, Embedded Swift for microcontrollers, swift-log/metrics/service-lifecycle, and cross-platform UI trade-offs.",
+      "Swift beyond the app: Vapor and Hummingbird servers, SwiftNIO event loops, sharing models with a server, Swift on Linux, the static Linux SDK, WebAssembly, Embedded Swift, swift-log and friends, and cross-platform UI choices.",
     tags: ["swift", "server-side", "vapor"],
     publishedAt: "2026-08-16",
     get content() {

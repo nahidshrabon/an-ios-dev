@@ -1,10 +1,12 @@
-Everything up to this point has treated Swift as the language you use to build an app that runs on Apple hardware. That framing was never the whole truth. Swift was designed from the start as a general-purpose systems language, and its story since roughly 2017 has been one of steady expansion beyond Apple's platforms: a real server-side ecosystem, first-class Linux support, a toolchain that targets WebAssembly, and a subset — Embedded Swift — that runs without a heap on microcontrollers. This section is a tour of that wider world. It won't make you a backend engineer or an embedded systems expert in one sitting, but it will give you enough working vocabulary and hands-on familiarity to know when reaching for Swift outside the app makes sense, and when it doesn't.
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-The throughline across this section is one you've seen before, recast in a new setting: the same language, the same type system, the same discipline around concurrency and error handling, applied to environments that don't have UIKit, SwiftUI, or even Foundation as you know it. Recognizing what's the same and what's genuinely different is the skill this section builds.
+Until now, Swift was the language for apps on Apple devices. But Swift is a **general-purpose language**. It also runs on **servers**, on **Linux**, in the **browser** (WebAssembly), and on tiny **microcontrollers** (Embedded Swift).
 
-## 81.1 Server-side Swift with Vapor: your first route
+This section is a short tour. The language, the type system, `async`/`await`, and error handling stay the same. What changes is the **environment**: often there is no UIKit, no SwiftUI, and sometimes not even the Foundation you know.
 
-Vapor is the most established web framework in the Swift server ecosystem, and it's the natural on-ramp if you already think in Swift and want to write a backend without switching languages. A minimal Vapor application starts an HTTP server and registers routes:
+## 81.1 Server-side Swift with Vapor: your first route 🟢
+
+**Vapor** is the most popular web framework for Swift. With it, you can write a **backend in Swift** instead of learning another language. A small Vapor app starts an HTTP server and registers **routes** (a URL path plus the code that answers it):
 
 ```swift
 import Vapor
@@ -16,30 +18,65 @@ app.get("hello") { req async throws -> String in
 }
 
 app.get("users", ":id") { req async throws -> User in
-    guard let id = req.parameters.get("id", as: Int.self) else {
-        throw Abort(.badRequest)
+    guard let id = req.parameters.get("id", as: UUID.self) else {
+        throw Abort(.badRequest)                       // 400
     }
-    return try await User.find(id, on: req.db)
-        .flatMap { user in
-            guard let user else { throw Abort(.notFound) }
-            return user
-        }
+    guard let user = try await User.find(id, on: req.db) else {
+        throw Abort(.notFound)                         // 404
+    }
+    return user
 }
 
 try await app.execute()
 ```
 
-Two things should feel immediately familiar and one thing should feel new. Familiar: the route closures are `async throws`, using exactly the structured concurrency you learned in section 17 and section 18 — there's no callback-based networking API to relearn. Familiar: `Abort` is just a typed error you throw, following the same error-handling model from section 9. New: the request (`req`) is your window into everything ambient that a web framework provides — the database connection, the incoming HTTP body, route parameters, logging — because unlike an iOS app, a server has no persistent UI-driven object graph; every request is a fresh, isolated unit of work that must fetch or construct whatever context it needs.
+Try it from the terminal:
 
-That "everything starts fresh per request" model is the single biggest mental shift moving from app development to server development. An iOS app's `AppDelegate` or `App` struct lives for the lifetime of the process, holding onto singletons and caches you set up once. A Vapor route handler runs concurrently with dozens or hundreds of other invocations of itself, on a per-request basis, and should not assume any shared mutable state beyond what's explicitly passed through `req` or held in a properly synchronized service.
+```bash
+curl http://localhost:8080/hello
+# Hello, world!
 
-## 81.2 Vapor: routing, middleware, and Fluent
+curl http://localhost:8080/users/not-a-uuid
+# {"error":true,"reason":"Bad Request"}
+```
 
-Vapor's routing system supports grouping, parameters, and route-specific middleware:
+What feels **familiar**:
+
+- Route closures are `async throws`, the same concurrency you learned in sections 17 and 18.
+- `Abort` is just an error you `throw`, like in section 9. Vapor turns it into an HTTP status code.
+
+What is **new**: `req` (the request) is how you reach **everything**: the database (`req.db`), the body, the route parameters, and the logger.
+
+**The big mental shift:** an iOS app's `App` struct lives for the whole process and keeps singletons and caches. On a server, **each request is a fresh, separate unit of work**. Hundreds of requests run **at the same time**. So a handler should not depend on shared mutable state, except what comes through `req` or a properly protected service (like an actor).
 
 ```swift
-let api = app.grouped("api", "v1")
-let protected = api.grouped(UserAuthenticator())
+// ❌ Shared mutable state: many requests change it at once
+var visitCount = 0
+app.get("visits") { req async -> String in
+    visitCount += 1            // a data race (Swift 6 reports an error here)
+    return "\(visitCount)"
+}
+
+// ✅ Protect shared state with an actor
+actor VisitCounter {
+    private var count = 0
+    func next() -> Int { count += 1; return count }
+}
+let counter = VisitCounter()
+app.get("visits") { req async -> String in
+    "\(await counter.next())"
+}
+```
+
+---
+
+## 81.2 Vapor: routing, middleware, and Fluent 🟡
+
+**Route groups** share a path prefix and the same **middleware**:
+
+```swift
+let api = app.grouped("api", "v1")                  // /api/v1/...
+let protected = api.grouped(UserAuthenticator(), User.guardMiddleware())
 
 protected.get("profile") { req async throws -> ProfileResponse in
     let user = try req.auth.require(User.self)
@@ -47,27 +84,50 @@ protected.get("profile") { req async throws -> ProfileResponse in
 }
 
 protected.post("posts") { req async throws -> Post in
-    let input = try req.content.decode(CreatePostRequest.self)
-    let post = Post(title: input.title, body: input.body, authorID: try req.auth.require(User.self).requireID())
+    let input = try req.content.decode(CreatePostRequest.self)   // JSON body → Swift type
+    let user = try req.auth.require(User.self)
+    let post = Post(title: input.title, body: input.body, authorID: try user.requireID())
     try await post.save(on: req.db)
     return post
 }
 ```
 
-Middleware in Vapor plays the same role interceptors or decorators play in other server frameworks: a piece of logic that wraps every request passing through a route group, commonly used for authentication, logging, or rate limiting. This is conceptually the same "wrap behavior around a boundary without touching the business logic" pattern you saw with URLSession's `URLProtocol` or interceptors in section 40's advanced networking material — different layer, same idea of cross-cutting concerns kept separate from route logic.
+**Middleware** is code that **wraps every request** in a group. It is used for things like login checks, logging, and rate limits. It is the same idea as the request interceptors in section 40: keep cross-cutting work out of the route code.
 
-Fluent is Vapor's ORM, and it should feel like a distant cousin of SwiftData from section 41: models are Swift types conforming to a protocol (`Model`), fields are declared with property wrappers (`@Field`, `@Parent`, `@Children`), and queries are built with a fluent (no pun intended, mostly) API:
+A simple logging middleware:
 
 ```swift
-final class Post: Model, Content {
-    static let schema = "posts"
+struct TimingMiddleware: AsyncMiddleware {
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        let start = ContinuousClock.now
+        let response = try await next.respond(to: request)      // run the route
+        let time = ContinuousClock.now - start
+        request.logger.info("\(request.method) \(request.url.path) took \(time)")
+        return response
+    }
+}
+
+app.middleware.use(TimingMiddleware())       // for every route
+```
+
+**Fluent** is Vapor's **ORM** (Object-Relational Mapper: it maps Swift types to database tables). It looks a lot like SwiftData (section 41): a model is a Swift class, and fields use property wrappers.
+
+```swift
+final class Post: Model, Content, @unchecked Sendable {
+    static let schema = "posts"                // the table name
 
     @ID(key: .id) var id: UUID?
     @Field(key: "title") var title: String
     @Field(key: "body") var body: String
-    @Parent(key: "author_id") var author: User
+    @Parent(key: "author_id") var author: User  // many posts → one user
 
     init() {}
+
+    init(title: String, body: String, authorID: User.IDValue) {
+        self.title = title
+        self.body = body
+        self.$author.id = authorID
+    }
 }
 
 let recentPosts = try await Post.query(on: req.db)
@@ -77,11 +137,19 @@ let recentPosts = try await Post.query(on: req.db)
     .all()
 ```
 
-The relationship property wrappers (`@Parent`, `@Children`, `@Siblings`) map directly onto the same conceptual relationships (`@Relationship` in SwiftData, or `NSManagedObject` relationships in Core Data from section 42) — a one-to-many or many-to-many association expressed declaratively rather than through manually managed foreign keys. If you're comfortable with SwiftData's model layer, Fluent's vocabulary will not feel foreign, even though the underlying database is a real Postgres or MySQL instance rather than an on-device SQLite file.
+| Relationship | Fluent | SwiftData |
+|---|---|---|
+| Many → one | `@Parent` | a plain property with `@Relationship` |
+| One → many | `@Children` | an array with `@Relationship` |
+| Many ↔ many | `@Siblings` | arrays on both sides |
 
-## 81.3 Hummingbird as a lighter alternative
+The ideas are the same. The difference: Fluent talks to a **real server database** (Postgres, MySQL), not an SQLite file on the device.
 
-Hummingbird is a newer, more minimal server framework built directly on SwiftNIO, positioning itself as a lighter-weight alternative to Vapor's more batteries-included approach. Where Vapor bundles routing, an ORM, templating, and a broad plugin ecosystem, Hummingbird deliberately keeps its core small and composable:
+---
+
+## 81.3 Hummingbird as a lighter alternative 🟡
+
+**Hummingbird** is a smaller server framework, also built on SwiftNIO (81.4). Vapor comes with **many features included** (an ORM, templates, a big plugin ecosystem). Hummingbird keeps a **small core**, and you add only what you need.
 
 ```swift
 import Hummingbird
@@ -91,15 +159,43 @@ router.get("/hello") { request, context in
     "Hello, world!"
 }
 
-let app = Application(router: router, configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
+let app = Application(
+    router: router,
+    configuration: .init(address: .hostname("127.0.0.1", port: 8080))
+)
 try await app.runService()
 ```
 
-The trade-off is genuinely about scope, not quality: Vapor gives you Fluent, Leaf templating, and a large existing ecosystem of third-party packages out of the box, which is valuable if you want a complete, opinionated stack quickly. Hummingbird gives you a smaller core with fewer built-in opinions, which is valuable if you want tight control over exactly which dependencies end up in your binary, or if you're building something latency-sensitive where every layer of abstraction has a measurable cost. Neither is strictly "better" — the choice mirrors the same batteries-included-versus-minimal-core trade-off you've seen in other ecosystems (think of it as roughly analogous to choosing a full-featured framework versus a lean one in any other server language).
+Returning JSON is just as simple. Make the type `ResponseCodable`:
 
-## 81.4 SwiftNIO event loops vs async/await
+```swift
+struct Recipe: ResponseCodable {
+    let id: Int
+    let title: String
+}
 
-SwiftNIO is the low-level networking engine that both Vapor and Hummingbird are built on, and understanding its event-loop model clarifies a lot about how Swift's structured concurrency maps onto server workloads. SwiftNIO predates Swift's native `async`/`await` (introduced in section 17), and it's built around an explicitly callback- and future-based model: an `EventLoop` is a single thread running a run loop that processes I/O events and scheduled work, and a `EventLoopGroup` is a pool of such loops that connections get distributed across.
+router.get("/recipes/:id") { request, context -> Recipe in
+    let id = try context.parameters.require("id", as: Int.self)
+    return Recipe(id: id, title: "Pancakes")
+}
+```
+
+| | Vapor | Hummingbird |
+|---|---|---|
+| Size | Large, many features included | Small core, add pieces yourself |
+| Good when | You want a full stack fast | You want control over every dependency |
+| ORM | Fluent included | Choose your own |
+
+Neither is "better". It is the same choice as in any language: **full-featured framework** vs **small, minimal framework**.
+
+---
+
+## 81.4 SwiftNIO event loops vs async/await 🔴
+
+**SwiftNIO** is the low-level networking engine under both Vapor and Hummingbird. It is **older than `async`/`await`**, so its original API uses **futures and callbacks**.
+
+- An **event loop** is **one thread** that handles I/O events for **many connections**, one small piece of work at a time.
+- An **event loop group** is a pool of these loops. Connections are spread across them.
 
 ```swift
 // SwiftNIO's native, pre-async/await style
@@ -111,11 +207,35 @@ let future: EventLoopFuture<String> = promise.futureResult
 future.whenSuccess { value in print(value) }
 ```
 
-Modern Vapor and Hummingbird code, as seen in the earlier subtopics, is almost entirely `async`/`await` on the surface — Swift's concurrency runtime bridges to SwiftNIO's event loops underneath, so you rarely write `EventLoopFuture` code directly anymore. But the event loop model still matters conceptually: an event loop is deliberately a single thread handling many connections cooperatively, which is the same core insight as the cooperative thread pool behind Swift's structured concurrency task system from section 18 — never block the loop with synchronous, long-running work, because doing so starves every other connection sharing that loop. This is the server-side equivalent of the "never block the main thread" rule from UI development, just applied to whichever loop is currently serving a given connection rather than to the one thread responsible for rendering.
+Today you almost always write `async`/`await`. You can turn a future into an async value with `.get()`:
 
-## 81.5 Sharing model code between app and server
+```swift
+let value: String = try await future.get()     // bridge: future → async/await
+```
 
-One of the most concrete practical wins from using Swift on both ends of a client-server system is sharing model and validation code through a Swift package. A `Codable` struct representing an API request or response can live in a shared package, imported by both the Vapor server target and the iOS app target:
+**The rule that still matters: never block an event loop.** One loop serves many connections. If one handler does slow, synchronous work, **every other connection on that loop waits**. It is the server version of "never block the main thread".
+
+```swift
+// ❌ Blocks the loop: every other request on this thread waits 2 seconds
+app.get("slow") { req -> String in
+    Thread.sleep(forTimeInterval: 2)
+    return "done"
+}
+
+// ✅ Suspends instead of blocking: the thread is free for other requests
+app.get("slow") { req async throws -> String in
+    try await Task.sleep(for: .seconds(2))
+    return "done"
+}
+```
+
+This is the same idea as Swift's **cooperative thread pool** (section 18): threads are shared, so work must **suspend**, not block.
+
+---
+
+## 81.5 Sharing model code between app and server 🟢
+
+A big win of Swift on **both** sides: **share the model code** in a Swift package. The same `Codable` types are used by the iOS app and by the server.
 
 ```swift
 // SharedModels package, used by both server and iOS app
@@ -137,11 +257,50 @@ public struct PostResponse: Codable, Sendable, Identifiable {
 }
 ```
 
-This directly extends the modularization discipline from section 48: a shared package with no platform-specific dependencies (no UIKit, no Vapor-specific imports) compiles cleanly for both an iOS target and a Linux server target, eliminating an entire category of bugs where the client's understanding of a JSON shape silently drifts from the server's. Validation logic — a password strength check, a date range validator — can live in this shared package too, guaranteeing the client and server enforce identical rules rather than maintaining two hand-synchronized implementations. The practical constraint is that the shared package must avoid Foundation APIs that behave differently or are unavailable on Linux (a concern the next subtopic addresses directly), and must avoid any Apple-platform-only import.
+Shared **validation** rules can live there too, so the app and the server always agree:
 
-## 81.6 Swift on Linux and Foundation differences
+```swift
+public enum PostRules {
+    public static let maxTitleLength = 120
 
-Swift has been open source and Linux-supported since 2015, and the toolchain runs natively there — but Foundation on Linux is not byte-for-byte identical to Foundation on Apple platforms, because large parts of Apple's Foundation historically bridged to Objective-C runtime features and Core Foundation internals that don't exist on Linux. The open-source `swift-corelibs-foundation` project has closed most of these gaps over time, and Swift 6's Foundation rewrite (a pure-Swift implementation) has closed many more, but differences still surface in practice: certain `DateFormatter` locale behaviors, some `NSAttributedString` functionality tied to text layout, and select `FileManager` behaviors around extended attributes and permissions can differ subtly between platforms.
+    public static func validate(_ request: CreatePostRequest) throws {
+        guard !request.title.isEmpty else { throw PostError.emptyTitle }
+        guard request.title.count <= maxTitleLength else { throw PostError.titleTooLong }
+    }
+}
+```
+
+```swift
+// iOS app: check before sending
+try PostRules.validate(draft)
+
+// Vapor server: check again, because clients can't be trusted
+let input = try req.content.decode(CreatePostRequest.self)
+try PostRules.validate(input)
+```
+
+The folder layout:
+
+```plaintext
+MyProject/
+├── SharedModels/       ← Swift package: Codable types + validation (no UIKit, no Vapor)
+├── iOSApp/             ← depends on SharedModels
+└── Server/             ← depends on SharedModels + Vapor
+```
+
+This prevents a whole class of bugs: the app's idea of the JSON shape **slowly drifting** from the server's. It follows the modularization rules from section 48: the shared package must **not import** UIKit, SwiftUI, or Vapor, and must avoid Foundation APIs that differ on Linux (81.6).
+
+---
+
+## 81.6 Swift on Linux and Foundation differences 🟡
+
+Swift has run on **Linux** since it became open source in 2015. But **Foundation on Linux is not exactly the same** as on Apple platforms. Apple's old Foundation used Objective-C and Core Foundation, which do not exist on Linux.
+
+The open-source Foundation, and the newer **Swift-native Foundation** (the rewrite that ships with Swift 6), closed most gaps. Some differences remain, for example:
+
+- some **date and locale** formatting details
+- parts of **`NSAttributedString`** that depend on text layout
+- some **`FileManager`** behavior around permissions and extended attributes
 
 ```swift
 #if canImport(FoundationNetworking)
@@ -156,22 +315,66 @@ import FoundationNetworking  // URLSession lived here on older Linux toolchains
 #endif
 ```
 
-The practical lesson is not "avoid Foundation on Linux" — it's "test the specific Foundation APIs your shared code actually uses on both platforms before assuming parity," particularly anything touching dates, locales, or file attributes. This is a direct extension of the platform-availability discipline from section 33's multiplatform SwiftUI material: there, `#if os(iOS)` guarded UI-layer differences between iPhone and Mac; here, the same conditional-compilation tool guards standard-library and Foundation-layer differences between Apple platforms and Linux.
+A real example: `URLSession` exists on Linux, but on older toolchains you need the extra import above.
 
-## 81.7 The static Linux SDK
+```swift
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+import Foundation
 
-Deploying a Swift server binary historically meant either building on the exact same Linux distribution and version as your deployment target, or shipping a full Swift runtime alongside your binary — both of which added real friction to the "build once, deploy anywhere" story that's second nature in many other server ecosystems. The static Linux SDK addresses this directly: it lets you cross-compile a fully statically linked binary, with the Swift runtime and standard library baked in, from macOS (or another Linux host) targeting Linux, with no dependency on the runtime library versions installed on the deployment machine.
+let (data, _) = try await URLSession.shared.data(from: URL(string: "https://example.com")!)
+```
+
+The best protection is to **run your tests on Linux too**. Docker makes this easy:
 
 ```bash
+docker run --rm -v "$PWD":/code -w /code swift:latest swift test
+```
+
+**The lesson:** do not avoid Foundation on Linux. **Test the Foundation APIs you actually use, on both platforms.** `#if os(Linux)` is the same tool as `#if os(iOS)` in multiplatform SwiftUI (section 33), only used for a different kind of difference.
+
+---
+
+## 81.7 The static Linux SDK 🔴
+
+Shipping a Swift server binary used to be painful. You had to build on the **same Linux version** as your server, or ship the **Swift runtime** next to your binary.
+
+The **static Linux SDK** fixes this. It builds a **fully static binary**: the Swift runtime and standard library are **inside** the binary. You can build it **on your Mac**, for Linux.
+
+```bash
+# Install the SDK once (get the exact URL and checksum from swift.org):
+swift sdk install <static-linux-sdk-url> --checksum <checksum>
+
+# Build a static Linux binary from macOS:
 swift build --swift-sdk x86_64-swift-linux-musl \
   -c release
 ```
 
-The resulting binary can be dropped into a minimal container image (even a `scratch`-based one, with nothing else installed) and will run without needing a matching Swift installation on the host. This matters enormously for deployment simplicity and container image size: a statically linked binary in a minimal base image starts faster, has a dramatically smaller attack surface, and sidesteps an entire class of "works on my machine, fails in the container" version-mismatch bugs. It's the server-side analog of static linking trade-offs you first encountered with library linking choices in section 72's build system material — trading a larger binary for fewer runtime dependencies, except here the "runtime environment" is an entire Linux distribution rather than a single app sandbox.
+The binary runs with **nothing else installed**, even in an empty (`scratch`) container image:
 
-## 81.8 Swift for WebAssembly
+```dockerfile
+FROM scratch
+COPY .build/x86_64-swift-linux-musl/release/MyServer /MyServer
+EXPOSE 8080
+ENTRYPOINT ["/MyServer"]
+```
 
-Swift's WebAssembly (WASM) support lets Swift code run inside a browser or any WASM runtime, compiled to a portable bytecode format rather than native machine code. The primary framework here is SwiftWasm alongside the increasingly official `swift-sdk`-based WASM toolchain, and one common use case is rendering a full Swift UI layer in the browser via a bridging layer to the DOM:
+Benefits:
+
+- **Tiny images** that start fast.
+- **Less to attack**: no shell, no extra libraries.
+- **No version mismatch**: no "works on my machine, fails in the container".
+
+The trade-off is the usual **static vs dynamic linking** one (section 72): a **bigger binary**, but **no runtime dependencies**.
+
+---
+
+## 81.8 Swift for WebAssembly 🔴
+
+**WebAssembly (WASM)** is a portable bytecode that runs in **web browsers** and other WASM runtimes. Swift can compile to WASM, so Swift code can run **inside a web page**.
+
+Talking to the browser uses **JavaScriptKit**, a bridge to JavaScript and the DOM (the page's elements):
 
 ```swift
 import JavaScriptKit
@@ -182,14 +385,53 @@ div.innerText = "Hello from Swift, compiled to WebAssembly!"
 _ = document.body.appendChild(div)
 ```
 
-The realistic use cases today cluster around three areas: running existing Swift business logic (validation, calculations, a shared model layer from 81.5) inside a web frontend without a rewrite; building small interactive demos or tools that need to run in-browser without a server round-trip; and, more speculatively, full Swift-based web UI frameworks that are still maturing relative to the JavaScript ecosystem's incumbents. It's worth being honest about where this sits on the maturity curve: WASM toolchain support, debugging experience, and binary size are all considerably rougher than the native iOS or server toolchains covered earlier in this section, and choosing Swift-to-WASM today is a deliberate bet on an actively-developing target rather than a drop-in mature option.
+A button that runs Swift code when clicked:
 
-## 81.9 Embedded Swift
+```swift
+var button = document.createElement("button")
+button.innerText = "Count"
+var count = 0
+button.onclick = .object(JSClosure { _ in
+    count += 1
+    div.innerText = "Clicked \(count) times".jsValue
+    return .undefined
+})
+_ = document.body.appendChild(button)
+```
 
-Embedded Swift is a distinct compilation mode — not a separate language — that produces small, dependency-free binaries suitable for microcontrollers and other resource-constrained environments, by disabling or restricting features that require a full runtime: no heap-allocated existentials by default, no full reflection metadata, no Objective-C interop, and a compiled-away, statically-resolved generics model rather than one relying on runtime metadata.
+Build it with a Swift SDK for WebAssembly:
+
+```bash
+swift build --swift-sdk wasm32-unknown-wasi -c release
+```
+
+Good uses today:
+
+1. Run **existing Swift logic** (validation, calculations, the shared models from 81.5) in a web app, without rewriting it.
+2. Small **in-browser tools and demos** that need no server.
+3. Full Swift web UI frameworks, which are **still young**.
+
+**Be honest about maturity:** debugging, tooling, and binary size are **much rougher** than for iOS or server Swift. Choosing WASM today is a bet on a growing platform, not a mature, drop-in option.
+
+---
+
+## 81.9 Embedded Swift 🔴
+
+**Embedded Swift** is a **compilation mode**, not a new language. It makes **very small binaries** with no runtime dependencies, for **microcontrollers** (tiny chips with kilobytes of memory).
+
+To fit there, it **removes features that need a runtime**:
+
+| Feature | Normal Swift | Embedded Swift |
+|---|---|---|
+| Generics | Can use runtime metadata | Always **specialized** at compile time |
+| `any Protocol` (existentials) | Allowed | Limited |
+| Full reflection (`Mirror`) | Available | Not available |
+| Objective-C interop | On Apple platforms | Not available |
+| Foundation | Available | Not available |
 
 ```swift
 // A representative Embedded Swift snippet: no Foundation, minimal runtime
+// (gpioSet and delay are functions from the board's own support library)
 @main
 struct BlinkProgram {
     static func main() {
@@ -203,11 +445,34 @@ struct BlinkProgram {
 }
 ```
 
-The restrictions read as limitations, but each maps to a concrete reason: full generics and existentials in ordinary Swift lean on runtime metadata and dynamic dispatch machinery that assumes a heap and a reasonably capable OS underneath — none of which exists on a microcontroller running at kilohertz-to-megahertz clock speeds with kilobytes of RAM. Embedded Swift's response is to push as much resolution as possible to compile time: generics get fully specialized (monomorphized) rather than dispatched dynamically, and language features with an unavoidable runtime cost are simply unavailable in this mode. This is the same "static, ahead-of-time cost paid once at compile time, versus dynamic, ahead-of-time cost paid repeatedly at runtime" trade-off that runs through section 15's low-level Swift material, just pushed to its logical extreme in service of running on hardware with almost no room for any runtime cost at all.
+You turn it on with a compiler flag:
 
-## 81.10 `swift-log`, `swift-metrics`, `swift-service-lifecycle`
+```bash
+swiftc -enable-experimental-feature Embedded -wmo -parse-as-library -Osize \
+  -target armv7em-none-none-eabi \
+  -c Blink.swift -o blink.o
+```
 
-The Swift server ecosystem has converged on a small set of API-only packages that define common cross-cutting interfaces without dictating a specific backend implementation — `swift-log` for structured logging, `swift-metrics` for counters and gauges, and `swift-service-lifecycle` for coordinated startup and graceful shutdown across multiple long-running services in one process.
+Generics still work. The compiler makes a **separate copy for each concrete type** (this is called **monomorphization**):
+
+```swift
+func largest<T: Comparable>(_ a: T, _ b: T) -> T { a > b ? a : b }
+
+largest(3, 7)        // compiler generates largest(Int, Int)
+largest(2.5, 1.0)    // compiler generates largest(Double, Double)
+```
+
+**Why the limits?** Runtime generics and existentials need **metadata and a heap**. A microcontroller with kilobytes of RAM has almost no room for that. So Embedded Swift pays the cost **once, at compile time**, instead of **again and again at runtime**. This is the static-vs-dynamic trade-off from low-level Swift (section 15), taken to the extreme.
+
+---
+
+## 81.10 `swift-log`, `swift-metrics`, `swift-service-lifecycle` 🟡
+
+The Swift server world uses a few shared **API-only packages**. Each one defines a **common interface**, but **not the backend** that does the real work:
+
+- **`swift-log`:** logging
+- **`swift-metrics`:** counters, gauges, and timers
+- **`swift-service-lifecycle`:** starting and **gracefully stopping** many services in one process
 
 ```swift
 import Logging
@@ -220,28 +485,85 @@ let requestCounter = Counter(label: "http_requests_total")
 requestCounter.increment()
 ```
 
-The deliberate design choice — an API package separate from any specific backend — mirrors `URLSession`'s protocol-oriented design from section 39, or `os.Logger`'s structured logging model from section 68.19: you write against a stable interface (`Logger`, `Counter`), and a separate backend package (say, one that ships logs to a specific aggregation service, or exports metrics in Prometheus format) is swapped in at the composition root without touching any call site. `swift-service-lifecycle` extends this same separation-of-concerns instinct to process orchestration: instead of each service managing its own signal handling and shutdown ordering ad hoc, services conform to a common protocol and a shared lifecycle coordinator handles startup ordering, graceful shutdown on `SIGTERM`, and ensuring dependent services shut down in the right sequence — a genuinely different problem from anything an iOS app faces, since an app's process lifecycle is managed entirely by the OS rather than something your code orchestrates directly.
+You choose the **backend once**, at startup. Call sites never change:
 
-## 81.11 Cross-platform UI options and honest trade-offs
+```swift
+// Development: print to the console
+LoggingSystem.bootstrap(StreamLogHandler.standardOutput)
 
-Given a Swift codebase and a desire to reach beyond iOS, there's a real, honest question of how to build the actual user interface. SwiftUI itself already runs on macOS, watchOS, tvOS, and visionOS with the platform-adaptive discipline from section 33 — but the question here is broader: what if the target is a genuinely non-Apple platform, like Android or the web?
+// Production: swap in a backend package, e.g. one that sends JSON logs
+// LoggingSystem.bootstrap(MyJSONLogHandler.init)
+```
 
-A few real paths exist, each with real trade-offs worth naming plainly. Skip (from the SwiftUI-adjacent open-source ecosystem) compiles a SwiftUI-like syntax to native Android views via a Kotlin interop layer, letting a mostly-shared Swift codebase target Android with genuinely native rendering rather than a webview — but it requires buying into a specific, still-young toolchain and accepting that not every SwiftUI API has a Skip equivalent. Swift-to-WASM (from 81.8) can render UI in a browser, but with the mobile-versus-web maturity gap already noted. And a more conservative, widely-used pattern sidesteps the "one UI toolkit everywhere" question entirely: share the model layer, networking, and business logic (per 81.5) as a Swift package, while building genuinely separate, platform-native UI layers — SwiftUI for Apple platforms, Jetpack Compose for Android, a web framework for browsers — accepting three UI codebases in exchange for each one being fully idiomatic and fully supported on its platform.
+This is the same idea as programming to a protocol and wiring the real type in the **composition root** (section 47.6).
 
-There's no universally correct answer here, and being honest about that is the point of this subtopic. A small team building a single, tightly-scoped app might genuinely benefit from a shared-UI framework like Skip to avoid tripling UI work. A larger team building a flagship product on each platform might reasonably conclude that fully native, per-platform UI — accepting the duplication in exchange for zero compromise on any single platform's idioms and performance — is worth the extra work. Both are legitimate engineering decisions, and the right call depends on team size, target platform priorities, and how much the product's UI needs to feel truly native on each surface versus merely functional.
+**`swift-service-lifecycle`** solves a problem iOS apps don't have. On iOS, **the OS** manages your process. On a server, **your code** must start services in order and shut them down **cleanly** when the server receives `SIGTERM` (the "please stop" signal):
+
+```swift
+import ServiceLifecycle
+
+struct CleanupJob: Service {
+    func run() async throws {
+        // when a graceful shutdown starts, cancel the loop below
+        try await cancelWhenGracefulShutdown {
+            while !Task.isCancelled {
+                try await Task.sleep(for: .seconds(60))
+                // delete old sessions...
+            }
+        }
+    }
+}
+
+let group = ServiceGroup(
+    services: [app, CleanupJob()],              // e.g. the Hummingbird app + a job
+    gracefulShutdownSignals: [.sigterm],
+    logger: logger
+)
+try await group.run()                            // stops all services in the right order
+```
+
+---
+
+## 81.11 Cross-platform UI options and honest trade-offs 🟡
+
+SwiftUI already runs on iPhone, iPad, Mac, Apple Watch, Apple TV, and Vision Pro (section 33). But what about **Android** or the **web**? There are a few real paths:
+
+| Option | How it works | Trade-off |
+|---|---|---|
+| **Skip** | Write SwiftUI; it runs on Android with native Jetpack Compose UI | Young toolchain; not every SwiftUI API is supported |
+| **Swift + WASM** (81.8) | Render UI in the browser from Swift | Tooling is still immature |
+| **Shared logic, native UI** | Share models and logic as a Swift package; build each UI natively | Two or three UI codebases |
+
+The conservative, widely used option is the last one:
+
+```plaintext
+SharedCore (Swift package)       models, networking, validation, business rules
+   ├── iOS / macOS app           SwiftUI
+   ├── Android app               Jetpack Compose (calls SharedCore, or Kotlin code)
+   └── Web app                   a web framework (or SharedCore via WASM)
+```
+
+**There is no single right answer.**
+
+- A **small team** with one focused app may save a lot of time with a shared-UI tool like Skip.
+- A **larger team** building a flagship app on each platform may choose **fully native UI** everywhere, and accept the extra work to get the best result on each platform.
+
+Decide based on **team size**, **which platforms matter most**, and **how native** the UI must feel on each one.
+
+---
 
 ## Summary
 
 | Subtopic | Core idea |
 |---|---|
-| 81.1 Vapor first route | Async route handlers per request; no persistent app-lifetime state by default |
-| 81.2 Vapor routing/middleware/Fluent | Middleware wraps cross-cutting concerns; Fluent mirrors SwiftData's declarative model layer |
-| 81.3 Hummingbird | Minimal, composable alternative to Vapor's batteries-included approach |
-| 81.4 SwiftNIO event loops | Cooperative single-threaded loops underneath async/await; never block a loop |
-| 81.5 Sharing model code | Shared Swift package eliminates client/server model drift |
-| 81.6 Swift on Linux | Foundation has narrowing but real platform differences; test, don't assume parity |
-| 81.7 Static Linux SDK | Fully static cross-compiled binaries simplify container deployment |
-| 81.8 Swift for WebAssembly | Real but immature toolchain for running Swift logic or UI in-browser |
-| 81.9 Embedded Swift | Compile-time-resolved subset of Swift for heapless, runtime-free microcontroller targets |
-| 81.10 swift-log/metrics/service-lifecycle | API-only packages decoupling interface from backend implementation |
-| 81.11 Cross-platform UI trade-offs | Shared logic plus native-per-platform UI is the conservative, often-correct default |
+| 81.1 Vapor first route | `async` route handlers; each request is fresh, no shared mutable state |
+| 81.2 Vapor routing/middleware/Fluent | Middleware wraps requests; Fluent models look like SwiftData |
+| 81.3 Hummingbird | A small, minimal alternative to Vapor |
+| 81.4 SwiftNIO event loops | One loop serves many connections; never block it |
+| 81.5 Sharing model code | One Swift package for app and server; no JSON drift |
+| 81.6 Swift on Linux | Foundation mostly matches; test on Linux, don't assume |
+| 81.7 Static Linux SDK | One static binary, runs even in an empty container |
+| 81.8 Swift for WebAssembly | Swift in the browser; real, but still young |
+| 81.9 Embedded Swift | A compile-time-only subset of Swift for microcontrollers |
+| 81.10 swift-log/metrics/service-lifecycle | Shared APIs, backend chosen at startup; clean shutdown |
+| 81.11 Cross-platform UI trade-offs | Shared logic plus native UI is the safe default |
