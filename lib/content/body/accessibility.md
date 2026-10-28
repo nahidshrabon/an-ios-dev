@@ -1,304 +1,726 @@
-## 70.1 Turning On VoiceOver and Navigating Your Own App
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-VoiceOver is iOS's built-in screen reader, converting on-screen content into spoken audio and haptic feedback, navigated via swipe gestures rather than direct taps — the single most important accessibility testing practice is genuinely turning VoiceOver on and attempting to use one's own app with it, rather than relying purely on reading accessibility-related code or documentation.
-
-```swift
-// Not a Swift API — enabled via Settings > Accessibility > VoiceOver,
-// or Siri ("Hey Siri, turn on VoiceOver"), or a configured Accessibility Shortcut
-// (triple-click the side/home button) for quick toggling during development
-```
-
-Actually navigating an app with VoiceOver turned on surfaces problems that are genuinely difficult to anticipate purely by reasoning about code — an element that seems obviously labeled when reading SwiftUI source might turn out to have a confusing or entirely absent spoken description, and experiencing this firsthand (swiping through the actual app rather than imagining how it should theoretically behave) is what the rest of this section's more specific techniques ultimately exist to support.
+Accessibility means **everyone** can use your app: people who are blind or have low vision, who are deaf, who have limited movement, or who are sensitive to motion. Many of these features help **all** users too. This section covers **VoiceOver** (labels, values, hints, traits, grouping, actions, the rotor, reading order), **visual** settings (Dynamic Type, Reduce Motion, transparency, contrast, color), **tap targets**, other **input** methods, the **tools**, App Store **Nutrition Labels**, and **media**.
 
 ---
 
-## 70.2 Accessibility Labels
+## 70.1 Turning On VoiceOver and Navigating Your Own App 🟢
 
-The accessibility label is the primary spoken description VoiceOver announces for an element — for elements with visible text, SwiftUI/UIKit often infer a reasonable default label automatically, but elements without inherent text (an icon-only button, a custom graphic) require an explicitly provided label to be usable at all with VoiceOver.
+**VoiceOver** is the built-in **screen reader**: it speaks what's on screen, and you control it with gestures. The most important accessibility test is simple: **turn it on and use your own app**.
+
+Set up a quick toggle first: **Settings ▸ Accessibility ▸ Accessibility Shortcut ▸ VoiceOver**. Now a **triple-click** of the side button turns it on and off.
+
+The basic gestures:
+
+| Gesture | Does |
+|---|---|
+| Touch / drag a finger | Speak what's under the finger |
+| **Swipe right / left** | Next / previous element |
+| **Double-tap** (anywhere) | Activate the selected element |
+| Two-finger swipe **up** | Read everything from the top |
+| **Three-finger swipe** | Scroll |
+| Two-finger **scrub** (a quick "Z") | Go back / close |
+| **Rotor**: twist two fingers like a dial | Choose a navigation mode (70.7) |
+
+A good test routine for each screen:
+
+```
+1. Swipe through EVERY element, start to end.
+   - Does each one say something meaningful? ("button" alone = broken)
+   - Is the order logical?
+2. Do the screen's main task (log in, add to cart) with VoiceOver only.
+3. Try Screen Curtain (three-finger triple-tap): the screen goes dark.
+   Can you still do the task by sound alone?
+```
+
+You'll find problems in minutes that are hard to see by reading code: unlabeled icons, decorative images read aloud, a price read **after** the "Buy" button. The rest of this section shows how to fix them.
+
+---
+
+## 70.2 Accessibility Labels 🟢
+
+The **label** is **what VoiceOver says** for an element. Elements with visible **text** get a label automatically. **Icons** and images usually don't:
 
 ```swift
-Button(action: deleteItem) {
+// ❌ VoiceOver may say only "button" (or read the symbol's name)
+Button(action: deleteRecipe) {
     Image(systemName: "trash")
 }
-.accessibilityLabel("Delete item")
-```
 
-Without an explicit label, an icon-only button like the trash icon above would be announced by VoiceOver as something unhelpful like "button" or, worse, be entirely unlabeled and effectively unusable — the accessibility label is what bridges the gap between an element's purely visual meaning (immediately obvious to a sighted user recognizing a trash icon) and a meaningful spoken equivalent conveying that same information to someone using VoiceOver.
-
----
-
-## 70.3 Accessibility Values and Hints
-
-Beyond the label (what an element *is*), the accessibility value communicates an element's current state (a slider's current position, a toggle's on/off state), while the accessibility hint provides additional guidance about what will happen if the user interacts with the element — both supplementing, not replacing, the core label.
-
-```swift
-Slider(value: $volume, in: 0...100)
-    .accessibilityLabel("Volume")
-    .accessibilityValue("\(Int(volume)) percent")
-
-Button("Submit") { submitForm() }
-    .accessibilityHint("Submits the form and proceeds to the confirmation screen")
-```
-
-Distinguishing label, value, and hint clearly matters because conflating them produces a confusing, verbose spoken experience — a slider's label should stay stable ("Volume") while its value changes dynamically ("50 percent," "75 percent") as the user adjusts it, and a hint should only be used when a control's action genuinely isn't obvious from its label alone, since VoiceOver users who already understand common patterns don't benefit from (and can find tedious) an unnecessary hint on every single, self-explanatory button.
-
----
-
-## 70.4 Accessibility Traits
-
-Accessibility traits describe an element's *kind* or role (button, header, link, selected, disabled) to VoiceOver, influencing both how the element is announced (a "header" trait causes VoiceOver to announce "heading" alongside the content) and how it behaves within rotor-based navigation (70.7).
-
-```swift
-Text("Recommended Recipes")
-    .accessibilityAddTraits(.isHeader)
-
-Button("Add to Cart") { addToCart() }
-    .accessibilityAddTraits(isInCart ? [.isSelected] : [])
-```
-
-Correctly applying traits like `.isHeader` genuinely matters beyond just how a single element sounds in isolation — VoiceOver users frequently navigate by heading, jumping directly between sections of a screen via the rotor rather than swiping through every single element sequentially, meaning a screen with content that's visually structured into clear sections but lacking the corresponding `.isHeader` traits denies VoiceOver users this same efficient, structure-aware navigation that sighted users get for free just by visually scanning the screen.
-
----
-
-## 70.5 Grouping and Combining Elements
-
-`.accessibilityElement(children: .combine)` merges several individual child views into a single VoiceOver-navigable element with a combined spoken description, appropriate when a group of related visual elements (an icon plus a label plus a value) genuinely represents one conceptual unit that shouldn't require several separate swipes to fully understand.
-
-```swift
-HStack {
-    Image(systemName: "cart.fill")
-    Text("3 items")
-    Text("$45.00")
+// ✅ Option 1: add a label
+Button(action: deleteRecipe) {
+    Image(systemName: "trash")
 }
-.accessibilityElement(children: .combine)
-// VoiceOver announces this as one element: "cart, 3 items, $45.00"
-// rather than three separate swipe-through elements
+.accessibilityLabel("Delete recipe")
+
+// ✅ Option 2 (best): use a Label, and show only the icon
+Button(action: deleteRecipe) {
+    Label("Delete recipe", systemImage: "trash")
+        .labelStyle(.iconOnly)          // looks like an icon; VoiceOver says "Delete recipe, button"
+}
 ```
 
-Choosing appropriately between leaving elements separate versus combining them reflects a genuine information-architecture decision about VoiceOver navigation efficiency — three separate, individually-swipeable elements ("cart" icon, "3 items," "$45.00") forces a VoiceOver user to swipe three times just to understand something a sighted user grasps in a single glance, while combining them into one coherent announcement provides the equivalent efficient, holistic understanding in a single swipe, appropriately matching the visual grouping's actual conceptual unity.
+Option 2 also helps **Voice Control** (70.15) and keyboard users, and the text is already **localized** with the rest of your strings.
+
+Good labels:
+
+| Do | Don't |
+|---|---|
+| "Delete recipe" | "Delete recipe **button**" (the **trait** adds "button", 70.4) |
+| "Favorite" | "Heart icon" (say what it **does**, not what it **looks like**) |
+| Short: 1–3 words | A full sentence (that's a hint, 70.3) |
+| Localized | Hard-coded English |
+
+**Decorative** images (a background pattern, an illustration that repeats the text) should be **skipped** by VoiceOver:
+
+```swift
+Image(decorative: "kitchen-illustration")              // never read
+Image("divider").accessibilityHidden(true)            // or hide any view
+```
+
+UIKit: set `accessibilityLabel` on the view, and `isAccessibilityElement = false` for decorative ones.
 
 ---
 
-## 70.6 Custom Accessibility Actions
+## 70.3 Accessibility Values and Hints 🟢
 
-Beyond a control's default single action (activating a button), `accessibilityAction` lets additional custom actions be exposed to VoiceOver users — accessible via a rotor gesture (swiping up/down after selecting an element) — appropriate for surfacing actions that a sighted user might access via a swipe gesture, long-press, or context menu that wouldn't otherwise be discoverable through VoiceOver's standard interaction model.
+Three different pieces of information:
+
+| Property | Answers | Example |
+|---|---|---|
+| **Label** (70.2) | **What** is it? | "Servings" |
+| **Value** | What's its **current state**? | "4" |
+| **Hint** | What **happens** if I use it? | "Changes the ingredient amounts." |
+
+VoiceOver reads them in that order: "Servings, 4, adjustable. Changes the ingredient amounts."
 
 ```swift
-Text(message.text)
+Stepper("Servings", value: $servings, in: 1...12)
+    .accessibilityValue("\(servings) servings")
+    .accessibilityHint("Changes the ingredient amounts.")
+
+// A custom progress ring has no built-in value: provide it
+CookingProgressRing(progress: progress)
+    .accessibilityLabel("Cooking progress")
+    .accessibilityValue("\(Int(progress * 100)) percent")
+```
+
+Rules:
+
+- Keep the **label stable** and put the changing part in the **value**. ("Volume, 50 percent" → "Volume, 75 percent", not a new label each time.)
+- Use a **hint** only when the result **isn't obvious** from the label. "Delete recipe" needs no hint; a "Sync" button that also **logs you out** of other devices does.
+- Hints describe the **result**, start with a **verb**, and end with a period: "Opens the recipe." not "Double-tap to open the recipe" (users already know how to activate).
+
+Users can turn hints **off** in settings, so never put **essential** information only in a hint.
+
+---
+
+## 70.4 Accessibility Traits 🟢
+
+**Traits** tell VoiceOver what **kind** of element something is. They change **how** it's announced and **how** users can navigate to it:
+
+| Trait | VoiceOver says / does |
+|---|---|
+| `.isButton` | "…, button" |
+| `.isHeader` | "…, heading": reachable with the **Headings** rotor (70.7) |
+| `.isLink` | "…, link" |
+| `.isSelected` | "selected, …" (current tab, chosen option) |
+| `.isToggle` | "…, switch button" (iOS 17) |
+| `.isImage` | "…, image" |
+| `.updatesFrequently` | For values that change constantly, like a timer |
+| `.isModal` | VoiceOver stays **inside** this view (custom alerts, sheets) |
+
+```swift
+Text("Breakfast")
+    .font(.title2.bold())
+    .accessibilityAddTraits(.isHeader)            // or .accessibilityHeading(.h2)
+
+MealTypeChip(type: .vegan, isSelected: filter == .vegan)
+    .accessibilityAddTraits(filter == .vegan ? .isSelected : [])
+```
+
+**Headings** matter a lot: many VoiceOver users navigate by **heading**, jumping from section to section, the way sighted users **scan** the screen. A screen with visual sections but no heading traits forces them to swipe through **everything**.
+
+A common bug: making `Text` tappable with `onTapGesture`. Visually it acts like a button, but VoiceOver doesn't know it's **actionable**:
+
+```swift
+// ❌ VoiceOver: "Show all" (no hint that it does anything)
+Text("Show all").onTapGesture { showAll() }
+
+// ✅ Use a real Button (correct trait, focus, keyboard, Voice Control)
+Button("Show all") { showAll() }
+```
+
+---
+
+## 70.5 Grouping and Combining Elements 🟢
+
+By default, every text and image is a **separate** VoiceOver stop. For a recipe card, that's many swipes for **one** thing:
+
+```
+Without grouping (5 swipes):  "Photo" → "Pasta Carbonara" → "25 min" → "4.8 stars" → "Favorite, button"
+```
+
+Group related pieces into **one** element:
+
+```swift
+struct RecipeCard: View {
+    let recipe: Recipe
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            RecipePhoto(recipe: recipe)
+                .accessibilityHidden(true)                // decorative here
+            Text(recipe.title).font(.headline)
+            HStack {
+                Label("\(recipe.minutes) min", systemImage: "clock")
+                Label(recipe.rating.formatted(), systemImage: "star.fill")
+            }
+        }
+        .accessibilityElement(children: .combine)        // ONE stop
+        // VoiceOver: "Pasta Carbonara, 25 min, 4.8"
+    }
+}
+```
+
+Three grouping modes:
+
+| Mode | Result |
+|---|---|
+| `.combine` | One element; the children's labels are **joined** automatically |
+| `.ignore` | One element; children ignored. **You** write the label |
+| `.contain` | Children stay **separate**, but are treated as a **group** (affects order, 70.9) |
+
+With `.ignore`, write a label that **reads well**:
+
+```swift
+.accessibilityElement(children: .ignore)
+.accessibilityLabel("\(recipe.title), \(recipe.minutes) minutes, rated \(recipe.rating.formatted()) stars")
+```
+
+Group when the pieces form **one idea**. Keep things **separate** when each is a different **action** (a card with "Edit" and "Share" buttons): or group them and expose the buttons as custom actions (70.6).
+
+---
+
+## 70.6 Custom Accessibility Actions 🟡
+
+Sighted users find extra actions through **gestures**: swipe a row to delete, long-press for a menu. Those gestures don't exist for VoiceOver users. **Custom actions** expose the same actions in VoiceOver's **Actions** rotor: the user swipes **up or down** to pick one, then double-taps:
+
+```swift
+RecipeRow(recipe: recipe)
+    .swipeActions {
+        Button("Delete", role: .destructive) { delete(recipe) }
+        Button("Favorite") { toggleFavorite(recipe) }
+    }
+    .accessibilityElement(children: .combine)
     .accessibilityActions {
-        Button("Reply") { reply(to: message) }
-        Button("Delete") { delete(message) }
-        Button("Mark Unread") { markUnread(message) }
+        Button("Favorite") { toggleFavorite(recipe) }
+        Button("Share") { share(recipe) }
+        Button("Delete", role: .destructive) { delete(recipe) }
+    }
+// VoiceOver: "Pasta Carbonara, 25 min. Actions available."
+```
+
+(SwiftUI's `swipeActions` and `contextMenu` are often exposed automatically, but **custom** gestures never are. Check with VoiceOver.)
+
+For values you change **up and down** (a custom rating, a dial), use an **adjustable** action: the user swipes **up** or **down** on the element:
+
+```swift
+StarRatingView(rating: $rating)
+    .accessibilityElement()
+    .accessibilityLabel("Rating")
+    .accessibilityValue("\(rating) of 5 stars")
+    .accessibilityAdjustableAction { direction in
+        switch direction {
+        case .increment: rating = min(rating + 1, 5)
+        case .decrement: rating = max(rating - 1, 1)
+        @unknown default: break
+        }
     }
 ```
 
-Custom accessibility actions address a genuine parity gap that would otherwise exist between sighted and VoiceOver interaction models — a sighted user might discover "swipe left to delete" on a message row through visual affordance or simple exploration, but that same swipe-to-reveal gesture is meaningless within VoiceOver's own distinct gesture vocabulary, making explicit custom actions the mechanism that restores equivalent functional access to the same underlying capability, regardless of which interaction mode a user relies on.
+The rule: **every** action a sighted user can do must be possible with VoiceOver, even if the **way** to do it is different.
 
 ---
 
-## 70.7 The VoiceOver Rotor
+## 70.7 The VoiceOver Rotor 🟡
 
-The rotor is a VoiceOver navigation mechanism (a twisting gesture, like turning a dial) letting users quickly switch between navigation modes — jumping by headings, links, form controls, or custom app-defined rotor categories — providing efficient, non-linear navigation through a screen's content rather than requiring sequential swipe-through of every element.
+The **rotor** (twist two fingers like a dial) changes what **swipe up/down** does: move by **headings**, **links**, **form controls**, **words**, adjust **speech rate**, and more. It turns a long screen into something you can **jump** through.
+
+The built-in rotors work automatically if your traits are right (headings, 70.4; links). You can add **your own** rotor for content that matters in **your** app:
 
 ```swift
-// Custom rotor exposing a specific navigable category beyond the system defaults:
-.accessibilityRotor("Unread Messages") {
-    ForEach(unreadMessages) { message in
-        AccessibilityRotorEntry(message.subject, id: message.id)
+struct InboxView: View {
+    let messages: [Message]
+
+    var body: some View {
+        List(messages) { message in
+            MessageRow(message: message)
+        }
+        .accessibilityRotor("Unread") {
+            ForEach(messages.filter(\.isUnread)) { message in
+                AccessibilityRotorEntry(message.subject, id: message.id)
+            }
+        }
     }
 }
 ```
 
-A custom rotor category is genuinely valuable for content with an app-specific structure that the system's default rotor categories (headings, links, form controls) don't naturally capture — a messaging app's "Unread Messages" rotor, for instance, lets a VoiceOver user jump directly between only the unread messages in a long list, mirroring the same kind of efficient, non-linear access to relevant content that the default heading-based rotor navigation (70.4) provides for section-level structure.
+Now a VoiceOver user picks "**Unread**" in the rotor and swipes down to jump **only** between unread messages, skipping the 200 read ones.
+
+Good candidates for custom rotors:
+
+- **Unread** or **flagged** items in a long list,
+- **Errors** in a long form ("jump to the next field with a problem"),
+- **Ingredients** vs. **steps** in a recipe,
+- **Search matches** inside a document.
+
+Add a rotor when sighted users would **scan** for something visually (bold unread items, red error fields). The rotor is the VoiceOver equivalent of that quick visual scan.
 
 ---
 
-## 70.8 accessibilityRepresentation for Custom Controls
+## 70.8 accessibilityRepresentation for Custom Controls 🟡
 
-For genuinely custom controls built from primitive drawing (recall Core Graphics/Canvas from section 30, or Core Animation layers from section 62) rather than composed from standard, already-accessible SwiftUI/UIKit controls, `accessibilityRepresentation` lets a developer explicitly describe how that custom visual should be represented to assistive technology, since a hand-drawn control has no inherent accessibility semantics.
+A control you **draw yourself** (with `Canvas`, 30.5, or shapes and gestures) has **no** accessibility meaning: VoiceOver sees pixels, not "a slider". **`accessibilityRepresentation`** says: "**for accessibility, treat this like that standard control**":
 
 ```swift
-CustomDialControl(value: $temperature)
-    .accessibilityRepresentation {
-        Slider(value: $temperature, in: 60...80)  // presents a standard slider interface to VoiceOver
+struct OvenDial: View {
+    @Binding var temperature: Double            // 100...250 °C
+
+    var body: some View {
+        Canvas { context, size in
+            drawDial(in: context, size: size, value: temperature)    // fully custom drawing
+        }
+        .frame(width: 180, height: 180)
+        .gesture(DragGesture().onChanged { updateTemperature(from: $0) })
+        .accessibilityRepresentation {
+            Slider(value: $temperature, in: 100...250, step: 5) {
+                Text("Oven temperature")
+            }
+        }
     }
-```
-
-This is a genuinely important escape hatch specifically for custom-drawn controls — a hand-rolled dial control built with `Canvas` drawing calls (section 30.8) has no automatic accessibility semantics whatsoever, since VoiceOver has no inherent understanding of arbitrary drawn pixels, and `accessibilityRepresentation` lets the developer explicitly substitute a semantically equivalent, standard representation (like a `Slider`) for VoiceOver's purposes, even though the actual visual presentation remains the fully custom drawn control.
-
----
-
-## 70.9 Focus Order and Reading Order
-
-VoiceOver's default reading order generally follows a view hierarchy's natural structure, but this default order doesn't always match a screen's actual intended visual/logical reading order (particularly with overlapping content, `ZStack` layering, or custom layouts) — `accessibilitySortPriority` lets a developer explicitly control the order elements are announced in, independent of their structural position in code.
-
-```swift
-Text("Total: $45.00")
-    .accessibilitySortPriority(1)  // announced before the button below, regardless of code order
-Button("Checkout") { proceedToCheckout() }
-    .accessibilitySortPriority(0)
-```
-
-Getting reading order right matters because an incorrect order can produce a genuinely confusing, disorienting VoiceOver experience even when every individual element is otherwise perfectly labeled — a screen where VoiceOver announces a "Total" price *after* a "Checkout" button (an order that might make perfect sense visually, with the total displayed below the button, but poor sense read aloud sequentially) requires exactly this kind of explicit reading order correction to actually match the coherent, logical sequence a listening user needs.
-
----
-
-## 70.10 Dynamic Type Across the Full Size Ramp
-
-Dynamic Type lets users choose their preferred text size system-wide, ranging from the smallest standard size through the largest standard sizes and further into the accessibility size range (significantly larger than any standard size) — apps should support this entire range, not just the standard sizes, since users who rely on the accessibility size range genuinely need that larger text to use the app at all.
-
-```swift
-Text("Welcome back, \(userName)")
-    .font(.body)  // scales automatically with the user's chosen Dynamic Type size,
-                  // including the accessibility size range, without additional code
-```
-
-Testing only within the standard Dynamic Type range while neglecting the accessibility size range is a common, meaningful gap — a layout that looks fine at standard sizes can break in ways ranging from merely awkward (excessive line wrapping) to genuinely broken (truncated, cut-off, or overlapping content) at the largest accessibility sizes, meaning genuinely thorough Dynamic Type testing (recall broader localization/layout flexibility concerns from section 24) means specifically testing at the largest accessibility sizes, not just confirming that text scales at all within the more commonly tested standard range.
-
----
-
-## 70.11 Reduce Motion Support
-
-Reduce Motion is a system setting some users enable to minimize animation and motion effects, which can cause genuine discomfort (motion sickness-like symptoms) for users sensitive to parallax, large-scale movement, or certain animation styles — apps should check `UIAccessibility.isReduceMotionEnabled` and provide alternative, less motion-heavy transitions when the setting is active.
-
-```swift
-@Environment(\.accessibilityReduceMotion) var reduceMotion
-
-var body: some View {
-    someView
-        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
 }
+// VoiceOver: "Oven temperature, 180, adjustable." Swipe up/down changes it by 5.
 ```
 
-Respecting Reduce Motion isn't merely a stylistic preference to accommodate — for users who experience genuine physical discomfort from certain motion effects, an app ignoring this setting can make the app actively unpleasant or unusable to interact with, making Reduce Motion support a genuine accessibility requirement (not unlike accommodating a physical sensory need) rather than an optional nicety, and the fix is often as simple as swapping a large-scale, motion-heavy transition for a subtler cross-fade when the setting is active.
+The **look** stays your custom dial. For VoiceOver, Voice Control, and keyboard users, it behaves exactly like a standard `Slider`, with its label, value, and adjust actions, **for free**.
+
+| Approach | When |
+|---|---|
+| Use a **standard** control, styled (`.buttonStyle`, `.toggleStyle`) | Best: accessibility is built in |
+| `accessibilityRepresentation` | A truly custom look, with standard **behavior** |
+| Manual label + value + adjustable action (70.6) | When no standard control matches |
+
+UIKit equivalent: subclass `UIControl`, set `accessibilityTraits = .adjustable`, and implement `accessibilityIncrement()` / `accessibilityDecrement()`.
 
 ---
 
-## 70.12 Reduce Transparency and Increase Contrast
+## 70.9 Focus Order and Reading Order 🟡
 
-Reduce Transparency reduces or eliminates blur/translucency effects (which can reduce legibility for some users, particularly interacting poorly with certain visual impairments), while Increase Contrast strengthens color and border contrast throughout the system — both settings that well-behaved apps should observe via `UIAccessibility.isReduceTransparencyEnabled` and `UIAccessibility.isDarkerSystemColorsEnabled` respectively.
+VoiceOver reads elements roughly **top-left to bottom-right**, following the view structure. Usually that's right. But custom layouts, `ZStack`s, and overlays can produce a **confusing** order:
 
-```swift
-@Environment(\.accessibilityReduceTransparency) var reduceTransparency
-
-var backgroundMaterial: Material {
-    reduceTransparency ? .opaque(.regularMaterial) : .regularMaterial
-    // conceptually: substitute a solid, opaque background when transparency is reduced
-}
+```
+Visual layout:                       Default VoiceOver order:
+┌─────────────────────────┐          1. "Buy now, button"     ← action before context!
+│ [ Buy now ]   Total: $45│          2. "Total: $45"
+└─────────────────────────┘
 ```
 
-These two settings address genuinely distinct visual accessibility needs, both worth explicit support — translucent, blurred backgrounds (recall the Liquid Glass design material from section 32) can reduce text legibility against a busy or low-contrast background for some users, while insufficient contrast more broadly affects users with various visual impairments regardless of transparency specifically, meaning apps built heavily around translucent materials benefit from explicitly testing and providing solid alternatives when Reduce Transparency is active, rather than assuming a design that looks fine to the designer looks equally legible to every user.
-
----
-
-## 70.13 Differentiate Without Color
-
-Differentiate Without Color addresses the reality that color-only encoding of meaning (a red versus green status indicator, with no other visual distinction) is inaccessible to users with certain forms of color blindness — apps should pair color with a redundant, non-color signal (an icon, a shape, a text label) so meaning remains clear even without relying on color perception.
+Fix the order with **`accessibilitySortPriority`**: **higher** numbers are read **first**, within the same container:
 
 ```swift
 HStack {
-    Image(systemName: isError ? "xmark.circle.fill" : "checkmark.circle.fill")
-        .foregroundStyle(isError ? .red : .green)
-    Text(isError ? "Failed" : "Success")
+    Button("Buy now") { checkout() }
+        .accessibilitySortPriority(1)
+    Text("Total: $45.00")
+        .accessibilitySortPriority(2)          // read first: context, then action
 }
-// meaning is conveyed by icon shape AND text, not solely by the red/green color difference
+.accessibilityElement(children: .contain)      // priorities apply inside this group
 ```
 
-This principle directly parallels a broader design pattern already established for accessibility traits (70.4) and labels (70.2) — just as VoiceOver users need a non-visual (spoken) equivalent of visual information, users with color vision deficiencies need a non-color-dependent equivalent of color-encoded information, and in both cases the underlying design discipline is the same: never let a single sensory channel (sight generally, or color specifically) be the *sole* carrier of meaningful information, always providing a redundant path to the same understanding.
+The **best** fix is often simpler: put views in the code in the **logical** order, and let layout handle the visuals.
+
+Sometimes you must **move** VoiceOver's focus, for example to an **error** that just appeared. Use **`@AccessibilityFocusState`**:
+
+```swift
+struct LoginForm: View {
+    @State private var errorMessage: String?
+    @AccessibilityFocusState private var errorIsFocused: Bool
+
+    var body: some View {
+        Form {
+            // ... fields ...
+            if let errorMessage {
+                Text(errorMessage)
+                    .foregroundStyle(.red)
+                    .accessibilityFocused($errorIsFocused)
+            }
+            Button("Sign In") {
+                errorMessage = validate()
+                errorIsFocused = errorMessage != nil       // VoiceOver jumps to the error
+            }
+        }
+    }
+}
+```
+
+For short, non-visual updates ("Saved"), post an **announcement** instead: `AccessibilityNotification.Announcement("Recipe saved").post()`.
 
 ---
 
-## 70.14 Minimum Tap Target Sizes
+## 70.10 Dynamic Type Across the Full Size Ramp 🟢
 
-Apple's Human Interface Guidelines specify a minimum recommended tap target size (44×44 points) for interactive elements, ensuring controls remain reliably tappable for users with limited fine motor control or larger fingers — a visually small icon or button should still have its actual tappable area meet this minimum, even if the icon itself is rendered smaller.
+Users choose their **text size** in Settings. The range is big: from **xSmall** up to **xxxLarge**, then five **accessibility** sizes (**AX1–AX5**, turned on under Accessibility ▸ Display & Text Size ▸ Larger Text). At AX5, body text is about **3×** the default size.
+
+Text styles scale **automatically**:
 
 ```swift
+Text(recipe.title).font(.headline)             // ✅ scales
+Text(recipe.summary).font(.body)               // ✅ scales
+Text("Note").font(.system(size: 15))           // ❌ fixed size: ignores the user's choice
+Text("Note").font(.custom("Avenir", size: 15, relativeTo: .body))   // ✅ custom font that scales
+```
+
+Text scaling is the easy part. **Layouts** break at the large sizes. Make them adapt:
+
+```swift
+struct RecipeHeader: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .body) private var iconSize = 24.0     // grows with the text
+
+    var body: some View {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading))           // stack vertically when huge
+            : AnyLayout(HStackLayout())
+
+        layout {
+            Image(systemName: "clock")
+                .frame(width: iconSize, height: iconSize)
+            Text("25 minutes")
+            Text("Serves 4")
+        }
+    }
+}
+```
+
+| ❌ Breaks at large sizes | ✅ Instead |
+|---|---|
+| Fixed `.frame(height:)` around text | Let height grow; use `minHeight` if needed |
+| `.lineLimit(1)` on important text | Allow wrapping |
+| Rows of many items side by side | Switch to vertical (`AnyLayout`, `ViewThatFits`) |
+| Fixed icon and spacing sizes | `@ScaledMetric` |
+
+**Test** at the **largest** sizes, not just "a bit bigger": in Xcode Previews (Variants ▸ Dynamic Type), with the Accessibility Inspector's settings (70.17), or `.environment(\.dynamicTypeSize, .accessibility5)`. UIKit: use `UIFont.preferredFont(forTextStyle:)` (or `UIFontMetrics` for custom fonts) and set `adjustsFontForContentSizeCategory = true`.
+
+---
+
+## 70.11 Reduce Motion Support 🟢
+
+Some people get **dizzy** or **nauseous** from motion: large slides, zooms, parallax, spinning. They turn on **Reduce Motion**. For them, respecting it isn't style: it decides whether the app is **usable**.
+
+```swift
+struct RecipeStepView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var step = 0
+
+    var body: some View {
+        StepContent(step: step)
+            .id(step)
+            .transition(reduceMotion
+                        ? .opacity                                              // gentle cross-fade
+                        : .asymmetric(insertion: .move(edge: .trailing),
+                                      removal: .move(edge: .leading)))
+            .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring, value: step)
+    }
+}
+
+// UIKit
+if UIAccessibility.isReduceMotionEnabled { /* use a fade instead of a slide */ }
+```
+
+| Reduce or replace | Usually fine |
+|---|---|
+| Large **slides** and **zooms** between screens | Short **fades** and color changes |
+| **Parallax** and motion-linked effects | Small, quick state changes |
+| **Auto-playing** animations and video loops | Animations the user **starts** |
+| Bouncy, **springy** movement | Simple progress indicators |
+
+The fix is usually small: swap the motion for a **cross-fade**, or skip a decorative animation. Many system animations already adapt automatically. See also 29.15.
+
+---
+
+## 70.12 Reduce Transparency and Increase Contrast 🟡
+
+Two display settings, two different needs:
+
+| Setting | Helps | Your app should |
+|---|---|---|
+| **Reduce Transparency** | People who find text over **blurry, see-through** backgrounds hard to read | Use **solid** backgrounds instead of translucent ones |
+| **Increase Contrast** | People with low vision | Use **stronger** colors and borders |
+
+**System materials** (`.regularMaterial`, Liquid Glass, 32) **adapt automatically**. Your **own** translucent colors don't:
+
+```swift
+struct RecipeOverlayCard: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    var body: some View {
+        Text("Pasta Carbonara")
+            .padding()
+            .background(
+                reduceTransparency
+                    ? AnyShapeStyle(Color(.systemBackground))          // solid
+                    : AnyShapeStyle(Color.black.opacity(0.35))         // custom translucency
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.secondary, lineWidth: contrast == .increased ? 2 : 0.5)   // stronger edge
+            }
+    }
+}
+```
+
+For colors, the easiest path: in the **asset catalog**, turn on **High Contrast** for a color set and define stronger variants. The system picks them automatically when Increase Contrast is on. System colors (`.label`, `.secondaryLabel`, `.systemBlue`, …) already do this.
+
+UIKit equivalents: `UIAccessibility.isReduceTransparencyEnabled` and `UIAccessibility.isDarkerSystemColorsEnabled`.
+
+Test both settings on your most **visual** screens, especially anything with text over **photos** or **blur**.
+
+---
+
+## 70.13 Differentiate Without Color 🟢
+
+About **1 in 12** men (and fewer women) have some form of **color blindness**. If **color alone** carries meaning, they miss it:
+
+```swift
+// ❌ Only color tells "in stock" from "sold out"
+Circle().fill(item.inStock ? .green : .red).frame(width: 10, height: 10)
+
+// ✅ Color PLUS shape PLUS text
+Label(item.inStock ? "In stock" : "Sold out",
+      systemImage: item.inStock ? "checkmark.circle.fill" : "xmark.circle.fill")
+    .foregroundStyle(item.inStock ? .green : .red)
+```
+
+The rule: color can **support** meaning, but never be the **only** carrier. Add an icon, a shape, a pattern, or text.
+
+Users can also turn on **Differentiate Without Color** in Settings; check it to add **extra** cues where your design normally relies on color:
+
+```swift
+@Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+
+ChartLine(data: series)
+    .foregroundStyle(series.color)
+    .lineStyle(differentiateWithoutColor ? series.dashPattern : .solid)   // dashes as well as colors
+```
+
+Also check **contrast** itself: normal text needs a contrast ratio of at least **4.5:1** with its background (3:1 for large text). The Accessibility Inspector has a **color contrast** calculator (70.17).
+
+This is the same principle as labels for VoiceOver (70.2): never let **one** sense (sight, or color specifically) be the **only** way to get the information.
+
+---
+
+## 70.14 Minimum Tap Target Sizes 🟢
+
+Apple's guideline: interactive elements should have a tap area of at least **44 × 44 points**. Small targets are hard to hit for people with **tremors**, limited **dexterity**, or simply big fingers, and for **everyone** while walking.
+
+The trick: the **visible** icon can be small; the **tappable** area must not be:
+
+```swift
+// ❌ The tap area is only the 14-pt glyph
 Button(action: dismiss) {
     Image(systemName: "xmark")
-        .font(.system(size: 16))  // small, visually appropriate icon...
+        .font(.system(size: 14, weight: .semibold))
 }
-.frame(minWidth: 44, minHeight: 44)  // ...but with a tappable area meeting the minimum target size
+
+// ✅ Same look, 44 × 44 tap area
+Button(action: dismiss) {
+    Image(systemName: "xmark")
+        .font(.system(size: 14, weight: .semibold))
+        .frame(width: 44, height: 44)            // the frame INSIDE the label
+        .contentShape(Rectangle())               // the whole frame is tappable
+}
+.accessibilityLabel("Close")
 ```
 
-The distinction between visual size and tappable area size is the key technique here — a designer might reasonably want a small, unobtrusive close icon visually, but expanding the actual interactive frame beyond the icon's own visible bounds (rather than shrinking the tappable area to match the small icon exactly) preserves both the intended visual design and genuine usability for users who would otherwise struggle to reliably hit an undersized tap target, a real accessibility concern independent of any assistive technology specifically.
+Put the frame **inside** the button's label (with `contentShape`), so the button's hit area really grows.
+
+| Platform | Minimum target |
+|---|---|
+| iPhone, iPad | 44 × 44 pt |
+| visionOS | 60 pt (64.14) |
+| Mac (pointer) | Can be smaller, but keep generous spacing |
+
+Also leave **space** between targets: two 44-pt buttons touching each other still cause mis-taps.
+
+UIKit: give buttons enough content insets (`UIButton.Configuration`), or override `point(inside:with:)` to extend the hit area. The **hit region** audit in `performAccessibilityAudit()` (67.9) and the Accessibility Inspector both flag small targets.
 
 ---
 
-## 70.15 Switch Control and Voice Control
+## 70.15 Switch Control and Voice Control 🟡
 
-Switch Control lets users navigate and interact with iOS using one or more physical switches (appropriate for users with limited mobility who can't use touch directly), scanning through interactive elements sequentially and selecting via a switch activation, while Voice Control lets users navigate and interact entirely through spoken commands — both depending on the same underlying accessibility properties (labels, traits) already covered in this section to function correctly.
+Two more assistive technologies for people who can't use **touch** easily:
+
+| Technology | How people use it |
+|---|---|
+| **Switch Control** | One or more **switches** (a button, a head movement, a sip-and-puff device). iOS **highlights** elements one by one; the user presses a switch to pick |
+| **Voice Control** | **Speaking**: "Tap Add to Cart", "Scroll down", "Show numbers" (then "Tap 7") |
+
+Good news: both use the **same** accessibility information as VoiceOver: labels, traits, grouping, actions. The work from 70.2–70.9 helps **all** of them.
+
+Voice Control has one special need: users say what they **see**. So labels should **match the visible text**, and you can add **alternative** names:
 
 ```swift
-// Both Switch Control and Voice Control rely on the same accessibility labels/traits
-// already established for VoiceOver support — a well-labeled button
-// ("Add to Cart") is both correctly announced by VoiceOver AND
-// correctly invokable by saying "Tap Add to Cart" under Voice Control
+Button {
+    addToCart()
+} label: {
+    Label("Add to Cart", systemImage: "cart.badge.plus")
+}
+.accessibilityInputLabels(["Add to Cart", "Add", "Cart"])   // any of these works when spoken
+
+// An icon-only button: users will say what they think it is
+Button(action: showFilters) { Image(systemName: "line.3.horizontal.decrease.circle") }
+    .accessibilityLabel("Filters")
+    .accessibilityInputLabels(["Filters", "Filter"])
 ```
 
-This shared dependency on the same underlying accessibility metadata is a genuinely important, easy-to-miss point — the accessibility labeling and trait work already done to support VoiceOver (70.2, 70.4) isn't VoiceOver-specific investment at all, but rather foundational accessibility infrastructure that simultaneously benefits Switch Control and Voice Control users too, meaning correctly implementing accessibility labels once provides multiplied benefit across several genuinely distinct assistive technologies rather than requiring separate, redundant work for each one.
+Test with Voice Control on: say "**Show names**" to see the name of every control. If a button shows "button" or a name that differs from its visible text, users can't call it.
+
+For Switch Control, the grouping (70.5) and order (70.9) matter a lot: scanning through 40 separate elements one by one is **slow**, while well-grouped screens are quick.
 
 ---
 
-## 70.16 Full Keyboard Access
+## 70.16 Full Keyboard Access 🟡
 
-Full Keyboard Access lets users navigate and control iOS (including apps) entirely via an external physical keyboard, without needing to touch the screen at all — appropriate for users who find touch interaction difficult but can use a keyboard, requiring that all interactive elements be genuinely reachable and operable via keyboard focus navigation and standard activation keys.
+**Full Keyboard Access** (Settings ▸ Accessibility ▸ Keyboards) lets people use an iPhone or iPad entirely with a **hardware keyboard**: **Tab** and arrow keys move the focus, **Space** activates. It helps people who can't touch the screen precisely, and keyboard power users on iPad.
+
+**Standard** controls (buttons, toggles, text fields, list rows) work **automatically**. **Custom** interactive views need to opt in:
 
 ```swift
-// SwiftUI's standard focus system (recall .focusable(), .focused()) generally
-// provides Full Keyboard Access support automatically for standard controls;
-// custom controls need explicit .focusable() and key-handling to participate correctly
-Button("Save") { save() }
-    .focusable()  // ensures the button participates correctly in keyboard focus navigation
+struct StarRating: View {
+    @Binding var rating: Int
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack {
+            ForEach(1...5, id: \.self) { star in
+                Image(systemName: star <= rating ? "star.fill" : "star")
+                    .onTapGesture { rating = star }
+            }
+        }
+        .padding(4)
+        .focusable()                                     // can receive keyboard focus
+        .focused($isFocused)
+        .overlay {                                       // a visible focus ring
+            RoundedRectangle(cornerRadius: 6).stroke(.tint, lineWidth: isFocused ? 2 : 0)
+        }
+        .onKeyPress(.rightArrow) { rating = min(rating + 1, 5); return .handled }
+        .onKeyPress(.leftArrow)  { rating = max(rating - 1, 1); return .handled }
+        .accessibilityRepresentation {                   // and VoiceOver (70.8)
+            Stepper("Rating", value: $rating, in: 1...5)
+        }
+    }
+}
 ```
 
-Like Switch Control and Voice Control (70.15), Full Keyboard Access largely builds on infrastructure already needed for other accessibility purposes — standard SwiftUI controls generally participate in keyboard focus navigation automatically with no additional work, meaning the specific area requiring deliberate developer attention is genuinely custom, non-standard controls (much like the custom-control accessibility representation concern from 70.8), which need explicit `.focusable()` support and appropriate key-event handling to be genuinely usable under Full Keyboard Access.
+Checklist:
+
+- Every action reachable with **Tab** / arrows and **Space**. No action available **only** through a gesture.
+- A **visible** focus indicator on custom controls.
+- Focus order matches the visual order (70.9).
+- Add **keyboard shortcuts** for common commands (`.keyboardShortcut("n", modifiers: .command)` for "New Recipe").
+
+Test it: connect a keyboard (or use the Mac keyboard in the Simulator with Full Keyboard Access on) and try your main flows **without touching** the screen.
 
 ---
 
-## 70.17 The Accessibility Inspector
+## 70.17 The Accessibility Inspector 🟢
 
-The Accessibility Inspector (a standalone macOS tool, also integrated into Xcode) lets a developer inspect any running app's actual accessibility tree — viewing each element's label, value, traits, and hierarchy directly, and running automated accessibility audits — providing much of the same diagnostic value for accessibility that the View Hierarchy Debugger (section 68.12) provides for layout.
+The **Accessibility Inspector** (Xcode ▸ Open Developer Tool ▸ Accessibility Inspector) shows how assistive technologies **see** your app, on the Simulator, a device, or the Mac:
 
-```swift
-// Not a Swift API — accessed via Xcode > Open Developer Tool > Accessibility Inspector,
-// or directly running an automated audit against a running simulator/device,
-// surfacing issues like missing labels, insufficient contrast, and undersized tap targets
+| Feature | Use for |
+|---|---|
+| **Inspection pointer** | Point at any element: see its **label, value, traits, identifier**, and frame |
+| **Audit** | Scan the current screen for issues: missing labels, low **contrast**, small **targets**, clipped text, Dynamic Type problems |
+| **Settings** panel | Change **text size**, Increase Contrast, Reduce Motion, and more **live**, without opening Settings |
+| **Navigation** | Step through elements like VoiceOver does, with an option to **speak** them |
+| **Color Contrast Calculator** | Check two colors against the 4.5:1 rule (70.13) |
+
+A fast workflow per screen:
+
+```
+1. Run Audit → fix the issues it lists (each one links to the element)
+2. Settings panel → drag text size to the maximum → check the layout (70.10)
+3. Inspection pointer on every icon → does it have a meaningful label?
 ```
 
-The Accessibility Inspector's automated audit capability directly parallels `performAccessibilityAudit()` from UI testing (section 67.9) — both surface the same broad categories of accessibility issue (missing labels, contrast problems, undersized targets), with the Inspector providing an interactive, exploratory tool for accessibility investigation during development, while `performAccessibilityAudit()` provides the equivalent check as an automated, continuously-run assertion integrated directly into a UI test suite, the two tools complementing each other across different points in the development workflow.
+The Inspector's **audit** and **`performAccessibilityAudit()`** in UI tests (67.9) check the same kinds of problems. Use the Inspector to **explore and fix** while developing, and the UI-test audit to **keep** them fixed in CI. Neither replaces actually **using** the app with VoiceOver (70.1): tools find mechanical problems; only real use finds confusing experiences.
 
 ---
 
-## 70.18 Accessibility Nutrition Labels on the App Store
+## 70.18 Accessibility Nutrition Labels on the App Store 🟢
 
-Accessibility Nutrition Labels let developers declare, on an app's App Store listing, which specific accessibility features the app actually supports (VoiceOver, Voice Control, larger text, sufficient contrast, and others) — giving users with disabilities visibility into an app's accessibility support *before* downloading it, rather than discovering accessibility gaps only after installation.
+**Accessibility Nutrition Labels** show on your App Store page **which** accessibility features your app supports, so people can see **before downloading** whether the app will work for them.
 
-```swift
-// Declared via App Store Connect, not Swift code — developers select which
-// accessibility features (VoiceOver support, Voice Control support,
-// Larger Text support, Sufficient Contrast, Reduced Motion support, etc.)
-// their app genuinely and accurately supports
-```
+You declare them in **App Store Connect**, per device type (iPhone, iPad, Mac, …). The features include:
 
-Accurate self-declaration here carries genuine weight beyond a simple marketing checkbox — a user with a disability relying on VoiceOver can use Accessibility Nutrition Labels to make an informed decision about whether an app is actually likely to be usable *before* investing time downloading and attempting to use it, meaning honestly and accurately declaring supported features (rather than over-claiming support the app doesn't genuinely, thoroughly provide) directly affects real users' ability to make good decisions about which apps to trust and try.
+| Feature | Means your app… |
+|---|---|
+| **VoiceOver** | Works fully with the screen reader |
+| **Voice Control** | Works fully by voice |
+| **Larger Text** | Supports large Dynamic Type sizes without breaking |
+| **Dark Interface** | Supports a dark appearance |
+| **Differentiate Without Color Alone** | Never relies on color only |
+| **Sufficient Contrast** | Meets contrast guidelines |
+| **Reduced Motion** | Respects Reduce Motion |
+| **Captions**, **Audio Descriptions** | Provides them for media (70.19) |
+
+The bar is: users can complete the app's **common tasks** with that feature, not "it mostly works on some screens".
+
+Be **honest**. A blind user who downloads your app because it says "VoiceOver" and then gets stuck on an unlabeled login screen loses time and trust, and will leave a review saying so. It's better to declare **less** and improve over time.
+
+Labels also make a good **checklist**: if you can't honestly claim a feature yet, that's your accessibility to-do list for the next release.
 
 ---
 
-## 70.19 Captions and Audio Descriptions for Media 🟠
+## 70.19 Captions and Audio Descriptions for Media 🟡
 
-For apps presenting video or audio content (recall `AVPlayer`/`VideoPlayer` from section 55.8), captions (text representation of spoken dialogue and relevant sound effects) and audio descriptions (a supplementary narration track describing visually-important content for users who can't see the video) provide access to media content for deaf/hard-of-hearing and blind/low-vision users respectively.
+For video and audio, two different accommodations:
+
+| Accommodation | For | Contains |
+|---|---|---|
+| **Captions** (and **SDH**: subtitles for the deaf and hard of hearing) | Deaf and hard-of-hearing users | Text of the **speech**, plus important **sounds** ("[timer beeps]") |
+| **Audio descriptions** | Blind and low-vision users | An extra narration of what's **shown** ("She folds the egg into the flour.") |
+
+Neither replaces the other: captions don't help someone who can't **see**, and audio descriptions don't help someone who can't **hear**. A cooking video needs **both** to be fully accessible, and a **transcript** helps for audio-only content like podcasts.
+
+These tracks must be **in the media** (created when the video is produced: for HLS, WebVTT subtitle tracks and a described audio track). The app's job is to **offer** them. `AVPlayer` and `AVPlayerViewController` (55.8) do most of the work: by default they follow the user's **system settings** (Settings ▸ Accessibility ▸ Subtitles & Captioning, Audio Descriptions) and choose matching tracks **automatically**.
+
+With a **custom** player UI, you must offer the choice yourself:
 
 ```swift
-// AVPlayerItem can be configured with accessible media selection options,
-// including caption tracks and, where available, audio description tracks,
-// with AVPlayerViewController providing standard, accessible UI for track selection
-let playerItem = AVPlayerItem(url: videoURL)
-// Caption/audio-description tracks embedded in the media asset are exposed
-// through AVMediaSelectionGroup, letting VoiceOver users select them via
-// the standard playback controls' accessible track-selection UI
+import AVFoundation
+
+func captionOptions(for item: AVPlayerItem) async throws -> [AVMediaSelectionOption] {
+    guard let group = try await item.asset.loadMediaSelectionGroup(for: .legible) else { return [] }
+    return group.options                                   // show these in your captions menu
+}
+
+func selectSDHCaptions(for item: AVPlayerItem) async throws {
+    guard let group = try await item.asset.loadMediaSelectionGroup(for: .legible) else { return }
+    let sdh = AVMediaSelectionGroup.mediaSelectionOptions(
+        from: group.options,
+        withMediaCharacteristics: [.describesMusicAndSoundForAccessibility]
+    )
+    item.select(sdh.first, in: group)
+}
+
+// Audio descriptions live in the .audible group, with the
+// .describesVideoForAccessibility characteristic
 ```
 
-Captions and audio descriptions address two genuinely distinct accessibility needs, each requiring media actually authored to include the relevant track in the first place (this isn't something an app can add automatically to arbitrary video content it didn't produce) — captions provide deaf/hard-of-hearing users access to a video's spoken and sound content, while audio descriptions provide blind/low-vision users access to visually-conveyed information a video might never verbally state (an on-screen action, a visual sight gag, text shown briefly on screen), making both genuinely necessary, complementary accommodations rather than either alone being fully sufficient for comprehensive media accessibility.
+Also respect the user's **caption style** (size, color, background) from the system, which `AVPlayer`'s caption rendering does automatically. And for **sounds** your app uses as signals (a timer alarm), add a **visual** cue or haptic too.
 
 ---
 
@@ -306,22 +728,22 @@ Captions and audio descriptions address two genuinely distinct accessibility nee
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Foundational testing | VoiceOver navigation | Surfaces problems code review alone would miss |
-| Spoken identity | `accessibilityLabel` | Bridges visual meaning to spoken equivalent |
-| State and guidance | `accessibilityValue`, `accessibilityHint` | Current state and non-obvious action guidance |
-| Role/kind | `accessibilityAddTraits` | Enables structure-aware rotor navigation |
-| Unit cohesion | `.accessibilityElement(children: .combine)` | Merges related elements into one coherent announcement |
-| Hidden actions | `accessibilityActions` | Restores parity for swipe/long-press/context menu actions |
-| Non-linear navigation | VoiceOver rotor, custom rotors | Efficient jumping through app-specific content categories |
-| Custom control semantics | `accessibilityRepresentation` | Substitutes standard semantics for hand-drawn controls |
-| Logical sequencing | `accessibilitySortPriority` | Corrects reading order independent of code structure |
-| Text scaling | Dynamic Type, accessibility sizes | Full-range support, not just standard sizes |
-| Motion sensitivity | Reduce Motion | Alternative, less motion-heavy transitions |
-| Legibility/contrast | Reduce Transparency, Increase Contrast | Solid alternatives and stronger contrast |
-| Non-color signaling | Differentiate Without Color | Redundant, non-color-dependent meaning |
-| Physical usability | 44×44pt minimum tap targets | Reliable interaction regardless of visual icon size |
-| Alternative input | Switch Control, Voice Control | Built on the same underlying labels/traits |
-| Keyboard-only use | Full Keyboard Access, `.focusable()` | Complete non-touch operability |
-| Diagnostic tooling | Accessibility Inspector | Interactive, exploratory accessibility investigation |
-| Pre-download transparency | Accessibility Nutrition Labels | Honest, informed user decision-making |
-| Media accessibility | Captions, audio descriptions | Distinct, complementary accommodations for media content |
+| Real testing | VoiceOver, Screen Curtain | Use the app the way blind users do |
+| Labels | `accessibilityLabel`, `Label` + `.iconOnly`, `Image(decorative:)` | Say what each element is or does |
+| Values and hints | `accessibilityValue`, `accessibilityHint` | Current state; non-obvious results |
+| Traits | `.isHeader`, `.isButton`, `.isSelected`, real `Button`s | Roles that enable navigation |
+| Grouping | `.accessibilityElement(children:)` | One stop per idea |
+| Actions | `accessibilityActions`, `accessibilityAdjustableAction` | Gesture-only actions for everyone |
+| Rotor | `accessibilityRotor` | Jump between important items |
+| Custom controls | `accessibilityRepresentation` | Custom look, standard behavior |
+| Order and focus | `accessibilitySortPriority`, `@AccessibilityFocusState` | Logical reading; move focus to errors |
+| Dynamic Type | Text styles, `@ScaledMetric`, `AnyLayout` | Layouts that work at AX5 |
+| Motion | `accessibilityReduceMotion` | Fades instead of big movement |
+| Transparency and contrast | `accessibilityReduceTransparency`, `colorSchemeContrast` | Solid backgrounds, stronger edges |
+| Color | Icons + text with color; 4.5:1 contrast | Meaning without relying on color |
+| Tap targets | 44 × 44 pt frames + `contentShape` | Easy to hit, for everyone |
+| Switch and Voice Control | Same labels; `accessibilityInputLabels` | Spoken and switch access |
+| Keyboard | `.focusable()`, `.onKeyPress`, shortcuts | Full use without touch |
+| Tools | Accessibility Inspector, UI-test audits | Find and keep fixing mechanical issues |
+| App Store | Accessibility Nutrition Labels | Honest support info before download |
+| Media | Captions/SDH, audio descriptions | Both, for different users |

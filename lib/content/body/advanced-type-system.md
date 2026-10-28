@@ -1,6 +1,8 @@
-## 11.1 Key Paths: `KeyPath` and `WritableKeyPath`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A key path is a first-class, reusable reference to a property — not the property's *value*, but a pointer-like handle to "the `.name` property" itself, which can be stored, passed around, and applied to different instances later.
+## 11.1 Key Paths: `KeyPath` and `WritableKeyPath` 🟡
+
+A **key path** is a **reference to a property itself**, not to its value. `\Person.name` means "the `name` property of a `Person`". You can store it, pass it around, and use it on **any** `Person` later.
 
 ```swift
 struct Person {
@@ -19,13 +21,40 @@ mutablePerson[keyPath: ageKeyPath] = 31
 print(mutablePerson.age)   // 31
 ```
 
-`KeyPath` is read-only (works for `let` or computed get-only properties); `WritableKeyPath` supports both reading and writing (requires a `var` property). Key paths are especially useful for generic code that needs to operate on "some property, to be specified later" without knowing which one in advance.
+| Type | Can read | Can write | For |
+|---|---|---|---|
+| `KeyPath<Root, Value>` | ✅ | ❌ | `let` and get-only properties |
+| `WritableKeyPath<Root, Value>` | ✅ | ✅ | `var` properties of a value type |
+| `ReferenceWritableKeyPath` | ✅ | ✅ | `var` properties of a class |
+
+Key paths shine in **generic code** that works on "some property, chosen later":
+
+```swift
+func sorted<T, V: Comparable>(_ items: [T], by keyPath: KeyPath<T, V>) -> [T] {
+    items.sorted { $0[keyPath: keyPath] < $1[keyPath: keyPath] }
+}
+
+let people = [Person(name: "Ada", age: 30), Person(name: "Alan", age: 25)]
+sorted(people, by: \.age)    // Alan first
+sorted(people, by: \.name)   // Ada first
+```
+
+You already use key paths in SwiftUI: `ForEach(items, id: \.self)`, `List(users, id: \.email)`, and `@Environment(\.dismiss)`.
+
+Key paths can go **deeper**, through several properties:
+
+```swift
+struct Address { var city: String }
+struct Customer { var address: Address }
+
+let cityPath = \Customer.address.city      // KeyPath<Customer, String>
+```
 
 ---
 
-## 11.2 Key Paths as Functions
+## 11.2 Key Paths as Functions 🟢
 
-Since Swift 5.2, a key path literal can be used directly wherever a function of the matching shape (`(Root) -> Value`) is expected — most commonly with `map`:
+Since Swift 5.2, a key path can be used **wherever a function** like `(Root) -> Value` is expected. The most common case is `map`:
 
 ```swift
 struct Person {
@@ -42,13 +71,24 @@ print(names)   // ["Ada", "Alan"]
 print(ages)    // [30, 25]
 ```
 
-This works because Swift automatically bridges a key path to a closure of the appropriate type at the call site — `\.name` behaves exactly like `{ $0.name }`, just more concisely, and it composes well with `sorted(by:)` when paired with a comparator too.
+`\.name` works exactly like `{ $0.name }`, just shorter. It works with any function-style parameter:
+
+```swift
+struct Todo { let title: String; let isDone: Bool }
+let tasks = [Todo(title: "Code", isDone: true), Todo(title: "Test", isDone: false)]
+
+let done = tasks.filter(\.isDone)              // a Bool key path works as a filter
+let total = people.map(\.age).reduce(0, +)     // 55
+let allAdults = people.allSatisfy { $0.age >= 18 }   // a closure is still needed for comparisons
+```
+
+A key path only reads **one property**. For any extra logic (comparisons, math), use a normal closure.
 
 ---
 
-## 11.3 `@dynamicMemberLookup`
+## 11.3 `@dynamicMemberLookup` 🔴
 
-`@dynamicMemberLookup` lets a type support dot-syntax access to properties that aren't declared at compile time — the compiler rewrites `instance.someUndeclaredProperty` into a call to a special `subscript(dynamicMember:)` method you implement, commonly used for flexible wrappers around loosely-typed data like JSON.
+**`@dynamicMemberLookup`** lets a type support **dot syntax for properties that don't exist** at compile time. The compiler turns `instance.something` into a call to a special `subscript(dynamicMember:)` that you write. It's often used for wrappers around loosely-typed data, like JSON.
 
 ```swift
 @dynamicMemberLookup
@@ -65,13 +105,45 @@ print(json.name as Any)   // Optional("Alex") — "name" was never declared as a
 print(json.age as Any)    // Optional(28)
 ```
 
-This is powerful but should be used sparingly in application code — it trades compile-time safety (typos in property names become runtime `nil`s instead of compile errors) for flexibility, so it's best reserved for genuinely dynamic data sources where a fixed property list isn't feasible.
+**The trade-off:** you lose compile-time safety. A **typo** like `json.nmae` compiles fine, and just returns `nil` at runtime.
+
+There is a **type-safe** form too: take a **key path** instead of a string. Then only real properties are allowed. This is great for **wrapper types** that forward properties:
+
+```swift
+struct User {
+    var name: String
+    var email: String
+}
+
+@dynamicMemberLookup
+struct Tracked<Value> {
+    private(set) var value: Value
+    private(set) var changeCount = 0
+
+    subscript<T>(dynamicMember keyPath: WritableKeyPath<Value, T>) -> T {
+        get { value[keyPath: keyPath] }
+        set {
+            value[keyPath: keyPath] = newValue
+            changeCount += 1
+        }
+    }
+
+    init(_ value: Value) { self.value = value }
+}
+
+var user = Tracked(User(name: "Alex", email: "a@x.com"))
+user.name = "Sam"          // forwarded to User.name, and counted
+print(user.changeCount)    // 1
+// user.nmae = "x"         // ❌ compile error: no such property — still type-safe
+```
+
+SwiftUI's `Binding` uses this: `$user.name` works because `Binding` has key-path dynamic member lookup.
 
 ---
 
-## 11.4 `@dynamicCallable`
+## 11.4 `@dynamicCallable` 🔴
 
-`@dynamicCallable` lets an instance of a type be **called** directly like a function, `instance(...)`, by implementing a `dynamicallyCall` method — a rarer, more specialized feature typically used for building embedded DSLs or scripting-language bridges.
+**`@dynamicCallable`** lets you **call an instance like a function**: `instance(...)`. You implement a `dynamicallyCall` method. It's rare; it's mostly used for small DSLs (domain-specific languages) and bridges to scripting languages like Python.
 
 ```swift
 @dynamicCallable
@@ -85,13 +157,40 @@ let multiply = Multiplier()
 print(multiply(2, 3, 4))   // 24 — calls dynamicallyCall(withArguments: [2, 3, 4])
 ```
 
-There's also a keyword-argument variant, `dynamicallyCall(withKeywordArguments:)`, accepting labeled arguments. In practice, `@dynamicCallable` is one of Swift's least commonly used features in everyday app code — worth recognizing if you encounter it, but rarely something you'll reach for yourself.
+There's also a version with **labeled** arguments:
+
+```swift
+@dynamicCallable
+struct URLBuilder {
+    let base: String
+
+    func dynamicallyCall(withKeywordArguments args: KeyValuePairs<String, String>) -> String {
+        let query = args.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        return "\(base)?\(query)"
+    }
+}
+
+let search = URLBuilder(base: "https://example.com/search")
+print(search(q: "swift", page: "2"))   // "https://example.com/search?q=swift&page=2"
+```
+
+In everyday app code, you'll rarely write this. It's worth **recognizing** if you meet it.
+
+(If you just want a type to be "callable", a plain method named **`callAsFunction`** is simpler and type-safe:)
+
+```swift
+struct Greeter {
+    func callAsFunction(_ name: String) -> String { "Hello, \(name)" }
+}
+let greet = Greeter()
+greet("Ada")   // "Hello, Ada"
+```
 
 ---
 
-## 11.5 Operator Overloading and Custom Operators
+## 11.5 Operator Overloading and Custom Operators 🟡
 
-Swift lets you overload existing operators for your own types (matching what you saw partially in section 7's `Equatable`/`Comparable` conformances) and even define entirely new operators:
+You can **overload** existing operators for your own types (you saw `==` and `<` in section 7), and even create **new** operators:
 
 ```swift
 struct Vector2D {
@@ -113,7 +212,28 @@ print(a + b)    // Vector2D(x: 4.0, y: 6.0)
 print(-a)        // Vector2D(x: -1.0, y: -2.0)
 ```
 
-Entirely new custom operators must be declared with `prefix`, `infix`, or `postfix` before being defined, and (for infix operators) usually need an associated precedence group (see 11.6):
+Operators come in three positions:
+
+| Keyword | Position | Example |
+|---|---|---|
+| `prefix` | Before the value | `-a`, `!flag` |
+| `infix` | Between two values | `a + b` |
+| `postfix` | After the value | `value!` |
+
+Compound assignment like `+=` is a separate operator, with an `inout` left side:
+
+```swift
+extension Vector2D {
+    static func += (lhs: inout Vector2D, rhs: Vector2D) {
+        lhs = lhs + rhs
+    }
+}
+
+var position = Vector2D(x: 0, y: 0)
+position += Vector2D(x: 1, y: 1)
+```
+
+A **brand-new** operator must first be **declared** (`prefix`, `infix`, or `postfix`). Infix operators usually also get a **precedence group** (11.6):
 
 ```swift
 infix operator **: MultiplicationPrecedence
@@ -125,13 +245,16 @@ func ** (base: Double, exponent: Double) -> Double {
 print(2.0 ** 10.0)   // 1024.0
 ```
 
-Custom operators can improve readability for domain-specific math or DSL-like code, but overuse (especially of obscure symbols) tends to hurt readability for anyone unfamiliar with the specific operator — use sparingly and only where the notation genuinely matches domain convention.
+**Use custom operators sparingly.** They help for math-like code where the symbol is well known. Strange symbols that only your team knows make code **harder** to read. A named method is often clearer.
 
 ---
 
-## 11.6 Precedence Groups
+## 11.6 Precedence Groups 🔴
 
-A precedence group defines how a custom infix operator interacts with others in the same expression — specifically, its relative precedence (which operators bind tighter) and associativity (how a chain of the same operator groups, left-to-right or right-to-left).
+A **precedence group** decides how a custom infix operator **combines** with others in one expression:
+
+- **Precedence:** which operator **binds tighter**, like `*` before `+`.
+- **Associativity:** how a **chain** of the same operator groups: from the left `(a ∘ b) ∘ c`, or from the right `a ∘ (b ∘ c)`.
 
 ```swift
 precedencegroup ExponentiationPrecedence {
@@ -148,35 +271,81 @@ func ** (base: Double, exponent: Double) -> Double {
 print(2.0 * 3.0 ** 2.0)   // 18.0 — ** binds tighter than *, so this is 2.0 * (3.0 ** 2.0)
 ```
 
-Getting precedence and associativity right matters for making a custom operator behave the way users would intuitively expect (matching, where possible, well-established mathematical convention) rather than surprising them with unexpected grouping.
+Why it matters, with numbers:
+
+```plaintext
+2 ** 3 ** 2
+  right-associative:  2 ** (3 ** 2) = 2 ** 9 = 512    ← math convention
+  left-associative:   (2 ** 3) ** 2 = 8 ** 2 = 64     ← surprising
+```
+
+Get these right so your operator behaves the way readers **expect** from normal math.
+
+The standard groups, from loosest to tightest (a few of them):
+
+```plaintext
+AssignmentPrecedence  (=, +=)
+TernaryPrecedence     (? :)
+LogicalDisjunction    (||)
+LogicalConjunction    (&&)
+ComparisonPrecedence  (==, <)
+AdditionPrecedence    (+, -)
+MultiplicationPrecedence (*, /)
+```
 
 ---
 
-## 11.7 Noncopyable Types with `~Copyable`
+## 11.7 Noncopyable Types with `~Copyable` 🔴
 
-By default, every Swift type is implicitly copyable — assigning a struct's value creates an independent copy (recall section 6.9). `~Copyable` (introduced in Swift 5.9) opts a type *out* of that default, producing a type that can only ever be **moved**, never duplicated — useful for modeling unique resources (a file handle, a lock) where having two independent copies would be semantically wrong.
+Normally, **every** Swift type can be copied: assigning a struct makes an independent copy (6.9). **`~Copyable`** (Swift 5.9) **removes** that ability. A noncopyable value can only be **moved**, never duplicated.
+
+This fits **unique resources**: a file handle, a lock, a one-time token. Having **two copies** of those would be a bug.
 
 ```swift
 struct UniqueToken: ~Copyable {
     let id: Int
 }
 
-func consume(_ token: consuming UniqueToken) {
-    print("Consuming token \(token.id)")
+func spend(_ token: consuming UniqueToken) {
+    print("Spending token \(token.id)")
 }
 
 let token = UniqueToken(id: 1)
-consume(token)
-// consume(token)   // ❌ error: 'token' used after being consumed — it was moved, not copied
+spend(token)
+// spend(token)   // ❌ error: 'token' used after consume — it was moved, not copied
 ```
 
-Once a noncopyable value is passed to a `consuming` function (or otherwise moved), the original binding becomes unusable — the compiler enforces, at compile time, that there's never more than one "owner" of the value at once, which is a strong, zero-runtime-cost guarantee against use-after-free-style logic bugs for unique resources.
+After the value is **moved** (here, into a `consuming` parameter), the original name **can't be used** anymore. The compiler checks this **at compile time**, at **zero runtime cost**. You can never use a resource after giving it away.
+
+Noncopyable **structs** can even have a **`deinit`**, like classes. It runs when the value's single owner is done with it:
+
+```swift
+struct FileDescriptor: ~Copyable {
+    let fd: Int32
+
+    consuming func close() {
+        print("closing \(fd)")
+        discard self                 // we closed it ourselves: skip deinit
+    }
+
+    deinit {
+        print("auto-closing \(fd)")  // runs if nobody called close()
+    }
+}
+
+do {
+    let file = FileDescriptor(fd: 3)
+    // let copy = file   → moves `file` into `copy`; `file` is no longer usable
+}   // prints "auto-closing 3"
+```
+
+This gives **automatic cleanup** without a class, and without the risk of two copies closing the same file twice.
 
 ---
 
-## 11.8 Ownership: `consuming`, `borrowing`, `inout`
+## 11.8 Ownership: `consuming`, `borrowing`, `inout` 🔴
 
-These three parameter modifiers describe exactly how a function intends to interact with an argument's ownership — most relevant (though not exclusively) for noncopyable types from 11.7, since ownership becomes an explicit, enforced concern once copying isn't automatically available as a fallback.
+These three parameter modifiers say **how a function uses the argument's ownership**. They matter most for noncopyable types (11.7): without copying as a fallback, ownership must be **explicit**.
 
 ```swift
 struct Resource: ~Copyable {
@@ -196,33 +365,79 @@ func rename(_ resource: inout Resource) {
 }
 ```
 
-`borrowing` requests temporary, read-only access without taking ownership (the caller retains it); `consuming` takes full ownership, ending the caller's ability to use the value afterward; `inout` (already familiar from section 5.5) allows temporary exclusive mutable access, with ownership returning to the caller once the function returns. For ordinary copyable types, these annotations are optional, fine-grained performance hints; for noncopyable types, they become load-bearing — the compiler actively enforces the described ownership transfer.
+| Modifier | Access | After the call, the caller... |
+|---|---|---|
+| `borrowing` | Temporary, **read-only** | Still owns the value |
+| `consuming` | Takes **full ownership** | Can't use the value anymore |
+| `inout` | Temporary, **read and write** (5.5) | Owns it again, possibly changed |
+
+Using them together:
+
+```swift
+var resource = Resource(name: "cache")
+inspect(resource)      // borrowed: still usable
+rename(&resource)      // changed in place: still usable
+destroy(resource)      // moved: `resource` is gone now
+// inspect(resource)   // ❌ error: 'resource' used after consume
+```
+
+For **normal, copyable types**, these modifiers are optional **performance hints**. For **noncopyable types**, they are **required and enforced**.
+
+There's also a **`consume` operator** to end a value's life early, even for copyable types:
+
+```swift
+let bigArray = Array(repeating: 0, count: 1_000_000)
+let moved = consume bigArray   // no copy; `bigArray` can't be used after this line
+```
 
 ---
 
-## 11.9 `~Escapable` and Lifetime Dependencies
+## 11.9 `~Escapable` and Lifetime Dependencies 🔴
 
-`~Escapable` (introduced alongside Swift's ownership features) marks a type whose values are tied to a specific, bounded lifetime — they cannot "escape" beyond the scope that guarantees the data they depend on remains valid, similar in spirit to Rust's borrow-checked references, but far less commonly encountered in everyday Swift code.
+**`~Escapable`** marks a type whose values are **tied to a limited lifetime**. They can't **escape** the scope where the data they point to is guaranteed to be valid. The idea is similar to Rust's borrowed references, but you'll meet it much less often in everyday Swift.
+
+The main example is **`Span`** (section 15.3), a safe, **non-owning view** into existing memory. Since Swift 6.2, collections like `Array` have a `span` property (it may need a recent OS version):
 
 ```swift
-struct DataView: ~Escapable {
-    let pointer: UnsafeBufferPointer<UInt8>
+let numbers = [10, 20, 30]
+let view = numbers.span        // Span<Int>: a view into the array's memory, no copy
+print(view[1])                 // 20
+print(view.count)              // 3
+```
 
-    // a lifetime dependency ties this value's validity to the buffer's own lifetime
-    init(scanning buffer: borrowing [UInt8]) {
-        // conceptual illustration — real usage requires explicit lifetime annotations
-        self.pointer = buffer.withUnsafeBufferPointer { $0 }
-    }
+`Span` is `~Escapable`. The compiler **won't let it outlive** the array it points to:
+
+```swift
+func makeView() -> Span<Int> {
+    let local = [1, 2, 3]
+    return local.span   // ❌ error: the span would outlive `local`
 }
 ```
 
-The practical motivation: some low-level APIs (like `Span`, covered in section 15.3) want to hand out a lightweight, non-owning view into existing memory without allowing that view to be stored or used after the underlying memory it points to might no longer be valid — `~Escapable` gives the compiler the tools to enforce that boundary statically, at the cost of real added complexity in the type's usage rules.
+**Why it exists:** low-level code wants a **fast, lightweight view** into memory, like an `UnsafeBufferPointer`, but **without** the danger of using it after the memory is gone. `~Escapable` lets the compiler **prove** that at compile time.
+
+| | `UnsafeBufferPointer` | `Span` |
+|---|---|---|
+| Speed | Fast | Fast |
+| Bounds checked | ❌ No | ✅ Yes |
+| Can outlive the memory | ⚠️ Yes (a bug) | ❌ No (compile error) |
+
+Declaring **your own** `~Escapable` types needs lifetime annotations that are still evolving. For most developers, **using** `Span` is what matters.
 
 ---
 
-## 11.10 Access Control Levels Including `package`
+## 11.10 Access Control Levels Including `package` 🟢
 
-Swift's access control levels, from most to least restrictive: `private` (visible only within the enclosing declaration, and extensions in the same file), `fileprivate` (visible anywhere in the same source file), `internal` (the default — visible anywhere within the same module), `package` (visible anywhere within the same package, across multiple modules — introduced in Swift 5.9), and `public`/`open` (visible outside the module; `open` additionally allows subclassing/overriding from outside).
+Swift's **access levels**, from most hidden to most open:
+
+| Level | Visible in |
+|---|---|
+| `private` | The enclosing declaration (and its extensions in the same file) |
+| `fileprivate` | The same source file |
+| `internal` (default) | The same **module** |
+| `package` (Swift 5.9) | Any module in the same **package** |
+| `public` | Any module that imports it |
+| `open` | Like `public`, **plus** subclassing and overriding from other modules |
 
 ```swift
 private var secretCache: [String: Any] = [:]        // only visible in this file/scope
@@ -237,13 +452,35 @@ open class BaseViewModel {   // can be subclassed even from outside this module
 }
 ```
 
-`package` fills a real gap that existed before Swift 5.9: previously, sharing code between multiple related modules *within the same app or package* (but not exposing it publicly to external consumers) required either making everything `public` (over-exposing your API) or duplicating code. `package` lets multiple modules that are part of the same package collaborate freely, while still keeping that code invisible to genuinely external consumers of the package.
+Two useful details:
+
+```swift
+public struct Counter {
+    public private(set) var value = 0       // anyone can READ it; only this type can WRITE it
+    public init() { }
+    public mutating func increment() { value += 1 }
+}
+```
+
+```swift
+public struct Point {
+    public var x: Double
+    public var y: Double
+    // ⚠️ The memberwise init is internal, even for a public struct.
+    // Other modules can't call Point(x:y:) unless you write a public init:
+    public init(x: Double, y: Double) { self.x = x; self.y = y }
+}
+```
+
+**What `package` solves:** before Swift 5.9, code shared between **your own modules** had to be `public`, which also exposed it to **everyone** who used your package. `package` lets your modules share details **with each other** only (see 48.6 for more).
+
+**Rule:** start with the most hidden level that works. Make things more visible only when needed.
 
 ---
 
-## 11.11 `@inlinable` and `@usableFromInline`
+## 11.11 `@inlinable` and `@usableFromInline` 🔴
 
-These attributes matter specifically for **library authors** using resilient (ABI-stable) modules — they let the compiler inline a function's body directly into the *caller's* compiled code, even across module boundaries, for performance-critical code paths that would otherwise pay a cross-module call overhead.
+These attributes matter for **library authors**. Normally, a call into another module can't be **inlined** (the compiler can't copy the function's body into the caller), so there's a small cross-module call cost. **`@inlinable`** makes the function's **body** part of the module's public interface, so callers in other modules **can** inline it.
 
 ```swift
 public struct Vector {
@@ -262,13 +499,24 @@ public struct Vector {
 }
 ```
 
-`@inlinable` exposes a function's actual implementation as part of the module's public interface (so callers in other modules can inline it), which requires any `internal` members it touches (like `x`/`y` here) to be marked `@usableFromInline` — explicitly opting them into being visible to that inlined code, without making them fully `public`. This is a narrow, advanced optimization tool, primarily relevant when authoring performance-sensitive public frameworks, not everyday application code.
+An inlinable body is compiled **into the caller**, so everything it touches must be visible there. **`@usableFromInline`** makes an `internal` member usable **from inlined code**, without making it fully `public`.
+
+```plaintext
+Without @usableFromInline on x and y:
+  error: property 'x' is internal and cannot be referenced from an '@inlinable' function
+```
+
+**A warning:** an `@inlinable` body becomes **part of your public contract**. Apps compiled against version 1 keep **version 1's body** inlined in their binary, even after the library updates. So only inline small, stable code.
+
+This is a **narrow, advanced** tool for performance-sensitive public frameworks. In normal app code, the compiler already optimizes across files in your module.
 
 ---
 
-## 11.12 `@frozen` and Library Evolution
+## 11.12 `@frozen` and Library Evolution 🔴
 
-By default, a `public` struct or enum in a **resilient** library (one built with library evolution support, like the ones shipped in the OS itself) is treated as an opaque, potentially-changing-shape type from the outside — callers can't assume its exact memory layout, since the library author might add stored properties or enum cases in a future version without breaking already-compiled client binaries.
+Some libraries are built with **library evolution** turned on, like Apple's system frameworks. In such a **resilient** library, a `public` struct or enum is treated as having an **unknown layout** from the outside. The author may **add stored properties or enum cases** in a later version without breaking apps that are already compiled.
+
+That flexibility has a cost: code outside the library must reach the type's fields **indirectly**.
 
 ```swift
 @frozen public struct Point {
@@ -277,15 +525,30 @@ By default, a `public` struct or enum in a **resilient** library (one built with
 }
 ```
 
-`@frozen` is a library author's promise: "this type's layout (its stored properties, in this exact order) is fixed forever — I will never add, remove, or reorder them in a future version." This unlocks performance optimizations for callers (no indirection needed to account for a potentially-different future layout), at the cost of permanently giving up the ability to evolve that type's stored properties later. This attribute is essentially irrelevant for regular app code (which isn't a resilient library) and matters almost exclusively for framework/library authors, especially Apple's own system frameworks.
+**`@frozen`** is the author's **promise**: "this type's stored properties (in this exact order) will **never change**." Callers can then use the layout **directly**, which is faster. But the author can **never** add, remove, or reorder its stored properties again.
+
+For **enums**, `@frozen` means "no new cases, ever". That's why you can `switch` over a frozen enum with no `default`, but for non-frozen system enums Swift asks for **`@unknown default`**:
+
+```swift
+switch UIDevice.current.userInterfaceIdiom {
+case .phone: print("iPhone")
+case .pad:   print("iPad")
+@unknown default:
+    print("A new kind of device")   // future OS versions may add cases
+}
+```
+
+For **regular app code** (not a resilient library), `@frozen` has no effect. It matters mainly to **framework authors**, especially Apple.
 
 ---
 
-## 11.13 ABI Stability vs Module Stability
+## 11.13 ABI Stability vs Module Stability 🔴
 
-**ABI (Application Binary Interface) stability** means compiled binaries built against one version of a library continue working correctly against a *newer* version of that library's compiled binary, without recompilation — this is exactly what lets Apple ship the Swift standard library and system frameworks baked into the OS itself, rather than bundled inside every single app.
+**ABI stability** (ABI = Application Binary Interface): an app **compiled** against one version of a library keeps **working** with a **newer compiled version** of that library, **without recompiling**.
 
-**Module stability** is a related but distinct guarantee: a library's public interface (via its compiled `.swiftinterface` file) can be reliably consumed by a *different, potentially newer, version of the Swift compiler* than the one that originally built the library — this is what allows a binary framework compiled with an older Swift compiler to still be usable from a project built with a newer one.
+This is what lets Apple ship the **Swift runtime and standard library inside iOS** itself, instead of inside every app.
+
+**Module stability**: a library's public interface (its **`.swiftinterface`** file) can be used by a **newer Swift compiler** than the one that built it. This is what lets you use a **binary framework** built with an older Xcode in a project built with a newer one.
 
 ```swift
 // A resilient, ABI-stable library's public struct — expanded conceptually
@@ -301,7 +564,19 @@ By default, a `public` struct or enum in a **resilient** library (one built with
 // because ABI stability guarantees binary compatibility despite the layout potentially changing.
 ```
 
-These two guarantees, together, are what make it possible for the Swift runtime and standard library to live inside the OS itself (rather than every app statically linking and shipping its own copy), and for third-party binary frameworks (like ones distributed via Swift Package Manager binary targets, or XCFrameworks) to remain usable across Swift compiler version upgrades. Like `@frozen` and `@inlinable`, this is a topic that matters primarily to platform/framework engineers rather than typical app developers.
+| | ABI stability | Module stability |
+|---|---|---|
+| Question | Does my **compiled app** still run with a **newer library binary**? | Can a **newer compiler** use this **compiled framework**? |
+| Enabled by | Library evolution / resilience | The `.swiftinterface` file |
+| Example | Your app runs on next year's iOS | An XCFramework still works after you update Xcode |
+
+If you **ship a binary framework** (for example, an XCFramework for other teams), turn on this build setting. It enables both:
+
+```plaintext
+BUILD_LIBRARY_FOR_DISTRIBUTION = YES
+```
+
+Like `@frozen` and `@inlinable`, this matters mostly to **framework and platform engineers**, not typical app developers.
 
 ---
 
@@ -309,16 +584,16 @@ These two guarantees, together, are what make it possible for the Swift runtime 
 
 | Topic | One-line takeaway |
 |---|---|
-| Key paths | First-class, reusable references to a property, usable via `instance[keyPath:]` |
-| Key paths as functions | `\.property` can be passed directly wherever a `(Root) -> Value` closure is expected |
-| `@dynamicMemberLookup` | Enables dot-syntax access to properties not known at compile time — use sparingly |
-| `@dynamicCallable` | Lets an instance be called like a function; rare, mostly for DSLs |
-| Operator overloading | Define `+`, `-`, etc. for custom types, or introduce entirely new operators |
-| Precedence groups | Control how a custom operator's precedence and associativity interact with others |
-| `~Copyable` | Opts a type out of default copyability — can only be moved, never duplicated |
-| `consuming`/`borrowing`/`inout` | Explicit ownership transfer modes, load-bearing for noncopyable types |
-| `~Escapable` | Ties a value's validity to a bounded lifetime it can't outlive |
-| Access control + `package` | `private` < `fileprivate` < `internal` < `package` < `public`/`open`; `package` shares code across modules in one package without exposing it externally |
-| `@inlinable`/`@usableFromInline` | Expose a function's body for cross-module inlining in performance-critical library code |
-| `@frozen` | A library author's promise to never change a public type's layout again |
-| ABI/module stability | Let compiled binaries and frameworks remain compatible across library/compiler version changes |
+| Key paths | A reusable reference to a property; use with `instance[keyPath:]` |
+| Key paths as functions | `\.name` works where `{ $0.name }` would |
+| `@dynamicMemberLookup` | Dot syntax for unknown members; prefer the key-path (type-safe) form |
+| `@dynamicCallable` | Call an instance like a function; rare; `callAsFunction` is simpler |
+| Operator overloading | Define `+`, `-`, `+=` for your types; new operators sparingly |
+| Precedence groups | Control binding strength and grouping of custom operators |
+| `~Copyable` | Values that can be moved but never copied; can have `deinit` |
+| `consuming`/`borrowing`/`inout` | Say how a function uses ownership; enforced for noncopyable types |
+| `~Escapable` | Values that can't outlive their data, like `Span` |
+| Access control + `package` | `private` → `open`; `package` shares between your own modules |
+| `@inlinable`/`@usableFromInline` | Let other modules inline a library function's body |
+| `@frozen` | A promise that a public type's layout or cases never change |
+| ABI/module stability | Compiled apps and frameworks keep working across versions |

@@ -1,6 +1,12 @@
-## 29.1 Implicit Animation
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Implicit animation uses `.animation()` attached to a view, automatically animating any changes to values that modifier observes.
+In SwiftUI you don't animate **views**; you animate **state changes**. You change a value and say "**animate this**". SwiftUI then moves every view that depends on that value **smoothly** from the old look to the new one. Almost everything in this section is a different way to say **what** to animate and **how**.
+
+---
+
+## 29.1 Implicit Animation 🟢
+
+**Implicit** animation uses the **`.animation(_:value:)`** modifier. It means: "**when this value changes**, animate the changes on this view".
 
 ```swift
 struct ImplicitAnimationView: View {
@@ -11,18 +17,34 @@ struct ImplicitAnimationView: View {
             .fill(.blue)
             .frame(width: isExpanded ? 200 : 100, height: isExpanded ? 200 : 100)
             .animation(.default, value: isExpanded)
-            .onTapGesture { isExpanded.toggle() }
+            .onTapGesture { isExpanded.toggle() }   // no withAnimation needed
     }
 }
 ```
 
-`.animation(.default, value: isExpanded)` tells SwiftUI: whenever `isExpanded` changes, animate any resulting visual differences on this view (here, the frame size) using the default animation curve. The `value:` parameter is required — it scopes the animation to only trigger when that specific value changes, rather than animating every possible state change touching the view.
+The **`value:`** is required. It limits the animation to changes of **that one value**. Without it (the old, deprecated form), **any** change touching the view animated, even ones you didn't want, like data loading or rotation.
+
+⚠️ `.animation` only affects modifiers **above** it in the chain:
+
+```swift
+Circle()
+    .frame(width: size, height: size)    // ✅ animated: above .animation
+    .animation(.spring, value: size)
+    .opacity(size > 100 ? 1 : 0.5)       // ❌ not animated by it: below .animation
+```
+
+You can watch **several** values with several modifiers, each with its own curve:
+
+```swift
+.animation(.spring, value: isExpanded)
+.animation(.easeInOut, value: isHighlighted)
+```
 
 ---
 
-## 29.2 Explicit Animation
+## 29.2 Explicit Animation 🟢
 
-Explicit animation wraps a state change inside `withAnimation()`, animating whatever visual effects result from that specific state mutation — useful when you want precise control over exactly which changes animate.
+**Explicit** animation wraps a **state change** in **`withAnimation`**. Every view affected by that change animates:
 
 ```swift
 struct ExplicitAnimationView: View {
@@ -42,13 +64,31 @@ struct ExplicitAnimationView: View {
 }
 ```
 
-Unlike `.animation()`, which continuously watches a value on a specific view, `withAnimation()` animates the *effects of a single code block* — any state changes made inside it that affect the view hierarchy get animated together. This is generally the more predictable and commonly recommended approach for triggering animation from a specific event.
+| | Implicit `.animation(_:value:)` | Explicit `withAnimation { }` |
+|---|---|---|
+| Set on | A **view** | A **state change** |
+| Animates | That view, when the value changes | **Every** view affected by the change |
+| Good for | One view that always animates a value | Animating **because of an event** (a tap, a load) |
+
+`withAnimation` is usually **easier to reason about**: you see the animation right where the change happens.
+
+From iOS 17, you can run code **when the animation finishes**:
+
+```swift
+withAnimation(.easeOut(duration: 0.3)) {
+    isCardVisible = false
+} completion: {
+    cards.removeFirst()          // runs after the card has slid away
+}
+```
+
+The same change **without** `withAnimation` happens **instantly**. So you choose per change whether it animates.
 
 ---
 
-## 29.3 Animation Curves
+## 29.3 Animation Curves 🟢
 
-SwiftUI provides a family of standard timing curves via static `Animation` values, each producing a different pacing feel.
+A **curve** (timing curve) decides the **speed** of the motion over time. SwiftUI has the standard ones:
 
 ```swift
 struct CurvesComparisonView: View {
@@ -74,13 +114,28 @@ struct CurvesComparisonView: View {
 }
 ```
 
-`.linear` moves at constant speed throughout; `.easeIn` starts slow and accelerates; `.easeOut` starts fast and decelerates (often feels the most natural for elements entering a stopped state); `.easeInOut` combines both, starting and ending slow with acceleration in the middle. Each accepts a `duration:` parameter controlling total animation length.
+| Curve | Speed | Feels like |
+|---|---|---|
+| `.linear` | The same the whole way | Mechanical; good for progress bars and spinners |
+| `.easeIn` | Starts slow, ends fast | Something leaving or falling |
+| `.easeOut` | Starts **fast**, ends **slow** | Something arriving and stopping |
+| `.easeInOut` | Slow, fast, slow | A natural move from A to B |
+
+Each takes a **`duration:`** in seconds. Without one, it uses a short default.
+
+For **exact** control, use a custom **Bézier curve**, like in design tools:
+
+```swift
+.animation(.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.6), value: moved)
+```
+
+Most of the time, though, a **spring** (29.4) looks better than any of these.
 
 ---
 
-## 29.4 Spring Animations
+## 29.4 Spring Animations 🟢
 
-Spring animations model physical spring-like motion, producing natural-feeling bounce and settle behavior rather than a fixed mathematical curve.
+A **spring** moves like a real spring: fast at first, maybe a little **bounce**, then it **settles**. Springs feel natural, and they handle **interruptions** well (a new tap mid-animation keeps the current speed instead of jumping).
 
 ```swift
 struct SpringAnimationView: View {
@@ -100,13 +155,36 @@ struct SpringAnimationView: View {
 }
 ```
 
-`response:` roughly controls how quickly the spring reacts (lower values feel snappier), and `dampingFraction:` controls how much the motion oscillates before settling — a value near `1.0` settles smoothly with minimal bounce, while lower values produce more pronounced overshoot and bounce. SwiftUI also offers convenience presets like `.bouncy`, `.smooth`, and `.snappy` that provide well-tuned spring configurations without manually specifying `response`/`dampingFraction`.
+- **`response`**: about how **long** it takes. Lower = **snappier**.
+- **`dampingFraction`**: how fast the bounce **dies down**. **`1.0`** = no bounce. **Lower** = **more bounce** and overshoot.
+
+The newer, simpler form uses **`duration`** and **`bounce`**:
+
+```swift
+.spring(duration: 0.5, bounce: 0.3)    // bounce: 0 = none, 0.3 = some, 0.6+ = a lot
+```
+
+And there are ready-made presets:
+
+| Preset | Feel |
+|---|---|
+| `.smooth` | No bounce; calm |
+| `.snappy` | Quick, a tiny bounce |
+| `.bouncy` | Clearly bouncy; playful |
+| `.spring` | The balanced default |
+
+```swift
+withAnimation(.bouncy) { isLiked.toggle() }
+withAnimation(.snappy(duration: 0.25)) { isMenuOpen.toggle() }
+```
+
+**Since iOS 17, the default animation (`.default`) is a spring.** It's a good choice for most UI.
 
 ---
 
-## 29.5 Delay and Repeat
+## 29.5 Delay and Repeat 🟢
 
-Animations can be delayed before starting, and repeated a fixed number of times or indefinitely, via `.delay()` and `.repeatCount()`/`.repeatForever()`.
+**`.delay()`** waits before starting. **`.repeatCount()`** and **`.repeatForever()`** repeat the animation:
 
 ```swift
 struct PulsingIndicatorView: View {
@@ -129,13 +207,35 @@ struct PulsingIndicatorView: View {
 }
 ```
 
-`.repeatForever(autoreverses: true)` loops the animation indefinitely, alternating between the start and end states each cycle (autoreversing) rather than snapping back — a common pattern for attention-grabbing pulsing indicators like the one above. `.delay()` inserts a pause before the animation begins, useful for staggering multiple elements' entrance animations.
+**`.repeatForever(autoreverses: true)`** loops **forever**, going **forward and back** each time (big, small, big, small) instead of **snapping** back to the start. It's the classic pattern for a **pulsing** "live" dot.
+
+**Delays** are great for **staggering**: making items appear one after another:
+
+```swift
+ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+    ItemRow(item: item)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 20)
+        .animation(.spring.delay(Double(index) * 0.05), value: appeared)   // 50 ms apart
+}
+.onAppear { appeared = true }
+```
+
+For **SF Symbols**, there are built-in repeating effects, with no state needed:
+
+```swift
+Image(systemName: "wifi")
+    .symbolEffect(.variableColor.iterative, options: .repeating)
+
+Image(systemName: "bell")
+    .symbolEffect(.bounce, value: notificationCount)   // bounces each time the count changes
+```
 
 ---
 
-## 29.6 .transition()
+## 29.6 .transition() 🟢
 
-`.transition()` defines how a view animates into and out of the hierarchy — that is, what happens specifically when a view is added or removed (as opposed to a property changing on a view that remains present).
+**`.transition()`** describes how a view **appears** and **disappears**: when it's **added to** or **removed from** the view tree (usually by an `if`). `.animation` is for a view that **stays** and **changes**.
 
 ```swift
 struct TransitionExampleView: View {
@@ -156,13 +256,33 @@ struct TransitionExampleView: View {
 }
 ```
 
-Standard built-in transitions include `.opacity` (fade), `.slide`, `.scale`, `.move(edge:)`, and `.offset()`. Transitions only take visible effect when the insertion/removal is wrapped in `withAnimation()` (or occurs within an implicitly animated context) — without that, the view simply appears/disappears instantly regardless of the assigned `.transition()`.
+| Transition | Effect |
+|---|---|
+| `.opacity` | Fade (the default) |
+| `.slide` | Slide in from the leading edge, out to the trailing edge |
+| `.scale` | Grow from / shrink to a point |
+| `.move(edge: .bottom)` | Slide in from / out to an edge |
+| `.offset(x:y:)` | Move by a fixed amount |
+| `.push(from: .trailing)` | Push in, pushing the old view out |
+| `.blurReplace` | Blur and fade (iOS 17) |
+
+⚠️ A transition only runs if the **change is animated**: inside `withAnimation`, or under an `.animation(_:value:)` that watches the value. Without that, the view just **pops** in and out.
+
+```swift
+// ❌ No animation → the transition is ignored
+Button("Toggle") { showDetail.toggle() }
+
+// ✅ Animated change → the transition runs
+Button("Toggle") { withAnimation { showDetail.toggle() } }
+```
+
+Also keep the `if` inside a **container that stays** (like the `VStack` above). The container is what animates the child coming and going.
 
 ---
 
-## 29.7 AsymmetricTransition
+## 29.7 AsymmetricTransition 🟡
 
-`.asymmetric(insertion:removal:)` lets a view use different transitions for appearing versus disappearing, rather than the same transition reversed.
+A normal transition uses the **same** effect **in** and **out** (reversed). **`.asymmetric(insertion:removal:)`** gives **different** effects for each:
 
 ```swift
 struct AsymmetricTransitionView: View {
@@ -188,13 +308,38 @@ struct AsymmetricTransitionView: View {
 }
 ```
 
-Here the banner slides down while fading in on insertion, but simply fades out (without sliding back up) on removal — a common pattern where entrance and exit should feel intentionally different rather than symmetric. `.combined(with:)` layers multiple transitions together, as shown combining `.move` and `.opacity`.
+The banner **slides down and fades in** when it appears, but **only fades out** when it goes. **`.combined(with:)`** runs two transitions **together**.
+
+A **card stack** is another common case: new cards come from the right, old ones leave to the left:
+
+```swift
+CardView(card: current)
+    .id(current.id)            // a new id → a new view → the transition runs (25.15)
+    .transition(.asymmetric(
+        insertion: .move(edge: .trailing),
+        removal: .move(edge: .leading)
+    ))
+```
+
+You can also build your own **custom** transitions with the **`Transition`** protocol (iOS 17):
+
+```swift
+struct RotateFade: Transition {
+    func body(content: Content, phase: TransitionPhase) -> some View {
+        content
+            .rotationEffect(.degrees(phase.isIdentity ? 0 : 30))
+            .opacity(phase.isIdentity ? 1 : 0)
+    }
+}
+
+// .transition(RotateFade())
+```
 
 ---
 
-## 29.8 matchedGeometryEffect Basics
+## 29.8 matchedGeometryEffect Basics 🟡
 
-`matchedGeometryEffect(id:in:)` links two views (typically appearing at different times or in different parts of the hierarchy) sharing a common namespace, so SwiftUI can smoothly animate one view's position/size into matching the other's — producing the illusion of a single view morphing between two states.
+**`matchedGeometryEffect(id:in:)`** links **two views** that represent **the same thing**. When one disappears and the other appears, SwiftUI animates the **position and size** from one to the other. It looks like **one view changing shape**.
 
 ```swift
 struct MatchedGeometryBasicsView: View {
@@ -220,13 +365,50 @@ struct MatchedGeometryBasicsView: View {
 }
 ```
 
-`@Namespace` creates the shared coordinate context (`animation` here), and matching `id:` values across the two conditionally-shown views tell SwiftUI they represent "the same" logical element — even though only one is actually present in the hierarchy at any given moment, SwiftUI animates the transition between their frames as if it were one continuous shape.
+Two parts:
+
+- **`@Namespace`** creates a **shared space** for IDs. IDs only match **inside the same namespace**, so two different screens can both use `"shape"` without clashing.
+- The **same `id:`** tells SwiftUI: "these two are **one logical element**".
+
+Only one of them exists at a time, but SwiftUI animates **between their frames** as if it were one shape.
+
+A popular use is a **sliding tab indicator**:
+
+```swift
+struct TabBarIndicator: View {
+    @Namespace private var namespace
+    @State private var selected = "Home"
+    let tabs = ["Home", "Search", "Profile"]
+
+    var body: some View {
+        HStack {
+            ForEach(tabs, id: \.self) { tab in
+                Text(tab)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background {
+                        if selected == tab {
+                            Capsule()
+                                .fill(.blue.opacity(0.2))
+                                .matchedGeometryEffect(id: "indicator", in: namespace)
+                        }
+                    }
+                    .onTapGesture {
+                        withAnimation(.snappy) { selected = tab }   // the capsule slides to the new tab
+                    }
+            }
+        }
+    }
+}
+```
+
+⚠️ Only **one** view with a given ID should be **visible** at a time (unless you use `isSource:`). Two visible views with the same ID give strange results.
 
 ---
 
-## 29.9 matchedGeometryEffect Hero Transitions
+## 29.9 matchedGeometryEffect Hero Transitions 🟡
 
-The most common real-world application of `matchedGeometryEffect` is a "hero transition" — a small thumbnail smoothly expanding into a full detail view, as seen in apps like Photos or App Store.
+A **hero transition** is a **small thumbnail** that **grows** into a **full detail view**, like in the App Store's Today tab:
 
 ```swift
 struct HeroTransitionView: View {
@@ -264,13 +446,19 @@ struct HeroTransitionView: View {
 }
 ```
 
-Each row shares an `id:` (its own item string) in the common `heroNamespace`. Tapping a row swaps `selectedItem`, causing the list to disappear and the detail view (sharing the same `id:` as the tapped row) to appear — SwiftUI interpolates the frame change between the small row and the large detail view, producing the expanding "hero" effect rather than a jarring cut. (Section 27.20's `.navigationTransition(.zoom())` is a purpose-built, simpler alternative for the specific case of navigation-triggered zoom transitions.)
+Each row uses **its own item** as the ID. When you tap "Beta", the list goes away and the detail appears with the **same ID**, `"Beta"`. SwiftUI animates from the **small row's frame** to the **big detail's frame**. The row seems to **grow** into the detail, instead of a hard cut.
+
+Tips for real apps:
+
+- Match **pieces** separately (the image, the title, the background), each with its own ID like `"\(item.id)-image"`. The result looks more polished.
+- Add `.zIndex(1)` to the detail, so it animates **above** the other rows.
+- For **navigation** (pushing a screen), the **zoom transition** (27.23) is simpler and handles back swipes for you. Use `matchedGeometryEffect` for **custom** layouts **inside one screen**.
 
 ---
 
-## 29.10 Phase Animators
+## 29.10 Phase Animators 🟡
 
-`.phaseAnimator()` (available from iOS 17) steps a view through a sequence of discrete "phases," automatically animating between each one — well suited to multi-stage effects like a shake or bounce sequence.
+**`.phaseAnimator()`** (iOS 17) moves a view through a **list of phases**, one after another, animating between them. It's great for **multi-step** effects like a **shake** or a **pulse**:
 
 ```swift
 struct PhaseAnimatorView: View {
@@ -292,29 +480,51 @@ struct PhaseAnimatorView: View {
         Image(systemName: "bell.fill")
             .font(.system(size: 50))
             .phaseAnimator(ShakePhase.allCases, trigger: trigger) { content, phase in
-                content.offset(x: phase.xOffset)
+                content.offset(x: phase.xOffset)       // how each phase looks
             } animation: { _ in
-                .easeInOut(duration: 0.1)
+                .easeInOut(duration: 0.1)              // how to move to that phase
             }
             .onTapGesture { trigger.toggle() }
     }
 }
 ```
 
-`.phaseAnimator()` takes the sequence of phase values, a `trigger:` value that restarts the sequence when it changes, a content closure describing how each phase should visually modify the view, and an `animation:` closure controlling the timing between phase transitions. SwiftUI automatically steps through each phase in order, animating between them — ideal for expressive, multi-beat effects without manually chaining several `withAnimation()` calls and completion handlers.
+The parts:
+
+| Part | Role |
+|---|---|
+| Phases (`ShakePhase.allCases`) | The steps, in order |
+| `trigger:` | **Each time** this value changes, run through all phases **once** |
+| Content closure | How the view looks **in** each phase |
+| `animation:` closure | The animation used to **reach** each phase |
+
+**Without** a `trigger:`, the phases **loop forever**. That's an easy "breathing" effect:
+
+```swift
+Circle()
+    .fill(.green)
+    .frame(width: 12, height: 12)
+    .phaseAnimator([false, true]) { content, isBig in
+        content.scaleEffect(isBig ? 1.4 : 1.0).opacity(isBig ? 0.6 : 1)
+    } animation: { _ in
+        .easeInOut(duration: 1)
+    }
+```
+
+It replaces chains of `withAnimation` calls with **delays** and **completion** blocks, which were hard to keep in sync.
 
 ---
 
-## 29.11 Keyframe Animators
+## 29.11 Keyframe Animators 🔴
 
-`.keyframeAnimator()` (iOS 17+) provides fine-grained control over multiple animatable properties simultaneously, each with its own independent timeline of keyframes — well suited to complex, choreographed multi-property animations.
+**`.keyframeAnimator()`** (iOS 17) gives you **full control** over **several properties**, each with its **own timeline**. Think of a video editor: each property has its own track of **keyframes** (values at certain times).
 
 ```swift
 struct KeyframeAnimatorView: View {
     struct AnimationValues {
         var scale = 1.0
         var verticalOffset = 0.0
-        var opacity = 1.0
+        var rotation = Angle.zero
     }
 
     @State private var trigger = false
@@ -327,7 +537,7 @@ struct KeyframeAnimatorView: View {
                 content
                     .scaleEffect(value.scale)
                     .offset(y: value.verticalOffset)
-                    .opacity(value.opacity)
+                    .rotationEffect(value.rotation)
             } keyframes: { _ in
                 KeyframeTrack(\.scale) {
                     SpringKeyframe(1.3, duration: 0.2)
@@ -335,10 +545,12 @@ struct KeyframeAnimatorView: View {
                 }
                 KeyframeTrack(\.verticalOffset) {
                     LinearKeyframe(-30, duration: 0.2)
-                    LinearKeyframe(0, duration: 0.3)
+                    CubicKeyframe(0, duration: 0.3)
                 }
-                KeyframeTrack(\.opacity) {
-                    LinearKeyframe(1.0, duration: 0.5)
+                KeyframeTrack(\.rotation) {
+                    LinearKeyframe(.degrees(15), duration: 0.1)
+                    LinearKeyframe(.degrees(-15), duration: 0.2)
+                    SpringKeyframe(.zero, duration: 0.2)
                 }
             }
             .onTapGesture { trigger.toggle() }
@@ -346,13 +558,33 @@ struct KeyframeAnimatorView: View {
 }
 ```
 
-Each `KeyframeTrack` animates one property (via key path) along its own independent sequence of keyframes (`LinearKeyframe`, `SpringKeyframe`, `CubicKeyframe`, etc., each with its own `duration:`), all running in parallel on a shared overall timeline. This gives far more choreographic control than a single `withAnimation()` call, at the cost of more setup — appropriate for polished, bespoke animation sequences like the pop-and-lift-then-settle star effect above.
+How to read it:
+
+- **`AnimationValues`** holds **every** property you animate.
+- Each **`KeyframeTrack`** animates **one** property (by key path), as a list of keyframes.
+- All tracks run **at the same time**, side by side.
+- Each keyframe sets a **target value** and how long to take to get there.
+
+| Keyframe | Movement to its value |
+|---|---|
+| `LinearKeyframe` | Constant speed |
+| `CubicKeyframe` | Smooth curve, flowing into the next keyframe |
+| `SpringKeyframe` | Spring motion |
+| `MoveKeyframe` | Jump instantly, no animation |
+
+| Use | When |
+|---|---|
+| `withAnimation` | A simple A → B change |
+| `phaseAnimator` | A few steps, all properties moving together |
+| `keyframeAnimator` | Several properties with **different timing** |
+
+Keyframes cost more setup, but give the most **polished** results, like the star above: it **pops up**, **wiggles**, and **settles**, all at once.
 
 ---
 
-## 29.12 Animatable and animatableData
+## 29.12 Animatable and animatableData 🔴
 
-Custom `Shape`s or views can conform to `Animatable` by exposing an `animatableData` property, telling SwiftUI exactly which underlying numeric value(s) should be interpolated during animation.
+How does SwiftUI animate at all? For each frame, it computes an **in-between value** (it **interpolates**) and redraws. Built-in modifiers like `.frame` and `.opacity` already know how. For your **own** shapes and views, you tell SwiftUI **which number** to interpolate, with **`Animatable`** and **`animatableData`**:
 
 ```swift
 struct AnimatableCounter: View, Animatable {
@@ -360,13 +592,13 @@ struct AnimatableCounter: View, Animatable {
 
     var animatableData: Double {
         get { value }
-        set { value = newValue }
+        set { value = newValue }      // SwiftUI sets in-between values here, frame by frame
     }
 
     var body: some View {
         Text("\(Int(value))")
             .font(.system(size: 40, weight: .bold, design: .rounded))
-            .contentTransition(.numericText())
+            .monospacedDigit()
     }
 }
 
@@ -375,7 +607,7 @@ struct CounterDemoView: View {
 
     var body: some View {
         VStack {
-            AnimatableCounter(value: count)
+            AnimatableCounter(value: count)     // counts 0, 1, 2 … 50
             Button("Add 50") {
                 withAnimation(.easeOut(duration: 1)) { count += 50 }
             }
@@ -384,16 +616,52 @@ struct CounterDemoView: View {
 }
 ```
 
-Without `Animatable` conformance, SwiftUI has no way to know that `value` should be smoothly interpolated frame-by-frame during an animation — it would simply jump from the old value to the new one. Exposing `animatableData` (here, directly mapped to `value`) tells the framework exactly what numeric quantity to interpolate, enabling smooth "counting up" animation as `value` transitions from its old value to the new one.
+Without `Animatable`, SwiftUI doesn't know that `value` can be **in between**. It would just **jump** from 0 to 50. With `animatableData`, SwiftUI sets 0.0, 0.8, 2.1, … 50.0 over one second, and `body` shows each one.
+
+This is the base of **animatable custom shapes**:
+
+```swift
+struct ProgressRing: Shape {
+    var progress: Double            // 0...1
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        Path { p in
+            p.addArc(center: CGPoint(x: rect.midX, y: rect.midY),
+                     radius: min(rect.width, rect.height) / 2,
+                     startAngle: .degrees(-90),
+                     endAngle: .degrees(-90 + 360 * progress),
+                     clockwise: false)
+        }
+    }
+}
+
+// ProgressRing(progress: progress).stroke(.blue, lineWidth: 8)
+// withAnimation { progress = 0.75 } → the ring grows smoothly
+```
+
+`Shape` already conforms to `Animatable`; you only add `animatableData`. iOS 26 also adds an **`@Animatable`** macro that writes `animatableData` for you.
+
+For a simple **number** change in `Text`, there's an easier tool than `Animatable`: `.contentTransition(.numericText())` (29.16) animates the **digits** rolling.
 
 ---
 
-## 29.13 VectorArithmetic
+## 29.13 VectorArithmetic 🔴
 
-For `Animatable` types that need to interpolate more than a single `Double`, `animatableData` can be any type conforming to `VectorArithmetic` — commonly `AnimatablePair` for combining two values, or a custom type for more complex multi-value interpolation.
+`animatableData` must be a type that conforms to **`VectorArithmetic`**. That's a type SwiftUI can **do math** on:
+
+- **add** and **subtract** values (to get the difference between start and end),
+- **scale** by a number (to get "30% of the way"),
+- measure its **size** (`magnitudeSquared`), for springs.
+
+`Double`, `CGFloat`, and `Float` already conform. To animate **two** values, combine them with **`AnimatablePair`**:
 
 ```swift
-struct WavyShape: Shape, Animatable {
+struct WavyShape: Shape {
     var amplitude: Double
     var phase: Double
 
@@ -420,13 +688,28 @@ struct WavyShape: Shape, Animatable {
 }
 ```
 
-`AnimatablePair<Double, Double>` bundles `amplitude` and `phase` into a single interpolatable unit — `VectorArithmetic` requires types to support addition, scaling, and a notion of "magnitude," which is exactly what's needed for SwiftUI to compute smooth in-between values across an arbitrary number of properties simultaneously, here producing a smoothly morphing wave shape as both values animate together.
+`amplitude` and `phase` must **both** animate, so they're packed into **one** `AnimatablePair`. A single `Double` could only carry one of them; the other would **jump**.
+
+For **three or more** values, **nest** pairs:
+
+```swift
+var animatableData: AnimatablePair<Double, AnimatablePair<Double, Double>> {
+    get { AnimatablePair(a, AnimatablePair(b, c)) }
+    set {
+        a = newValue.first
+        b = newValue.second.first
+        c = newValue.second.second
+    }
+}
+```
+
+Nested pairs get hard to read fast. That's one reason the `@Animatable` macro (29.12) is welcome.
 
 ---
 
-## 29.14 Transactions and Animation Scoping
+## 29.14 Transactions and Animation Scoping 🔴
 
-A `Transaction` carries the animation context (or lack thereof) associated with a particular state change, and can be read or modified via `.transaction()` to override animation behavior for specific parts of a view hierarchy.
+Every state change comes with a **`Transaction`**: a small package of context, including **which animation** (if any) to use. `withAnimation` is really "set the animation on this change's transaction". The **`.transaction`** modifier lets one part of the tree **change** that:
 
 ```swift
 struct TransactionScopingView: View {
@@ -442,7 +725,7 @@ struct TransactionScopingView: View {
                 .fill(.green)
                 .frame(width: isExpanded ? 250 : 100, height: 80)
                 .transaction { transaction in
-                    transaction.animation = nil
+                    transaction.animation = nil     // this view opts out
                 }
         }
         .onTapGesture {
@@ -452,13 +735,34 @@ struct TransactionScopingView: View {
 }
 ```
 
-Here, both rectangles respond to the same `isExpanded` state change wrapped in `withAnimation()`, but the green rectangle's `.transaction()` modifier explicitly nils out the transaction's animation — causing it to resize instantly while the blue rectangle above it animates smoothly. This provides fine-grained, per-view control over animation participation, useful when part of a hierarchy should deliberately opt out of an otherwise-animated state change.
+Both rectangles react to the **same** animated change. The **blue** one animates. The **green** one **resizes instantly**, because its transaction's animation was set to `nil`.
+
+Other tools for **scoping** animations:
+
+```swift
+// Turn off animation for one change, even inside an animated context
+var transaction = Transaction()
+transaction.disablesAnimations = true
+withTransaction(transaction) {
+    scrollOffset = 0
+}
+
+// Animate only the modifiers inside the closure (iOS 17)
+Text("Hello")
+    .animation(.spring) { content in
+        content
+            .scaleEffect(isPressed ? 0.9 : 1)   // animated
+    }
+    .foregroundStyle(isPressed ? .red : .primary)   // not animated
+```
+
+Use these when **part** of a screen should change **instantly** while the rest animates: for example, a **text label** that should update immediately while the **layout** around it moves.
 
 ---
 
-## 29.15 Reduce Motion
+## 29.15 Reduce Motion 🟢
 
-The system-wide Reduce Motion accessibility setting expresses a user preference for minimizing large or disorienting animations. Well-behaved apps should check this and adjust or substitute animations accordingly.
+**Reduce Motion** is an accessibility setting. Users who get **dizzy** or distracted by movement turn it on. Good apps **respect** it:
 
 ```swift
 struct ReduceMotionAwareView: View {
@@ -475,40 +779,90 @@ struct ReduceMotionAwareView: View {
 }
 ```
 
-`@Environment(\.accessibilityReduceMotion)` reflects the user's system setting. Rather than removing feedback entirely when Reduce Motion is on, well-designed apps typically substitute large movement/scale-based animation with a simpler cue (like a crossfade, or in this simplified example, no animation at all) — respecting the user's stated preference for a calmer, less motion-heavy interface without losing all sense of state change.
+Reduce Motion doesn't mean "**no animation at all**". It means **less movement**. The best approach is to **replace** big motion (sliding, zooming, bouncing, spinning) with a **gentle fade**, so the user still sees that something changed:
+
+```swift
+.transition(reduceMotion ? .opacity : .move(edge: .bottom))
+
+withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .bouncy) {
+    showDetail.toggle()
+}
+```
+
+A small helper keeps this tidy:
+
+```swift
+func withMotionAwareAnimation<Result>(
+    _ animation: Animation? = .default,
+    reduceMotion: Bool,
+    _ body: () throws -> Result
+) rethrows -> Result {
+    try withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : animation, body)
+}
+```
+
+System animations (navigation pushes, sheets) already follow the setting. Your **custom** ones are your job. Test with **Settings → Accessibility → Motion → Reduce Motion** (70).
 
 ---
 
-## 29.16 Debugging Animation Glitches
+## 29.16 Debugging Animation Glitches 🟡
 
-Common animation problems and their typical causes are worth recognizing directly, since animation bugs can be subtle and don't always throw compiler errors or crashes.
+Animation bugs don't crash and don't show compiler errors. Things just **jump** or **don't move**. Here are the usual causes.
+
+**1. The view's identity changes.** A changing **`.id()`** makes a **new view** every time (25.15), so there's nothing to animate between:
 
 ```swift
-// PROBLEM: animation "jumps" instead of smoothly transitioning —
-// often caused by an .id() change forcing full view identity reset
+// ❌ The number jumps: each change creates a brand-new Text
 struct BadIdentityExampleView: View {
     @State private var count = 0
 
     var body: some View {
         Text("\(count)")
-            .id(count) // new identity every change — defeats animation
+            .id(count)                               // new identity on every change
             .onTapGesture { withAnimation { count += 1 } }
     }
 }
 
-// FIX: keep identity stable; animate the underlying value instead
+// ✅ Same view; only the value changes, so the digits roll
 struct FixedIdentityExampleView: View {
     @State private var count = 0
 
     var body: some View {
         Text("\(count)")
-            .contentTransition(.numericText())
+            .contentTransition(.numericText(value: Double(count)))   // rolls up or down
             .onTapGesture { withAnimation { count += 1 } }
     }
 }
 ```
 
-A frequent cause of "animation just doesn't happen" bugs is a missing `value:` argument on `.animation()`, or forgetting to wrap a state mutation in `withAnimation()` at all. Another common cause, shown above, is inadvertently changing a view's `.id()` alongside the animated state — since `.id()` controls view identity (recall structural identity from section 23), changing it forces SwiftUI to treat the view as an entirely new instance rather than an existing one transitioning between values, which defeats the animation and produces an abrupt jump instead. Keeping identity stable while only the underlying data changes is essential for smooth, correct animation behavior.
+The same thing happens with **`if`/`else` for styling** (25.14): two branches are two views, so you get a **fade** instead of a smooth change.
+
+**2. The change isn't animated.** No `withAnimation`, or `.animation` is missing its **`value:`**, or it watches the **wrong** value.
+
+**3. The change happens in an `async` call later.** `withAnimation` only covers changes **inside its closure, right now**:
+
+```swift
+// ❌ The await finishes later, outside the animation
+withAnimation {
+    Task { items = await loadItems() }
+}
+
+// ✅ Wrap the actual change
+Task {
+    let loaded = await loadItems()
+    withAnimation { items = loaded }
+}
+```
+
+**4. `.animation` is in the wrong place.** It only animates modifiers **above** it (29.1).
+
+**5. A transition has no animated container.** The `if` must sit inside a view that **stays** (29.6).
+
+How to investigate:
+
+- Turn on **Debug → Slow Animations** in the Simulator to see each frame.
+- Add `Self._printChanges()` to see **what** changed and **when** (25.13).
+- In **Instruments**, the **SwiftUI** and **Animation Hitches** tools show dropped frames (69).
 
 ---
 
@@ -516,19 +870,19 @@ A frequent cause of "animation just doesn't happen" bugs is a missing `value:` a
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Implicit animation | `.animation(_:value:)` | Auto-animate a view's changes to a watched value |
-| Explicit animation | `withAnimation { }` | Animate effects of a specific state change |
-| Standard curves | `.linear`, `.easeIn/Out/InOut` | Fixed mathematical timing curves |
-| Spring motion | `.spring(response:dampingFraction:)` | Physically-inspired bounce and settle |
+| Implicit animation | `.animation(_:value:)` | Animate one view when a value changes |
+| Explicit animation | `withAnimation { }` | Animate everything a state change affects |
+| Standard curves | `.linear`, `.easeIn/Out/InOut` | Fixed speed shapes over time |
+| Spring motion | `.spring(duration:bounce:)`, `.smooth`, `.bouncy` | Natural motion; the default since iOS 17 |
 | Timing control | `.delay()`, `.repeatForever()` | Stagger and loop animations |
-| Insertion/removal | `.transition()` | Animate views appearing/disappearing |
-| Asymmetric effects | `.asymmetric(insertion:removal:)` | Different transitions in vs. out |
+| Insertion/removal | `.transition()` | How views appear and disappear (needs an animated change) |
+| Asymmetric effects | `.asymmetric(insertion:removal:)` | Different effects in and out |
 | Shape morphing | `matchedGeometryEffect(id:in:)` | Animate one view's frame into another's |
-| Hero transitions | Shared `@Namespace` + matching `id` | Thumbnail-to-detail expand effect |
-| Multi-stage effects | `.phaseAnimator()` | Step through discrete animated phases |
-| Choreographed animation | `.keyframeAnimator()` | Independent per-property keyframe tracks |
-| Custom interpolation | `Animatable`, `animatableData` | Tell SwiftUI what to interpolate |
-| Multi-value interpolation | `VectorArithmetic`, `AnimatablePair` | Combine multiple animatable values |
-| Per-view animation control | `.transaction()` | Override animation for part of a hierarchy |
-| Accessibility | `accessibilityReduceMotion` | Respect reduced-motion preference |
-| Debugging | Stable `.id()`, explicit `value:` | Avoid identity resets that break animation |
+| Hero transitions | Shared `@Namespace` + matching `id` | A thumbnail grows into a detail view |
+| Multi-stage effects | `.phaseAnimator()` | Step through phases; loops without a trigger |
+| Choreographed animation | `.keyframeAnimator()` | Separate keyframe tracks per property |
+| Custom interpolation | `Animatable`, `animatableData` | Tell SwiftUI which number to interpolate |
+| Multi-value interpolation | `VectorArithmetic`, `AnimatablePair` | Animate several values together |
+| Per-view animation control | `.transaction()`, `withTransaction` | Turn animation off or on for part of the tree |
+| Accessibility | `accessibilityReduceMotion` | Swap big motion for gentle fades |
+| Debugging | Stable identity, animate the real change | Fix jumps and missing animations |

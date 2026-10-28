@@ -1,6 +1,8 @@
-## 14.1 `Sequence` and `IteratorProtocol`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`Sequence` is the most basic protocol enabling `for-in` iteration — it requires only a `makeIterator()` method returning something conforming to `IteratorProtocol`, which itself requires just one method: `next()`, returning the next element or `nil` when exhausted.
+## 14.1 `Sequence` and `IteratorProtocol` 🟡
+
+**`Sequence`** is the most basic protocol for `for-in` loops. It needs only one method, **`makeIterator()`**. That returns an **iterator** (`IteratorProtocol`), which needs only one method too: **`next()`**. It returns the next element, or **`nil`** when there are no more.
 
 ```swift
 struct Countdown: Sequence {
@@ -25,13 +27,38 @@ for number in Countdown(start: 3) {
 }
 ```
 
-Every `for-in` loop you've written since section 2 desugars to exactly this: call `makeIterator()`, then repeatedly call `next()` until it returns `nil`. `map`, `filter`, and friends (section 3) are all defined in terms of `Sequence`, which is why any custom type conforming to it gets those operations for free.
+Every `for-in` loop (section 2) is really this:
+
+```swift
+// What you write:
+for number in Countdown(start: 3) { print(number) }
+
+// What Swift does:
+var iterator = Countdown(start: 3).makeIterator()
+while let number = iterator.next() {
+    print(number)
+}
+```
+
+And because `map`, `filter`, `contains`, `reduce` (section 3) are written **for `Sequence`**, your type gets them **for free**:
+
+```swift
+Countdown(start: 5).map { $0 * 10 }      // [50, 40, 30, 20, 10]
+Countdown(start: 5).filter { $0.isMultiple(of: 2) }   // [4, 2]
+```
+
+A quick way to make a sequence without a new type: `sequence(first:next:)`:
+
+```swift
+let powersOfTwo = sequence(first: 1) { $0 < 100 ? $0 * 2 : nil }
+print(Array(powersOfTwo))   // [1, 2, 4, 8, 16, 32, 64, 128]
+```
 
 ---
 
-## 14.2 `Collection` and Its Index Model
+## 14.2 `Collection` and Its Index Model 🟡
 
-`Collection` refines `Sequence` by adding random access via indices — `startIndex`, `endIndex`, and a way to advance an index (`index(after:)`) — enabling subscript access (`collection[index]`) rather than only sequential iteration.
+**`Collection`** builds on `Sequence`. It adds **indices**: `startIndex`, `endIndex`, and a way to move to the next index (`index(after:)`). With these, you can read elements by **subscript** (`collection[index]`), and loop over the same collection **many times**.
 
 ```swift
 protocol Collection: Sequence {
@@ -43,13 +70,30 @@ protocol Collection: Sequence {
 }
 ```
 
-This is exactly the index model you saw with `String.Index` back in section 1.7 — `String` conforms to `Collection` (via `BidirectionalCollection`, see 14.3), which is precisely why it uses `startIndex`/`endIndex`/`index(after:)` instead of plain integers.
+| | `Sequence` | `Collection` |
+|---|---|---|
+| Loop over it | ✅ | ✅ |
+| Loop **again** | Not guaranteed | ✅ Always |
+| `count`, `isEmpty`, `first` | Some, maybe slow | ✅ |
+| Subscript with an index | ❌ | ✅ |
+
+The index is **not always an `Int`**. This is exactly the `String.Index` model from 1.7: `String` is a `Collection` whose index is `String.Index`.
+
+```swift
+let word = "Swift"
+var i = word.startIndex
+while i != word.endIndex {
+    print(word[i])               // S, w, i, f, t
+    i = word.index(after: i)
+}
+```
 
 ---
 
-## 14.3 `BidirectionalCollection` and `RandomAccessCollection`
+## 14.3 `BidirectionalCollection` and `RandomAccessCollection` 🔴
 
-`BidirectionalCollection` adds `index(before:)`, enabling backward traversal (needed for things like `.last`, or iterating in reverse). `RandomAccessCollection` further guarantees that computing the distance between any two indices, or advancing by an arbitrary offset, is O(1) — not just possible, but *fast*.
+- **`BidirectionalCollection`** adds `index(before:)`: you can go **backward**. That's needed for `last`, `reversed()`, and `dropLast()`.
+- **`RandomAccessCollection`** promises that **jumping** any distance, and **measuring** the distance between two indices, is **O(1)**: not just possible, but **fast**.
 
 ```swift
 // String is BidirectionalCollection but NOT RandomAccessCollection,
@@ -63,13 +107,37 @@ let distance = arr.distance(from: arr.startIndex, to: arr.index(arr.startIndex, 
 print(distance)   // 500, computed instantly
 ```
 
-This hierarchy — `Sequence` → `Collection` → `BidirectionalCollection` → `RandomAccessCollection` — is exactly why `String` deliberately lacks integer subscripting (1.7) while `Array` has it: the protocols themselves encode the actual complexity guarantees each type can honestly provide.
+```plaintext
+Sequence                       for-in
+  └─ Collection                indices, subscript, count
+       └─ BidirectionalCollection   go backward: last, reversed()
+            └─ RandomAccessCollection   jump anywhere in O(1)
+
+String:  up to Bidirectional
+Array:   all the way to RandomAccess
+```
+
+This hierarchy explains why `String` has **no `Int` subscript** (1.7) but `Array` does: the protocols **describe honestly** how fast each type can be.
+
+It also matters for **your own code**. Some algorithms are only fast on random-access collections, so you can require that:
+
+```swift
+func middle<C: RandomAccessCollection>(_ items: C) -> C.Element? {
+    guard !items.isEmpty else { return nil }
+    let mid = items.index(items.startIndex, offsetBy: items.count / 2)   // O(1) here
+    return items[mid]
+}
+
+middle([1, 2, 3, 4, 5])   // 3
+// middle("hello")        // ❌ String isn't RandomAccessCollection
+```
 
 ---
 
-## 14.4 `RangeReplaceableCollection` and `MutableCollection`
+## 14.4 `RangeReplaceableCollection` and `MutableCollection` 🟡
 
-`MutableCollection` adds the ability to *change* existing elements in place via subscript assignment (`collection[i] = newValue`), without changing the collection's length. `RangeReplaceableCollection` goes further, supporting insertion, removal, and appending — changing the collection's actual size (this is what gives `Array` its `append`, `insert`, `remove` methods from section 3.2).
+- **`MutableCollection`**: you can **replace** elements in place (`collection[i] = newValue`). The **count stays the same**.
+- **`RangeReplaceableCollection`**: you can **insert, remove, and append**. The **count changes**. This is where `Array` gets `append`, `insert`, and `remove` (3.2).
 
 ```swift
 var numbers = [1, 2, 3]
@@ -79,13 +147,28 @@ numbers.removeFirst()      // RangeReplaceableCollection: changes the count
 print(numbers)   // [100, 3, 4]
 ```
 
-`Set` and `Dictionary`, notably, are **not** `RangeReplaceableCollection` in the same sense — they have their own specialized insertion/removal APIs (recall sections 3.4–3.7), since "range" doesn't meaningfully apply to their unordered structure.
+| Type | `MutableCollection` | `RangeReplaceableCollection` |
+|---|---|---|
+| `Array` | ✅ | ✅ |
+| `String` | ❌ (characters vary in size) | ✅ (`append`, `insert`) |
+| `Set`, `Dictionary` | ❌ | ❌ (they have their own `insert`/`remove`) |
+
+`Set` and `Dictionary` aren't range-replaceable: they have **no order**, so "replace the range from index 2 to 5" doesn't make sense for them (3.4–3.7).
+
+Some useful in-place algorithms come from `MutableCollection`:
+
+```swift
+var scores = [70, 95, 82, 60]
+scores.sort()                                   // [60, 70, 82, 95]
+scores.reverse()                                // [95, 82, 70, 60]
+let split = scores.partition { $0 < 75 }        // moves < 75 to the end, returns the split index
+```
 
 ---
 
-## 14.5 Writing a Custom `Collection`
+## 14.5 Writing a Custom `Collection` 🔴
 
-Combining 14.1–14.4, here's a minimal custom `Collection` — a fixed-size circular buffer exposing standard collection operations for free once the core requirements are satisfied:
+Putting 14.1–14.4 together: a small custom `Collection`, a stack that exposes all the standard operations once the core requirements are met:
 
 ```swift
 struct FixedStack<Element>: Collection {
@@ -113,13 +196,28 @@ print(stack.filter { $0 > 1 })       // [2, 3] — filter works automatically
 print(stack.count)                    // 3 — count works automatically
 ```
 
-This is the real payoff of the `Sequence`/`Collection` protocol hierarchy: implement four small requirements (`startIndex`, `endIndex`, `subscript`, `index(after:)`), and every higher-order operation from section 3 (`map`, `filter`, `reduce`, `first(where:)`, and dozens more) becomes available automatically, entirely for free.
+**The payoff:** write **four** small requirements (`startIndex`, `endIndex`, `subscript`, `index(after:)`), and you get **dozens** of operations for free: `map`, `filter`, `reduce`, `first(where:)`, `contains`, `isEmpty`, `count`, `firstIndex(of:)`, `prefix`, `dropFirst`, and many more.
+
+Because the storage is an array, it's easy to go further. Adding `RandomAccessCollection` costs **nothing extra** here, since `Int` indices already support it:
+
+```swift
+extension FixedStack: RandomAccessCollection { }
+
+stack.last          // Optional(3) — from BidirectionalCollection
+stack.reversed()    // [3, 2, 1]
+```
+
+And SwiftUI's `ForEach` and `List` accept any `RandomAccessCollection`, so this works directly:
+
+```swift
+ForEach(stack, id: \.self) { Text("\($0)") }
+```
 
 ---
 
-## 14.6 `Codable`: Automatic Synthesis
+## 14.6 `Codable`: Automatic Synthesis 🟢
 
-`Codable` (a combination of `Encodable` and `Decodable`) enables converting a type to and from external representations like JSON. For simple structs whose properties are all themselves `Codable`, Swift synthesizes the entire implementation automatically:
+**`Codable`** (short for `Encodable & Decodable`) converts a type **to and from** outside formats like **JSON**. For a struct whose properties are **all `Codable`**, Swift **writes the whole implementation for you**:
 
 ```swift
 struct User: Codable {
@@ -139,13 +237,39 @@ let decoded = try decoder.decode(User.self, from: data)
 print(decoded.name)   // "Alex"
 ```
 
-No manual encoding/decoding code is required at all here — as long as every property is itself `Codable` (which all the basic types, `Array`, `Dictionary`, and `Optional` of `Codable` types already are), the compiler generates a complete, correct implementation.
+Already `Codable`: `String`, `Int`, `Double`, `Bool`, `Date`, `URL`, `UUID`, `Data`, and any `Array`, `Dictionary`, `Set`, or `Optional` of `Codable` types. Enums with raw values or associated values can be `Codable` too.
+
+**Optional properties** are fine. If the key is **missing** in the JSON, the value is just `nil`:
+
+```swift
+struct Profile: Codable {
+    var name: String
+    var bio: String?     // missing "bio" in JSON → nil, no error
+}
+```
+
+When decoding **fails**, the error says exactly what is wrong. Print it while debugging:
+
+```swift
+do {
+    _ = try JSONDecoder().decode(User.self, from: Data(#"{"name": "Alex"}"#.utf8))
+} catch {
+    print(error)
+    // keyNotFound(CodingKeys(stringValue: "age", ...), ... "No value associated with key age")
+}
+```
+
+Make encoded JSON **readable** for debugging:
+
+```swift
+encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+```
 
 ---
 
-## 14.7 `CodingKeys` and Key Remapping
+## 14.7 `CodingKeys` and Key Remapping 🟢
 
-When your Swift property names don't match the external JSON key names (a very common situation — JSON often uses `snake_case` while Swift convention is `camelCase`), a `CodingKeys` enum lets you remap them explicitly, while keeping automatic synthesis for everything else:
+Often your Swift names **don't match** the JSON keys (JSON often uses `snake_case`; Swift uses `camelCase`). A **`CodingKeys`** enum maps them, and keeps automatic synthesis for everything else:
 
 ```swift
 struct User: Codable {
@@ -166,13 +290,30 @@ let user = try JSONDecoder().decode(User.self, from: json)
 print(user.fullName)   // "Alex"
 ```
 
-`CodingKeys` must list every property you want encoded/decoded (omitting one excludes it from both directions), and its raw values are what actually appear in the encoded JSON — the enum case names are just the Swift-side mapping.
+Rules:
+
+- The **case name** is your Swift property name. The **raw value** is the JSON key.
+- `CodingKeys` must list **every property you want encoded and decoded**.
+- **Leaving a property out** skips it in both directions. It then needs a **default value**:
+
+```swift
+struct Post: Codable {
+    var title: String
+    var isExpanded = false        // UI-only state, not in the JSON
+
+    enum CodingKeys: String, CodingKey {
+        case title                // isExpanded is left out on purpose
+    }
+}
+```
+
+(If **all** your differences are just snake_case vs camelCase, a decoder strategy (14.11) is simpler.)
 
 ---
 
-## 14.8 Custom `init(from:)` and `encode(to:)`
+## 14.8 Custom `init(from:)` and `encode(to:)` 🟡
 
-When automatic synthesis isn't flexible enough — non-standard JSON shapes, computed transformations during decoding, conditional logic — you implement `Decodable`'s `init(from:)` and `Encodable`'s `encode(to:)` by hand:
+When automatic synthesis **can't express** what you need (an odd JSON shape, a conversion while decoding, a fallback value), write **`init(from:)`** and **`encode(to:)`** yourself:
 
 ```swift
 struct Temperature: Codable {
@@ -195,13 +336,37 @@ struct Temperature: Codable {
 }
 ```
 
-Here, the external JSON representation (`fahrenheit`) is entirely different from the internal Swift storage (`celsius`) — a transformation automatic synthesis simply couldn't express, requiring the manual implementation to bridge the two representations explicitly.
+Here the JSON stores `fahrenheit`, but the Swift type stores `celsius`. Synthesis can't do that conversion.
+
+A very common real need: a **default value** when a key is missing, instead of failing:
+
+```swift
+struct Settings: Decodable {
+    var theme: String
+    var fontSize: Int
+
+    enum CodingKeys: String, CodingKey { case theme, fontSize }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        theme = try container.decodeIfPresent(String.self, forKey: .theme) ?? "system"
+        fontSize = try container.decodeIfPresent(Int.self, forKey: .fontSize) ?? 16
+    }
+}
+```
+
+| Method | If the key is missing |
+|---|---|
+| `decode(_:forKey:)` | Throws `keyNotFound` |
+| `decodeIfPresent(_:forKey:)` | Returns `nil` |
+
+Note: if you write `init(from:)` in the **struct** itself, you lose the free memberwise init. Put it in an **extension** to keep both (6.2).
 
 ---
 
-## 14.9 Nested and Keyed Containers
+## 14.9 Nested and Keyed Containers 🔴
 
-Real-world JSON is often nested — objects inside objects, arrays of objects — and `Codable`'s container APIs (`nestedContainer`, `nestedUnkeyedContainer`) let you navigate that structure explicitly during manual decoding:
+Real JSON is often **nested**: objects inside objects. The container APIs (`nestedContainer`, `nestedUnkeyedContainer`) let you **walk into** that structure while decoding:
 
 ```swift
 struct Response: Decodable {
@@ -228,13 +393,39 @@ struct Response: Decodable {
 // decodes: {"data": {"user": {"name": "Alex"}}}
 ```
 
-For most nested JSON, though, it's simpler to model the nesting directly as nested `Codable` structs and let automatic synthesis handle each layer — manual nested containers are typically reserved for cases where the Swift model's shape genuinely needs to differ from the JSON's shape.
+This **flattens** three levels of JSON into one simple Swift property.
+
+The other option: model the nesting with **small nested structs**, and let synthesis do the work. It's usually **simpler**:
+
+```swift
+struct ResponseDTO: Decodable {
+    struct DataPart: Decodable {
+        struct UserPart: Decodable { let name: String }
+        let user: UserPart
+    }
+    let data: DataPart
+}
+
+let dto = try JSONDecoder().decode(ResponseDTO.self, from: json)
+let username = dto.data.user.name
+```
+
+Use manual nested containers when your Swift model **must** have a different shape than the JSON.
 
 ---
 
-## 14.10 Decoding Heterogeneous and Polymorphic JSON
+## 14.10 Decoding Heterogeneous and Polymorphic JSON 🔴
 
-A common, genuinely tricky real-world problem: JSON where a field's shape depends on another field's value (e.g. a `"type"` discriminator determining which additional fields are present) — `Codable` doesn't handle this automatically, but supports it via manual `init(from:)` logic that inspects a discriminator first:
+A common, tricky case: JSON where the **shape depends on a field**, often a **`"type"`** field (a "discriminator"):
+
+```json
+[
+  {"type": "circle", "radius": 2},
+  {"type": "square", "side": 3}
+]
+```
+
+`Codable` can't do this automatically. The standard solution: **read the `type` first**, then decode the rest based on it, into an **enum with associated values**:
 
 ```swift
 protocol Shape: Decodable { }
@@ -257,26 +448,40 @@ enum ShapeWrapper: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
-        let singleValueContainer = try decoder.singleValueContainer()
         switch type {
         case "circle":
-            self = .circle(try singleValueContainer.decode(Circle.self))
+            self = .circle(try Circle(from: decoder))   // decode the same JSON object as a Circle
         case "square":
-            self = .square(try singleValueContainer.decode(Square.self))
+            self = .square(try Square(from: decoder))
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown shape type")
         }
     }
 }
+
+let shapes = try JSONDecoder().decode([ShapeWrapper].self, from: json)
+for shape in shapes {
+    switch shape {
+    case .circle(let c): print("circle, radius \(c.radius)")
+    case .square(let s): print("square, side \(s.side)")
+    }
+}
 ```
 
-This pattern — decode a discriminator field first, then branch to decode the rest of the payload according to that discriminator — is the standard approach for polymorphic JSON, and maps naturally onto an enum with associated values (recalling section 6.17/6.22's "make illegal states unrepresentable" theme).
+`Circle(from: decoder)` reads the **same** JSON object again, using `Circle`'s own synthesized decoding. The extra `"type"` key is simply ignored.
+
+**Tip for servers that add new types later:** instead of throwing for an unknown type, add a `case unknown` and decode it **safely**. Then one new type from the server doesn't break the whole list:
+
+```swift
+default:
+    self = .unknown(type)       // ignore it in the UI, instead of failing everything
+```
 
 ---
 
-## 14.11 `JSONDecoder` Strategies: Keys, Dates, Data
+## 14.11 `JSONDecoder` Strategies: Keys, Dates, Data 🟢
 
-Beyond per-type `CodingKeys`, `JSONDecoder` (and `JSONEncoder`) support global **strategies** that apply automatically across an entire decode, covering common conventions without per-property boilerplate:
+Besides per-type `CodingKeys`, `JSONDecoder` and `JSONEncoder` have **strategies** that apply to the **whole** decode. They cover common conventions without per-property code:
 
 ```swift
 struct Event: Codable {
@@ -296,13 +501,33 @@ let event = try decoder.decode(Event.self, from: json)
 print(event.eventName)   // "Launch"
 ```
 
-Other common strategies include `.base64` for `Data` fields (the default, decoding base64-encoded strings into raw bytes) and custom closures for both keys and dates when a project's convention doesn't match one of the built-in options.
+| Strategy | Common values |
+|---|---|
+| `keyDecodingStrategy` | `.useDefaultKeys`, `.convertFromSnakeCase`, `.custom { ... }` |
+| `dateDecodingStrategy` | `.deferredToDate` (default), `.iso8601`, `.secondsSince1970`, `.formatted(...)`, `.custom { ... }` |
+| `dataDecodingStrategy` | `.base64` (default), `.custom { ... }` |
+
+A `.custom` date strategy, for a server that sends dates **with fractional seconds** (which `.iso8601` can't parse):
+
+```swift
+decoder.dateDecodingStrategy = .custom { decoder in
+    let text = try decoder.singleValueContainer().decode(String.self)
+    if let date = try? Date(text, strategy: .iso8601.year().month().day()
+        .time(includingFractionalSeconds: true)) {
+        return date
+    }
+    throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath,
+                                            debugDescription: "Bad date: \(text)"))
+}
+```
+
+**Tip:** create and configure your decoder **once** (for example in your API client), so every request uses the same rules.
 
 ---
 
-## 14.12 Regex Literals and Matching
+## 14.12 Regex Literals and Matching 🟡
 
-Since Swift 5.7, regular expressions are a first-class language feature — a regex literal (`/pattern/`) is checked and type-inferred at *compile time*, catching malformed patterns before runtime, unlike a regex built from a plain string:
+Since Swift 5.7, regular expressions are part of the language. A **regex literal** (`/pattern/`) is **checked at compile time**: a broken pattern is a **compile error**, not a runtime crash.
 
 ```swift
 let text = "Contact: alex@example.com or 555-1234"
@@ -319,13 +544,32 @@ if let match = text.firstMatch(of: phonePattern) {
 }
 ```
 
-Regex literals give you strongly-typed capture groups (`match.1`, `match.2` above are inferred as `Substring`, not `Any`), which is a meaningful improvement over `NSRegularExpression`'s stringly-typed, manually-indexed API from the Objective-C era.
+Capture groups are **typed**: `match.1` is a `Substring`, not `Any`. That's much nicer than the old `NSRegularExpression` API.
+
+**Name** the groups for clearer code:
+
+```swift
+let pattern = /(?<area>\d{3})-(?<number>\d{4})/
+if let match = text.firstMatch(of: pattern) {
+    print(match.area, match.number)    // 555 1234
+}
+```
+
+Other useful operations:
+
+```swift
+let log = "a1 b22 c333"
+log.matches(of: /\d+/).map(\.0)                  // ["1", "22", "333"] — all matches
+log.contains(/\d{3}/)                             // true
+log.replacing(/\d+/, with: "#")                   // "a# b# c#"
+"2026-10-26".wholeMatch(of: /\d{4}-\d{2}-\d{2}/) != nil   // true: the whole string must match
+```
 
 ---
 
-## 14.13 `RegexBuilder` DSL
+## 14.13 `RegexBuilder` DSL 🔴
 
-For complex patterns, `RegexBuilder` (paired with the result-builder mechanism from section 12) lets you construct a regex declaratively, composed from named, reusable pieces — often far more readable than a dense inline pattern string:
+For complex patterns, **`RegexBuilder`** lets you **build** a regex from named pieces, using a result builder (section 12). It's often **much easier to read** than a dense pattern string:
 
 ```swift
 import RegexBuilder
@@ -350,13 +594,43 @@ if let match = text.firstMatch(of: phoneRegex) {
 }
 ```
 
-`RegexBuilder` trades some conciseness for significantly better readability and named (rather than positionally-numbered) capture group access — valuable for complex patterns that would otherwise become an unreadable wall of regex syntax.
+A big feature: **`TryCapture`** can **convert** a capture into a real type while matching. If the conversion fails, the match fails:
+
+```swift
+let priceRegex = Regex {
+    "$"
+    TryCapture {
+        OneOrMore(.digit)
+        "."
+        Repeat(.digit, count: 2)
+    } transform: { Double($0) }        // the capture becomes a Double
+}
+
+if let match = "Total: $42.50".firstMatch(of: priceRegex) {
+    let price: Double = match.1        // 42.5, already a Double
+}
+```
+
+You can also mix in Foundation's **parsers**, like currency:
+
+```swift
+let totalRegex = Regex {
+    "Total: "
+    Capture(.localizedCurrency(code: "USD", locale: Locale(identifier: "en_US")))   // captures a Decimal
+}
+
+if let match = "Total: $1,299.99".firstMatch(of: totalRegex) {
+    print(match.1)   // 1299.99
+}
+```
+
+`RegexBuilder` is **longer** than a literal, but much **clearer** for complex patterns, and gives **named, typed** captures.
 
 ---
 
-## 14.14 `FormatStyle` for Numbers and Currency
+## 14.14 `FormatStyle` for Numbers and Currency 🟢
 
-`FormatStyle` (used via the `.formatted()` method) replaces older, more verbose `NumberFormatter`/`DateFormatter` APIs with a concise, type-safe, locale-aware alternative:
+**`FormatStyle`** (used with `.formatted()`) replaces the older, wordy `NumberFormatter`. It's short, type-safe, and **locale-aware**:
 
 ```swift
 let price = 1234.5
@@ -369,13 +643,39 @@ let count = 3
 print(count.formatted(.number.grouping(.never)))     // "3"
 ```
 
-The locale-awareness is automatic and significant: the exact same `.formatted(.currency(code: "USD"))` call produces different grouping/decimal separator conventions depending on the user's current locale, without any additional code — something `NumberFormatter` required considerably more boilerplate to configure correctly.
+**Locale-awareness is automatic.** The same line gives different results for users in different regions:
+
+```swift
+let amount = 1234.5
+amount.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))  // "1.234,50 €"
+amount.formatted(.currency(code: "EUR").locale(Locale(identifier: "en_US")))  // "€1,234.50"
+```
+
+More useful styles:
+
+```swift
+1_500_000.formatted(.number.notation(.compactName))        // "1.5M"
+Int64(5_300_000).formatted(.byteCount(style: .file))         // "5.3 MB"
+["Alex", "Sam", "Kim"].formatted(.list(type: .and))           // "Alex, Sam, and Kim"
+```
+
+SwiftUI's `Text` takes a format directly, and updates when the locale changes:
+
+```swift
+Text(price, format: .currency(code: "USD"))
+```
+
+You can also **parse** text back into numbers with the same styles:
+
+```swift
+let parsed = try Double("1,234.50", format: .number)   // 1234.5
+```
 
 ---
 
-## 14.15 `FormatStyle` for Dates and Relative Time
+## 14.15 `FormatStyle` for Dates and Relative Time 🟢
 
-The same `FormatStyle` system extends to dates, including human-friendly relative phrasing ("2 hours ago," "in 3 days") without manually computing time differences:
+The same system formats **dates**, including friendly **relative** text like "2 hours ago", with no manual math:
 
 ```swift
 let date = Date()
@@ -387,13 +687,35 @@ let pastDate = Calendar.current.date(byAdding: .hour, value: -2, to: date)!
 print(pastDate.formatted(.relative(presentation: .named)))      // "2 hours ago"
 ```
 
-This system is what powers the relative timestamps commonly seen throughout iOS (Messages, Mail, and similar apps) without every app needing to hand-roll its own "time ago" calculation logic.
+Pick only the **parts** you want, in any order. The locale decides the final order and words:
+
+```swift
+date.formatted(.dateTime.weekday(.wide).hour().minute())   // e.g. "Monday 2:30 PM"
+date.formatted(.iso8601)                                    // "2026-08-03T14:30:00Z" (for APIs)
+```
+
+Ranges and durations:
+
+```swift
+let end = date.addingTimeInterval(90 * 60)
+(date..<end).formatted(date: .omitted, time: .shortened)   // e.g. "2:30 – 4:00 PM"
+
+Duration.seconds(5400).formatted(.units(allowed: [.hours, .minutes]))   // "1 hr, 30 min"
+```
+
+In SwiftUI, a relative date can **update by itself**:
+
+```swift
+Text(post.date, style: .relative)    // "5 minutes", then "6 minutes", automatically
+```
+
+This powers the relative timestamps across iOS (Messages, Mail), so you don't need your own "time ago" code.
 
 ---
 
-## 14.16 `Measurement` and Unit Conversion
+## 14.16 `Measurement` and Unit Conversion 🟢
 
-`Measurement<UnitType>` pairs a numeric value with an explicit unit, and supports automatic, type-safe conversion between compatible units — eliminating an entire category of manual unit-conversion arithmetic bugs:
+**`Measurement<UnitType>`** stores a number **together with its unit**, and converts between compatible units **safely**. No more manual conversion math:
 
 ```swift
 let distance = Measurement(value: 5, unit: UnitLength.kilometers)
@@ -407,31 +729,72 @@ let total = Measurement(value: 5, unit: UnitLength.kilometers) + Measurement(val
 print(total.converted(to: .kilometers))   // 5.5 km — arithmetic across different but compatible units
 ```
 
-Because the unit is part of the value's type-level information (not just a number you have to remember the meaning of separately), you get compile-time protection against accidentally treating meters as miles — directly related to the phantom-type pattern from section 8.13, applied to a real, ready-to-use standard-library type.
+The **unit type** is part of the value's **type**. Mixing incompatible units is a **compile error**:
+
+```swift
+let length = Measurement(value: 1, unit: UnitLength.meters)
+let weight = Measurement(value: 1, unit: UnitMass.kilograms)
+// length + weight   // ❌ error: can't add UnitLength and UnitMass
+```
+
+It's the phantom-type idea from 8.13, ready to use.
+
+Display it in the **user's preferred units** automatically:
+
+```swift
+let run = Measurement(value: 10, unit: UnitLength.kilometers)
+run.formatted(.measurement(width: .abbreviated, usage: .road))
+// "10 km" in Germany, "6.2 mi" in the US
+```
 
 ---
 
-## 14.17 `AttributedString` and Markdown
+## 14.17 `AttributedString` and Markdown 🟢
 
-`AttributedString` represents text with formatting information (bold, color, links) attached directly to specific ranges of the string — a modern, value-type replacement for `NSAttributedString`, with built-in Markdown parsing support:
+**`AttributedString`** is text with **formatting attached to parts of it** (bold, color, links). It's the modern, value-type replacement for `NSAttributedString`, and it can **parse Markdown**:
 
 ```swift
 var text = AttributedString("Hello, bold world!")
 if let range = text.range(of: "bold") {
-    text[range].font = .boldSystemFont(ofSize: 16)
+    text[range].font = .body.bold()          // a SwiftUI Font
+    text[range].foregroundColor = Color.orange
 }
 
 let markdown = try! AttributedString(markdown: "This is **bold** and this is *italic*")
 // "bold" and "italic" ranges automatically carry the appropriate formatting attributes
 ```
 
-This is heavily used in SwiftUI's `Text` view (section 23), which accepts an `AttributedString` directly — letting you author simple rich text (bold, links, emphasis) using ordinary Markdown syntax rather than manually constructing formatting ranges.
+SwiftUI's **`Text`** (section 23) accepts an `AttributedString` directly:
+
+```swift
+Text(text)
+Text(markdown)
+```
+
+A string **literal** in `Text` is treated as Markdown automatically:
+
+```swift
+Text("Read our **[terms](https://example.com/terms)** before you continue.")
+// "terms" is bold and a tappable link
+```
+
+(A `String` **variable** is not parsed. Wrap it: `Text(try AttributedString(markdown: someString))`.)
+
+Attributes can also be set on **all** the text, or found again later:
+
+```swift
+var greeting = AttributedString("Welcome back, Alex")
+greeting.font = .title
+if let nameRange = greeting.range(of: "Alex") {
+    greeting[nameRange].foregroundColor = Color.blue
+}
+```
 
 ---
 
-## 14.18 `Duration`, `Instant`, and `Clock`
+## 14.18 `Duration`, `Instant`, and `Clock` 🟡
 
-`Duration` represents a span of time with high precision (down to attoseconds) and a type-safe API, replacing ambiguous raw `Double` seconds/milliseconds values that were easy to mix up:
+**`Duration`** is a span of time with **high precision** and a **clear, typed API**. It replaces raw `Double` seconds or milliseconds, which are easy to mix up:
 
 ```swift
 let timeout: Duration = .seconds(30)
@@ -440,7 +803,7 @@ let combined = timeout + shortDelay
 print(combined)   // 30.5 seconds
 ```
 
-`Clock` is a protocol abstracting "a way to measure time passing" — `ContinuousClock` and `SuspendingClock` (see 14.19) are the two standard-library conformers, and an `Instant` is a specific point in time as measured by a particular clock, supporting arithmetic with `Duration`:
+A **`Clock`** measures time passing. Swift has two: `ContinuousClock` and `SuspendingClock` (14.19). An **`Instant`** is one point in time on a clock. You can subtract instants to get a `Duration`:
 
 ```swift
 let clock = ContinuousClock()
@@ -450,13 +813,36 @@ let elapsed = clock.now - start
 print(elapsed)   // e.g. "0.003 seconds" — an Instant minus an Instant produces a Duration
 ```
 
-This whole system (`Duration`/`Clock`/`Instant`) is deeply integrated with Swift Concurrency's `Task.sleep(for:)` (covered in Part 2, section 17.6), replacing the older, more error-prone `DispatchTime`/raw-seconds APIs.
+`measure` does the same in one call:
+
+```swift
+let elapsed = ContinuousClock().measure {
+    _ = (1...1_000_000).reduce(0, +)
+}
+print(elapsed)   // e.g. 0.0021 seconds
+```
+
+`Duration` is built into Swift concurrency's `Task.sleep(for:)` (section 17.6):
+
+```swift
+try await Task.sleep(for: .seconds(2))           // clear unit, no "nanoseconds" math
+try await Task.sleep(for: .milliseconds(250))
+```
+
+Compare with the older API, where a missing zero is a silent bug:
+
+```swift
+try await Task.sleep(nanoseconds: 2_000_000_000)   // 2 seconds... if you counted the zeros right
+```
 
 ---
 
-## 14.19 `ContinuousClock` vs `SuspendingClock`
+## 14.19 `ContinuousClock` vs `SuspendingClock` 🔴
 
-The distinction between Swift's two standard clocks matters specifically around device sleep: `ContinuousClock` keeps ticking even while the device is asleep (measuring genuine elapsed wall-clock time), while `SuspendingClock` pauses while the device is asleep (measuring only time the device was actually awake and running).
+The two clocks differ when the **device sleeps**:
+
+- **`ContinuousClock`** keeps ticking **while the device sleeps**. It measures **real elapsed time**.
+- **`SuspendingClock`** **pauses** while the device sleeps. It measures only time the device was **awake**.
 
 ```swift
 // ContinuousClock: use for measuring real-world elapsed time,
@@ -468,13 +854,27 @@ let wallClock = ContinuousClock()
 let activeClock = SuspendingClock()
 ```
 
-Choosing the wrong one produces subtly incorrect results for anything spanning a potential sleep/wake cycle — a countdown timer for a user-facing feature almost always wants `ContinuousClock` (real elapsed time matters to the user, awake or not), while performance instrumentation measuring actual CPU-active duration might specifically want `SuspendingClock`.
+| Need | Clock |
+|---|---|
+| A countdown the user sees ("offer ends in 10 min") | `ContinuousClock` |
+| Timeouts for network requests | `ContinuousClock` |
+| Measuring how long code actually ran | `SuspendingClock` |
+
+The wrong choice gives **subtle bugs** for anything that spans a sleep. A user-facing timer almost always wants `ContinuousClock`: real time passes for the user, whether the screen is on or not.
+
+You can pass a clock to `Task.sleep` too:
+
+```swift
+try await Task.sleep(for: .seconds(60), clock: .continuous)
+```
+
+(Note: neither clock is "wall-clock time" you show to users as a date. For that, use `Date`.)
 
 ---
 
-## 14.20 The `Observation` Module and `withObservationTracking`
+## 14.20 The `Observation` Module and `withObservationTracking` 🔴
 
-The `Observation` module (introduced in iOS 17/Swift 5.9, powering `@Observable` from section 13.5) provides fine-grained change tracking for a type's properties — `withObservationTracking` lets you register a callback that fires the *next* time any property actually accessed inside its closure changes:
+The **`Observation`** module (iOS 17, Swift 5.9) powers `@Observable` (13.5). It tracks changes **per property**. **`withObservationTracking`** lets you register a callback that fires the **next time** any property **read inside its closure** changes:
 
 ```swift
 @Observable
@@ -493,13 +893,35 @@ withObservationTracking {
 counter.count += 1   // "count changed!" fires here
 ```
 
-The key advantage over the older `ObservableObject`/`@Published` system (covered for legacy literacy in section 25.12): tracking is precise, per-property, and determined dynamically by which properties were actually *read* during the tracked closure — not a blanket "notify on any change to any property" broadcast, which is what makes `@Observable`-backed SwiftUI views re-render only when a property they genuinely display actually changes.
+Two details:
+
+- `onChange` fires **once**. To keep observing, register again inside it.
+- It fires **just before** the new value is set (like `willSet`), so read the new value later, for example in a `Task`.
+
+A small helper that keeps observing:
+
+```swift
+func observe(_ counter: Counter) {
+    withObservationTracking {
+        _ = counter.count
+    } onChange: {
+        Task { @MainActor in
+            print("count is now \(counter.count)")
+            observe(counter)            // register again for the next change
+        }
+    }
+}
+```
+
+**Why it's better than `ObservableObject`/`@Published`** (legacy, section 25.12): tracking is **per property**, based on what the code **actually read**. A SwiftUI view that only shows `count` re-renders only when `count` changes, not when any other property changes.
+
+(Newer SDKs also add an `Observations` async sequence that makes continuous observation easier.)
 
 ---
 
-## 14.21 `Synchronization`: `Mutex` and `Atomic`
+## 14.21 `Synchronization`: `Mutex` and `Atomic` 🔴
 
-The `Synchronization` module (Swift 6) provides low-level, high-performance primitives for protecting shared mutable state across threads, as an alternative to older lock types (`NSLock`, covered in section 10.5/22.5) or full actor isolation (Part 2) when you specifically need lightweight, low-level synchronization:
+The **`Synchronization`** module (Swift 6, iOS 18) has low-level, fast tools to protect **shared mutable state** across threads. They're an alternative to older locks (`NSLock`, section 22.5) or actors (Part 2), when you need something **small and fast**:
 
 ```swift
 import Synchronization
@@ -513,23 +935,65 @@ counter.withLock { value in
 print(counter.withLock { $0 })   // 1
 ```
 
-`Atomic<T>` provides lock-free atomic operations for simple values (like a counter or flag) shared across threads, appropriate when a full `Mutex` (or an actor) would be heavier machinery than the situation actually needs — both are specialized, performance-oriented tools most relevant for library authors or code with proven, measured contention on a specific piece of shared state, not a default first reach for everyday app-level concurrency (which should generally prefer actors, covered in Part 2, section 19).
+`Mutex` **owns** the value. You can only touch it **inside** `withLock`, so you can't forget to lock. And `Mutex` is `Sendable`, so it works in a `final class` that must be `Sendable`:
+
+```swift
+final class Cache: Sendable {
+    private let storage = Mutex<[String: Data]>([:])
+
+    func value(for key: String) -> Data? {
+        storage.withLock { $0[key] }
+    }
+
+    func store(_ data: Data, for key: String) {
+        storage.withLock { $0[key] = data }
+    }
+}
+```
+
+**`Atomic`** does **lock-free** operations on simple values, like a counter or a flag:
+
+```swift
+let requestCount = Atomic<Int>(0)
+requestCount.add(1, ordering: .relaxed)
+print(requestCount.load(ordering: .relaxed))   // 1
+```
+
+These are **specialized** tools for library authors, or for code where you **measured** a real bottleneck. For everyday app code, prefer **actors** (section 19).
 
 ---
 
-## 14.22 `Subprocess` 1.0 basics
+## 14.22 `Subprocess` 1.0 basics 🔴
 
-`Subprocess` is a modern Swift API (reaching 1.0 alongside recent Swift/toolchain releases) for launching and communicating with external processes — replacing the older, more cumbersome Foundation `Process` API with a structured-concurrency-friendly, `async`/`await`-based interface:
+**`Subprocess`** is a modern Swift package for **starting other programs** and reading their output. It replaces Foundation's older, clunky `Process` API with an `async`/`await` interface:
 
 ```swift
 import Subprocess
 
-let result = try await run(.name("echo"), arguments: ["Hello from a subprocess"])
-print(String(decoding: result.standardOutput, as: UTF8.self))
+let result = try await run(
+    .name("echo"),
+    arguments: ["Hello from a subprocess"],
+    output: .string(limit: 4096)
+)
+print(result.standardOutput ?? "")
 // "Hello from a subprocess"
+print(result.terminationStatus)   // exited(0)
 ```
 
-This is primarily relevant for command-line tools, server-side Swift (Part 12), or build/automation scripts written in Swift rather than typical iOS app code (sandboxed iOS apps generally cannot spawn arbitrary subprocesses at all) — included here as a standard-library-adjacent tool worth recognizing, not one you'll reach for in ordinary app development.
+Compare with the old `Process` API:
+
+```swift
+let process = Process()
+process.executableURL = URL(fileURLWithPath: "/bin/echo")
+process.arguments = ["Hello"]
+let pipe = Pipe()
+process.standardOutput = pipe
+try process.run()
+process.waitUntilExit()
+let data = pipe.fileHandleForReading.readDataToEndOfFile()
+```
+
+It's mainly for **command-line tools**, **server-side Swift** (section 81), and **build scripts** written in Swift. **iOS apps can't start other processes**: the sandbox doesn't allow it. Know that it exists; you won't use it in app code.
 
 ---
 
@@ -537,25 +1001,25 @@ This is primarily relevant for command-line tools, server-side Swift (Part 12), 
 
 | Topic | One-line takeaway |
 |---|---|
-| `Sequence`/`IteratorProtocol` | The minimal protocol enabling `for-in`; every `for-in` loop desugars to this |
-| `Collection` | Adds indexed, subscript-based access on top of `Sequence` |
-| `Bidirectional`/`RandomAccessCollection` | Encode complexity guarantees — why `String` lacks `Int` subscripting but `Array` has it |
-| `RangeReplaceable`/`MutableCollection` | Enable in-place mutation and size-changing operations like `append`/`insert`/`remove` |
-| Custom `Collection` | Implement 4 requirements, get `map`/`filter`/`reduce`/dozens more for free |
-| `Codable` synthesis | Automatic for simple, all-`Codable`-member structs |
-| `CodingKeys` | Remaps Swift property names to different external JSON key names |
-| Custom `init(from:)`/`encode(to:)` | Hand-write encoding/decoding when synthesis can't express the needed transformation |
-| Nested containers | Navigate nested JSON structure explicitly during manual decoding |
-| Polymorphic JSON | Decode a discriminator field first, then branch — maps naturally onto enums |
-| Decoder/encoder strategies | Global key/date/data conventions applied without per-property boilerplate |
-| Regex literals | Compile-time-checked `/pattern/` syntax with strongly-typed capture groups |
-| `RegexBuilder` | A declarative, composable DSL alternative to dense inline regex patterns |
-| `FormatStyle` (numbers) | Concise, locale-aware formatting via `.formatted(...)` |
-| `FormatStyle` (dates) | Includes human-friendly relative phrasing like "2 hours ago" |
-| `Measurement` | Type-safe values with units, supporting automatic, safe conversion |
-| `AttributedString` | Value-type rich text with built-in Markdown parsing, used directly by SwiftUI `Text` |
-| `Duration`/`Clock`/`Instant` | Type-safe time spans and clock abstractions, replacing raw-seconds APIs |
-| `ContinuousClock` vs `SuspendingClock` | Keeps ticking through sleep vs. pauses during sleep |
-| `Observation`/`withObservationTracking` | Fine-grained, per-property change tracking underlying `@Observable` |
-| `Mutex`/`Atomic` | Low-level thread-safety primitives for specific, measured contention needs |
-| `Subprocess` | Modern async API for launching external processes, mainly for CLI/server Swift |
+| `Sequence`/`IteratorProtocol` | `makeIterator()` + `next()`; every `for-in` uses them |
+| `Collection` | Adds indices, subscripts, and repeatable looping |
+| `Bidirectional`/`RandomAccessCollection` | Describe how fast moving through indices is; why `String` has no `Int` subscript |
+| `RangeReplaceable`/`MutableCollection` | Replace elements in place, or change the count |
+| Custom `Collection` | Four requirements, dozens of free operations |
+| `Codable` synthesis | Free encoding and decoding when every property is `Codable` |
+| `CodingKeys` | Map Swift names to JSON keys; leave out what you don't encode |
+| Custom `init(from:)`/`encode(to:)` | For conversions and defaults; `decodeIfPresent` for missing keys |
+| Nested containers | Walk into nested JSON, or use nested DTO structs |
+| Polymorphic JSON | Read the `type` first, then decode into an enum case |
+| Decoder/encoder strategies | Snake case, dates, and data rules for the whole decode |
+| Regex literals | `/pattern/`, checked at compile time, with typed captures |
+| `RegexBuilder` | Readable, composable regexes; `TryCapture` converts while matching |
+| `FormatStyle` (numbers) | `.formatted(...)`: locale-aware currency, percent, compact numbers |
+| `FormatStyle` (dates) | Parts, ranges, durations, and "2 hours ago" |
+| `Measurement` | Values with units; safe conversion; local units for display |
+| `AttributedString` | Rich text with Markdown; works directly in SwiftUI `Text` |
+| `Duration`/`Clock`/`Instant` | Typed time spans; `Task.sleep(for: .seconds(2))` |
+| `ContinuousClock` vs `SuspendingClock` | Counts sleep time vs pauses during sleep |
+| `Observation`/`withObservationTracking` | Per-property change tracking behind `@Observable` |
+| `Mutex`/`Atomic` | Small, fast thread-safety tools; actors first in app code |
+| `Subprocess` | Run other programs from Swift; CLI and server only |

@@ -1,376 +1,905 @@
-## 55.1 PHPickerViewController and Privacy-Preserving Picking
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`PHPickerViewController` (and its SwiftUI wrapper, `PhotosPicker`) lets a user select photos/videos from their library without the app ever needing explicit photo library permission at all — the picker runs in a separate, system-owned process, handing the app only the specific items the user actually selected.
+Photos, camera, video, and audio are a big part of many apps. This section starts with the **easy, private** way to pick photos, then goes deeper: **PhotoKit**, the **camera** with `AVCaptureSession`, **playback**, **audio sessions**, recording, **editing and exporting** video, **streaming**, MusicKit and ShazamKit, and the **Now Playing** controls on the Lock Screen.
+
+---
+
+## 55.1 PHPickerViewController and Privacy-Preserving Picking 🟢
+
+To let the user **pick** a photo, use **`PhotosPicker`** (SwiftUI) or **`PHPickerViewController`** (UIKit). The best part: **no permission prompt**.
 
 ```swift
-import PhotosUI
 import SwiftUI
+import PhotosUI
 
-struct PhotoPickerView: View {
+struct ProfilePhotoPicker: View {
     @State private var selectedItem: PhotosPickerItem?
-    @State private var selectedImage: Image?
+    @State private var image: Image?
 
     var body: some View {
-        PhotosPicker(selection: $selectedItem, matching: .images) {
-            Text("Choose a Photo")
+        VStack {
+            image?
+                .resizable()
+                .scaledToFill()
+                .frame(width: 120, height: 120)
+                .clipShape(.circle)
+
+            PhotosPicker("Choose Photo", selection: $selectedItem, matching: .images)
         }
-        .onChange(of: selectedItem) { _, newItem in
-            Task {
-                if let data = try? await newItem?.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    selectedImage = Image(uiImage: uiImage)
-                }
+        .task(id: selectedItem) {                         // re-runs (and cancels) on each new pick
+            guard let selectedItem else { return }
+            if let data = try? await selectedItem.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                image = Image(uiImage: uiImage)
             }
         }
     }
 }
 ```
 
-This is a genuinely significant privacy improvement over older, full-library-access-requiring picker APIs — because the picker UI itself runs outside the app's own process (similar in spirit to the extension sandboxing model, section 53.1) and only hands back the specific items the user explicitly chose, an app using `PhotosPicker` never needs to request or be granted broad photo library access just to let a user pick a single profile picture, meaningfully reducing the permission footprint for the extremely common "let the user pick one photo" use case.
+Why no prompt? The picker runs in a **separate, system process**. Your app never sees the library; it only gets the items the user **chose**. That's the same idea as the extension sandbox (53.1).
+
+Useful options:
+
+```swift
+PhotosPicker(selection: $items,                          // [PhotosPickerItem]
+             maxSelectionCount: 5,
+             selectionBehavior: .ordered,
+             matching: .any(of: [.images, .videos]),
+             preferredItemEncoding: .compatible) {       // JPEG/H.264 instead of HEIC/HEVC
+    Label("Add Photos", systemImage: "photo.on.rectangle")
+}
+```
+
+**Videos** are big, so load them as a **file**, not as `Data`:
+
+```swift
+struct Movie: Transferable {
+    let url: URL
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .movie) { movie in
+            SentTransferredFile(movie.url)
+        } importing: { received in
+            // The received file is temporary: copy it somewhere we own
+            let copy = URL.temporaryDirectory.appending(path: UUID().uuidString + ".mov")
+            try FileManager.default.copyItem(at: received.file, to: copy)
+            return Movie(url: copy)
+        }
+    }
+}
+
+let movie = try await item.loadTransferable(type: Movie.self)
+```
+
+For "pick a profile picture" or "attach photos", this is **always** the right choice. Full library access (55.2) is only for apps that **browse** the library.
 
 ---
 
-## 55.2 PhotoKit: Fetching and Displaying Assets
+## 55.2 PhotoKit: Fetching and Displaying Assets 🟡
 
-For apps that genuinely need broader library access (a photo-editing or gallery app browsing the user's entire library, as opposed to picking one item), PhotoKit's `PHAsset`/`PHFetchResult` APIs provide direct, queryable access to the user's photo library, requiring explicit, broader authorization.
+**PhotoKit** gives **direct** access to the library: for a gallery app, a photo editor, or a backup tool. This **needs permission**:
 
 ```swift
 import Photos
 
+func requestLibraryAccess() async -> Bool {
+    let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)   // NSPhotoLibraryUsageDescription
+    return status == .authorized || status == .limited                        // limited: 55.3
+}
+```
+
+| Access level | Lets you | Info.plist key |
+|---|---|---|
+| `.addOnly` | Only **save** new photos | `NSPhotoLibraryAddUsageDescription` |
+| `.readWrite` | **Read**, edit, and save | `NSPhotoLibraryUsageDescription` |
+
+Fetch **assets** (photo/video records), newest first:
+
+```swift
 func fetchRecentPhotos() -> PHFetchResult<PHAsset> {
     let options = PHFetchOptions()
     options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
     return PHAsset.fetchAssets(with: .image, options: options)
 }
+```
 
+A **`PHFetchResult`** is **lazy**: it doesn't load 30,000 photos at once. Read items by index as cells appear.
+
+Load an **image** for an asset:
+
+```swift
 func loadImage(for asset: PHAsset, targetSize: CGSize) async -> UIImage? {
-    await withCheckedContinuation { continuation in
-        let manager = PHImageManager.default()
-        manager.requestImage(for: asset, targetSize: targetSize, contentMode: .aspectFill, options: nil) { image, _ in
+    let options = PHImageRequestOptions()
+    options.deliveryMode = .highQualityFormat          // call the handler ONCE (important!)
+    options.isNetworkAccessAllowed = true              // the photo may be in iCloud only
+
+    return await withCheckedContinuation { continuation in
+        PHImageManager.default().requestImage(for: asset, targetSize: targetSize,
+                                              contentMode: .aspectFill, options: options) { image, _ in
             continuation.resume(returning: image)
         }
     }
 }
 ```
 
-`PHFetchResult` behaves much like a lazily-evaluated, sortable/filterable collection over the device's photo library — appropriate specifically for apps whose core purpose genuinely requires browsing across the whole library (unlike the single-selection `PHPickerViewController` use case from 55.1), and `withCheckedContinuation` here bridges `PHImageManager`'s older completion-handler-based image loading API into the modern `async`/`await` world, a common bridging pattern (recall continuations more broadly from Part 2's structured concurrency material) for wrapping still-callback-based system APIs.
+⚠️ By default, `requestImage` may call its handler **twice**: first a **blurry** preview, then the final image. Resuming a continuation twice **crashes** (18.11). Set **`.highQualityFormat`** (one call), or check `PHImageResultIsDegradedKey` in the info dictionary.
+
+More tools:
+
+- **`PHCachingImageManager`**: pre-loads thumbnails for a **scrolling grid**.
+- **`PHPhotoLibraryChangeObserver`**: updates your UI when the library changes.
+- **Saving**: `PHPhotoLibrary.shared().performChanges { PHAssetChangeRequest.creationRequestForAssetFromImage(image) }`.
 
 ---
 
-## 55.3 Limited Photo Library Access
+## 55.3 Limited Photo Library Access 🟢
 
-Beyond full library access or none at all, users can grant "Limited" access — selecting a specific subset of photos the app is allowed to see, with the ability to add more selected photos later via a system-presented picker, without the app ever gaining visibility into the rest of the library.
+When asked for library access, the user can choose **Limited Access**: they **select** some photos, and your app sees **only those**.
 
 ```swift
-func checkAuthorizationStatus() {
-    let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-    if status == .limited {
-        // Offer the user a way to add more photos to the limited selection:
-        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: someViewController)
-    }
+let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+switch status {
+case .authorized:   showFullLibrary()
+case .limited:      showSelectedPhotosWithManageButton()   // fetches return ONLY the selected ones
+case .denied, .restricted: showSettingsHint()
+case .notDetermined: Task { await requestLibraryAccess() }
+@unknown default:   break
 }
 ```
 
-`presentLimitedLibraryPicker(from:)` lets an app that's been granted only limited access offer the user a convenient way to expand their selection (add more specific photos to what the app can see) without requiring a trip to Settings — well-designed apps generally detect the `.limited` status and surface this option contextually, such as showing a small "Select More Photos" prompt within their own photo browsing UI, rather than leaving users to discover the option only accidentally.
+In limited mode, PhotoKit works **normally**, but every fetch only returns the photos the user **shared**. Your app can't even tell how many others exist.
+
+Give users an easy way to **add more**, with the system's picker:
+
+```swift
+// UIKit
+PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: viewController)
+
+// iOS 15+: also returns the new selection's identifiers
+let identifiers = await PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: viewController)
+```
+
+Good apps show a small **"Manage"** or **"Select More Photos"** button in their own gallery when the status is `.limited`.
+
+By default, the system may **remind** the user about the limited selection. If your app has its own "Manage" button, turn that off with **`PHPhotoLibraryPreventAutomaticLimitedAccessAlert`** = `YES` in Info.plist.
+
+Remember: if you only need the user to **pick** photos, use `PhotosPicker` (55.1) and skip all of this.
 
 ---
 
-## 55.4 AVCaptureSession Setup
+## 55.4 AVCaptureSession Setup 🟡
 
-`AVCaptureSession` is the foundational object coordinating camera/microphone input with one or more capture outputs (photo capture, video recording, real-time frame processing) — configuring one correctly requires explicitly adding inputs (device access) and outputs (what to actually do with the captured data) within a begin/commit configuration block.
+For a **custom camera** screen, use **AVFoundation**. The center is **`AVCaptureSession`**: it connects **inputs** (camera, microphone) to **outputs** (photos, video files, live frames).
+
+```
+Camera ──► AVCaptureDeviceInput ──┐
+                                   ├──► AVCaptureSession ──► AVCapturePhotoOutput   (55.5)
+Microphone ──► input ─────────────┘            │      ──► AVCaptureMovieFileOutput (55.6)
+                                               │      ──► AVCaptureVideoDataOutput (55.7)
+                                               └──► AVCaptureVideoPreviewLayer (what the user sees)
+```
+
+First, permission (`NSCameraUsageDescription` in Info.plist):
 
 ```swift
 import AVFoundation
 
-func setupCaptureSession() throws -> AVCaptureSession {
+func cameraAllowed() async -> Bool {
+    switch AVCaptureDevice.authorizationStatus(for: .video) {
+    case .authorized:    return true
+    case .notDetermined: return await AVCaptureDevice.requestAccess(for: .video)
+    default:             return false                       // denied: point to Settings
+    }
+}
+```
+
+Then configure the session:
+
+```swift
+final class CameraController {
     let session = AVCaptureSession()
-    session.beginConfiguration()
-    defer { session.commitConfiguration() }
+    let photoOutput = AVCapturePhotoOutput()
+    private let sessionQueue = DispatchQueue(label: "camera.session")   // never block the main thread
 
-    guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-        throw CaptureError.noCameraAvailable
+    func configure() throws {
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }               // apply all changes together
+
+        session.sessionPreset = .photo
+
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            throw CameraError.noCamera                        // e.g. the Simulator
+        }
+        let input = try AVCaptureDeviceInput(device: camera)
+        guard session.canAddInput(input) else { throw CameraError.cannotAddInput }
+        session.addInput(input)
+
+        guard session.canAddOutput(photoOutput) else { throw CameraError.cannotAddOutput }
+        session.addOutput(photoOutput)
     }
-    let input = try AVCaptureDeviceInput(device: device)
-    guard session.canAddInput(input) else { throw CaptureError.cannotAddInput }
-    session.addInput(input)
 
-    return session
+    func start() {
+        sessionQueue.async { self.session.startRunning() }   // blocking call: keep it off main
+    }
+
+    func stop() {
+        sessionQueue.async { self.session.stopRunning() }
+    }
 }
 ```
 
-`beginConfiguration()`/`commitConfiguration()` bracket a batch of session changes, letting `AVCaptureSession` apply them together as one atomic reconfiguration rather than incrementally reacting to each individual `addInput`/`addOutput` call — `canAddInput`/`canAddOutput` should always be checked before actually adding, since a session can reject certain input/output combinations depending on hardware capability and what's already configured, making these checks a genuine correctness requirement rather than defensive boilerplate.
+| Call | Why |
+|---|---|
+| `beginConfiguration` / `commitConfiguration` | Apply many changes **at once**, not one by one |
+| `canAddInput` / `canAddOutput` | Some combinations aren't supported on some devices. Adding anyway **throws an exception** |
+| `startRunning()` on a **background** queue | It **blocks** until the camera starts |
 
----
-
-## 55.5 Capturing a Photo
-
-`AVCapturePhotoOutput`, added to a configured capture session (54.4), handles the actual photo capture — `capturePhoto(with:delegate:)` triggers a capture, with the result delivered asynchronously through `AVCapturePhotoCaptureDelegate`.
+Show the live preview in SwiftUI with a small `UIViewRepresentable` (38.1):
 
 ```swift
-class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
-    var onCapture: ((Data?) -> Void)?
-
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        onCapture?(photo.fileDataRepresentation())
-    }
+final class PreviewView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+    var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
 }
 
-func capturePhoto(output: AVCapturePhotoOutput, delegate: AVCapturePhotoCaptureDelegate) {
-    let settings = AVCapturePhotoSettings()
-    output.capturePhoto(with: settings, delegate: delegate)
+struct CameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        view.previewLayer.session = session
+        view.previewLayer.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateUIView(_ uiView: PreviewView, context: Context) {}
 }
 ```
 
-`AVCapturePhotoSettings` configures per-capture options (flash mode, whether to also capture a preview image, format preferences) independently for each individual capture, letting the same `AVCapturePhotoOutput` handle photos with different settings across successive captures without needing to be reconfigured each time — `photo.fileDataRepresentation()` provides the actual encoded image data (typically HEIC or JPEG) ready to be saved or further processed once the delegate callback fires.
+The camera **doesn't work in the Simulator**. Test on a device.
 
 ---
 
-## 55.6 Capturing Video
+## 55.5 Capturing a Photo 🟡
 
-`AVCaptureMovieFileOutput` handles video recording, writing directly to a specified file URL, with recording start/stop controlled explicitly and completion reported via `AVCaptureFileOutputRecordingDelegate`.
+**`AVCapturePhotoOutput`** takes photos. Each shot uses a **new** `AVCapturePhotoSettings`, and the result arrives in a **delegate**:
 
 ```swift
-class VideoCaptureDelegate: NSObject, AVCaptureFileOutputRecordingDelegate {
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
-        // recording complete; outputFileURL contains the recorded video
-    }
-}
+final class PhotoCaptureProcessor: NSObject, AVCapturePhotoCaptureDelegate {
+    private let completion: (Result<Data, Error>) -> Void
 
-func startRecording(output: AVCaptureMovieFileOutput, to url: URL, delegate: AVCaptureFileOutputRecordingDelegate) {
-    output.startRecording(to: url, recordingDelegate: delegate)
+    init(completion: @escaping (Result<Data, Error>) -> Void) {
+        self.completion = completion
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                     didFinishProcessingPhoto photo: AVCapturePhoto,
+                     error: Error?) {
+        if let error {
+            completion(.failure(error))
+        } else if let data = photo.fileDataRepresentation() {   // HEIC or JPEG, ready to save
+            completion(.success(data))
+        } else {
+            completion(.failure(CameraError.noData))
+        }
+    }
 }
 ```
 
-Unlike photo capture's single discrete request/response, video recording is fundamentally a start/stop-bounded operation — `startRecording(to:recordingDelegate:)` begins writing continuously to the specified file until an explicit `stopRecording()` call, with the delegate callback firing only once recording has genuinely finished and the file is complete and ready for use, reflecting video's inherently different temporal nature compared to photo capture's single-moment operation.
+The photo output only holds a **weak** reference to the delegate. Keep it **alive** yourself until the photo arrives:
+
+```swift
+extension CameraController {
+    func takePhoto() async throws -> Data {
+        let settings = AVCapturePhotoSettings()               // NEW settings for every shot
+        settings.flashMode = .auto
+        settings.photoQualityPrioritization = .balanced       // .speed, .balanced, or .quality
+
+        return try await withCheckedThrowingContinuation { continuation in
+            var processor: PhotoCaptureProcessor?
+            processor = PhotoCaptureProcessor { result in
+                continuation.resume(with: result)
+                processor = nil                               // release it when done
+            }
+            photoOutput.capturePhoto(with: settings, delegate: processor!)
+        }
+    }
+}
+```
+
+| Setting | Controls |
+|---|---|
+| `flashMode` | `.off`, `.on`, `.auto` |
+| `photoQualityPrioritization` | Faster shots vs. better processing (limited by the output's `maxPhotoQualityPrioritization`) |
+| `AVCapturePhotoSettings(format:)` | HEVC/HEIC vs. JPEG |
+
+Reusing a settings object **throws an exception**: create one per capture.
+
+Save the result to the library (needs **add-only** permission, 55.2):
+
+```swift
+try await PHPhotoLibrary.shared().performChanges {
+    PHAssetCreationRequest.forAsset().addResource(with: .photo, data: photoData, options: nil)
+}
+```
 
 ---
 
-## 55.7 Real-Time Frame Processing with AVCaptureVideoDataOutput
+## 55.6 Capturing Video 🟡
 
-`AVCaptureVideoDataOutput` delivers a live, continuous stream of raw video frames as they're captured, appropriate for real-time processing (like a barcode scanner, an on-device ML vision feature, or a custom camera filter effect) rather than saving to a file.
+**`AVCaptureMovieFileOutput`** records video straight to a **file**. Add a **microphone** input too (`NSMicrophoneUsageDescription`), or the video has no sound:
 
 ```swift
-class FrameProcessor: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+extension CameraController {
+    func addMovieOutput(_ movieOutput: AVCaptureMovieFileOutput) throws {
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }
+
+        if let mic = AVCaptureDevice.default(for: .audio) {
+            let micInput = try AVCaptureDeviceInput(device: mic)
+            if session.canAddInput(micInput) { session.addInput(micInput) }
+        }
+        guard session.canAddOutput(movieOutput) else { throw CameraError.cannotAddOutput }
+        session.addOutput(movieOutput)
+        movieOutput.maxRecordedDuration = CMTime(seconds: 60, preferredTimescale: 600)
+    }
+}
+```
+
+Recording has a **start** and a **stop**, unlike a photo:
+
+```swift
+final class RecordingDelegate: NSObject, AVCaptureFileOutputRecordingDelegate {
+    var onFinish: ((URL) -> Void)?
+
+    func fileOutput(_ output: AVCaptureFileOutput,
+                    didFinishRecordingTo outputFileURL: URL,
+                    from connections: [AVCaptureConnection],
+                    error: Error?) {
+        // ⚠️ An error doesn't always mean failure (e.g. max duration reached)
+        let succeeded = (error as NSError?)?
+            .userInfo[AVErrorRecordingSuccessfullyFinishedKey] as? Bool ?? (error == nil)
+        if succeeded { onFinish?(outputFileURL) }
+    }
+}
+
+let fileURL = URL.temporaryDirectory.appending(path: "\(UUID().uuidString).mov")  // must not exist yet
+movieOutput.startRecording(to: fileURL, recordingDelegate: recordingDelegate)
+// ... later, when the user taps Stop:
+movieOutput.stopRecording()
+```
+
+| | Photo (55.5) | Video |
+|---|---|---|
+| Shape | One **moment** | A **time span**: start → stop |
+| Result | `Data` in a callback | A **file**, after recording finishes |
+| Done when | Delegate called | `didFinishRecordingTo` called (file is complete) |
+
+Need more control (custom compression, adding overlays while recording)? Use **`AVAssetWriter`** with data outputs instead. It's more work, but you control every frame.
+
+---
+
+## 55.7 Real-Time Frame Processing with AVCaptureVideoDataOutput 🔴
+
+**`AVCaptureVideoDataOutput`** gives you **every frame**, live (30 or 60 per second), instead of saving a file. Use it for **scanners**, **live filters**, or **Vision** and Core ML features.
+
+```swift
+import AVFoundation
+import Vision
+
+final class BarcodeFrameProcessor: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+    var onCode: ((String) -> Void)?
+    private let request = VNDetectBarcodesRequest()
+
+    // Runs on the queue you chose below, once per frame
+    func captureOutput(_ output: AVCaptureOutput,
+                       didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        // process pixelBuffer in real time — e.g., feed into a Vision request
+
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right)
+        try? handler.perform([request])
+
+        if let code = request.results?.first?.payloadStringValue {
+            DispatchQueue.main.async { self.onCode?(code) }    // back to main for the UI
+        }
     }
 }
+
+// Setup:
+let videoOutput = AVCaptureVideoDataOutput()
+videoOutput.alwaysDiscardsLateVideoFrames = true            // drop frames we can't keep up with
+videoOutput.setSampleBufferDelegate(processor, queue: DispatchQueue(label: "camera.frames"))
+if session.canAddOutput(videoOutput) { session.addOutput(videoOutput) }
 ```
 
-`captureOutput(_:didOutput:from:)` fires continuously, once per captured frame (typically 30 or 60 times per second) — this callback runs on a dedicated capture queue rather than the main thread, meaning any processing done here must itself be fast enough to keep up with the incoming frame rate or explicitly offload heavier work elsewhere, since falling behind causes frames to be dropped; `CMSampleBufferGetImageBuffer` extracts the actual pixel data (`CVPixelBuffer`) from the lower-level `CMSampleBuffer` container, which is the format most downstream processing (like Vision framework requests) actually expects.
+Rules for frame processing:
+
+- The callback runs on **your** serial queue, **not** main. Hop to main only for UI updates.
+- You have about **16–33 ms** per frame. If you're slower, frames are **dropped**. Skip frames on purpose (e.g. analyze every 5th) if the work is heavy.
+- **Don't keep** `CMSampleBuffer`s. The camera uses a small **pool** of buffers; holding them makes the camera **stop** sending frames.
+- `CMSampleBufferGetImageBuffer` gives the **`CVPixelBuffer`**: the raw pixels most tools (Vision, Core Image, Core ML) want.
+
+For a plain **barcode or text scanner**, VisionKit's **`DataScannerViewController`** (iOS 16) does all of this for you, with a ready-made UI. Build your own pipeline only when you need something it can't do.
 
 ---
 
-## 55.8 AVPlayer and VideoPlayer Playback
+## 55.8 AVPlayer and VideoPlayer Playback 🟢
 
-`AVPlayer` is the foundational video/audio playback engine, and SwiftUI's `VideoPlayer` wraps it for direct, declarative use within a SwiftUI view hierarchy — the AVFoundation equivalent of the relationship between `UIViewController` and `UIHostingController`/`UIViewRepresentable` (section 38) bridging patterns, but built specifically for media playback.
+**`AVPlayer`** plays video and audio: local files, remote files, and streams (55.14). SwiftUI's **`VideoPlayer`** shows an `AVPlayer` with the **standard controls**:
 
 ```swift
+import SwiftUI
 import AVKit
 
 struct RecipeVideoView: View {
     let videoURL: URL
+    @State private var player = AVPlayer()                  // keep ONE player for the view
 
     var body: some View {
-        VideoPlayer(player: AVPlayer(url: videoURL))
-            .aspectRatio(16/9, contentMode: .fit)
+        VideoPlayer(player: player) {
+            // Optional overlay, drawn over the video (not touchable)
+            Text("Step 3: Fold the dough").padding().background(.black.opacity(0.5))
+        }
+        .aspectRatio(16 / 9, contentMode: .fit)
+        .task {
+            player.replaceCurrentItem(with: AVPlayerItem(url: videoURL))
+        }
+        .onDisappear { player.pause() }
     }
 }
 ```
 
-`VideoPlayer` provides standard playback controls (play/pause, scrubbing, fullscreen) essentially for free, appropriate for the common case of showing a video with expected, standard controls — apps needing custom playback UI (a bespoke scrubber, custom overlay controls) instead work directly with `AVPlayer` and `AVPlayerLayer` (typically via a `UIViewRepresentable` wrapper, section 38.1) for full control over presentation, trading `VideoPlayer`'s convenience for greater customization flexibility.
+⚠️ Don't write `VideoPlayer(player: AVPlayer(url: url))` inside `body`. It creates a **new player** each time the view updates, and playback restarts or stops.
+
+| Need | Use |
+|---|---|
+| Show a video with normal controls | **`VideoPlayer`** |
+| System player with Picture in Picture, AirPlay, chapters | **`AVPlayerViewController`** (UIKit, wrap with 38.2) |
+| Your **own** controls and design | **`AVPlayerLayer`** in a `UIViewRepresentable` (the same layer trick as 55.4) |
+
+Watch progress with a time observer, for a custom scrubber:
+
+```swift
+let token = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
+                                           queue: .main) { time in
+    progress = time.seconds                                  // update your slider
+}
+// later: player.removeTimeObserver(token)
+```
 
 ---
 
-## 55.9 AVAudioSession Categories and Interruptions
+## 55.9 AVAudioSession Categories and Interruptions 🟡
 
-`AVAudioSession` configures how an app's audio behaves relative to other audio on the device — its `category` determines fundamental behavior like whether audio continues when the device is muted, whether it mixes with or silences other apps' audio, and how the app responds to interruptions (like an incoming phone call).
+**`AVAudioSession`** tells iOS **how** your app's audio should behave next to other audio: music, calls, the silent switch.
 
 ```swift
-func configureAudioSession() throws {
+import AVFoundation
+
+func configureForPlayback() throws {
     let session = AVAudioSession.sharedInstance()
-    try session.setCategory(.playback, mode: .default, options: [])
+    try session.setCategory(.playback, mode: .spokenAudio)   // a cooking podcast
     try session.setActive(true)
 }
+```
 
-NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { notification in
-    guard let info = notification.userInfo,
-          let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
-          let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
-    if type == .began {
-        // pause playback
-    } else if type == .ended {
-        // optionally resume playback
+| Category | Silent switch | Other apps' audio | Typical app |
+|---|---|---|---|
+| `.ambient` | **Silences** it | **Mixes** with it | Game sound effects |
+| `.soloAmbient` (default) | **Silences** it | **Stops** it | Simple apps |
+| `.playback` | **Keeps playing** | Stops it (or mixes with `.mixWithOthers`) | Music, podcasts, video |
+| `.record` | — | Stops it | Voice recorder |
+| `.playAndRecord` | Keeps playing | Stops it | Calls, voice chat |
+
+For audio that keeps playing **in the background**, you need **both** `.playback` **and** the **Audio** background mode (`UIBackgroundModes`: `audio`).
+
+**Interruptions** happen when a phone call, an alarm, or Siri takes the audio. Handle them:
+
+```swift
+func observeInterruptions() async {
+    for await notification in NotificationCenter.default.notifications(named: AVAudioSession.interruptionNotification) {
+        guard let info = notification.userInfo,
+              let rawType = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: rawType) else { continue }
+
+        switch type {
+        case .began:
+            player.pause()                                    // the system already paused audio
+        case .ended:
+            let rawOptions = info[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            if AVAudioSession.InterruptionOptions(rawValue: rawOptions).contains(.shouldResume) {
+                player.play()                                 // only if the system says so
+            }
+        @unknown default:
+            break
+        }
     }
 }
 ```
 
-`.playback` category is appropriate for an app whose core purpose is playing audio/video content (continuing even if the device's silent switch is enabled, and by default silencing other background audio) — other categories like `.ambient` (mixes with other audio, respects the silent switch) or `.playAndRecord` (for apps needing simultaneous playback and recording) express meaningfully different behavioral contracts, and the interruption notification handling shown is essential for gracefully pausing playback when, say, a phone call interrupts the app's audio, then optionally resuming once that interruption ends.
+Also handle **route changes**: when the user **unplugs** headphones or disconnects AirPods, **pause** (`routeChangeNotification` with reason `.oldDeviceUnavailable`). Otherwise the audio suddenly plays out loud.
 
 ---
 
-## 55.10 AVAudioEngine Basics
+## 55.10 AVAudioEngine Basics 🔴
 
-`AVAudioEngine` provides a lower-level, node-graph-based audio processing pipeline — connecting audio source nodes (microphone input, a file player) through processing nodes (effects, mixing) to an output node, appropriate for apps needing genuine audio synthesis, real-time effects processing, or fine-grained mixing control beyond what `AVPlayer`'s simpler playback model provides.
-
-```swift
-let engine = AVAudioEngine()
-let playerNode = AVAudioPlayerNode()
-
-engine.attach(playerNode)
-engine.connect(playerNode, to: engine.mainMixerNode, format: nil)
-
-try engine.start()
-playerNode.scheduleFile(audioFile, at: nil)
-playerNode.play()
-```
-
-This node-graph model (attach nodes, connect them into a signal-flow graph, then start the whole engine) is meaningfully more powerful and more complex than `AVPlayer`'s simple "give it a URL, call play()" model — appropriate specifically for apps doing genuine audio work (a music production tool, a real-time voice effects app, precise multi-track mixing) rather than simply playing back existing media files, where `AVPlayer`/`VideoPlayer` (55.8) remain the simpler, more appropriate choice.
-
----
-
-## 55.11 Recording Audio
-
-`AVAudioRecorder` provides straightforward audio recording to a file, configured with format/quality settings and controlled via simple start/stop calls — the audio-specific analog of `AVCaptureMovieFileOutput`'s video recording (55.6).
+**`AVAudioEngine`** is a **graph of audio nodes**: sources → effects → mixer → output. Use it for **real-time** audio work: effects, mixing, synthesis, or reading the **microphone** live.
 
 ```swift
-func startAudioRecording(to url: URL) throws -> AVAudioRecorder {
-    let settings: [String: Any] = [
-        AVFormatIDKey: kAudioFormatMPEG4AAC,
-        AVSampleRateKey: 44100,
-        AVNumberOfChannelsKey: 1,
-        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-    ]
-    let recorder = try AVAudioRecorder(url: url, settings: settings)
-    recorder.record()
-    return recorder
+import AVFoundation
+
+final class NarrationPlayer {
+    private let engine = AVAudioEngine()
+    private let player = AVAudioPlayerNode()
+    private let timePitch = AVAudioUnitTimePitch()             // change speed, keep the pitch
+
+    func play(fileURL: URL, speed: Float) throws {
+        let file = try AVAudioFile(forReading: fileURL)
+
+        engine.attach(player)
+        engine.attach(timePitch)
+
+        // player → timePitch → mixer → speaker
+        engine.connect(player, to: timePitch, format: file.processingFormat)
+        engine.connect(timePitch, to: engine.mainMixerNode, format: file.processingFormat)
+
+        timePitch.rate = speed                                 // 1.5 = 50% faster, no "chipmunk" voice
+        try engine.start()
+
+        player.scheduleFile(file, at: nil)
+        player.play()
+    }
 }
 ```
 
-The `settings` dictionary configures the actual encoding format (AAC here, a common, efficient compressed audio format), sample rate, channel count, and quality — these choices involve real trade-offs between file size and audio fidelity, with the specific right choice depending on the recording's purpose (a voice memo can reasonably use lower quality/mono than professional music recording would require), and `AVAudioSession`'s `.record` or `.playAndRecord` category (55.9) must be properly configured before recording will actually function correctly.
+**Reading the microphone** live uses a **tap** on the input node:
+
+```swift
+let input = engine.inputNode
+let format = input.outputFormat(forBus: 0)
+
+input.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, time in
+    // buffer: AVAudioPCMBuffer with the latest audio
+    // e.g. measure loudness, send to speech recognition, or ShazamKit (55.15)
+}
+try engine.start()
+// later: input.removeTap(onBus: 0); engine.stop()
+```
+
+| Need | Use |
+|---|---|
+| Play a song, podcast, or video | `AVPlayer` (55.8): simpler |
+| Record a voice memo | `AVAudioRecorder` (55.11): simpler |
+| Effects, mixing several sounds, live mic analysis, synthesis | **`AVAudioEngine`** |
+
+The tap's closure runs on an **audio thread**: keep it fast, and don't touch the UI from it.
 
 ---
 
-## 55.12 Video Export with AVAssetExportSession
+## 55.11 Recording Audio 🟢
 
-`AVAssetExportSession` transcodes/exports a video asset — changing its format, resolution, or applying a preset quality level — appropriate for preparing a captured or composed video for sharing, upload, or storage in a more space-efficient format than the original capture.
+**`AVAudioRecorder`** records the microphone to a **file**. Three steps: **permission**, **session**, **recorder**:
 
 ```swift
-func exportVideo(asset: AVAsset, to outputURL: URL) async throws {
-    guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
+import AVFoundation
+
+final class VoiceNoteRecorder {
+    private var recorder: AVAudioRecorder?
+
+    func start(to url: URL) async throws {
+        // 1. Permission (NSMicrophoneUsageDescription in Info.plist)
+        guard await AVAudioApplication.requestRecordPermission() else {   // iOS 17
+            throw RecordingError.permissionDenied
+        }
+
+        // 2. The audio session must allow recording (55.9)
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+        try session.setActive(true)
+
+        // 3. The recorder
+        let settings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,              // AAC: small and good quality
+            AVSampleRateKey: 44_100,
+            AVNumberOfChannelsKey: 1,                         // mono is fine for voice
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        let recorder = try AVAudioRecorder(url: url, settings: settings)
+        recorder.isMeteringEnabled = true                     // for a live level meter
+        recorder.record()
+        self.recorder = recorder
+    }
+
+    func level() -> Float {
+        recorder?.updateMeters()
+        return recorder?.averagePower(forChannel: 0) ?? -160  // in dB: -160 (silent) to 0 (loud)
+    }
+
+    func stop() {
+        recorder?.stop()
+        recorder = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+}
+```
+
+The settings are a **trade-off** between **size** and **quality**: mono AAC is great for **voice notes**; music recording needs **stereo** and a higher quality. And without the right **session category**, `record()` silently records **nothing**.
+
+---
+
+## 55.12 Video Export with AVAssetExportSession 🟡
+
+**`AVAssetExportSession`** converts a video: a smaller **size**, a different **format**, or a final render of an edit (55.13). A common use: **shrink** a video before **uploading** it (39.11):
+
+```swift
+import AVFoundation
+
+func exportForUpload(from sourceURL: URL, to outputURL: URL) async throws {
+    let asset = AVURLAsset(url: sourceURL)
+
+    guard let export = AVAssetExportSession(asset: asset,
+                                            presetName: AVAssetExportPreset1280x720) else {
         throw ExportError.cannotCreateSession
     }
-    exportSession.outputURL = outputURL
-    exportSession.outputFileType = .mp4
 
-    await exportSession.export()
+    // iOS 18+: one async call that throws on failure
+    try await export.export(to: outputURL, as: .mp4)
+}
+```
 
-    if exportSession.status == .failed {
-        throw exportSession.error ?? ExportError.unknown
+Before iOS 18, set `outputURL` and `outputFileType`, call `await export.export()`, and then **check** `export.status` and `export.error` yourself.
+
+Show **progress** while it works (iOS 18):
+
+```swift
+Task {
+    for await state in export.states(updateInterval: 0.5) {
+        if case .exporting(let progress) = state {
+            exportProgress = progress.fractionCompleted        // 0.0 ... 1.0
+        }
     }
 }
 ```
 
-Export presets (`AVAssetExportPresetMediumQuality`, `AVAssetExportPresetHighestQuality`, and others) provide convenient, pre-tuned quality/size trade-offs without needing to manually specify every individual encoding parameter — this is commonly used before uploading a captured video to a server (recall multipart upload, section 39.11), since a device's raw captured video is often considerably larger than what's actually necessary or desirable to transmit and store, making export-before-upload a practical, common step in a video-handling pipeline.
+| Preset | Result |
+|---|---|
+| `AVAssetExportPresetLowQuality` / `MediumQuality` / `HighestQuality` | Simple quality levels |
+| `AVAssetExportPreset1280x720`, `1920x1080`, … | A fixed **maximum** size |
+| `AVAssetExportPresetHEVCHighestQuality` | HEVC: smaller files, same quality |
+| `AVAssetExportPresetPassthrough` | **No re-encoding**: just a new container (fast) |
+
+A phone's 4K video is often **far** bigger than needed for a recipe upload. Exporting to 720p first saves the user's **data** and your **server** storage.
 
 ---
 
 ## 55.13 Composing Video with AVMutableComposition 🔴
 
-`AVMutableComposition` builds a new video asset by combining and arranging multiple existing video/audio tracks — trimming clips, layering audio over video, or concatenating several separate clips into one continuous timeline — the foundation for building video editing functionality.
+**`AVMutableComposition`** builds a **new timeline** from pieces of other videos: join clips, **trim** them, add **music**. It's the base of any video editor.
 
 ```swift
-func combineClips(_ clipURLs: [URL]) async throws -> AVMutableComposition {
-    let composition = AVMutableComposition()
-    let videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+import AVFoundation
 
-    var currentTime = CMTime.zero
+func joinClips(_ clipURLs: [URL], music: URL?) async throws -> AVMutableComposition {
+    let composition = AVMutableComposition()
+    guard let videoTrack = composition.addMutableTrack(withMediaType: .video,
+                                                       preferredTrackID: kCMPersistentTrackID_Invalid),
+          let audioTrack = composition.addMutableTrack(withMediaType: .audio,
+                                                       preferredTrackID: kCMPersistentTrackID_Invalid)
+    else { throw CompositionError.cannotAddTrack }
+
+    var cursor = CMTime.zero                                         // where the next clip goes
+
     for url in clipURLs {
         let asset = AVURLAsset(url: url)
-        let assetTrack = try await asset.loadTracks(withMediaType: .video).first!
         let duration = try await asset.load(.duration)
-        try videoTrack?.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: assetTrack, at: currentTime)
-        currentTime = CMTimeAdd(currentTime, duration)
+        let range = CMTimeRange(start: .zero, duration: duration)   // the WHOLE clip (trim: a sub-range)
+
+        guard let sourceVideo = try await asset.loadTracks(withMediaType: .video).first else { continue }
+        try videoTrack.insertTimeRange(range, of: sourceVideo, at: cursor)
+        videoTrack.preferredTransform = try await sourceVideo.load(.preferredTransform)  // keep orientation
+
+        if let sourceAudio = try await asset.loadTracks(withMediaType: .audio).first {
+            try audioTrack.insertTimeRange(range, of: sourceAudio, at: cursor)
+        }
+        cursor = cursor + duration
+    }
+
+    // Background music under the whole video, on its own track
+    if let music,
+       let musicTrack = composition.addMutableTrack(withMediaType: .audio,
+                                                    preferredTrackID: kCMPersistentTrackID_Invalid),
+       let source = try await AVURLAsset(url: music).loadTracks(withMediaType: .audio).first {
+        try musicTrack.insertTimeRange(CMTimeRange(start: .zero, duration: cursor), of: source, at: .zero)
     }
     return composition
 }
 ```
 
-`insertTimeRange(_:of:at:)` is the core building block — placing a specific time range from a source track at a specific point in the composition's own timeline, and calling it repeatedly (as shown, advancing `currentTime` after each clip) is how multiple separate video files get concatenated into one continuous composition; this same building block, applied differently, also enables trimming (inserting only a sub-range of a source clip) and layering (adding a separate audio track alongside video at overlapping time ranges) — the composition, once built, can then be rendered via `AVAssetExportSession` (55.12) into a final, standalone video file.
+**`insertTimeRange(_:of:at:)`** is the one building block:
+
+| Goal | How |
+|---|---|
+| **Join** clips | Insert each one at the **end** of the previous (`cursor`) |
+| **Trim** | Insert only a **sub-range** of the source |
+| **Layer** audio | Insert into a **separate** audio track at the same time |
+
+A composition is an **`AVAsset`**, so you can:
+
+- **preview** it right away: `AVPlayer(playerItem: AVPlayerItem(asset: composition))`,
+- **render** it to a file with `AVAssetExportSession` (55.12).
+
+For transitions, text, and filters, add an **`AVVideoComposition`** too. Nothing is copied until export: the composition only **points to** ranges of the source files.
 
 ---
 
 ## 55.14 HLS Streaming and Offline Download 🔴
 
-HTTP Live Streaming (HLS) is Apple's adaptive bitrate streaming protocol — a video is encoded at multiple quality levels, with `AVPlayer` automatically switching between them based on current network conditions, and `AVAssetDownloadTask` supports downloading HLS content for offline playback.
+**HLS** (HTTP Live Streaming) is Apple's streaming format. The video is cut into **small segments**, at **several quality levels**, listed in a **`.m3u8`** playlist. `AVPlayer` plays it with **no extra code**:
 
 ```swift
-func downloadForOffline(hlsURL: URL) {
-    let asset = AVURLAsset(url: hlsURL)
-    let configuration = URLSessionConfiguration.background(withIdentifier: "com.example.myapp.hls-download")
-    let session = AVAssetDownloadURLSession(configuration: configuration, assetDownloadDelegate: downloadDelegate, delegateQueue: .main)
-
-    let downloadTask = session.makeAssetDownloadTask(asset: asset, assetTitle: "Recipe Video", assetArtworkData: nil, options: nil)
-    downloadTask?.resume()
-}
+let player = AVPlayer(url: URL(string: "https://example.com/videos/pasta/master.m3u8")!)
+player.play()
 ```
 
-Because `AVPlayer` transparently handles quality-level switching for adaptive streams, a well-encoded HLS asset provides a smooth playback experience across varying network conditions (dropping to a lower quality automatically during a poor connection, rather than buffering indefinitely) with no manual bitrate-switching logic required in the app — `AVAssetDownloadURLSession`, built on the same background `URLSession` infrastructure from section 40.8, extends this same adaptive-streaming asset format to support genuine offline playback, downloading and storing the content locally for later use without requiring network connectivity at playback time.
+While playing, `AVPlayer` **switches quality automatically**: lower quality on a weak connection (instead of stopping to buffer), higher when the network improves. You can guide it:
+
+```swift
+player.currentItem?.preferredPeakBitRate = 2_000_000          // cap at ~2 Mbps (e.g. on cellular)
+player.currentItem?.preferredForwardBufferDuration = 10       // seconds to buffer ahead
+```
+
+For **offline** viewing (a cooking class on a plane), download the stream with **`AVAssetDownloadURLSession`**. It's built on **background `URLSession`** (40.8), so the download continues when the app isn't running:
+
+```swift
+final class OfflineDownloader: NSObject, AVAssetDownloadDelegate {
+    private lazy var session = AVAssetDownloadURLSession(
+        configuration: .background(withIdentifier: "com.example.recipes.hls"),
+        assetDownloadDelegate: self,
+        delegateQueue: .main
+    )
+
+    func download(_ streamURL: URL, title: String) {
+        let asset = AVURLAsset(url: streamURL)
+        let configuration = AVAssetDownloadConfiguration(asset: asset, title: title)
+        session.makeAssetDownloadTask(downloadConfiguration: configuration).resume()
+    }
+
+    // The system picks the folder: SAVE this location (relative path) to play it later
+    func urlSession(_ session: URLSession,
+                    assetDownloadTask: AVAssetDownloadTask,
+                    willDownloadTo location: URL) {
+        OfflineStore.save(location.relativePath, for: assetDownloadTask.urlAsset.url)
+    }
+}
+
+// Later, offline:
+// let asset = AVURLAsset(url: URL.homeDirectory.appending(path: savedRelativePath))
+// player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+```
+
+Paid content is often protected with **FairPlay Streaming** (DRM); offline playback then also needs **persistable keys** through `AVContentKeySession`.
 
 ---
 
-## 55.15 MusicKit and ShazamKit 🟠
+## 55.15 MusicKit and ShazamKit 🟡
 
-MusicKit provides programmatic access to Apple Music's catalog and a user's library/playback (search, playlists, playback control), while ShazamKit provides on-device and catalog-matched audio recognition — identifying a song from a short audio sample, the same underlying technology behind the standalone Shazam app.
+Two music frameworks, two jobs:
+
+| | MusicKit | ShazamKit |
+|---|---|---|
+| Job | **Apple Music**: search the catalog, the user's library, **play** songs | **Recognize** a song (or your own audio) from a short sound sample |
+| Needs | `MusicAuthorization`; an Apple Music **subscription** to play full songs | Microphone permission |
+| Setup | Enable the **MusicKit** App Service for your App ID | Enable the **ShazamKit** App Service |
+
+**MusicKit**: find a song and play it:
+
+```swift
+import MusicKit
+
+func playSong(matching term: String) async throws {
+    guard await MusicAuthorization.request() == .authorized else { return }
+
+    var request = MusicCatalogSearchRequest(term: term, types: [Song.self])
+    request.limit = 1
+    let response = try await request.response()
+    guard let song = response.songs.first else { return }
+
+    let player = ApplicationMusicPlayer.shared                 // plays inside your app
+    player.queue = [song]
+    try await player.play()
+}
+```
+
+**ShazamKit**: from iOS 17, **`SHManagedSession`** records from the microphone **and** matches, in one call:
 
 ```swift
 import ShazamKit
 
-func recognizeAudio(from buffer: AVAudioPCMBuffer, at time: AVAudioTime) {
-    let session = SHSession()
-    let signature = SHSignatureGenerator()
-    try? signature.append(buffer, at: time)
-    session.match(try! signature.signature())
-}
+func identifyBackgroundSong() async -> String? {
+    let session = SHManagedSession()
 
-class MatchDelegate: NSObject, SHSessionDelegate {
-    func session(_ session: SHSession, didFind match: SHMatch) {
-        let title = match.mediaItems.first?.title
-        // present the recognized song
+    switch await session.result() {                            // listens until a match or a timeout
+    case .match(let match):
+        let item = match.mediaItems.first
+        return [item?.title, item?.artist].compactMap { $0 }.joined(separator: " – ")
+    case .noMatch:
+        return nil
+    case .error(let error, _):
+        print("Shazam failed: \(error)")
+        return nil
     }
 }
 ```
 
-`SHSignatureGenerator` builds an audio "fingerprint" from a captured buffer (fed from something like the `AVCaptureVideoDataOutput`-adjacent audio capture path, or a dedicated audio tap), and `SHSession.match()` compares that fingerprint against Shazam's catalog (or, for `SHCustomCatalog`, a developer-provided custom set of reference audio) — these two frameworks (MusicKit for catalog access/playback, ShazamKit for recognition) are commonly used together in apps building music-adjacent experiences, like a recipe app that could recognize background music playing in a cooking video and offer to add it to a playlist.
+ShazamKit can also match against a **custom catalog** (`SHCustomCatalog`) of **your** audio: for example, syncing your app to the cooking **video** playing on a TV. And the two work well together: recognize a song with ShazamKit, then add it to a playlist with MusicKit.
 
 ---
 
-## 55.16 Now Playing Info and Remote Commands
+## 55.16 Now Playing Info and Remote Commands 🟡
 
-`MPNowPlayingInfoCenter` publishes what an app is currently playing (title, artist, artwork, playback position) to the system, making it appear in Control Center, the Lock Screen, and on connected devices like CarPlay or a paired watch, while `MPRemoteCommandCenter` handles playback commands (play/pause/skip) arriving from those same external surfaces.
+When your app plays audio, users expect to control it from the **Lock Screen**, **Control Center**, **AirPods**, **CarPlay**, and the **Apple Watch**. Two classes make that work:
+
+| Class | Direction | Job |
+|---|---|---|
+| **`MPNowPlayingInfoCenter`** | App → system | **What** is playing: title, artwork, time |
+| **`MPRemoteCommandCenter`** | System → app | **Commands**: play, pause, skip, seek |
 
 ```swift
 import MediaPlayer
+import AVFoundation
 
-func updateNowPlayingInfo(title: String, artwork: UIImage) {
-    var info: [String: Any] = [
-        MPMediaItemPropertyTitle: title,
-        MPNowPlayingInfoPropertyElapsedPlaybackTime: currentPlayer.currentTime,
-        MPMediaItemPropertyPlaybackDuration: currentPlayer.duration
-    ]
-    info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: artwork.size) { _ in artwork }
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-}
+@MainActor
+final class NowPlayingController {
+    private let player: AVPlayer
 
-func configureRemoteCommands() {
-    let commandCenter = MPRemoteCommandCenter.shared()
-    commandCenter.playCommand.addTarget { _ in currentPlayer.play(); return .success }
-    commandCenter.pauseCommand.addTarget { _ in currentPlayer.pause(); return .success }
+    init(player: AVPlayer) {
+        self.player = player
+        setUpRemoteCommands()
+    }
+
+    func publish(title: String, show: String, artwork: UIImage) {
+        let duration = player.currentItem?.duration.seconds ?? 0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
+            MPMediaItemPropertyTitle: title,
+            MPMediaItemPropertyArtist: show,
+            MPMediaItemPropertyPlaybackDuration: duration.isFinite ? duration : 0,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: player.currentTime().seconds,
+            MPNowPlayingInfoPropertyPlaybackRate: player.rate,         // the system moves the bar for you
+            MPMediaItemPropertyArtwork: MPMediaItemArtwork(boundsSize: artwork.size) { _ in artwork }
+        ]
+    }
+
+    private func setUpRemoteCommands() {
+        let commands = MPRemoteCommandCenter.shared()
+
+        commands.playCommand.addTarget { [player] _ in player.play(); return .success }
+        commands.pauseCommand.addTarget { [player] _ in player.pause(); return .success }
+
+        commands.skipForwardCommand.preferredIntervals = [15]
+        commands.skipForwardCommand.addTarget { [player] _ in
+            player.seek(to: player.currentTime() + CMTime(seconds: 15, preferredTimescale: 600))
+            return .success
+        }
+
+        commands.changePlaybackPositionCommand.addTarget { [player] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            player.seek(to: CMTime(seconds: event.positionTime, preferredTimescale: 600))
+            return .success                                    // the user dragged the Lock Screen bar
+        }
+    }
 }
 ```
 
-Publishing accurate, up-to-date Now Playing info (and correctly wiring up remote commands) is what makes an app's media playback feel like a genuine first-class citizen of the system's broader media ecosystem — a user controlling playback from their Lock Screen, AirPods, or car's dashboard without ever needing to unlock their phone and open the app directly is a meaningfully better experience than an app that plays media with no system integration at all, and is expected baseline behavior for any app with substantial audio/video playback functionality.
+Rules that make it **work**:
+
+- Use the **`.playback`** audio session (55.9). Otherwise your app doesn't become the "now playing" app.
+- Update the info when the **track**, **rate** (play/pause), or **position** (after a seek) changes. You **don't** need to update it every second: the system moves the time forward using the rate.
+- Only enable the commands you **support**. Unsupported buttons should not appear.
+
+With `AVPlayer`, **`MPNowPlayingSession`** (iOS 16) can publish much of this **automatically**. Either way, Lock Screen and headphone controls are **expected** in any app that plays media.
 
 ---
 
@@ -378,19 +907,19 @@ Publishing accurate, up-to-date Now Playing info (and correctly wiring up remote
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Privacy-preserving picking | `PHPickerViewController`, `PhotosPicker` | Select photos with no broad library permission needed |
-| Full library access | `PHAsset`, `PHFetchResult`, `PHImageManager` | Queryable browsing for genuine gallery/editing apps |
-| Partial access | `.limited` authorization, `presentLimitedLibraryPicker` | User-controlled, expandable subset library access |
-| Capture foundation | `AVCaptureSession`, inputs/outputs | Coordinates camera/mic input with capture outputs |
-| Photo capture | `AVCapturePhotoOutput`, delegate | Single-request, async-delivered photo capture |
-| Video capture | `AVCaptureMovieFileOutput` | Start/stop-bounded file recording |
-| Real-time frames | `AVCaptureVideoDataOutput` | Continuous frame stream for live processing |
-| Media playback | `AVPlayer`, `VideoPlayer` | Standard controls with minimal setup |
-| Audio session behavior | `AVAudioSession`, categories, interruptions | How app audio interacts with the rest of the system |
-| Advanced audio pipeline | `AVAudioEngine`, node graph | Synthesis, effects, and fine-grained mixing |
-| Audio recording | `AVAudioRecorder` | Straightforward file-based audio capture |
-| Format conversion | `AVAssetExportSession`, presets | Transcode/resize video for sharing or storage |
-| Video editing foundation | `AVMutableComposition` | Trim, layer, and concatenate tracks |
-| Adaptive streaming | HLS, `AVAssetDownloadTask` | Network-adaptive playback and offline download |
-| Catalog access & recognition | MusicKit, ShazamKit | Apple Music integration and audio fingerprint matching |
-| System media integration | `MPNowPlayingInfoCenter`, `MPRemoteCommandCenter` | Lock Screen/Control Center/CarPlay playback control |
+| Private picking | `PhotosPicker`, `PHPickerViewController` | Pick photos with no permission prompt |
+| Full library | `PHAsset`, `PHFetchResult`, `PHImageManager` | Browse and edit the library (with permission) |
+| Limited access | `.limited`, `presentLimitedLibraryPicker` | Work with the user's selected subset |
+| Camera setup | `AVCaptureSession`, inputs, outputs, preview layer | Connect camera and mic to outputs |
+| Photo capture | `AVCapturePhotoOutput`, new settings per shot | One moment, delivered to a delegate |
+| Video capture | `AVCaptureMovieFileOutput` | Start/stop recording to a file |
+| Live frames | `AVCaptureVideoDataOutput`, Vision | Per-frame processing on your own queue |
+| Playback | `AVPlayer`, `VideoPlayer`, `AVPlayerViewController` | Standard or custom video players |
+| Audio behavior | `AVAudioSession` categories, interruptions | Play nicely with calls and other apps |
+| Audio graph | `AVAudioEngine`, nodes, input taps | Effects, mixing, live microphone audio |
+| Recording audio | `AVAudioRecorder` | Permission + session + recorder |
+| Export | `AVAssetExportSession`, presets | Shrink or convert video |
+| Editing | `AVMutableComposition`, `insertTimeRange` | Join, trim, and layer clips |
+| Streaming | HLS, `AVAssetDownloadURLSession` | Adaptive playback and offline downloads |
+| Music | MusicKit, ShazamKit (`SHManagedSession`) | Apple Music access and song recognition |
+| System controls | `MPNowPlayingInfoCenter`, `MPRemoteCommandCenter` | Lock Screen, AirPods, and CarPlay control |

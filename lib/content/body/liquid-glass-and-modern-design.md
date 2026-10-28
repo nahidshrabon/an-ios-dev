@@ -1,6 +1,14 @@
-## 32.1 What Liquid Glass Is and the Design Intent
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Liquid Glass is a translucent, dynamic material that reacts to underlying content and light, used throughout system chrome (toolbars, tab bars, controls) to create a sense of depth and continuity between interface layers and the content beneath them.
+**Liquid Glass** is Apple's design language from iOS 26 (and macOS, iPadOS, watchOS, tvOS, visionOS 26). Bars, buttons, and controls are made of a **see-through, light-bending material** that floats **above** your content. This section covers the SwiftUI APIs for glass, **when not** to use it, accessibility, the newest **SF Symbols** features, app icons, and keeping a design **consistent** with tokens.
+
+All `glassEffect` APIs below need **iOS 26 or later**.
+
+---
+
+## 32.1 What Liquid Glass Is and the Design Intent 🟢
+
+**Liquid Glass** is a **material**: a surface that's **translucent** (partly see-through), **bends light** like real glass (refraction), and **reacts** to what's behind it and to touch.
 
 ```swift
 struct GlassIntentDemoView: View {
@@ -15,20 +23,27 @@ struct GlassIntentDemoView: View {
                 Text("Liquid Glass")
                     .font(.title.bold())
                     .padding()
-                    .glassEffect()
+                    .glassEffect()          // the text floats on a piece of glass
             }
         }
     }
 }
 ```
 
-The design intent behind Liquid Glass is that interface chrome shouldn't feel like an opaque layer sitting flatly on top of content — it should feel like it's genuinely part of the same physical space, refracting and reflecting the content beneath it the way real glass would. This differs conceptually from earlier flat/opaque design languages: rather than fully obscuring what's underneath, glass elements let content show through in a controlled, legible way, unifying chrome and content into one coherent visual system.
+The **idea** behind it:
+
+- **Content comes first.** Photos, maps, and text fill the screen. Controls **float** on top, in a separate layer.
+- **Controls don't block content.** Older designs used **opaque** bars that hid what's behind. Glass lets content **show through**, in a controlled, readable way.
+- **One system.** Bars, buttons, sheets, and menus all use the **same** material, so the whole UI feels like one physical thing.
+- **It feels alive.** Glass **lights up** and **flexes** when touched, and changes shape smoothly (32.4).
+
+The good news: **standard components** (navigation bars, tab bars, toolbars, sheets, menus) get glass **automatically** when you build with the iOS 26 SDK. You only use the APIs in this section for **custom** controls.
 
 ---
 
-## 32.2 .glassEffect() on a View
+## 32.2 .glassEffect() on a View 🟢
 
-`.glassEffect()` is the core modifier that applies the Liquid Glass material to any view, giving it the characteristic translucent, refractive appearance.
+**`.glassEffect(_:in:)`** puts the glass material **behind** a view, in a **shape** you choose:
 
 ```swift
 struct GlassButtonDemoView: View {
@@ -45,13 +60,44 @@ struct GlassButtonDemoView: View {
 }
 ```
 
-`.glassEffect()` accepts an optional style (like `.regular`) and an `in:` shape parameter (such as `.circle` or a `RoundedRectangle`) that defines the glass element's clipped silhouette — the glass material is rendered within that shape's bounds, giving precise control over exactly how the translucent surface is contoured. This is the direct building block behind the `.glass`/`.glassProminent` button styles covered in section 28.12, which apply glass styling specifically tuned for button contexts.
+- The **first** parameter is the **style** (the "variant"). `.regular` is the normal one; `.clear` is more see-through, for use over **rich media** like photos.
+- **`in:`** is the **shape** of the glass: `.circle`, `.capsule` (the default), `.rect(cornerRadius:)`, or any `Shape`.
+
+You can **customize** the glass:
+
+```swift
+Label("Record", systemImage: "record.circle")
+    .padding()
+    .glassEffect(
+        .regular
+            .tint(.red)          // a colored glass, for important actions
+            .interactive(),      // reacts to touch: scales and shimmers when pressed
+        in: .capsule
+    )
+```
+
+For **buttons**, it's usually easier to use the button styles from 28.12. They're built on the same material, tuned for buttons:
+
+```swift
+Button("Continue") { }
+    .buttonStyle(.glass)            // = glass behind a button, with press feedback
+
+Button("Buy Now") { }
+    .buttonStyle(.glassProminent)   // tinted glass for the main action
+```
+
+| Use | When |
+|---|---|
+| `.buttonStyle(.glass)` | A normal button with glass |
+| `.glassEffect()` | A **custom** control, label, or container |
+
+Apply `.glassEffect()` **after** the modifiers that size the content (like `.padding()`), so the glass covers the right area.
 
 ---
 
-## 32.3 GlassEffectContainer and Grouping
+## 32.3 GlassEffectContainer and Grouping 🟡
 
-When multiple glass elements sit near each other, `GlassEffectContainer` groups them so they visually and physically interact as a coherent set — sharing refraction and blending behavior — rather than rendering as independent, disconnected glass surfaces.
+When **several** glass shapes sit **close together**, put them in a **`GlassEffectContainer`**:
 
 ```swift
 struct GlassContainerDemoView: View {
@@ -75,13 +121,38 @@ struct GlassContainerDemoView: View {
 }
 ```
 
-Without a shared `GlassEffectContainer`, each `.glassEffect()` call would render as an independent glass surface with no visual relationship to its neighbors. `GlassEffectContainer` establishes a shared rendering context so grouped glass elements behave as a cohesive material — closer to how physically adjacent pieces of glass would interact with light together, rather than each being computed in total isolation.
+Why it matters:
+
+1. **Glass can't see other glass.** Each piece bends the light from **behind** it. Without a container, neighboring pieces render **separately** and can look wrong where they're close.
+2. **They render together.** The container draws all its glass **in one pass**, which is **faster** and looks consistent.
+3. **They can blend.** Shapes closer than the container's **`spacing`** **melt together** like drops of water. That's also what makes **morphing** possible (32.4).
+
+The container's `spacing` is about **blending**, not layout. The `HStack`'s `spacing` still decides where the shapes go.
+
+To make separate views look like **one** piece of glass, use **`.glassEffectUnion`**:
+
+```swift
+@Namespace private var ns
+
+GlassEffectContainer {
+    HStack(spacing: 0) {
+        Button("Bold", systemImage: "bold") { }
+            .padding()
+            .glassEffect()
+            .glassEffectUnion(id: "format", namespace: ns)
+        Button("Italic", systemImage: "italic") { }
+            .padding()
+            .glassEffect()
+            .glassEffectUnion(id: "format", namespace: ns)   // one capsule around both
+    }
+}
+```
 
 ---
 
-## 32.4 glassEffectID and Morphing Between Elements
+## 32.4 glassEffectID and Morphing Between Elements 🟡
 
-`.glassEffectID(_:in:)` tags a glass element with a stable identity within a `GlassEffectContainer`'s namespace, enabling a smooth morphing transition when that element's shape, size, or position changes — rather than an abrupt cut between two distinct glass surfaces.
+**`.glassEffectID(_:in:)`** gives a glass shape an **identity**. When views with glass **appear**, **disappear**, or **change**, SwiftUI **morphs** the glass from one to the other, like liquid, instead of a hard cut:
 
 ```swift
 struct MorphingGlassView: View {
@@ -89,35 +160,46 @@ struct MorphingGlassView: View {
     @State private var isExpanded = false
 
     var body: some View {
-        GlassEffectContainer {
-            Group {
+        GlassEffectContainer(spacing: 20) {
+            HStack(spacing: 20) {
+                Button {
+                    withAnimation(.bouncy) { isExpanded.toggle() }
+                } label: {
+                    Image(systemName: isExpanded ? "xmark" : "plus")
+                        .frame(width: 44, height: 44)
+                }
+                .glassEffect(.regular.interactive(), in: .circle)
+                .glassEffectID("toggle", in: glassNamespace)
+
                 if isExpanded {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(.clear)
-                        .frame(width: 220, height: 80)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 24))
-                        .glassEffectID("controlSurface", in: glassNamespace)
-                } else {
-                    Circle()
-                        .fill(.clear)
-                        .frame(width: 60, height: 60)
-                        .glassEffect(.regular, in: .circle)
-                        .glassEffectID("controlSurface", in: glassNamespace)
+                    ForEach(["camera", "photo", "doc"], id: \.self) { icon in
+                        Image(systemName: icon)
+                            .frame(width: 44, height: 44)
+                            .glassEffect(.regular, in: .circle)
+                            .glassEffectID(icon, in: glassNamespace)   // flows out of the "+" button
+                    }
                 }
             }
         }
-        .onTapGesture { withAnimation(.spring) { isExpanded.toggle() } }
     }
 }
 ```
 
-This closely parallels `matchedGeometryEffect` (section 29.8–29.9) conceptually — a shared `@Namespace` plus a matching identity (here via `.glassEffectID()` rather than a plain `id:`) tells SwiftUI that two differently-shaped glass elements represent "the same" logical surface across a state change, so it animates a smooth morph between the small circular control and the larger expanded surface rather than performing an abrupt swap.
+When `isExpanded` turns on, the new buttons **flow out** of the "+" button like drops splitting off. When it turns off, they **merge back** in.
+
+Three things are needed:
+
+1. A **`GlassEffectContainer`** around them.
+2. A **`@Namespace`**, and a **`.glassEffectID`** on each glass shape.
+3. The change inside **`withAnimation`**.
+
+It's the same idea as **`matchedGeometryEffect`** (29.8): a **shared namespace** plus a **matching ID** says "these are the **same** logical thing", so SwiftUI animates between them. Here it's built **for glass**, so the material itself **flows**.
 
 ---
 
-## 32.5 Glass in Toolbars and Tab Bars
+## 32.5 Glass in Toolbars and Tab Bars 🟢
 
-System chrome elements like toolbars (section 27.16–27.18) and tab bars (section 27.7–27.9) adopt Liquid Glass automatically in modern SwiftUI, without requiring explicit `.glassEffect()` calls — the material is baked into these standard components' default appearance.
+**System bars** use glass **automatically**: navigation bars, toolbars (27.19), and tab bars (27.8). You **don't** add `.glassEffect()` to them:
 
 ```swift
 struct GlassChromeDemoView: View {
@@ -130,7 +212,7 @@ struct GlassChromeDemoView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
-                    Button("Share", systemImage: "square.and.arrow.up") { }
+                    Button("Share", systemImage: "square.and.arrow.up") { }   // gets glass for free
                 }
             }
         }
@@ -138,13 +220,41 @@ struct GlassChromeDemoView: View {
 }
 ```
 
-Because toolbars and tab bars already render with glass material automatically, developers generally don't need to manually apply `.glassEffect()` to system chrome — the manual APIs from 32.2–32.4 are primarily intended for *custom* controls and surfaces (like a bespoke floating control panel) that should visually match the same glass language used throughout the rest of the system.
+What you **can** control:
+
+```swift
+.toolbar {
+    ToolbarItemGroup(placement: .topBarTrailing) {      // items in one group share one glass capsule
+        Button("Bold", systemImage: "bold") { }
+        Button("Italic", systemImage: "italic") { }
+    }
+    ToolbarSpacer(.fixed, placement: .topBarTrailing)   // a gap: separate glass groups
+    ToolbarItem(placement: .topBarTrailing) {
+        Button("Done", systemImage: "checkmark") { }
+            .buttonStyle(.glassProminent)               // a tinted, prominent action
+    }
+}
+```
+
+And for **tab bars**:
+
+```swift
+TabView { /* ... */ }
+    .tabBarMinimizeBehavior(.onScrollDown)    // the tab bar shrinks while scrolling down
+    .tabViewBottomAccessory {                 // a glass bar above the tabs, like Music's mini player
+        NowPlayingBar()
+    }
+```
+
+The manual APIs from 32.2–32.4 are for **custom** pieces: a floating map control, a camera shutter panel, a custom player bar. Those should **match** the system's glass, so the app feels consistent.
+
+⚠️ If you put a **custom background** on system bars (like an opaque color), you **remove** the glass. Check old code for `.toolbarBackground(...)` when moving to iOS 26.
 
 ---
 
-## 32.6 Scroll Edge Effects with Glass Content
+## 32.6 Scroll Edge Effects with Glass Content 🟢
 
-When glass-styled chrome (like a toolbar) sits at the edge of a scrollable view, the system applies a scroll edge effect — content passing beneath the glass chrome is subtly blurred/faded as it approaches the edge, reinforcing the sense that the chrome is a distinct translucent layer above the scrolling content.
+When content **scrolls under** a glass bar, the system adds a **scroll edge effect**: content near the edge **fades and blurs** a little. It keeps the bar's buttons **readable** over busy content, and shows that the bar is a **separate layer**.
 
 ```swift
 struct ScrollEdgeGlassView: View {
@@ -154,45 +264,78 @@ struct ScrollEdgeGlassView: View {
                 Text("Row \(index)")
             }
             .navigationTitle("Scrolling List")
-            .toolbarBackground(.visible, for: .navigationBar)
+            // nothing to add: the edge effect comes with the navigation bar
         }
     }
 }
 ```
 
-This edge effect happens automatically as part of standard navigation and toolbar chrome — as list content scrolls up beneath a glass navigation bar, it doesn't abruptly clip at the boundary but instead fades/blurs progressively, similar in spirit to `.scrollEdgeEffectStyle()` from section 26.19's discussion of edge effects, but specifically tuned to complement glass material's translucency.
+It's **automatic** for scroll views under system bars. You can adjust it with **`.scrollEdgeEffectStyle`** (26.19):
+
+```swift
+ScrollView { content }
+    .scrollEdgeEffectStyle(.hard, for: .top)     // a sharper edge, good for dense text and tables
+
+ScrollView { content }
+    .scrollEdgeEffectHidden(true, for: .bottom)  // no effect at the bottom edge
+```
+
+If you build a **custom** floating bar with `.safeAreaInset` (24.15), the scroll view knows about it, and the edge effect follows it too.
 
 ---
 
-## 32.7 Concentric Corner Radii and ConcentricRectangle
+## 32.7 Concentric Corner Radii and ConcentricRectangle 🟡
 
-`ConcentricRectangle` is a shape that automatically computes a corner radius concentric with (i.e., proportionally matched to) its container's own corner radius — useful for nested glass or rounded elements that should visually "nest" correctly regardless of the outer shape's exact radius.
+**Concentric** shapes share the **same center** for their corner curves. When you nest a rounded shape inside another with **padding**, the inner radius should be **smaller**, so the gap stays **even** all the way around the corner:
+
+**inner radius = outer radius − padding**
+
+If you use the **same** radius inside and out, the corners look **wrong**: the gap is wider at the corners than on the sides.
+
+```swift
+// The manual way: compute it yourself
+let outer: CGFloat = 28
+let padding: CGFloat = 12
+
+RoundedRectangle(cornerRadius: outer)
+    .fill(.gray.opacity(0.15))
+    .frame(width: 200, height: 120)
+    .overlay {
+        RoundedRectangle(cornerRadius: outer - padding)   // 16
+            .fill(.blue)
+            .padding(padding)
+    }
+```
+
+iOS 26 adds **`ConcentricRectangle`**. It reads the **container's shape** and computes the right radius **for you**:
 
 ```swift
 struct ConcentricDemoView: View {
     var body: some View {
-        RoundedRectangle(cornerRadius: 28)
-            .fill(.gray.opacity(0.15))
-            .frame(width: 200, height: 120)
-            .overlay(
-                ConcentricRectangle()
-                    .fill(.blue)
-                    .padding(12)
-            )
+        VStack {
+            ConcentricRectangle()
+                .fill(.blue)
+                .padding(12)
+        }
+        .frame(width: 200, height: 120)
+        .background(.gray.opacity(0.15), in: .rect(cornerRadius: 28))
+        .containerShape(.rect(cornerRadius: 28))      // tells children the outer shape
     }
 }
 ```
 
-Without `ConcentricRectangle`, nesting a smaller rounded rectangle inside a larger one requires manually computing a smaller corner radius that still looks visually "concentric" (proportionally consistent) with the outer shape — get it wrong and the nested shape looks either too sharp or too round relative to its container. `ConcentricRectangle` automates this calculation, always producing a corner radius that reads as a natural, nested companion to whatever container it's placed within.
+**`.containerShape`** tells child views the **outer shape**. `ConcentricRectangle` then fits itself **inside** it, at its own distance from the edges.
+
+This matters more now, because devices, windows, sheets, and glass controls all have **rounded corners**. A button near the corner of a sheet should **follow** the sheet's curve. With `ConcentricRectangle`, it does, even if the outer radius changes (for example, on a different device).
 
 ---
 
-## 32.8 When Not to Use Glass
+## 32.8 When Not to Use Glass 🟢
 
-Glass material is intentionally reserved for specific roles — primarily system chrome and floating controls — and overusing it on content-heavy or information-dense surfaces can actively hurt legibility and visual clarity.
+Glass is for a **small set** of roles: **bars**, **floating controls**, and **short labels** over content. Using it **everywhere** makes an app **harder to read** and look busy.
 
 ```swift
-// AVOID: applying glass to large blocks of primary reading content
+// ❌ Glass behind long reading content
 struct OverusedGlassView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -200,11 +343,11 @@ struct OverusedGlassView: View {
             Text("Long paragraph of body text that users need to read carefully...")
         }
         .padding()
-        .glassEffect() // legibility suffers against variable backgrounds
+        .glassEffect(in: .rect(cornerRadius: 16))   // contrast changes with whatever is behind
     }
 }
 
-// BETTER: reserve glass for chrome/controls; use solid backgrounds for dense reading content
+// ✅ A solid background for reading; glass stays on the controls
 struct AppropriateGlassUsageView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -212,65 +355,109 @@ struct AppropriateGlassUsageView: View {
             Text("Long paragraph of body text that users need to read carefully...")
         }
         .padding()
-        .background(.background) // solid, reliable contrast for reading
+        .background(.background)                     // stable, high contrast
     }
 }
 ```
 
-Because glass surfaces are translucent by design, text or controls placed directly on glass can suffer variable, sometimes poor contrast depending on what's showing through underneath — a real usability risk for content the user needs to read carefully, like long-form article text or dense data tables. The general guidance is: use glass for chrome, floating controls, and short, glanceable labels; use solid, high-contrast backgrounds for primary reading content and information-dense layouts.
+Glass is **see-through**, so the **contrast** of text on it **changes** with what's behind: a dark photo, a white page, a busy map. For a short label, that's fine. For long text or a data table, it's tiring and can become **unreadable**.
+
+| ✅ Use glass for | ❌ Avoid glass for |
+|---|---|
+| Navigation bars, toolbars, tab bars (automatic) | Long text, articles |
+| Floating buttons over maps, photos, video | Lists and table rows |
+| Small status labels and badges | Dense data, forms |
+| Custom player bars, camera controls | Every card on a screen |
+
+Two more rules:
+
+- **Don't stack glass on glass.** Glass can't see through other glass (32.3); layers of it look muddy.
+- **Content stays in the content layer.** Glass is the **control** layer. If everything is glass, nothing stands out.
 
 ---
 
-## 32.9 Reduce Transparency and Contrast Fallbacks
+## 32.9 Reduce Transparency and Contrast Fallbacks 🟡
 
-The system-wide Reduce Transparency accessibility setting expresses a user preference for less see-through interface material, and well-behaved glass usage should respect it by falling back to a more opaque appearance.
+**Reduce Transparency** is an accessibility setting for users who find see-through surfaces **hard to read**. **Increase Contrast** asks for **stronger** borders and colors.
+
+**System glass adapts automatically.** With these settings on, `.glassEffect()`, glass buttons, and system bars become **frostier** or **more solid**, with clearer edges. You don't have to do anything for them.
+
+Your **own** see-through styles (materials, opacity, custom blur) are **your** job:
 
 ```swift
-struct TransparencyAwareGlassView: View {
+struct TransparencyAwareCard: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        Text("Status")
+        Text("Status: Online")
             .padding()
-            .background {
-                if reduceTransparency {
-                    RoundedRectangle(cornerRadius: 12).fill(.regularMaterial)
-                } else {
-                    Color.clear
+            .background(
+                reduceTransparency
+                    ? AnyShapeStyle(.background)           // solid
+                    : AnyShapeStyle(.ultraThinMaterial),   // see-through
+                in: .rect(cornerRadius: 12)
+            )
+            .overlay {
+                if contrast == .increased {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(.primary, lineWidth: 1)   // a clear edge for Increase Contrast
                 }
             }
-            .glassEffect(reduceTransparency ? .regular.interactive(false) : .regular)
     }
 }
 ```
 
-Much like `accessibilityReduceMotion` (section 29.15) informs animation choices, `@Environment(\.accessibilityReduceTransparency)` lets an app adjust its glass usage — substituting a more opaque material or solid background — for users who've indicated a preference against heavily see-through interfaces, ensuring the app remains legible and comfortable regardless of what content happens to be showing through underneath.
+It works like **Reduce Motion** (29.15): the user states a preference, and you **swap** to a calmer version, without losing information.
+
+Test with **Settings → Accessibility → Display & Text Size → Reduce Transparency** and **Increase Contrast** (70). Also test over **light and dark** content, since glass looks different over each.
 
 ---
 
-## 32.10 SF Symbols 7: Variable Color
+## 32.10 SF Symbols 7: Variable Color 🟢
 
-SF Symbols 7 extends variable color rendering, letting a symbol's fill progressively "light up" across its component layers to represent a continuous value like signal strength or volume level.
+Some symbols have **layers** that can light up **step by step**: Wi-Fi bars, speaker waves, a battery. **`variableValue:`** (0 to 1) sets **how much** is filled, to show a **level**:
 
 ```swift
 struct VariableColorDemoView: View {
     @State private var signalLevel: Double = 0.6
 
     var body: some View {
-        Image(systemName: "wifi", variableValue: signalLevel)
-            .font(.system(size: 50))
-            .foregroundStyle(.blue)
+        VStack {
+            Image(systemName: "wifi", variableValue: signalLevel)
+                .font(.system(size: 50))
+                .foregroundStyle(.blue)
+
+            Slider(value: $signalLevel, in: 0...1)
+        }
     }
 }
 ```
 
-The `variableValue:` parameter (0 to 1) controls how much of the symbol's variable-color-capable layers appear filled versus dimmed — for a symbol like `wifi` with multiple signal-strength bars, a value of `0.6` fills roughly 60% of the available layers, giving an immediate, glanceable visual representation of a continuous quantity without needing a separate custom progress indicator.
+At `0.6`, about **60%** of the layers are **full color**; the rest are **dimmed**. You get a clear "level" icon with **no custom drawing**.
+
+Good symbols for this:
+
+```swift
+Image(systemName: "speaker.wave.3.fill", variableValue: volume)
+Image(systemName: "cellularbars", variableValue: signal)
+Image(systemName: "chart.bar.fill", variableValue: progress)
+```
+
+Only symbols **designed** for variable color react. You can check in the **SF Symbols app** (filter by "Variable").
+
+SF Symbols 7 (iOS 26) adds a second mode, **variable draw**: instead of dimming layers, the symbol's **strokes** are drawn **partway**, like a gauge filling up:
+
+```swift
+Image(systemName: "thermometer.high", variableValue: temperature)
+    .symbolVariableValueMode(.draw)     // draw the stroke partway (iOS 26)
+```
 
 ---
 
-## 32.11 SF Symbols 7: Draw Animations and Symbol Effects
+## 32.11 SF Symbols 7: Draw Animations and Symbol Effects 🟢
 
-SF Symbols 7 introduces new built-in symbol effects, including draw-on animations that render a symbol's strokes progressively, similar in spirit to `.trim()` (section 30.4) but built directly into the symbol rendering system.
+**Symbol effects** are ready-made animations for SF Symbols. SF Symbols 7 adds **Draw** animations: the symbol is **drawn stroke by stroke**, like a pen writing it. It's similar to animating `.trim()` (30.4), but built into the symbol.
 
 ```swift
 struct DrawAnimationDemoView: View {
@@ -279,54 +466,111 @@ struct DrawAnimationDemoView: View {
     var body: some View {
         Image(systemName: "signature")
             .font(.system(size: 60))
-            .symbolEffect(.drawOn, isActive: isDrawn)
+            .symbolEffect(.drawOn, isActive: isDrawn)   // toggling isActive plays the draw animation
             .onTapGesture { isDrawn.toggle() }
     }
 }
 ```
 
-`.symbolEffect(.drawOn, isActive:)` applies the draw-on animation, progressively tracing the symbol's strokes as if being drawn, toggled by the `isActive:` binding-like parameter. Other symbol effects (introduced across recent SF Symbols/SwiftUI versions) include `.bounce`, `.pulse`, `.variableColor`, and `.wiggle` — each providing a built-in, semantically named animation specifically tuned for SF Symbols, without needing custom `Animatable`/`GeometryEffect` work (sections 29.12–29.13) to achieve similar polish.
+There are several **kinds** of effects:
+
+| Effect | Looks like | Trigger |
+|---|---|---|
+| `.bounce` | A quick jump | Each time a `value:` changes |
+| `.pulse` | Fading in and out | While active |
+| `.variableColor` | Layers lighting up in turn | While active |
+| `.wiggle` | A small shake | Each time a `value:` changes |
+| `.breathe` | Slowly growing and shrinking | While active |
+| `.rotate` | Spinning (like a fan or gear) | While active |
+| `.drawOn` / `.drawOff` | Drawing in / erasing the strokes | While active, or as a transition |
+
+```swift
+Image(systemName: "bell")
+    .symbolEffect(.wiggle, value: unreadCount)         // wiggles when a new notification arrives
+
+Image(systemName: "arrow.triangle.2.circlepath")
+    .symbolEffect(.rotate, isActive: isSyncing)        // spins while syncing
+
+Image(systemName: isMuted ? "speaker.slash" : "speaker.wave.2")
+    .contentTransition(.symbolEffect(.replace))        // smooth swap between two symbols
+```
+
+You get polished animations with **no** `Animatable` or `GeometryEffect` code (29.12, 30.8). And they follow **Reduce Motion** automatically.
 
 ---
 
-## 32.12 Creating Custom SF Symbols
+## 32.12 Creating Custom SF Symbols 🟡
 
-Beyond the thousands of built-in system symbols, Xcode's companion app (SF Symbols) supports importing custom vector artwork and annotating it to behave as a fully-featured custom symbol — including multi-weight, multi-scale, and variable-color support.
+You can turn your **own** icons (like a brand logo) into **custom symbols**. They then work **exactly like** system symbols: they scale with the **font**, match text **weight**, support **rendering modes**, and can use **symbol effects**.
+
+The steps:
+
+1. In the **SF Symbols app**, pick a system symbol close to your design and **export a template** (an SVG with guides).
+2. Draw your icon on the template in a vector tool (Sketch, Figma, Illustrator).
+3. **Import** it back into the SF Symbols app. **Annotate** it: assign paths to **layers** (for multicolor, hierarchical, and variable color) and check different **weights**.
+4. **Export** it and drag it into your **Asset Catalog** in Xcode.
+
+Then use it by **name**:
 
 ```swift
 struct CustomSymbolDemoView: View {
     var body: some View {
-        Image("custom.brand-mark") // a custom symbol imported via the SF Symbols app / Asset Catalog
-            .font(.system(size: 40, weight: .semibold))
-            .foregroundStyle(.purple)
+        VStack {
+            Image("custom.brand-mark")          // a custom symbol from the asset catalog
+                .font(.system(size: 40, weight: .semibold))
+                .foregroundStyle(.purple)
+
+            Label("Rewards", image: "custom.brand-mark")   // works in labels too
+                .font(.headline)
+        }
     }
 }
 ```
 
-A custom symbol, once properly annotated (with paths assigned to appropriate layers for template rendering, multi-weight variants, and optional variable-color layers) and added to an Asset Catalog, can be referenced by name just like a built-in `systemImage:` symbol, and participates in the same `.font()`-driven scaling, weight adjustment, and symbol effects covered in this section — giving custom brand iconography the same flexibility and consistency as Apple's own symbol library.
+Note: custom symbols use `Image("name")` (from the asset catalog), not `Image(systemName:)`, which is only for Apple's built-in symbols.
+
+Why bother, instead of a PNG?
+
+| PNG icon | Custom symbol |
+|---|---|
+| Fixed size; blurry when scaled | Vector; sharp at any size |
+| Doesn't match text weight | Thin to black, like the font |
+| One color | Rendering modes and tints |
+| No animation | Symbol effects |
 
 ---
 
-## 32.13 App Icons with Icon Composer
+## 32.13 App Icons with Icon Composer 🟢
 
-Icon Composer is Apple's dedicated tool for building modern, layered app icons that support Liquid Glass-era effects like dynamic lighting response and depth, replacing the older flat, single-layer icon workflow for platforms that support the newer icon format.
+**Icon Composer** is Apple's app (it comes with Xcode 26) for making **app icons** in the new **layered** format.
+
+Instead of one flat PNG, an icon has **layers** (for example: a background, a shape, a highlight). The system renders them with **glass effects**: light **reflections**, **depth**, and **blur**, and can show them in different **appearances**:
+
+| Appearance | Look |
+|---|---|
+| Default | Full color |
+| Dark | Adapted for Dark Mode |
+| Clear | See-through glass |
+| Tinted | One color chosen by the user |
+
+The workflow is outside of code:
 
 ```
-// Icon Composer produces a .icon (or similar layered) file consumed by Xcode's
-// asset pipeline — not something typically built via SwiftUI code directly.
-// Xcode project setup:
-// 1. Design layered icon artwork (background, midground, foreground) in Icon Composer
-// 2. Export/link the resulting icon package into the app target's asset catalog
-// 3. The system composites and lights the layers dynamically at render time
+1. Design the artwork as separate layers (SVG or PNG) in your design tool.
+2. Open Icon Composer and drag in the layers.
+3. Adjust each layer: glass on/off, blur, shadow, opacity, and colors per appearance.
+4. Preview it on iPhone, iPad, Mac, and Watch, in every appearance.
+5. Save the .icon file and add it to your Xcode project.
+6. In the target's settings, set the app icon to that file's name.
 ```
 
-Unlike a traditional flat PNG app icon, an Icon Composer-built icon is composed of multiple layered elements that the system can render with dynamic lighting, subtle parallax, and glass-consistent visual treatment — extending the Liquid Glass design language to the Home Screen itself, rather than treating the app icon as a static, isolated image asset.
+One `.icon` file can serve **all** platforms. The system lights and renders it, so the **same** icon looks right on the Home Screen, in Settings, and in Spotlight, in every mode.
 
 ---
 
-## 32.14 Building a Design Token System in Swift 🟠
+## 32.14 Building a Design Token System in Swift 🟡
 
-A design token system centralizes a project's core visual constants (colors, spacing, corner radii, typography scales) into a single, strongly-typed source of truth, avoiding scattered magic numbers and making systematic theme changes (like adopting a new glass-consistent visual identity) far more tractable.
+**Design tokens** are **named** values for your design: colors, spacing, corner radii, font styles. Instead of writing `16` or `Color(red: 0.2, ...)` all over the code, you write `Spacing.md` or `.brandAccent`. There's **one source of truth**.
 
 ```swift
 enum DesignTokens {
@@ -345,7 +589,7 @@ enum DesignTokens {
     }
 
     enum ColorToken {
-        static let accent = Color("BrandAccent")
+        static let accent = Color("BrandAccent")          // from the asset catalog: has light and dark versions
         static let surface = Color("SurfaceBackground")
     }
 }
@@ -354,13 +598,44 @@ struct TokenUsageView: View {
     var body: some View {
         Text("Themed Card")
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.ColorToken.surface)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.CornerRadius.card))
+            .background(DesignTokens.ColorToken.surface, in: .rect(cornerRadius: DesignTokens.CornerRadius.card))
     }
 }
 ```
 
-Centralizing these values as `enum`-namespaced static constants (rather than repeating raw numbers like `16` or `.cornerRadius(12)` throughout the codebase) means a single change to `DesignTokens.Spacing.md` propagates everywhere that token is used, and makes visual consistency across a large app dramatically easier to enforce and audit — a practical, scalable pattern for maintaining a coherent design language (glass-based or otherwise) across dozens or hundreds of views.
+**Why enums with `static let`?**
+
+- A **caseless `enum`** can't be **created** by accident (`DesignTokens()` doesn't compile). It's just a **namespace**.
+- Names are **grouped**: `Spacing.md` can't clash with some other `md`, and **autocomplete** lists them neatly.
+- `static let` values are **constants** and **thread-safe**, unlike global `var`s.
+
+**Benefits**:
+
+- Change `Spacing.md` from 16 to 14 **once**, and every screen updates.
+- **Consistency** is easy to check: any raw number in a view is a smell.
+- Designers and developers share the **same names**.
+
+Make tokens feel **built in** with extensions:
+
+```swift
+extension ShapeStyle where Self == Color {
+    static var brandAccent: Color { Color("BrandAccent") }
+    static var surface: Color { Color("SurfaceBackground") }
+}
+
+extension CGFloat {
+    static let spacingMD: CGFloat = 16
+}
+
+Text("Hello")
+    .padding(.spacingMD)
+    .foregroundStyle(.brandAccent)        // reads like .blue or .primary
+    .background(.surface)
+```
+
+Xcode can also **generate** symbols for asset catalog colors and images, so `Color(.brandAccent)` is **checked by the compiler**: no typos in string names. If it does, use those generated names instead of writing the `Color("...")` extensions yourself (two `brandAccent`s would clash).
+
+Put **semantic** names on top of raw ones: `ColorToken.danger` instead of `ColorToken.red500`. Then a redesign changes **what** "danger" looks like, not every place that uses it.
 
 ---
 
@@ -368,17 +643,17 @@ Centralizing these values as `enum`-namespaced static constants (rather than rep
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Design intent | Liquid Glass material | Translucent, refractive chrome unified with content |
-| Applying glass | `.glassEffect(_:in:)` | Core modifier for glass material on any view |
-| Grouping glass | `GlassEffectContainer` | Cohesive rendering for adjacent glass elements |
-| Morphing glass | `.glassEffectID(_:in:)` | Smooth shape/size transitions between glass states |
-| System chrome | Toolbars, tab bars | Adopt glass automatically without manual code |
-| Scroll interaction | Scroll edge effects | Content fades/blurs beneath glass chrome |
-| Nested shapes | `ConcentricRectangle` | Auto-computed, proportionally nested corner radii |
-| Usage guidance | — | Reserve glass for chrome/controls, not dense reading content |
-| Accessibility | `accessibilityReduceTransparency` | Fallback to opaque appearance when requested |
-| Continuous values | SF Symbols variable color | Symbol fill representing a continuous quantity |
-| Symbol animation | `.symbolEffect(.drawOn, ...)` | Built-in draw-on and other symbol animations |
-| Custom iconography | Custom SF Symbols | Brand icons with full symbol-system flexibility |
-| App icons | Icon Composer | Layered, dynamically-lit modern app icons |
-| Design consistency | Design token system | Centralized, strongly-typed visual constants |
+| Design intent | Liquid Glass material | See-through, light-bending controls floating above content |
+| Applying glass | `.glassEffect(_:in:)`, `.tint`, `.interactive()` | Glass behind custom controls, in any shape |
+| Grouping glass | `GlassEffectContainer`, `.glassEffectUnion` | Render nearby glass together; let it blend |
+| Morphing glass | `.glassEffectID(_:in:)` | Glass flows between shapes, like `matchedGeometryEffect` |
+| System chrome | Toolbars, tab bars | Glass is automatic; group items and add spacers |
+| Scroll interaction | Scroll edge effects | Content fades under bars; adjust with `.scrollEdgeEffectStyle` |
+| Nested shapes | `ConcentricRectangle`, `.containerShape` | Inner radius = outer − padding, computed for you |
+| Usage guidance | — | Glass for controls and bars; solid for reading content |
+| Accessibility | `accessibilityReduceTransparency`, `colorSchemeContrast` | System glass adapts; make custom materials solid |
+| Continuous values | `variableValue:`, `.symbolVariableValueMode(.draw)` | Symbols that show a level |
+| Symbol animation | `.symbolEffect(...)` | Draw, bounce, wiggle, rotate, and more, built in |
+| Custom iconography | Custom SF Symbols | Your icons with symbol scaling, weights, and effects |
+| App icons | Icon Composer | Layered icons with glass and multiple appearances |
+| Design consistency | Design token system | Named, shared values instead of magic numbers |

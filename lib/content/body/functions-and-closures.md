@@ -1,6 +1,8 @@
-## 5.1 Declaring Functions, Parameters, and Return Values
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A function is declared with `func`, a name, a parenthesized parameter list, and an optional return type after `->`:
+## 5.1 Declaring Functions, Parameters, and Return Values 🟢
+
+Declare a **function** with `func`, a name, the **parameters** in parentheses, and the **return type** after `->`:
 
 ```swift
 func greet(name: String) -> String {
@@ -10,7 +12,10 @@ func greet(name: String) -> String {
 print(greet(name: "Alex"))   // "Hello, Alex!"
 ```
 
-A function with no return value can omit `-> Void` entirely (it's implicit), and a single-expression body can omit `return` (implicit return, Swift 5.1+):
+Two shortcuts:
+
+- A function that returns nothing can leave out `-> Void`.
+- A body with **one expression** can leave out `return` (implicit return).
 
 ```swift
 func logMessage(_ message: String) {
@@ -22,7 +27,7 @@ func square(_ n: Int) -> Int {
 }
 ```
 
-Functions can have multiple parameters and multiple return values (via a tuple, recalling 1.10):
+A function can take several parameters, and return several values with a **tuple** (see 1.10):
 
 ```swift
 func divide(_ dividend: Int, by divisor: Int) -> (quotient: Int, remainder: Int) {
@@ -33,25 +38,42 @@ let result = divide(17, by: 5)
 print("\(result.quotient) remainder \(result.remainder)")   // "3 remainder 2"
 ```
 
+A function that can fail can **throw** an error (section 9) or return an optional:
+
+```swift
+func parseAge(_ text: String) -> Int? {
+    guard let age = Int(text), (0...150).contains(age) else { return nil }
+    return age
+}
+
+parseAge("42")    // Optional(42)
+parseAge("-5")    // nil
+```
+
 ---
 
-## 5.2 Argument Labels and External Parameter Names
+## 5.2 Argument Labels and External Parameter Names 🟢
 
-Swift functions have two names per parameter: an **external label** used at the call site, and an **internal name** used inside the function body. By default, the same word serves both:
+Each parameter has **two names**:
+
+- an **argument label**, used by the **caller**
+- a **parameter name**, used **inside** the function
+
+By default, one word is used for both:
 
 ```swift
 func greet(name: String) { print("Hi \(name)") }
 greet(name: "Ada")   // external label "name:" required at the call site
 ```
 
-Use `_` to suppress the external label entirely, useful when the label would be redundant with the function's own name:
+Write `_` to **remove the label**, when it would only repeat the function name:
 
 ```swift
 func square(_ number: Int) -> Int { number * number }
 square(5)   // no label needed — "square(number: 5)" would be redundant
 ```
 
-Or give each side a different word — this is extremely common in Swift's own APIs, producing call sites that read like natural English:
+Or use **two different words**. Apple's own APIs do this all the time, so calls read like English:
 
 ```swift
 func move(from start: Int, to end: Int) {
@@ -60,13 +82,27 @@ func move(from start: Int, to end: Int) {
 move(from: 0, to: 10)   // "from:"/"to:" externally, "start"/"end" internally
 ```
 
-This dual-naming system is one of Swift's most distinctive design choices — it lets APIs read fluently at the call site while keeping short, clear names inside the implementation.
+```plaintext
+func move(from start: Int, to end: Int)
+          ────  ─────
+          label  name used inside the body
+```
+
+You know this style from UIKit and Foundation:
+
+```swift
+view.addSubview(label)
+array.insert(5, at: 0)
+string.replacingOccurrences(of: "a", with: "b")
+```
+
+**Why it matters:** the caller sees **clear, readable calls**, and the code inside keeps **short, clear names**.
 
 ---
 
-## 5.3 Default Parameter Values
+## 5.3 Default Parameter Values 🟢
 
-Any parameter can have a default, letting callers omit it entirely:
+A parameter can have a **default value**. Then the caller can leave it out:
 
 ```swift
 func greet(name: String, greeting: String = "Hello") -> String {
@@ -77,19 +113,35 @@ print(greet(name: "Alex"))                    // "Hello, Alex!"
 print(greet(name: "Alex", greeting: "Hey"))    // "Hey, Alex!"
 ```
 
-Parameters with defaults are conventionally placed after required parameters (though Swift doesn't strictly enforce this, it keeps call sites readable). Defaults can reference other parameters or even call functions:
+Put parameters **with** defaults **after** the required ones. Swift doesn't force this, but calls read better.
+
+A default can be any expression, even a function call. It runs **each time** the default is used:
 
 ```swift
 func createUser(name: String, id: Int = Int.random(in: 1000...9999)) -> String {
     "\(name)#\(id)"
 }
+
+createUser(name: "Sam")   // e.g. "Sam#4821" — a new random id each call
+```
+
+(A default **can't** use another parameter, like `end: Int = start + 1`. Use an optional and compute it inside instead.)
+
+Defaults are great for **configuration** with sensible values:
+
+```swift
+func fetchRecipes(page: Int = 1, pageSize: Int = 20, includeDrafts: Bool = false) { /* ... */ }
+
+fetchRecipes()                       // all defaults
+fetchRecipes(page: 3)                // only change what you need
+fetchRecipes(includeDrafts: true)    // skip the middle ones
 ```
 
 ---
 
-## 5.4 Variadic Parameters
+## 5.4 Variadic Parameters 🟢
 
-A variadic parameter accepts zero or more values of the same type, written with `...` after the type, and is exposed inside the function as a plain array:
+A **variadic parameter** accepts **zero or more** values of one type. Write `...` after the type. Inside the function, it is a normal **array**:
 
 ```swift
 func sum(_ numbers: Int...) -> Int {
@@ -101,7 +153,7 @@ print(sum())                 // 0 — zero arguments is legal
 print(sum(1, 2, 3, 4, 5))    // 15
 ```
 
-A function can have at most one variadic parameter, and any parameters after it require labels (since there'd otherwise be no way to tell where the variadic list ends):
+The parameter **after** a variadic one needs a **label**, so Swift knows where the list ends:
 
 ```swift
 func describe(_ items: String..., separator: String = ", ") -> String {
@@ -112,11 +164,21 @@ print(describe("apple", "banana", "cherry"))                 // "apple, banana, 
 print(describe("apple", "banana", separator: " and "))        // "apple and banana"
 ```
 
+`print` itself is variadic. That's why it takes any number of values:
+
+```swift
+print("a", "b", "c", separator: "-")   // "a-b-c"
+```
+
+Note: you **can't** pass an existing array to a variadic parameter. If you already have an array, write the function to take `[Int]` instead.
+
 ---
 
-## 5.5 `inout` Parameters
+## 5.5 `inout` Parameters 🟡
 
-By default, function parameters are constants (copies) — you can't reassign them inside the function, and changes never propagate back to the caller. `inout` changes that: the parameter is passed by reference, and mutations are visible to the caller after the function returns.
+Normally, parameters are **constants** (copies). You can't change them inside the function, and the caller's value never changes.
+
+**`inout`** changes this. The function can **change the caller's variable**:
 
 ```swift
 func increment(_ value: inout Int) {
@@ -128,7 +190,7 @@ increment(&counter)      // must pass with & to make the by-reference intent exp
 print(counter)           // 6
 ```
 
-A classic use is swapping two values without a tuple return:
+A classic example: swapping two values:
 
 ```swift
 func swapValues(_ a: inout Int, _ b: inout Int) {
@@ -143,18 +205,39 @@ swapValues(&x, &y)
 print(x, y)   // 2 1
 ```
 
-`inout` requires the argument to be a mutable variable (`var`), not a literal or `let` constant, and the explicit `&` at the call site is a deliberate design choice — it makes potential mutation visible right where the call happens, unlike languages where reference semantics are invisible at the call site.
+(The standard library already has `swap(&x, &y)`.)
+
+Rules:
+
+- The argument must be a **`var`**. Not a `let`, and not a literal.
+- You must write **`&`** at the call. This is on purpose: anyone reading the call **sees** that the value may change.
 
 ```swift
 let frozen = 10
-increment(&frozen)   // ❌ error: cannot pass immutable value as inout argument
+increment(&frozen)   // ❌ error: cannot pass immutable value as inout argument: 'frozen' is a 'let' constant
+```
+
+How it works: Swift **copies the value in**, the function changes the copy, and Swift **copies it back out** when the function returns ("copy-in, copy-out").
+
+`inout` is useful for helpers that update a struct:
+
+```swift
+struct Player { var health = 100 }
+
+func applyDamage(_ amount: Int, to player: inout Player) {
+    player.health = max(0, player.health - amount)
+}
+
+var hero = Player()
+applyDamage(30, to: &hero)
+print(hero.health)   // 70
 ```
 
 ---
 
-## 5.6 Returning Tuples and Multiple Values
+## 5.6 Returning Tuples and Multiple Values 🟢
 
-Already previewed in 5.1 and 1.10 — tuples are the standard way to return more than one related value without defining a dedicated type:
+You saw this in 5.1 and 1.10. A **tuple** is the normal way to return a few related values without making a new type:
 
 ```swift
 func minMax(of array: [Int]) -> (min: Int, max: Int)? {
@@ -173,7 +256,9 @@ if let bounds = minMax(of: [8, 3, 12, 1, 9]) {
 }
 ```
 
-Named tuple elements (`min`/`max` above) make the call site self-documenting compared to positional access (`.0`/`.1`), and you can decompose the result directly with pattern matching if you don't need the tuple as a whole:
+**Name the elements** (`min`, `max`). `bounds.min` explains itself; `bounds.0` doesn't.
+
+You can also **decompose** the result straight into constants:
 
 ```swift
 func statistics(of numbers: [Double]) -> (average: Double, total: Double) {
@@ -185,11 +270,22 @@ let (avg, sum) = statistics(of: [1.0, 2.0, 3.0, 4.0])
 print("Average: \(avg), Sum: \(sum)")
 ```
 
+If the result is used in many places, or grows past 2–3 values, use a **struct** instead:
+
+```swift
+struct OrderSummary {
+    let itemCount: Int
+    let subtotal: Double
+    let tax: Double
+    var total: Double { subtotal + tax }
+}
+```
+
 ---
 
-## 5.7 `@discardableResult`
+## 5.7 `@discardableResult` 🟢
 
-By default, Swift warns you if you ignore a function's non-`Void` return value — a useful nudge, since an unused result is often a bug. `@discardableResult` opts a specific function out of that warning, for cases where the return value is genuinely optional to use.
+If you **ignore** a function's return value, Swift **warns** you. This is helpful, because an unused result is often a bug. **`@discardableResult`** turns off that warning for one function, when using the result is truly optional:
 
 ```swift
 func logAndReturn(_ message: String) -> String {
@@ -197,7 +293,7 @@ func logAndReturn(_ message: String) -> String {
     return message
 }
 
-logAndReturn("Hello")   // ⚠️ warning: result of call is unused
+logAndReturn("Hello")   // ⚠️ warning: result of call to 'logAndReturn' is unused
 ```
 
 ```swift
@@ -211,7 +307,7 @@ logAndReturn("Hello")            // no warning now
 let saved = logAndReturn("Hi")   // still perfectly fine to capture the result when you want it
 ```
 
-A very common real-world case: array mutation methods that return the removed element, like `removeLast()` — you usually don't care about the return value, but sometimes you do:
+A familiar example: `removeLast()` returns the removed element. Usually you don't need it, sometimes you do:
 
 ```swift
 var stack = [1, 2, 3]
@@ -219,11 +315,17 @@ stack.removeLast()                    // fine, no warning — removeLast() is @d
 let popped = stack.removeLast()       // also fine, capturing it when needed
 ```
 
+If you want to ignore a result **without** this attribute, assign it to `_`:
+
+```swift
+_ = someFunctionThatReturnsAValue()
+```
+
 ---
 
-## 5.8 Nested Functions and Scope
+## 5.8 Nested Functions and Scope 🟢
 
-Swift allows functions to be defined *inside* other functions — nested functions are only visible within their enclosing function, which is useful for breaking apart a complex algorithm into named steps without polluting the surrounding namespace.
+You can write a function **inside** another function. A **nested function** is only visible inside its outer function. It's a good way to split a complex task into **named steps** without adding more names to the rest of your code.
 
 ```swift
 func processOrder(items: [Double], taxRate: Double) -> Double {
@@ -241,7 +343,7 @@ func processOrder(items: [Double], taxRate: Double) -> Double {
 print(processOrder(items: [10.0, 20.0], taxRate: 0.08))   // 32.4
 ```
 
-Nested functions capture variables from their enclosing scope automatically, exactly like closures (which they effectively are):
+Nested functions can use the outer function's variables (here `items` and `taxRate`) without passing them in. They **capture** them, just like closures. In fact, they are closures with a name:
 
 ```swift
 func makeCounter() -> () -> Int {
@@ -259,11 +361,15 @@ print(counter())   // 2
 print(counter())   // 3 — count persists across calls, captured by the returned function
 ```
 
+`count` lives on after `makeCounter` returns, because the returned function **keeps it alive**.
+
 ---
 
-## 5.9 Closure Syntax from Long Form to Shorthand
+## 5.9 Closure Syntax from Long Form to Shorthand 🟢
 
-A closure is a self-contained block of functionality that can be passed around like a value — functions themselves are just closures with a name. The full syntax mirrors a function's parameter list and return type, wrapped in braces with `in` separating the signature from the body:
+A **closure** is a block of code you can **pass around like a value**. A named function is just a closure with a name.
+
+The full form looks like a function without a name. `in` separates the signature from the body:
 
 ```swift
 let fullForm: (Int, Int) -> Int = { (a: Int, b: Int) -> Int in
@@ -272,7 +378,7 @@ let fullForm: (Int, Int) -> Int = { (a: Int, b: Int) -> Int in
 print(fullForm(3, 4))   // 7
 ```
 
-Swift progressively lets you drop redundant parts, since types are usually inferable from context (e.g. the parameter type of `sorted(by:)`):
+Swift lets you **drop the parts it can infer** from the context. Here, `sorted(by:)` already says the closure takes two `Int`s and returns a `Bool`:
 
 ```swift
 let numbers = [5, 2, 8, 1]
@@ -293,13 +399,21 @@ let sorted4 = numbers.sorted(by: { $0 < $1 })
 let sorted5 = numbers.sorted(by: <)
 ```
 
-All five produce the identical result; which one reads best depends on how self-explanatory the closure body is on its own.
+All five give the **same result**: `[1, 2, 5, 8]`. Pick the one that is **clearest** for that code.
+
+A **closure type** is written `(Input) -> Output`. A `typealias` makes long ones easier to read:
+
+```swift
+typealias CompletionHandler = (Result<Data, Error>) -> Void
+
+func download(from url: URL, completion: @escaping CompletionHandler) { /* ... */ }
+```
 
 ---
 
-## 5.10 Trailing Closure Syntax and Multiple Trailing Closures
+## 5.10 Trailing Closure Syntax and Multiple Trailing Closures 🟢
 
-When a closure is a function's last (or only) argument, Swift lets you move it outside the parentheses — the standard, idiomatic way closures appear in real Swift code:
+When a closure is the **last** argument, you can write it **after the parentheses**. This is the normal way closures appear in Swift code:
 
 ```swift
 let numbers = [5, 2, 8, 1]
@@ -311,7 +425,9 @@ let sorted1 = numbers.sorted(by: { $0 < $1 })
 let sorted2 = numbers.sorted { $0 < $1 }
 ```
 
-If a closure is the *only* argument, the parentheses can be omitted entirely, as just shown. Since Swift 5.3, functions can accept **multiple** trailing closures, each labeled at the closure boundary:
+If the closure is the **only** argument, you can drop the `()` too, as above.
+
+Since Swift 5.3, a call can have **several trailing closures**. The first has no label; the others keep their labels:
 
 ```swift
 func fetchData(
@@ -329,13 +445,21 @@ fetchData { data in
 }
 ```
 
-This pattern shows up constantly in SwiftUI (section 23 onward), where views like animations or alerts take several closures — one unlabeled trailing, the rest labeled.
+You'll see this a lot in SwiftUI (section 23 on). A `Button` takes an action closure and a label closure:
+
+```swift
+Button {
+    save()
+} label: {
+    Label("Save", systemImage: "square.and.arrow.down")
+}
+```
 
 ---
 
-## 5.11 Shorthand Argument Names `$0`, `$1`
+## 5.11 Shorthand Argument Names `$0`, `$1` 🟢
 
-Already used above — `$0`, `$1`, `$2`, etc. refer to a closure's parameters positionally, letting you skip declaring names entirely for short, obvious closures:
+`$0`, `$1`, `$2`... are **automatic names** for a closure's parameters, by position. You don't need to declare names at all:
 
 ```swift
 let numbers = [1, 2, 3, 4, 5]
@@ -346,7 +470,7 @@ let sums = zip(numbers, [10, 20, 30, 40, 50]).map { $0 + $1 }   // $0, $1 for a 
 print(sums)   // [11, 22, 33, 44, 55]
 ```
 
-Shorthand names are best reserved for closures short enough that the reader can hold the whole body in their head at once — once a closure spans several lines or has non-obvious logic, naming the parameters explicitly (`{ price, quantity in ... }`) makes the code meaningfully easier to read:
+Use them for **short, obvious** closures. When a closure is longer, or the meaning isn't clear, **name the parameters**:
 
 ```swift
 // fine — trivially obvious
@@ -358,11 +482,18 @@ let discountedTotal = zip(prices, quantities).map { price, quantity in
 }
 ```
 
+For reading one property, a **key path** is often even clearer than `$0`:
+
+```swift
+let names = users.map(\.name)          // same as users.map { $0.name }
+let active = users.filter(\.isActive)  // same as users.filter { $0.isActive }
+```
+
 ---
 
-## 5.12 Capturing Values in Closures
+## 5.12 Capturing Values in Closures 🟡
 
-Closures **capture** variables and constants from their surrounding context, keeping a live reference to them rather than a frozen snapshot — this is what makes the counter example in 5.8 work.
+A closure **captures** the variables it uses from around it. It keeps a **live reference** to them, not a frozen copy. That's why the counter in 5.8 works.
 
 ```swift
 func makeMultiplier(factor: Int) -> (Int) -> Int {
@@ -376,7 +507,7 @@ print(triple(5))   // 15
 print(triple(10))  // 30
 ```
 
-Because captures are references, not copies, multiple closures sharing the same captured variable observe each other's mutations:
+Because it's a reference, closures that capture the **same variable** see each other's changes:
 
 ```swift
 func makeIncrementers() -> (increment: () -> Void, current: () -> Int) {
@@ -392,11 +523,24 @@ counters.increment()
 print(counters.current())   // 2 — both closures share the same captured "total"
 ```
 
+The "live" capture can surprise you. The closure reads the variable **when it runs**, not when it was created:
+
+```swift
+var message = "Hello"
+let printMessage = { print(message) }
+message = "Goodbye"
+printMessage()   // "Goodbye" — not "Hello"
+```
+
+To capture the value **as it is now**, use a capture list (5.13).
+
 ---
 
-## 5.13 Capture Lists and `[weak self]`
+## 5.13 Capture Lists and `[weak self]` 🟡
 
-By default, a closure captures reference types (like `self` in a class) **strongly** — it keeps the object alive for as long as the closure itself exists. This is frequently the source of retain cycles (fully explored in section 10), especially when a class stores a closure that itself captures that same class via `self`.
+By default, a closure captures objects (class instances, like `self`) **strongly**. It keeps the object **alive** as long as the closure exists.
+
+This easily creates a **retain cycle** (section 10): the object stores the closure, and the closure holds the object. Neither is ever freed.
 
 ```swift
 class DataLoader {
@@ -410,7 +554,13 @@ class DataLoader {
 }
 ```
 
-A **capture list** — square brackets right after the opening `{` — lets you control exactly how each captured value is held. `[weak self]` captures `self` as a weak (optional) reference, breaking the strong reference cycle:
+```plaintext
+DataLoader ──strong──► onComplete closure
+     ▲                       │
+     └────────strong─────────┘     ← a cycle: neither is ever freed
+```
+
+A **capture list** (square brackets right after `{`) controls **how** each value is captured. `[weak self]` captures `self` **weakly**, as an optional, and breaks the cycle:
 
 ```swift
 class DataLoader {
@@ -425,7 +575,7 @@ class DataLoader {
 }
 ```
 
-Capture lists can also snapshot a value **at closure-creation time** rather than capturing a live reference, using regular `let`/`var` syntax inside the brackets:
+A capture list can also take a **snapshot** of a value **when the closure is created**:
 
 ```swift
 var counter = 0
@@ -436,15 +586,22 @@ counter = 100
 snapshot()   // prints 0, not 100 — because [counter] captured a copy, not a reference
 ```
 
-This section only introduces the mechanics; the full rationale for `weak` versus `unowned` and the deeper retain-cycle story is covered in section 10 (Memory Management).
+| Capture | What the closure holds |
+|---|---|
+| (default) | A live reference; objects are kept alive |
+| `[weak self]` | An optional, weak reference; doesn't keep `self` alive |
+| `[unowned self]` | A non-optional reference that crashes if `self` is gone (section 10) |
+| `[x]` | A copy of `x`'s value at creation time |
+
+This lesson covers only the mechanics. Section 10 (Memory Management) explains `weak` vs `unowned` and retain cycles in depth.
 
 ---
 
-## 5.14 Escaping vs Non-Escaping Closures
+## 5.14 Escaping vs Non-Escaping Closures 🟡
 
-By default, a closure parameter is **non-escaping**: Swift guarantees it will be called (or simply discarded) before the function it was passed to returns. This lets the compiler make optimizations and skip certain reference-counting overhead.
+By default, a closure parameter is **non-escaping**: Swift knows it will be used (or dropped) **before the function returns**. This lets the compiler optimize, and you don't need `self.` inside it.
 
-An **escaping** closure is one that might be called *after* the function returns — the classic case being a closure stored for later, such as a network completion handler. These must be marked explicitly with `@escaping`:
+An **escaping** closure may run **after** the function returns. The classic case is a closure you **store** for later, like a network completion handler. It must be marked **`@escaping`**:
 
 ```swift
 var savedCompletion: (() -> Void)?
@@ -458,32 +615,48 @@ func performNow(action: () -> Void) {
 }
 ```
 
-If you try to store or otherwise let a non-escaping closure outlive the function call, the compiler rejects it:
+If you try to store a non-escaping closure, the compiler stops you:
 
 ```swift
 func performNow(action: () -> Void) {
-    savedCompletion = action   // ❌ error: escaping closure captures non-escaping parameter
+    savedCompletion = action   // ❌ error: assigning non-escaping parameter 'action' to an @escaping closure
 }
 ```
 
-`@escaping` closures capture `self` and other reference types strongly by default, which is exactly why `[weak self]` (5.13) matters most for escaping closures stored as properties or passed to asynchronous APIs like `URLSession` completion handlers.
+Escaping closures are where retain cycles happen, so this is where `[weak self]` (5.13) matters most:
 
 ```swift
 class ImageLoader {
+    var image: String?
+
     func loadImage(completion: @escaping (String) -> Void) {
         DispatchQueue.global().async {
             // simulate work, then call back later — after loadImage has already returned
             completion("image data")
         }
     }
+
+    func start() {
+        loadImage { [weak self] data in
+            self?.image = data      // doesn't keep the loader alive just for this callback
+        }
+    }
 }
 ```
 
+| | Non-escaping (default) | `@escaping` |
+|---|---|---|
+| Runs | Before the function returns | Possibly later |
+| Can be stored | No | Yes |
+| Typical use | `map`, `filter`, `sorted(by:)` | Completion handlers, stored callbacks |
+
+(With `async`/`await` (section 17), you need far fewer escaping completion handlers.)
+
 ---
 
-## 5.15 Autoclosures
+## 5.15 Autoclosures 🔴
 
-`@autoclosure` automatically wraps an *expression* passed as an argument into a closure, without the caller needing to write `{ }` explicitly. It exists to let an argument's evaluation be deferred, while keeping the call site looking like a plain expression.
+**`@autoclosure`** automatically **wraps an expression** in a closure. The caller writes a normal expression (no `{ }`), but it is **not evaluated right away**. It runs only if and when the function calls it.
 
 ```swift
 func logIfTrue(_ condition: Bool, _ message: @autoclosure () -> String) {
@@ -495,7 +668,7 @@ func logIfTrue(_ condition: Bool, _ message: @autoclosure () -> String) {
 logIfTrue(true, "This message was lazily created")   // no {} needed at the call site
 ```
 
-The standard library's own `??` and `assert` rely on this exact mechanism — the right-hand side of `??` (recall 4.6) is an autoclosure, which is precisely why it's only evaluated when actually needed:
+The standard library uses this for `??` and `assert`. The right side of `??` (4.6) is an autoclosure. That's why it only runs when needed:
 
 ```swift
 func expensiveDefault() -> Int {
@@ -507,7 +680,7 @@ let value: Int? = 10
 let result = value ?? expensiveDefault()   // "computing..." never prints, because value wasn't nil
 ```
 
-You can see the deferred-evaluation effect directly by writing your own:
+You can see the delayed evaluation yourself:
 
 ```swift
 func evaluate(_ expression: @autoclosure () -> Int) -> Int {
@@ -521,13 +694,25 @@ _ = evaluate(5 + 5)
 // "about to evaluate" prints first, then the addition happens, then "evaluated"
 ```
 
-**Use sparingly** — autoclosures make it non-obvious at the call site that an expression's evaluation is being deferred, which can surprise readers. They're best reserved for small, well-established patterns like lazy defaults or assertion messages, not general-purpose APIs.
+A practical example: a debug log that doesn't build its message in release builds:
+
+```swift
+func debugLog(_ message: @autoclosure () -> String) {
+    #if DEBUG
+    print(message())
+    #endif
+}
+
+debugLog("Loaded \(items.count) items: \(items)")   // string never built in Release
+```
+
+**Use it rarely.** At the call site, nothing shows that the expression is delayed, which can surprise readers. Keep it for small, well-known patterns like defaults, assertions, and logging.
 
 ---
 
-## 5.16 Functions as First-Class Values
+## 5.16 Functions as First-Class Values 🟢
 
-Because closures are values, and named functions are just closures with a name attached, functions themselves can be assigned to constants, passed as arguments, stored in arrays, and returned from other functions — the same "first-class" treatment as an `Int` or `String`.
+Functions are **values**, like an `Int` or a `String`. You can store them in constants, pass them as arguments, put them in arrays, and return them from other functions. This is what "**first-class**" means.
 
 ```swift
 func add(_ a: Int, _ b: Int) -> Int { a + b }
@@ -542,7 +727,7 @@ for op in operations {
 }
 ```
 
-A function's own name, with no call parentheses, refers to the function itself as a value — this is exactly what made `numbers.sorted(by: <)` work back in 5.9, since `<` is itself a function taking two arguments and returning a `Bool`.
+A function's name **without `()`** is the function itself, as a value. That's why `numbers.sorted(by: <)` works in 5.9: `<` is a function that takes two values and returns a `Bool`.
 
 ```swift
 func applyOperation(_ operation: (Int, Int) -> Int, to a: Int, and b: Int) -> Int {
@@ -553,11 +738,26 @@ print(applyOperation(add, to: 5, and: 3))         // 8
 print(applyOperation(multiply, to: 5, and: 3))    // 15
 ```
 
+You can pass a named function wherever a closure is expected:
+
+```swift
+func isEven(_ n: Int) -> Bool { n % 2 == 0 }
+
+let evens = [1, 2, 3, 4].filter(isEven)   // [2, 4]
+```
+
+A dictionary of functions works like a simple lookup table:
+
+```swift
+let calculator: [String: (Int, Int) -> Int] = ["+": add, "*": multiply]
+calculator["*"]?(6, 7)   // Optional(42)
+```
+
 ---
 
-## 5.17 Higher-Order Functions You Write Yourself
+## 5.17 Higher-Order Functions You Write Yourself 🟡
 
-A higher-order function is simply one that takes a function/closure as a parameter, or returns one — you've already been using the standard library's versions all through section 3 (`map`, `filter`, `reduce`). Writing your own follows exactly the same shape.
+A **higher-order function** is a function that **takes** a function as a parameter, or **returns** one. You've used the standard ones in section 3 (`map`, `filter`, `reduce`). Writing your own looks the same.
 
 ```swift
 func repeatAction(times: Int, action: () -> Void) {
@@ -574,7 +774,7 @@ repeatAction(times: 3) {
 // Hello!
 ```
 
-A custom `map`-like function, built from scratch, makes the underlying mechanism explicit:
+Your own `map`, built from scratch, shows how it works inside:
 
 ```swift
 func transform<T, U>(_ array: [T], using transformer: (T) -> U) -> [U] {
@@ -590,7 +790,7 @@ let strings = transform(numbers) { "Value: \($0)" }
 print(strings)   // ["Value: 1", "Value: 2", "Value: 3"]
 ```
 
-Functions that **return** other functions are equally common — this is how you build configurable behavior, like a family of related validators generated from one general-purpose factory function:
+Functions that **return** functions are useful to build **configurable behavior**. One factory makes many related validators:
 
 ```swift
 func makeValidator(minimumLength: Int) -> (String) -> Bool {
@@ -605,7 +805,20 @@ print(isValidUsername("ab"))          // false
 print(isValidUsername("abc"))         // true
 ```
 
-(Generics, seen above as `<T, U>`, are covered in full in section 8 — for now, read them simply as "this works for any type.")
+A real helper: measure how long any piece of work takes:
+
+```swift
+func measure<T>(_ label: String, _ work: () -> T) -> T {
+    let start = Date()
+    let result = work()
+    print("\(label) took \(Date().timeIntervalSince(start))s")
+    return result
+}
+
+let sorted = measure("Sorting") { (1...100_000).shuffled().sorted() }
+```
+
+(The `<T, U>` and `<T>` are **generics**, covered in section 8. For now, read them as "works with any type".)
 
 ---
 
@@ -613,20 +826,20 @@ print(isValidUsername("abc"))         // true
 
 | Topic | One-line takeaway |
 |---|---|
-| Function basics | `func`, implicit `Void` return, implicit `return` for single-expression bodies |
-| Argument labels | External label at call site, internal name inside the body; `_` suppresses the label |
-| Default values | Callers can omit parameters that have a default |
-| Variadic parameters | `Type...` accepts zero or more values, exposed as an array |
-| `inout` | Pass by reference with explicit `&`; requires a mutable `var` argument |
-| Tuple returns | Standard way to return multiple named values without a dedicated type |
-| `@discardableResult` | Silences the "unused result" warning for functions whose return value is optional to use |
-| Nested functions | Scoped to their enclosing function; capture the enclosing scope like closures |
-| Closure syntax | Full form down to `$0` shorthand — all equivalent, pick based on clarity |
-| Trailing closures | Move a final closure argument outside `()`; multiple trailing closures since Swift 5.3 |
-| `$0`, `$1` | Positional shorthand — great for short, obvious closures; name params otherwise |
-| Capturing | Closures hold live references to captured variables, not frozen snapshots |
-| `[weak self]` | Breaks strong capture of `self`, preventing retain cycles (full story in section 10) |
-| Escaping closures | `@escaping` marks closures that may run after the function returns; needed to store them |
-| Autoclosures | `@autoclosure` defers an expression's evaluation without `{}` at the call site — use sparingly |
-| Functions as values | Named functions are closures with a name — assignable, passable, storable |
-| Higher-order functions | Any function taking or returning another function/closure — you can write your own `map` |
+| Function basics | `func`, no `-> Void` needed, implicit `return` for one expression |
+| Argument labels | A label for the caller, a name inside; `_` removes the label |
+| Default values | Callers can leave out parameters that have defaults |
+| Variadic parameters | `Type...` takes zero or more values, as an array |
+| `inout` | The function changes the caller's `var`; call with `&` |
+| Tuple returns | Return a few named values; use a struct when it grows |
+| `@discardableResult` | Turns off the "unused result" warning |
+| Nested functions | Visible only inside the outer function; capture its variables |
+| Closure syntax | From the full form to `$0` and `<`; pick the clearest |
+| Trailing closures | Move the last closure outside `()`; several are allowed since Swift 5.3 |
+| `$0`, `$1` | For short, obvious closures; name parameters otherwise |
+| Capturing | Closures hold live references to captured variables |
+| `[weak self]` | Avoids a strong capture of `self` and retain cycles (section 10) |
+| Escaping closures | `@escaping` for closures that run later or are stored |
+| Autoclosures | Delays an expression without `{}`; use rarely |
+| Functions as values | Store, pass, and return functions like any value |
+| Higher-order functions | Functions that take or return functions; you can write your own |

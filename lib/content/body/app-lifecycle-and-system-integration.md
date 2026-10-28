@@ -1,6 +1,12 @@
-## 49.1 The SwiftUI App Protocol and Scene Phases
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-The `App` protocol is the modern, SwiftUI-native entry point (replacing `UIApplicationDelegate`/`UISceneDelegate` as the primary structure for simple apps), and `@Environment(\.scenePhase)` exposes the app's current lifecycle phase — `.active`, `.inactive`, or `.background`.
+An app doesn't live alone. The system **launches**, **backgrounds**, and **terminates** it. Other apps and websites **link** into it. The user moves between **devices**, searches with **Spotlight**, and shares activities over **FaceTime**. This section covers how your app fits into the system: lifecycle, configuration, deep links, Handoff, state restoration, background work, Spotlight, and SharePlay.
+
+---
+
+## 49.1 The SwiftUI App Protocol and Scene Phases 🟢
+
+In SwiftUI, the **`App`** protocol is the app's **entry point** (marked `@main`). **`@Environment(\.scenePhase)`** tells you where the app is in its lifecycle:
 
 ```swift
 @main
@@ -13,9 +19,9 @@ struct RecipeApp: App {
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             switch newPhase {
-            case .active: print("App became active")
-            case .inactive: print("App became inactive (e.g., transitioning, or Control Center open)")
-            case .background: print("App entered background")
+            case .active: print("In the foreground, receiving touches")
+            case .inactive: print("Visible, but not receiving events (app switcher, Control Center)")
+            case .background: print("Not visible")
             @unknown default: break
             }
         }
@@ -23,35 +29,72 @@ struct RecipeApp: App {
 }
 ```
 
-`.active` means the app is in the foreground and receiving events normally; `.inactive` is a brief transitional state (also entered when the app is technically visible but not receiving events, like when Control Center is pulled down over it); `.background` means the app is no longer visible at all. This three-phase model is the SwiftUI-native equivalent of the older `UIApplicationDelegate` lifecycle methods (`applicationDidBecomeActive`, `applicationDidEnterBackground`, etc.), expressed as observable state rather than delegate callbacks — directly usable with `.onChange(of:)` (section 25) rather than requiring a separate delegate object.
+| Phase | Meaning | Example |
+|---|---|---|
+| `.active` | On screen and **interactive** | The user is using the app |
+| `.inactive` | On screen, but **not** receiving events | Pulling down Control Center, the app switcher, an incoming call banner |
+| `.background` | **Not visible** | The user went to the Home Screen or another app |
+
+This replaces the older **`UIApplicationDelegate`** callbacks (`applicationDidBecomeActive`, `applicationDidEnterBackground`, …): instead of delegate methods, it's a **value** you watch with `.onChange(of:)` (25).
+
+Read at the **`App`** level, `scenePhase` combines **all** windows (the app is `.active` if **any** window is). Read inside a **view**, it describes **that view's window**, which matters on iPad and Mac with several windows.
+
+You can still have an app delegate for things that need one (push notification registration, 50.3), with **`@UIApplicationDelegateAdaptor`**:
+
+```swift
+@main
+struct RecipeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    var body: some Scene { WindowGroup { ContentView() } }
+}
+```
 
 ---
 
-## 49.2 Responding to Background and Foreground
+## 49.2 Responding to Background and Foreground 🟢
 
-Transitioning to `.background` is the natural point to save any pending state and release resources that shouldn't remain active while the app isn't visible; transitioning back to `.active` is the natural point to refresh potentially-stale data.
+**Going to the background** is the moment to **save** and **stop** things. **Coming back** is the moment to **refresh**:
 
 ```swift
-.onChange(of: scenePhase) { _, newPhase in
-    switch newPhase {
-    case .background:
-        try? modelContext.save() // recall modelContext.save(), section 41.5
-        stopLocationUpdates()
-    case .active:
-        Task { await refreshIfStale() }
-    default:
-        break
+struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        RecipeListView()
+            .onChange(of: scenePhase) { _, newPhase in
+                switch newPhase {
+                case .background:
+                    try? modelContext.save()          // write now (41.5)
+                    stopLocationUpdates()             // don't drain the battery
+                case .active:
+                    Task { await refreshIfStale() }   // data may be old after hours away
+                default:
+                    break
+                }
+            }
     }
 }
 ```
 
-This pairs naturally with earlier persistence material — explicitly saving pending SwiftData changes (section 41.5) on backgrounding provides a stronger guarantee than relying purely on autosave timing, since the app could be terminated by the system shortly after backgrounding with no further warning. Stopping expensive ongoing work (location updates, active network connections) on backgrounding, and refreshing potentially-stale data on returning to `.active`, are both standard, expected behaviors for a well-behaved app that respects the system's resource constraints on background apps.
+Why save **explicitly** when SwiftData autosaves? Because after going to the background, the app may be **suspended** and then **terminated** by the system to free memory, **without any further warning**. Saving now guarantees nothing is lost; autosave **timing** isn't guaranteed.
+
+What to do on each transition:
+
+| Going to `.background` | Coming back to `.active` |
+|---|---|
+| Save unsaved changes and drafts | Refresh data that may be stale |
+| Stop location, timers, animations | Restart what you stopped |
+| Pause media (unless it's an audio app) | Check if the user's login is still valid |
+| Hide sensitive content (banking apps blur the screen) | |
+
+You get only a **few seconds** after backgrounding. For longer work, use a background task (49.10–49.12).
 
 ---
 
-## 49.3 Info.plist and Capabilities
+## 49.3 Info.plist and Capabilities 🟢
 
-`Info.plist` is the app's central configuration file, declaring metadata (display name, supported orientations, required device capabilities) and, in Xcode's Signing & Capabilities tab, enabling specific system capabilities (Push Notifications, HealthKit, CloudKit, and dozens more) that the app is permitted to use.
+**`Info.plist`** is the app's main **configuration** file: its name, version, supported orientations, required device features, and more. In Xcode you edit it in the target's **Info** tab. **Capabilities** (Push Notifications, iCloud, HealthKit…) are added in **Signing & Capabilities**.
 
 ```xml
 <key>UISupportedInterfaceOrientations</key>
@@ -59,16 +102,24 @@ This pairs naturally with earlier persistence material — explicitly saving pen
     <string>UIInterfaceOrientationPortrait</string>
 </array>
 <key>NSLocationWhenInUseUsageDescription</key>
-<string>We use your location to find nearby recipe ingredients.</string>
+<string>We use your location to find recipes with ingredients from nearby stores.</string>
+<key>NSCameraUsageDescription</key>
+<string>Take photos of your dishes to add them to your recipes.</string>
 ```
 
-Beyond simple configuration values, `Info.plist` is also where usage description strings (`NSLocationWhenInUseUsageDescription` and similar `NS*UsageDescription` keys) live — these are the human-readable explanations shown to the user in the system permission prompt when the app first requests access to a protected resource (location, camera, contacts, and so on), and omitting a required usage description string for a capability the app actually uses causes an immediate crash the moment that capability is requested, rather than merely a missing prompt.
+The **`NS…UsageDescription`** keys are the **explanations** shown in the system **permission prompt** ("RecipeApp would like to access your camera. *Take photos of your dishes…*").
+
+⚠️ If your app asks for a protected resource (camera, location, contacts, photos, microphone…) **without** the matching usage description, the app **crashes immediately**. It's not just a missing message.
+
+Write descriptions that say **why** the user benefits. "Needed for the app" is vague, and App Review may reject it.
+
+Since 2024, apps also need a **privacy manifest** (`PrivacyInfo.xcprivacy`): a file that lists the data you collect and the reasons you use certain **"required reason" APIs** (like `UserDefaults` or file timestamps). Third-party SDKs ship their own.
 
 ---
 
-## 49.4 Entitlements Explained
+## 49.4 Entitlements Explained 🟡
 
-Entitlements are a separate, cryptographically-signed configuration file (`.entitlements`) declaring which special system capabilities an app's code-signed binary is authorized to use — distinct from `Info.plist`'s more general configuration, entitlements specifically gate access to sensitive system capabilities like App Groups, Push Notifications, and CloudKit.
+**Entitlements** are **permissions** built into the app's **code signature**. They unlock **sensitive** system features: App Groups, push notifications, iCloud, Keychain sharing, Associated Domains, HealthKit, and others. Xcode keeps them in a **`.entitlements`** file, and adds entries when you add a capability:
 
 ```xml
 <!-- RecipeApp.entitlements -->
@@ -78,88 +129,165 @@ Entitlements are a separate, cryptographically-signed configuration file (`.enti
 </array>
 <key>aps-environment</key>
 <string>development</string>
+<key>com.apple.developer.associated-domains</key>
+<array>
+    <string>applinks:example.com</string>
+</array>
 ```
 
-Entitlements are checked and enforced at a deeper system level than `Info.plist` configuration — they're embedded into the app's code signature itself, meaning tampering with an entitlement without proper re-signing (by someone without the appropriate developer credentials) would invalidate the app's signature entirely, a meaningfully stronger security boundary than a plain configuration file provides. The App Group entitlement shown here is exactly the mechanism underlying the shared storage scenarios covered in sections 41.20 and 43.2 — declaring the entitlement is the prerequisite step that makes those shared-container APIs actually usable.
+| | `Info.plist` | Entitlements |
+|---|---|---|
+| What | General **configuration** | **Permission** to use protected features |
+| Protected by | Nothing special | The **code signature** + the **provisioning profile** |
+| Examples | App name, orientations, usage descriptions | App Groups, push, iCloud, Associated Domains |
+
+Entitlements are much **stronger** than a config value. They're **signed** into the app, and each must also be **allowed** by your **provisioning profile** (from your Apple Developer account, 77). Someone can't just edit the file to give an app new powers: changing an entitlement breaks the **signature**, and the app won't run.
+
+The **App Group** entitlement above is what makes the shared stores from 41.20 and 43.2 work. Without it, `UserDefaults(suiteName:)` and the group container just don't work.
 
 ---
 
-## 49.5 Custom URL Schemes
+## 49.5 Custom URL Schemes 🟢
 
-A custom URL scheme (`myapp://`) lets other apps (or the system) open your app directly via a specially-crafted URL, registered in `Info.plist`'s `CFBundleURLTypes` and handled via `.onOpenURL()`.
+A **custom URL scheme** like `myapp://` lets other apps, websites, or the system **open your app** with a URL. Register it in `Info.plist` (or the Info tab's **URL Types**), and handle it with **`.onOpenURL`**:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array><string>myapp</string></array>
+    </dict>
+</array>
+```
 
 ```swift
 WindowGroup {
     ContentView()
 }
 .onOpenURL { url in
-    // url might be: myapp://recipe/42
-    guard url.scheme == "myapp", url.host == "recipe" else { return }
-    let recipeID = url.pathComponents.dropFirst().first
-    // navigate to the specific recipe
+    // myapp://recipe/42
+    guard url.scheme == "myapp", url.host == "recipe",
+          let recipeID = url.pathComponents.dropFirst().first else { return }
+    router.showRecipe(id: recipeID)
 }
 ```
 
-Custom URL schemes are simple to set up but have a real weakness: scheme names aren't globally unique or reserved in any enforced way, meaning two different apps could both register the same `myapp://` scheme, leading to unpredictable behavior about which app actually opens when a link is tapped — this exact limitation is what universal links (49.6) were introduced to solve, and is why universal links are generally the recommended, more robust approach for genuine deep linking in modern apps, with custom schemes better reserved for narrower, less collision-prone use cases like inter-app communication between an organization's own suite of apps.
+URL schemes are **easy**, but have real **weaknesses**:
+
+- **No ownership.** Any app can register `myapp://`. If two do, which one opens is **unpredictable**. A malicious app could even **pretend** to be yours to catch links meant for you.
+- **Nothing happens** if the app isn't installed: the link just fails.
+- They don't work as **normal web links** in messages and emails.
+
+That's why **universal links** (49.6) are the recommended way to deep link. Custom schemes are still fine for narrow uses: an OAuth callback (40.16), or links between your **own** apps.
+
+⚠️ **Any** app or web page can open your URL, with **any** content. Treat URL input as **untrusted**: validate it, and never let a link perform a destructive action (like "delete account") without the user confirming.
 
 ---
 
-## 49.6 Universal Links and apple-app-site-association
+## 49.6 Universal Links and apple-app-site-association 🟡
 
-A universal link is an ordinary `https://` URL that, when tapped, opens directly in your app (if installed) instead of a web browser — verified via a JSON file (`apple-app-site-association`) hosted at your domain's root, cryptographically proving your app is authorized to handle links for that specific domain.
+A **universal link** is a **normal `https://` URL** that opens **your app** (if installed) instead of the browser. If the app **isn't** installed, the same link opens the **website**.
+
+Two pieces prove that your app **owns** the domain:
+
+**1. The app** lists the domain in the **Associated Domains** entitlement (49.4): `applinks:example.com`.
+
+**2. The website** hosts a JSON file at **`https://example.com/.well-known/apple-app-site-association`**:
 
 ```json
-// Hosted at: https://example.com/.well-known/apple-app-site-association
 {
-    "applinks": {
-        "details": [
-            {
-                "appID": "TEAMID.com.example.myapp",
-                "paths": ["/recipes/*"]
-            }
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.example.myapp"],
+        "components": [
+          { "/": "/recipes/*", "comment": "Recipe pages open in the app" },
+          { "/": "/account/*", "exclude": true, "comment": "These stay on the web" }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
-Because the association file must be hosted at the actual domain being claimed (and iOS verifies it directly against that domain at install time), universal links avoid the scheme-collision problem entirely — no other app can claim to handle links for `example.com` without actually controlling that domain, a meaningfully stronger guarantee than a custom URL scheme provides. This is also why universal links work seamlessly as a fallback: the exact same URL works whether or not the app is installed (opening the app if it is, falling back to the actual website if it isn't), unlike a custom scheme URL, which simply fails to do anything if the target app isn't present.
+The system downloads this file (through Apple's CDN) when the app is **installed** or **updated**, and checks that the domain **agrees** with the app.
+
+Why this fixes the URL-scheme problems:
+
+| | Custom scheme | Universal link |
+|---|---|---|
+| Who can claim it | **Any** app | Only an app the **domain owner** lists |
+| App not installed | Link **fails** | Opens the **website** |
+| Works as a normal web link (Messages, Mail, Safari) | ❌ | ✅ |
+| Setup | Info.plist only | Entitlement + a file on your server |
+
+Another app **can't** claim your links, because it would need to control **your domain** to put itself in that file.
+
+Common setup problems: the file must be served over **HTTPS**, **without redirects**, as `application/json`, with the **exact** Team ID and bundle ID. Apple's CDN caches it, so changes can take time to apply.
 
 ---
 
-## 49.7 Handling Incoming Links and Routing
+## 49.7 Handling Incoming Links and Routing 🟡
 
-Both custom URL schemes and universal links are received through the same `.onOpenURL()` modifier, and a well-designed app routes the parsed URL into its existing navigation system (recall value-based navigation, section 27.2, and `NavigationPath`, section 27.3) rather than treating link handling as an entirely separate code path.
+Both custom schemes and universal links arrive in SwiftUI through **`.onOpenURL`**. The clean way to handle them: **parse** the URL into a **route**, and push it onto the **same** navigation path that normal taps use (27.3, 27.4):
 
 ```swift
+enum RecipeRoute: Hashable {
+    case detail(UUID)
+    case category(String)
+}
+
 @Observable
 final class AppRouter {
     var path = NavigationPath()
 
     func handle(url: URL) {
-        guard url.pathComponents.count >= 3, url.pathComponents[1] == "recipes" else { return }
-        if let recipeID = UUID(uuidString: url.pathComponents[2]) {
-            path.append(RecipeRoute.detail(recipeID))
+        // https://example.com/recipes/<uuid>   or   myapp://recipes/<uuid>
+        let parts = url.pathComponents.filter { $0 != "/" }
+        guard let route = route(from: parts) else { return }
+        path = NavigationPath()          // start from the root, so "back" makes sense
+        path.append(route)
+    }
+
+    private func route(from parts: [String]) -> RecipeRoute? {
+        switch parts.first {
+        case "recipes":
+            guard parts.count >= 2, let id = UUID(uuidString: parts[1]) else { return nil }
+            return .detail(id)
+        case "categories":
+            return parts.count >= 2 ? .category(parts[1]) : nil
+        default:
+            return nil
         }
     }
 }
 
-// .onOpenURL { router.handle(url: $0) }
+// In the app:
+// NavigationStack(path: $router.path) { ... }
+//     .onOpenURL { router.handle(url: $0) }
 ```
 
-Feeding parsed deep link destinations directly into the same `NavigationPath`-based routing infrastructure used for ordinary in-app navigation (rather than maintaining separate logic for "how a user gets to the recipe detail screen via tapping" versus "how a user gets there via a deep link") keeps the app's navigation genuinely unified — the recipe detail screen doesn't need to know or care whether it was reached through normal navigation or an incoming link, since both paths ultimately just append the same value to the same `NavigationPath`.
+Why share **one** navigation system?
+
+- The detail screen **doesn't care** how it was reached: a tap, a link, a notification (50), or Spotlight (49.14). Each just **appends a route**.
+- There's **one** place to fix navigation bugs, not two.
+- Parsing can be **unit tested** (65): "this URL gives this route".
 
 ---
 
-## 49.8 NSUserActivity and Handoff
+## 49.8 NSUserActivity and Handoff 🟡
 
-`NSUserActivity` represents "what the user is currently doing" in a way the system can track and hand off between the user's devices — Handoff lets a user start viewing a recipe on their iPhone and seamlessly continue on their Mac or iPad, picking up in the same context.
+**`NSUserActivity`** describes "**what the user is doing right now**". With **Handoff**, the user can start something on one device and **continue** on another: view a recipe on iPhone, then open the **same** recipe on the Mac.
+
+**Publish** the activity from the view that represents it:
 
 ```swift
 struct RecipeDetailView: View {
     let recipe: Recipe
 
     var body: some View {
-        Text(recipe.title)
+        RecipeContent(recipe: recipe)
             .userActivity("com.example.myapp.viewing-recipe") { activity in
                 activity.title = "Viewing \(recipe.title)"
                 activity.userInfo = ["recipeID": recipe.id.uuidString]
@@ -169,175 +297,357 @@ struct RecipeDetailView: View {
 }
 ```
 
-`.userActivity()` (a SwiftUI modifier) automatically creates and updates an `NSUserActivity` reflecting whatever this view currently represents, publishing it as the "current activity" while the view is active — a second device signed into the same Apple ID that sees this published activity can display a Handoff prompt (typically an icon near the Home Screen/Dock), and tapping it launches (or activates) the app on that device with the activity's `userInfo` available to restore the exact same context, effectively continuing the same task across devices.
+**Receive** it on the other device:
+
+```swift
+ContentView()
+    .onContinueUserActivity("com.example.myapp.viewing-recipe") { activity in
+        if let idString = activity.userInfo?["recipeID"] as? String,
+           let id = UUID(uuidString: idString) {
+            router.path.append(RecipeRoute.detail(id))     // the same routing as deep links (49.7)
+        }
+    }
+```
+
+Also list the activity type in **Info.plist** under **`NSUserActivityTypes`**.
+
+How it feels to the user: while the recipe is open on the iPhone, a **Handoff icon** of your app appears on the Mac's Dock (or the iPad's app switcher). Clicking it opens your app **at that recipe**.
+
+Requirements: the same **Apple Account** on both devices, Bluetooth and Wi-Fi on, Handoff enabled, and your app installed on both. Keep `userInfo` **small** (IDs, not whole objects); the receiving device loads the data itself.
+
+`NSUserActivity` also powers **Spotlight** results (49.14) and **Siri suggestions**, so publishing activities pays off in several places.
 
 ---
 
-## 49.9 State Restoration
+## 49.9 State Restoration 🟡
 
-State restoration lets an app recreate its exact UI state (which screens were open, scroll position, form field contents) after being terminated by the system and later relaunched — distinct from ordinary data persistence (SwiftData, section 41), which preserves the underlying *data* but not necessarily the specific *navigation/UI state* the user was in.
+When the system **terminates** a backgrounded app (to free memory) and the user returns later, the app **relaunches**. Without **state restoration**, it starts at the **root** screen, and the user loses their place. With it, the app **reopens where they left off**.
+
+This is **different** from data persistence (41): SwiftData saves the **data** (the recipes); state restoration saves the **UI state** (which recipe was open, which tab, the scroll position, a half-typed search).
+
+**`@SceneStorage`** (25.10) is the tool. A navigation path can be saved thanks to **`NavigationPath.CodableRepresentation`**:
 
 ```swift
-@main
-struct RecipeApp: App {
+struct RootView: View {
     @SceneStorage("navigationPath") private var pathData: Data?
     @State private var path = NavigationPath()
 
-    var body: some Scene {
-        WindowGroup {
-            NavigationStack(path: $path) {
-                RecipeListView()
+    var body: some View {
+        NavigationStack(path: $path) {
+            RecipeListView()
+                .navigationDestination(for: RecipeRoute.self) { route in RouteView(route: route) }
+        }
+        .task {
+            // Restore once, when the scene appears
+            if let pathData,
+               let representation = try? JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: pathData) {
+                path = NavigationPath(representation)
             }
-            .onChange(of: path) { _, newPath in
-                pathData = try? JSONEncoder().encode(newPath.codable)
-            }
-            .task {
-                if let pathData, let codable = try? JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: pathData) {
-                    path = NavigationPath(codable)
-                }
+        }
+        .onChange(of: path) { _, newPath in
+            // Save on every change (only works if every value in the path is Codable)
+            if let representation = newPath.codable {
+                pathData = try? JSONEncoder().encode(representation)
             }
         }
     }
 }
 ```
 
-`@SceneStorage` persists small amounts of UI-specific state tied to a specific scene, surviving app termination and relaunch (though not a full device restart in all configurations) — `NavigationPath.CodableRepresentation` specifically exists to make a navigation path itself serializable (since the path may contain arbitrary navigable values), letting an app restore not just its data but the user's exact place within the navigation hierarchy, producing the polished, expected experience of the app reopening exactly where the user left off rather than always restarting at the root screen.
+Notes:
+
+- `@SceneStorage` must be used inside a **`View`** (not the `App` struct), because it's tied to **one scene** (window).
+- **`NavigationPath.codable`** is **optional**: it's `nil` if any value in the path isn't `Codable`. Make your route types `Codable` (another reason to use small route enums with IDs, 27.4).
+- Scene storage is **discarded** when the user **closes** the scene on purpose (swiping the app away in the app switcher). It's for **system**-caused relaunches, which is exactly when restoring makes sense.
 
 ---
 
-## 49.10 BGAppRefreshTask
+## 49.10 BGAppRefreshTask 🟡
 
-`BGAppRefreshTask` schedules brief, periodic background execution opportunities for refreshing app content (like fetching new data) even when the app isn't actively running — the system decides the actual timing based on device conditions (battery, usage patterns), treating the requested time as a preference rather than a guarantee.
+**`BGAppRefreshTask`** asks the system for **short** chances to run in the **background**, to **refresh content** (fetch the latest recipes) so the app is up to date when the user opens it.
+
+Setup:
+
+1. **Signing & Capabilities → Background Modes → Background fetch**.
+2. Add your task ID to **Info.plist** under **`BGTaskSchedulerPermittedIdentifiers`**.
+3. **Handle** the task and **schedule** it.
+
+The SwiftUI way (iOS 16+):
 
 ```swift
-func scheduleAppRefresh() {
-    let request = BGAppRefreshTaskRequest(identifier: "com.example.myapp.refresh")
-    request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
-    try? BGTaskScheduler.shared.submit(request)
+@main
+struct RecipeApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some Scene {
+        WindowGroup { ContentView() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { scheduleAppRefresh() }
+            }
+            .backgroundTask(.appRefresh("com.example.myapp.refresh")) {
+                scheduleAppRefresh()                 // ask for the NEXT refresh first
+                await refreshRecipeData()            // the task is cancelled if time runs out
+            }
+    }
 }
 
-func handleAppRefresh(task: BGAppRefreshTask) {
-    task.expirationHandler = { /* clean up if running out of time */ }
-    Task {
-        await refreshRecipeData()
-        task.setTaskCompleted(success: true)
-        scheduleAppRefresh() // reschedule the next refresh opportunity
-    }
+func scheduleAppRefresh() {
+    let request = BGAppRefreshTaskRequest(identifier: "com.example.myapp.refresh")
+    request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)   // "not before 15 minutes from now"
+    try? BGTaskScheduler.shared.submit(request)
 }
 ```
 
-`earliestBeginDate` communicates the earliest the app would like this refresh to run, but the actual scheduling decision is entirely up to the system, which balances the request against battery level, network conditions, and the user's actual app usage patterns — an app that's rarely opened gets background refresh opportunities far less frequently than one used constantly, and the `expirationHandler` closure is essential since the system imposes a strict, short time budget on this kind of task and will terminate it abruptly if it runs over, making cleanup-on-expiration a genuine requirement rather than an edge case.
+The classic UIKit way registers a handler at launch and uses an **`expirationHandler`**:
+
+```swift
+BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.example.myapp.refresh", using: nil) { task in
+    let work = Task {
+        await refreshRecipeData()
+        task.setTaskCompleted(success: !Task.isCancelled)
+    }
+    task.expirationHandler = { work.cancel() }     // time's up: stop NOW
+    scheduleAppRefresh()
+}
+```
+
+Important facts:
+
+- **`earliestBeginDate`** is only "**not before**". The **system** decides **when** (and **whether**) it runs, based on battery, network, and **how often the user opens the app**. It may be hours later, or never.
+- The time budget is **short** (around 30 seconds). When it runs out, the **expiration handler** fires. If you don't stop and call `setTaskCompleted`, the system **kills** the app and gives it **fewer** chances in the future.
+- Test with the debugger: pause, then `e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.example.myapp.refresh"]`.
 
 ---
 
-## 49.11 BGProcessingTask
+## 49.11 BGProcessingTask 🟡
 
-`BGProcessingTask` is the counterpart for longer-running, more resource-intensive background work (like a large database migration or extensive data cleanup) that doesn't need to complete quickly, but can require more time and system resources than `BGAppRefreshTask`'s brief refresh window allows.
+**`BGProcessingTask`** is for **longer**, **heavier** background work that **isn't urgent**: rebuilding a search index, cleaning up a database, training an on-device model, uploading analytics in bulk.
 
 ```swift
 func scheduleProcessingTask() {
-    let request = BGProcessingTaskRequest(identifier: "com.example.myapp.processing")
-    request.requiresNetworkConnectivity = true
-    request.requiresExternalPower = true
+    let request = BGProcessingTaskRequest(identifier: "com.example.myapp.cleanup")
+    request.requiresNetworkConnectivity = true     // only when online
+    request.requiresExternalPower = true           // only while charging
     try? BGTaskScheduler.shared.submit(request)
+}
+
+// Register the handler at launch, as in 49.10
+BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.example.myapp.cleanup", using: nil) { task in
+    let work = Task {
+        await rebuildSearchIndex()
+        task.setTaskCompleted(success: !Task.isCancelled)
+    }
+    task.expirationHandler = { work.cancel() }
 }
 ```
 
-`requiresExternalPower` and `requiresNetworkConnectivity` let the app express real resource requirements the system will actually honor when deciding when to grant this task execution time — the system is considerably more willing to allocate a longer processing window when the device is plugged in and idle (like overnight while charging) than during active, battery-powered use, which is precisely the scenario `BGProcessingTask` is designed for: work that's genuinely more resource-hungry than a quick refresh, but not urgent enough to need to happen immediately or during active app use.
+SwiftUI's `.backgroundTask` modifier covers **app refresh** and **background URL session** events; processing tasks are registered with `BGTaskScheduler` directly, as above.
+
+Setup: **Background Modes → Background processing**, and the ID in `BGTaskSchedulerPermittedIdentifiers`.
+
+| | `BGAppRefreshTask` | `BGProcessingTask` |
+|---|---|---|
+| Length | Seconds | **Minutes** |
+| When | Through the day | Usually when the device is **idle**, often **overnight while charging** |
+| Conditions you can require | — | Network, external power |
+| Use for | Fresh content | Heavy maintenance |
+
+Setting **`requiresExternalPower`** makes the system much more willing to give you **long** run time, because it won't drain the user's battery. Always handle **expiration** (cancel cleanly) and make the work **resumable**: if it's stopped halfway, the next run should continue, not start over.
 
 ---
 
-## 49.12 BGContinuedProcessingTask 🟠
+## 49.12 BGContinuedProcessingTask 🔴
 
-`BGContinuedProcessingTask` (a more recent addition) is designed for background work that begins while the app is actively in use and needs to continue running to completion even after the user backgrounds the app — bridging the gap between purely foreground work and the scheduled, system-timed work of `BGAppRefreshTask`/`BGProcessingTask`.
+**`BGContinuedProcessingTask`** (iOS 26) is for work the user **just started**, that should **keep going** if they **leave the app**: exporting a long video, uploading a big photo album, processing a large file.
 
 ```swift
+// At launch: register the handler (the ID uses your bundle ID as a prefix)
+BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.example.myapp.export.recipes",
+                                using: nil) { task in
+    guard let task = task as? BGContinuedProcessingTask else { return }
+    let work = Task {
+        task.progress.totalUnitCount = 100
+        for step in 1...100 {
+            guard !Task.isCancelled else { break }
+            await exportChunk(step)
+            task.progress.completedUnitCount = Int64(step)    // shown in the system UI
+        }
+        task.setTaskCompleted(success: !Task.isCancelled)
+    }
+    task.expirationHandler = { work.cancel() }
+}
+
+// When the user taps "Export"
 func startLongRunningExport() {
     let request = BGContinuedProcessingTaskRequest(
-        identifier: "com.example.myapp.export",
-        title: "Exporting Recipes"
+        identifier: "com.example.myapp.export.recipes",
+        title: "Exporting Recipes",
+        subtitle: "Preparing your recipe book"
     )
-    // Unlike scheduled tasks, this begins essentially immediately upon
-    // submission, continuing even if the user backgrounds the app mid-export
-    try? BGTaskScheduler.shared.submit(request)
+    try? BGTaskScheduler.shared.submit(request)               // starts right away
 }
 ```
 
-The key distinguishing use case is a task the user has *just now* explicitly initiated (like exporting a large recipe collection) that shouldn't be interrupted just because the user happens to switch to another app while it's running — unlike `BGAppRefreshTask`/`BGProcessingTask`, which are scheduled for some future, system-determined time, `BGContinuedProcessingTask` begins immediately and simply ensures continuity of already-started work across a foreground-to-background transition, complete with system UI (a progress indicator) showing the task's ongoing status even while the initiating app isn't in the foreground.
+| Task type | Starts | Typical use |
+|---|---|---|
+| `BGAppRefreshTask` | Later, when the **system** chooses | Fetch new content |
+| `BGProcessingTask` | Later, often overnight while charging | Heavy maintenance |
+| `BGContinuedProcessingTask` | **Now**, because the **user** asked | Finish an export or upload the user started |
+
+The key difference: it's **user-initiated** and **immediate**. The system shows its **progress** in system UI while your app is in the background, and the user can **cancel** it there. That's why it needs a **title** and a real **progress** value: the user should always know what's running.
+
+⚠️ This is a **new** API; check the current documentation for exact requirements (like the task ID format and Info.plist entries).
 
 ---
 
-## 49.13 Background Execution Budgets and Throttling 🟠
+## 49.13 Background Execution Budgets and Throttling 🔴
 
-All forms of background execution are subject to strict, system-enforced time and resource budgets — an app that consistently requests more background time than it's granted, or that's used infrequently by the user, gets progressively throttled, receiving fewer and shorter background execution opportunities over time.
+All background time is **limited** and **controlled by the system**. There's no fixed, guaranteed amount. The system decides, based on things like:
+
+- **How often the user opens your app.** An app used daily gets more chances than one opened once a month.
+- **How your app behaved before.** Apps that finish quickly and call `setTaskCompleted` are treated better than apps that run out of time.
+- **Device state**: battery level, Low Power Mode, network, temperature.
+- **User settings**: Background App Refresh can be turned **off** (globally or per app).
+
+Apple doesn't publish an exact formula, and it changes. So **design for little and unpredictable time**:
 
 ```swift
-// Defensive practice: always check remaining time and respond
-// gracefully to the expiration handler, rather than assuming
-// a fixed, guaranteed amount of execution time
+// Do the work in small, independent pieces, and stop as soon as you're told
 task.expirationHandler = {
-    // Cancel in-flight work cleanly; anything not completed
-    // by this point will simply not run — no guaranteed extension
-    currentWorkTask?.cancel()
+    currentWork?.cancel()            // nothing extra will be granted: stop NOW
+}
+
+for chunk in pendingChunks {
+    if Task.isCancelled { break }    // check between pieces
+    try await process(chunk)
+    markDone(chunk)                  // progress is saved, so the next run continues from here
 }
 ```
 
-The system's throttling behavior is deliberately opaque and adaptive — Apple doesn't publish an exact formula, but the practical, well-established guidance is that background execution is a privilege the system grants based on factors like how often the user actually opens the app, how much background time has been requested and used historically, and overall device conditions, not an unconditional right an app can rely on for consistent background work. Designing background tasks to be resilient to unpredictable, sometimes minimal execution time (always handling `expirationHandler`, always checking whether there's genuinely enough time left before starting a new unit of work) is essential for building features that degrade gracefully rather than failing unpredictably when the system grants less time than hoped for.
+Rules for **good background citizens**:
+
+1. **Never assume** a background task will run, or run at a certain time. The app must work **without** it.
+2. Work in **small, resumable** pieces, saving progress as you go.
+3. **Stop immediately** on expiration, and always call **`setTaskCompleted`**.
+4. Prefer **silent pushes** (44.4) when the **server** knows something changed: more timely than guessing with refresh tasks.
+5. For **big transfers**, use a **background `URLSession`** (40.8): the **system** does the transfer, without needing your app to run.
+
+You can check whether the user allows it: `UIApplication.shared.backgroundRefreshStatus` (`.available`, `.denied`, `.restricted`).
 
 ---
 
-## 49.14 Core Spotlight Indexing
+## 49.14 Core Spotlight Indexing 🟡
 
-Core Spotlight lets an app index its own content (individual recipes, for instance) so that content becomes searchable directly from the system-wide Spotlight search, without the user needing to open the app first.
+**Core Spotlight** lets you add your app's **content** to the system **search**. Users swipe down on the Home Screen, type "carbonara", and see **your** recipe, even if they didn't open your app first.
 
 ```swift
 import CoreSpotlight
+import UniformTypeIdentifiers
 
-func indexRecipe(_ recipe: Recipe) {
-    let attributeSet = CSSearchableItemAttributeSet(contentType: .text)
-    attributeSet.title = recipe.title
-    attributeSet.contentDescription = "Cook time: \(recipe.minutesToCook) minutes"
+func indexRecipe(_ recipe: Recipe) async throws {
+    let attributes = CSSearchableItemAttributeSet(contentType: .content)
+    attributes.title = recipe.title
+    attributes.contentDescription = "Ready in \(recipe.minutesToCook) minutes"
+    attributes.keywords = recipe.tags                       // extra search terms
+    attributes.thumbnailData = recipe.thumbnailData
 
     let item = CSSearchableItem(
-        uniqueIdentifier: recipe.id.uuidString,
-        domainIdentifier: "recipes",
-        attributeSet: attributeSet
+        uniqueIdentifier: recipe.id.uuidString,             // how you find it again
+        domainIdentifier: "recipes",                        // a group, for bulk deletes
+        attributeSet: attributes
     )
-    CSSearchableIndex.default().indexSearchableItems([item])
+    try await CSSearchableIndex.default().indexSearchableItems([item])
+}
+
+// When a recipe is deleted, remove it from search too
+func removeFromIndex(_ id: UUID) async throws {
+    try await CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [id.uuidString])
 }
 ```
 
-Indexed items appear directly in system-wide Spotlight search results (accessed via a swipe-down gesture on the Home Screen), and tapping a matching result launches the app with that specific item's `uniqueIdentifier` available (typically via `NSUserActivity`, connecting back to 49.8's Handoff mechanism, since Spotlight results actually use the same underlying continuation infrastructure) — letting users search for and jump directly into specific app content without first navigating the app's own internal search or browsing UI, a meaningful discoverability win for content-heavy apps.
+When the user **taps** a result, your app opens with an **`NSUserActivity`** of type **`CSSearchableItemActionType`**: the same "continue an activity" mechanism as Handoff (49.8):
+
+```swift
+ContentView()
+    .onContinueUserActivity(CSSearchableItemActionType) { activity in
+        if let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+           let uuid = UUID(uuidString: id) {
+            router.path.append(RecipeRoute.detail(uuid))     // same routing again (49.7)
+        }
+    }
+```
+
+Tips:
+
+- **Keep the index in sync**: index on create and update, delete on delete. Stale results that open "not found" screens annoy users.
+- Use a **`domainIdentifier`** so you can clear a whole group (for example, all items of a logged-out account).
+- Don't index **private** content that shouldn't show up when someone else glances at the device's search.
+
+It's a **discoverability** win for content-heavy apps: users jump **straight** to the item they want.
 
 ---
 
-## 49.15 SharePlay and GroupActivities 🟠
+## 49.15 SharePlay and GroupActivities 🔴
 
-`GroupActivities` powers SharePlay — a framework for building genuinely synchronized, shared experiences (watching content together, playing a game together, cooking along together) across multiple people's devices during a FaceTime call or other supported session.
+**SharePlay** lets people do something **together, in real time**, during a **FaceTime** call (or other supported sessions): watch a video in sync, play a game, or **cook along** step by step. The **`GroupActivities`** framework powers it.
+
+**1. Describe the activity.** It must be **`Codable`**, so keep it small (IDs, not big models):
 
 ```swift
 import GroupActivities
 
 struct CookAlongActivity: GroupActivity {
-    let recipe: Recipe
+    static let activityIdentifier = "com.example.myapp.cook-along"
+    let recipeID: UUID
+    let recipeTitle: String
 
     var metadata: GroupActivityMetadata {
         var metadata = GroupActivityMetadata()
-        metadata.title = "Cooking \(recipe.title) Together"
+        metadata.title = "Cook \(recipeTitle) Together"
         metadata.type = .generic
         return metadata
     }
 }
+```
 
+**2. Start it** (for example, from a "Cook Together" button during a call):
+
+```swift
 func startSharedCooking(recipe: Recipe) async {
-    let activity = CookAlongActivity(recipe: recipe)
-    do {
-        _ = try await activity.activate()
-    } catch { /* handle failure to activate */ }
+    let activity = CookAlongActivity(recipeID: recipe.id, recipeTitle: recipe.title)
+    if case .activationPreferred = await activity.prepareForActivation() {
+        _ = try? await activity.activate()        // invites everyone on the call
+    }
 }
 ```
 
-Activating a `GroupActivity` during an active FaceTime call prompts other participants to join the same shared session, after which the app can use a `GroupSession` to keep all participants' state synchronized (e.g., everyone's recipe view automatically advancing to the same step together) — this is a genuinely specialized, collaborative real-time framework, distinct from CloudKit's `CKShare` (section 44.5), which handles asynchronous, longer-lived data sharing rather than SharePlay's synchronous, session-based, in-the-moment shared activity model.
+**3. Join sessions and keep everyone in sync**, by sending small **messages**:
+
+```swift
+struct StepChanged: Codable { let step: Int }
+
+func observeSessions() async {
+    for await session in CookAlongActivity.sessions() {      // each time a session starts
+        let messenger = GroupSessionMessenger(session: session)
+        session.join()
+
+        Task {
+            for await (message, _) in messenger.messages(of: StepChanged.self) {
+                currentStep = message.step                    // someone moved to the next step
+            }
+        }
+        // When THIS user advances: try await messenger.send(StepChanged(step: currentStep))
+    }
+}
+```
+
+| | SharePlay (`GroupActivities`) | CloudKit sharing (`CKShare`, 44.5) |
+|---|---|---|
+| Timing | **Live**, during a call | **Any time**, long-lived |
+| Data | Small, temporary **messages** | **Stored** records |
+| Example | Everyone sees step 4 **right now** | A shared recipe collection the family edits over weeks |
+
+SharePlay is a **specialized** feature: great when an activity is naturally **shared in the moment**, not needed for most apps.
 
 ---
 
@@ -345,18 +655,18 @@ Activating a `GroupActivity` during an active FaceTime call prompts other partic
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| App lifecycle | `App` protocol, `@Environment(\.scenePhase)` | Modern, observable lifecycle state |
-| Background/foreground response | `.onChange(of: scenePhase)` | Save state, release resources, refresh data |
-| App configuration | `Info.plist`, usage description strings | Metadata and permission prompt text |
-| Signed capability grants | Entitlements (`.entitlements`) | Cryptographically-enforced access to sensitive capabilities |
-| Simple deep linking | Custom URL schemes, `.onOpenURL()` | Collision-prone but simple app-to-app links |
-| Robust deep linking | Universal links, `apple-app-site-association` | Domain-verified, browser-fallback-capable links |
-| Unified link handling | Route parsed URLs into `NavigationPath` | One navigation system for taps and links alike |
-| Cross-device continuity | `NSUserActivity`, `.userActivity()` | Handoff between a user's devices |
-| UI state persistence | `@SceneStorage`, `NavigationPath.CodableRepresentation` | Restore exact navigation state after relaunch |
-| Periodic background refresh | `BGAppRefreshTask` | Brief, system-timed content refresh |
-| Long-running background work | `BGProcessingTask` | Resource-intensive work under favorable conditions |
-| User-initiated continuity | `BGContinuedProcessingTask` | Continue already-started work across backgrounding |
-| Resource discipline | Background execution budgets | Design for unpredictable, throttled execution time |
-| System-wide search | Core Spotlight, `CSSearchableItem` | Index app content into Spotlight search |
-| Real-time shared experiences | `GroupActivities`, SharePlay | Synchronized multi-device sessions during FaceTime |
+| App lifecycle | `App` protocol, `@Environment(\.scenePhase)` | Active, inactive, background as a value |
+| Background/foreground response | `.onChange(of: scenePhase)` | Save and stop when leaving; refresh when back |
+| App configuration | `Info.plist`, `NS…UsageDescription`, privacy manifest | Settings, permission texts (or a crash), data use |
+| Signed capability grants | Entitlements | Signed permissions for protected features |
+| Simple deep linking | Custom URL schemes, `.onOpenURL()` | Easy, but anyone can claim them; validate input |
+| Robust deep linking | Universal links, `apple-app-site-association` | Domain-verified links with a web fallback |
+| Unified link handling | Parse URLs into routes on `NavigationPath` | One navigation system for everything |
+| Cross-device continuity | `.userActivity()`, `.onContinueUserActivity()` | Handoff between the user's devices |
+| UI state persistence | `@SceneStorage`, `NavigationPath.CodableRepresentation` | Reopen where the user left off |
+| Periodic background refresh | `BGAppRefreshTask`, `.backgroundTask` | Short, system-timed refreshes |
+| Long-running background work | `BGProcessingTask` | Heavy work, often while charging |
+| User-initiated continuity | `BGContinuedProcessingTask` | Finish what the user started, with visible progress |
+| Resource discipline | Background budgets | Small, resumable work; stop on expiration |
+| System-wide search | Core Spotlight, `CSSearchableItem` | Your content in Spotlight; keep the index in sync |
+| Real-time shared experiences | `GroupActivities`, SharePlay | Live shared activities during FaceTime |

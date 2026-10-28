@@ -1,6 +1,11 @@
-## 1.1 Variables and Constants: `var` vs `let`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Swift has exactly two ways to bind a name to a value: `var` for something that can change, `let` for something that can't.
+## 1.1 Variables and Constants: `var` vs `let` 🟢
+
+Swift has two ways to give a name to a value:
+
+- **`var`**: a **variable**. The value can change.
+- **`let`**: a **constant**. The value is set once and never changes.
 
 ```swift
 var score = 0
@@ -11,15 +16,15 @@ let maxAttempts = 3
 maxAttempts = 4   // ❌ compile error: cannot assign to value: 'maxAttempts' is a 'let' constant
 ```
 
-**Default to `let`.** The Swift compiler will warn you if you declare something with `var` but never mutate it:
+**Use `let` by default.** If you write `var` but never change the value, the compiler warns you:
 
 ```swift
 var name = "Alex"   // ⚠️ warning: variable 'name' was never mutated; consider changing to 'let'
 ```
 
-This isn't stylistic pickiness — it's a correctness signal. A `let` constant tells the next reader (often future-you) that this value is fixed for its entire lifetime, which eliminates a whole category of bugs where something changes unexpectedly deep in a function.
+This is not just style. A `let` tells the next reader: **this value never changes**. That removes a whole group of bugs where a value changes somewhere you did not expect.
 
-Constants must be assigned exactly once, but that assignment doesn't have to happen at the declaration site:
+A constant must get a value **exactly once**, but not always on the same line. The compiler checks **every branch**:
 
 ```swift
 let temperature: Double
@@ -31,24 +36,35 @@ if isCelsius {
 // temperature is now set, and can never change again
 ```
 
-This is called **deferred initialization** — the compiler tracks every branch to guarantee `temperature` is set before first use, on every code path.
+This is called **deferred initialization** (setting the value later). If one branch forgets to set it, the code does not compile:
 
-A subtlety with `var` and value types (structs, enums, tuples — covered in section 6): mutability is a property of the *binding*, not just the value. A `let` struct is fully frozen, including its properties:
+```swift
+let label: String
+if isAdmin {
+    label = "Admin"
+}
+print(label)   // ❌ error: constant 'label' used before being initialized
+```
+
+With **structs** (value types, section 6), `let` freezes the **whole value**, including its properties:
 
 ```swift
 struct Point { var x: Int; var y: Int }
 
 let p = Point(x: 0, y: 0)
 p.x = 5   // ❌ error: cannot assign to property: 'p' is a 'let' constant
+
+var q = Point(x: 0, y: 0)
+q.x = 5   // ✅ fine: q is a var
 ```
 
-**Key takeaway:** reach for `let` first; only switch to `var` when the compiler (or your logic) proves you need mutation.
+**Key takeaway:** start with `let`. Change to `var` only when you really need to change the value.
 
 ---
 
-## 1.2 Type Inference vs Explicit Type Annotation
+## 1.2 Type Inference vs Explicit Type Annotation 🟢
 
-Swift is statically typed — every value has a fixed type known at compile time — but you rarely have to write the type out. The compiler infers it from the literal or expression on the right-hand side.
+Swift is **statically typed**: every value has a fixed type, known when the code compiles. But you rarely write the type yourself. The compiler **infers** (works out) the type from the value on the right side:
 
 ```swift
 let age = 30            // inferred as Int
@@ -57,7 +73,7 @@ let name = "Swift"      // inferred as String
 let isReady = true      // inferred as Bool
 ```
 
-You add an explicit **type annotation** with a colon when you want a different type than the inferred default, or when there's no initial value to infer from:
+Write a **type annotation** (`: Type`) when you want a different type than the default, or when there is no starting value:
 
 ```swift
 let temperature: Float = 98.6     // without annotation this would be Double
@@ -65,27 +81,47 @@ let discount: Double = 10         // without annotation this integer literal wou
 var buffer: [UInt8]               // no initial value — annotation is required
 ```
 
-Type inference also flows through function return types and generic parameters:
+Inference also works through function results:
 
 ```swift
 func square(_ n: Int) -> Int { n * n }
 let result = square(4)   // result inferred as Int
 ```
 
-Inference is a compile-time-only feature — it costs nothing at runtime, and the type is fully locked in once inferred. This is different from dynamically typed languages: `let age = 30` can never later hold a `String`.
+Inference happens **only at compile time**. It costs nothing when the app runs, and the type **never changes** later. This is different from languages like JavaScript or Python:
 
 ```swift
 var age = 30
 age = "thirty"   // ❌ error: cannot assign value of type 'String' to type 'Int'
 ```
 
-**When to annotate explicitly even though inference would work:** public API signatures (for clarity to callers), numeric types where the default (`Int`/`Double`) isn't what you want, and empty collection literals (`let names: [String] = []`).
+Want to see what type the compiler picked? **Option-click** the name in Xcode, or print it:
+
+```swift
+let ratio = 3 / 4.0
+print(type(of: ratio))   // Double
+```
+
+**When to write the type even though inference works:**
+
+| Situation | Example |
+|---|---|
+| Public API, so callers see it clearly | `public var timeout: TimeInterval` |
+| You need a non-default number type | `let opacity: CGFloat = 0.5` |
+| An empty collection | `var names: [String] = []` |
 
 ---
 
-## 1.3 Integers: `Int`, Overflow, and Integer Division
+## 1.3 Integers: `Int`, Overflow, and Integer Division 🟢
 
-Swift's default integer type is `Int`, which is 64-bit on all modern Apple platforms (its size matches the platform's native word size). There are also fixed-width variants — `Int8`, `Int16`, `Int32`, `Int64` — and unsigned counterparts prefixed `U`: `UInt8`, `UInt16`, `UInt32`, `UInt64`.
+`Int` is Swift's default whole-number type. On all modern Apple devices it is **64-bit**. There are also fixed sizes, and **unsigned** versions (no negative numbers) that start with `U`:
+
+| Signed | Unsigned | Range example |
+|---|---|---|
+| `Int8` | `UInt8` | `Int8`: −128 to 127, `UInt8`: 0 to 255 |
+| `Int16` | `UInt16` | |
+| `Int32` | `UInt32` | |
+| `Int64` / `Int` | `UInt64` / `UInt` | `Int`: about ±9.2 quintillion |
 
 ```swift
 let a: Int = 42
@@ -97,22 +133,36 @@ Int.min      // -9223372036854775808
 UInt8.max    // 255
 ```
 
-Unlike C, Swift integers **trap on overflow** by default rather than silently wrapping — a deliberate safety decision:
+Use underscores to make big numbers easier to read. They are ignored by the compiler:
 
 ```swift
-let max = UInt8.max        // 255
-let boom = max + 1         // 💥 runtime crash: "Arithmetic overflow"
+let population = 8_100_000_000
+let timeoutNanoseconds = 1_500_000_000
 ```
 
-If you genuinely want wraparound behavior, use the overflow-reporting or wrapping operators:
+**Swift does not silently wrap on overflow** like C does. If a result does not fit, the app **stops with a crash** (a **trap**). This is a safety feature:
 
 ```swift
-let wrapped = max &+ 1          // 0 — wraps around using &+
+func nextLevel(_ level: UInt8) -> UInt8 {
+    level + 1
+}
+
+nextLevel(254)   // 255
+nextLevel(255)   // 💥 runtime crash: "Arithmetic overflow"
+```
+
+(If both values are constants, the compiler is even faster: it reports the overflow as a **compile error**.)
+
+If you really **want** wrap-around, use the `&` operators, or ask for a report:
+
+```swift
+let max = UInt8.max                        // 255
+let wrapped = max &+ 1                     // 0 — wraps around using &+
 let (sum, overflowed) = max.addingReportingOverflow(1)
 // sum == 0, overflowed == true
 ```
 
-Integer division truncates toward zero — there's no automatic promotion to floating point:
+**Integer division drops the fraction** (it truncates toward zero). It never gives a decimal result by itself:
 
 ```swift
 let result = 7 / 2          // 3, not 3.5
@@ -120,33 +170,42 @@ let negative = -7 / 2       // -3, truncates toward zero (not -4)
 let remainder = 7 % 2       // 1
 ```
 
-To get a fractional result you must convert to a floating-point type first:
+For a fractional result, convert to a floating-point type **first**:
 
 ```swift
 let precise = Double(7) / Double(2)   // 3.5
 ```
 
-Dividing by zero also has different behavior depending on type: integer division by zero traps immediately, while floating-point division by zero produces `inf` or `nan` (see 1.4).
+Dividing by zero behaves differently for integers and floating point:
 
 ```swift
-let crash = 7 / 0            // 💥 runtime crash
-let notCrash = 7.0 / 0.0     // inf — no crash
+func average(total: Int, count: Int) -> Int {
+    total / count
+}
+average(total: 7, count: 0)   // 💥 runtime crash: division by zero
+
+let notCrash = 7.0 / 0.0      // inf — no crash (see 1.4)
 ```
 
-**Key takeaway:** `Int` overflow and division-by-zero are runtime traps, not silent bugs — Swift wants you to catch them in testing, not production.
+**Key takeaway:** integer overflow and division by zero **crash**. They are not silent bugs. Swift wants you to find them while testing, not in production.
 
 ---
 
-## 1.4 Floating Point: `Double` vs `Float` and Precision Traps
+## 1.4 Floating Point: `Double` vs `Float` and Precision Traps 🟢
 
-Swift has two standard floating-point types: `Double` (64-bit, ~15-17 significant decimal digits) and `Float` (32-bit, ~6-9 significant decimal digits). **`Double` is the default** for any floating-point literal unless you annotate otherwise.
+Swift has two common types for numbers with a fraction:
+
+| Type | Size | Precision | Default? |
+|---|---|---|---|
+| `Double` | 64-bit | about 15–17 digits | **Yes** |
+| `Float` | 32-bit | about 6–9 digits | No |
 
 ```swift
 let pi = 3.14159265358979    // Double
 let piFloat: Float = 3.14159265358979   // Float — will lose precision
 ```
 
-Both types follow the IEEE 754 standard, which means they cannot represent most decimal fractions exactly in binary — the classic gotcha:
+Both store numbers **in binary** (the IEEE 754 standard). Most decimal fractions, like `0.1`, **cannot be stored exactly** in binary. This gives the classic surprise:
 
 ```swift
 let x = 0.1 + 0.2
@@ -154,7 +213,7 @@ print(x)              // 0.30000000000000004
 print(x == 0.3)        // false!
 ```
 
-This isn't a Swift bug; it's fundamental to binary floating-point representation. **Never compare floating-point values with `==`** — compare within a tolerance instead:
+This is not a Swift bug. Every language with binary floating point does this. So **never compare floating-point values with `==`**. Compare with a small **tolerance** instead:
 
 ```swift
 func isApproximatelyEqual(_ a: Double, _ b: Double, tolerance: Double = 1e-9) -> Bool {
@@ -164,15 +223,20 @@ func isApproximatelyEqual(_ a: Double, _ b: Double, tolerance: Double = 1e-9) ->
 isApproximatelyEqual(0.1 + 0.2, 0.3)   // true
 ```
 
-For money or anything requiring exact decimal arithmetic, don't use `Double`/`Float` at all — use integer cents, or `Decimal`:
+**For money, don't use `Double` or `Float`.** Use whole **cents** as an `Int`, or use `Decimal`, which works in base 10:
 
 ```swift
 let price = Decimal(string: "19.99")!
 let tax = Decimal(string: "1.62")!
 let total = price + tax   // exact decimal arithmetic, no binary rounding error
+
+// Or keep cents as an Int:
+let priceInCents = 1999
+let taxInCents = 162
+let totalInCents = priceInCents + taxInCents   // 2161 → show as "$21.61"
 ```
 
-Special floating-point values worth knowing:
+Special values you should know:
 
 ```swift
 let infinity = Double.infinity
@@ -183,13 +247,22 @@ print(notANumber == notANumber)   // false — NaN is never equal to itself
 print(notANumber.isNaN)           // true — the correct way to check
 ```
 
-**Key takeaway:** use `Double` unless you have a specific reason for `Float` (e.g. interop with a 32-bit API), never `==` compare floats, and reach for `Decimal` when exactness matters.
+Rounding is explicit, and you choose the rule:
+
+```swift
+let value = 2.5
+value.rounded()                     // 3.0 (halves go away from zero)
+value.rounded(.down)                // 2.0
+value.rounded(.toNearestOrEven)     // 2.0 ("banker's rounding")
+```
+
+**Key takeaway:** use `Double` unless an API needs `Float`. Never use `==` on floating point. Use `Decimal` (or integer cents) when the value must be exact.
 
 ---
 
-## 1.5 Booleans and Logical Operators
+## 1.5 Booleans and Logical Operators 🟢
 
-`Bool` has exactly two values, `true` and `false` — and unlike C, no other type implicitly converts to it.
+`Bool` has only two values: `true` and `false`. Unlike C, **no other type turns into a `Bool` by itself**. There is no "truthy" `1` or "falsy" `0`:
 
 ```swift
 let isLoggedIn = true
@@ -198,9 +271,12 @@ let hasPermission = false
 if 1 {   // ❌ error: type 'Int' cannot be used as a boolean
     // ...
 }
+
+let count = 3
+if count != 0 { /* ✅ say exactly what you mean */ }
 ```
 
-The standard logical operators are `&&` (and), `||` (or), and `!` (not):
+The logical operators are `&&` (and), `||` (or), and `!` (not):
 
 ```swift
 let canEdit = isLoggedIn && hasPermission
@@ -208,7 +284,7 @@ let canView = isLoggedIn || hasPermission
 let isLoggedOut = !isLoggedIn
 ```
 
-`&&` and `||` are **short-circuiting**: the right-hand side isn't evaluated if the left side already determines the result. This matters when the right side has side effects or could crash:
+`&&` and `||` **short-circuit**: if the left side already decides the answer, the right side **does not run**. This matters when the right side is slow or could crash:
 
 ```swift
 func expensiveCheck() -> Bool {
@@ -226,7 +302,13 @@ if !array.isEmpty && array[0] == 5 {
 }
 ```
 
-Comparison operators (`==`, `!=`, `<`, `>`, `<=`, `>=`) all produce `Bool`:
+The order matters. Swap the two checks, and the code crashes on an empty array:
+
+```swift
+if array[0] == 5 && !array.isEmpty { }   // 💥 crash: index out of range
+```
+
+Comparison operators (`==`, `!=`, `<`, `>`, `<=`, `>=`) all return a `Bool`:
 
 ```swift
 let a = 5
@@ -235,7 +317,7 @@ let comparison = a < b        // true
 let notEqual = a != b         // true
 ```
 
-You can combine comparisons and logic freely, and use parentheses for clarity even when not strictly required:
+Use parentheses when they make the logic clearer, even if they are not required:
 
 ```swift
 let age = 25
@@ -243,13 +325,20 @@ let hasLicense = true
 let canDrive = (age >= 18) && hasLicense
 ```
 
-**Key takeaway:** Swift's `Bool` is strict — no truthy/falsy coercion from other types — which removes an entire class of "if (x)" bugs common in C-family languages.
+`Bool` also has a handy `toggle()` method:
+
+```swift
+var isMuted = false
+isMuted.toggle()   // true
+```
+
+**Key takeaway:** Swift's `Bool` is strict. No hidden conversions means no `if (x)` surprises from C-style languages.
 
 ---
 
-## 1.6 Strings: Creation and Interpolation
+## 1.6 Strings: Creation and Interpolation 🟢
 
-`String` in Swift is a first-class, Unicode-correct value type (not a pointer to characters, unlike Objective-C's `NSString` or C's `char*`).
+`String` is a **value type** that handles **Unicode correctly**. It is not a pointer to bytes like C's `char*`.
 
 ```swift
 let greeting = "Hello, world!"
@@ -257,7 +346,7 @@ let empty = ""
 let empty2 = String()   // equivalent to ""
 ```
 
-Concatenation works with `+` or `+=`:
+Join strings with `+` or `+=`:
 
 ```swift
 let first = "Swift"
@@ -268,7 +357,7 @@ var message = "Hello"
 message += ", " + "world"
 ```
 
-**String interpolation** is the idiomatic way to build strings from mixed content, using `\(...)`:
+**String interpolation** is the usual way to build a string from values. Put the value inside `\(...)`:
 
 ```swift
 let name = "Alex"
@@ -277,7 +366,7 @@ let bio = "\(name) is \(age) years old."
 // "Alex is 28 years old."
 ```
 
-Interpolation accepts any expression, not just simple variables:
+Any expression works inside `\(...)`, not only variable names:
 
 ```swift
 let a = 4
@@ -288,7 +377,24 @@ let items = ["apple", "banana"]
 print("You have \(items.count) items")       // "You have 2 items"
 ```
 
-You can interpolate custom types too, as long as they conform to `CustomStringConvertible` (covered in section 7) — otherwise Swift falls back to a default, often unhelpful, description.
+Format numbers right inside the interpolation:
+
+```swift
+let total = 21.6149
+print("Total: \(total.formatted(.number.precision(.fractionLength(2))))")
+// "Total: 21.61"
+```
+
+Your own types can control how they print by adopting `CustomStringConvertible` (section 7):
+
+```swift
+struct User: CustomStringConvertible {
+    let name: String
+    var description: String { "User(\(name))" }
+}
+
+print("Signed in: \(User(name: "Alex"))")   // "Signed in: User(Alex)"
+```
 
 Useful string properties and methods:
 
@@ -306,22 +412,22 @@ s.split(separator: " ")   // ["Swift", "Basics"]
 s.trimmingCharacters(in: .whitespacesAndNewlines)
 ```
 
-**Key takeaway:** always prefer interpolation (`\(...)`) over manual concatenation — it's more readable and works with any expression.
+**Key takeaway:** use interpolation (`\(...)`) instead of joining many pieces with `+`. It is easier to read and works with any expression.
 
 ---
 
-## 1.7 String Indices and Why You Can't Use `Int` Subscripts
+## 1.7 String Indices and Why You Can't Use `Int` Subscripts 🟡
 
-Here's the thing that trips up almost every developer coming from another language: you cannot index into a Swift `String` with an integer.
+This surprises almost everyone who comes from another language: **you can't get a character with an integer index**.
 
 ```swift
 let word = "Hello"
 let letter = word[0]   // ❌ error: 'subscript(_:)' is unavailable
 ```
 
-Why? Swift strings are collections of `Character` values representing **extended grapheme clusters** — user-perceived characters, which can be composed of multiple Unicode scalars (see 1.9). Because characters can have variable byte-width, there's no way to jump to "the 5th character" in constant time the way you can with a fixed-width array. Allowing `Int` subscripting would silently create an O(n) operation disguised as an O(1) one — Swift's design philosophy refuses to hide that cost.
+**Why?** A Swift `Character` is what a person sees as **one character** (1.9). Some characters take 1 byte, some take many. So Swift can't jump straight to "the 5th character". It has to **walk from the start**, which is slow (O(n)). An `Int` subscript would **hide that cost** and look fast (O(1)). Swift refuses to hide it.
 
-Instead, `String` uses `String.Index`, which you navigate relative to the string itself:
+Instead, `String` uses its own index type, **`String.Index`**. You move it relative to the string:
 
 ```swift
 let word = "Hello"
@@ -340,13 +446,13 @@ let thirdIndex = word.index(word.startIndex, offsetBy: 2)
 word[thirdIndex]   // "l"
 ```
 
-Note `word.endIndex` is a "one past the end" sentinel — like C++ iterators — and subscripting it directly crashes:
+`endIndex` is **one past the last character**. Using it directly crashes:
 
 ```swift
 word[word.endIndex]   // 💥 crash: String index is out of bounds
 ```
 
-Ranges of indices give you substrings, which are of type `Substring` (a lightweight view sharing storage with the original string):
+A range of indices gives you a **`Substring`**. It is a light **view** that shares memory with the original string:
 
 ```swift
 let range = word.startIndex..<word.index(word.startIndex, offsetBy: 3)
@@ -354,23 +460,37 @@ let sub = word[range]           // "Hel" — this is a Substring, not a String
 let asString = String(sub)      // convert back to String for long-term storage
 ```
 
-For simple "does this exist" checks, you usually don't need indices at all — use higher-level APIs:
+**Why convert to `String`?** A `Substring` keeps the **whole original string** in memory. Keep it only for short work, then convert.
+
+Most of the time you don't need indices at all. Higher-level APIs are simpler:
 
 ```swift
 word.first                     // Optional("H")
 word.last                      // Optional("o")
 word.dropFirst()                // "ello"
 word.dropLast(2)                // "Hel"
+word.prefix(3)                  // "Hel"
+word.suffix(2)                  // "lo"
 Array(word)[2]                  // "l" — convert to [Character] if you truly need random access
 ```
 
-**Key takeaway:** reach for `String.Index` methods or convert to `[Character]` — never expect `string[i]` with an `Int` to compile.
+Find a position, then use it:
+
+```swift
+let email = "alex@example.com"
+if let at = email.firstIndex(of: "@") {
+    let user = email[..<at]                          // "alex"
+    let domain = email[email.index(after: at)...]    // "example.com"
+}
+```
+
+**Key takeaway:** use `String.Index` methods, or helpers like `prefix` and `firstIndex(of:)`. `string[i]` with an `Int` never compiles.
 
 ---
 
-## 1.8 Multiline Strings and Raw Strings
+## 1.8 Multiline Strings and Raw Strings 🟢
 
-For strings spanning multiple lines, use triple double-quotes. The opening and closing `"""` must each be on their own line, and the *indentation of the closing `"""`* determines how much leading whitespace is stripped from every line:
+For text over several lines, use **three double quotes** (`"""`). The opening and closing `"""` each go on their **own line**. The **indentation of the closing `"""`** decides how much leading space is removed from every line:
 
 ```swift
 let poem = """
@@ -386,7 +506,18 @@ print(poem)
 // And so are you.
 ```
 
-Multiline strings preserve internal formatting and let you embed quotes without escaping:
+Indent a line **more** than the closing `"""`, and the extra space stays:
+
+```swift
+let list = """
+    Groceries:
+      - milk
+      - eggs
+    """
+// "Groceries:\n  - milk\n  - eggs"
+```
+
+Inside a multiline string, quotes need **no escaping**:
 
 ```swift
 let dialogue = """
@@ -395,7 +526,7 @@ No backslashes needed here.
 """
 ```
 
-If you need a literal line break inside the source that shouldn't appear in the output, end the line with a backslash:
+To split one long line in the **source** without a line break in the **output**, end the line with a backslash:
 
 ```swift
 let longLine = """
@@ -405,7 +536,7 @@ let longLine = """
 // "This is one continuous line even though it's written across two."
 ```
 
-**Raw strings** (prefixed with `#"..."#`) turn off escape sequence processing and interpolation, which is invaluable for regular expressions, file paths, or any text full of backslashes and quotes:
+**Raw strings** (`#"..."#`) turn off escape sequences like `\n`. This is very useful for regular expressions, file paths, and JSON:
 
 ```swift
 let regularString = "Line 1\nLine 2"       // \n is a real newline
@@ -416,7 +547,7 @@ let path = #"C:\Users\Alex\Documents"#      // no need to escape every backslash
 let pattern = #"\d{3}-\d{4}"#               // a regex pattern, backslashes untouched
 ```
 
-To interpolate inside a raw string, add matching `#` characters around the parentheses:
+To interpolate inside a raw string, use `\#(...)`, with the same number of `#`:
 
 ```swift
 let value = 42
@@ -424,15 +555,23 @@ let raw = #"The value is \#(value), not \(value)"#
 // "The value is 42, not \(value)"
 ```
 
-You can stack multiple `#` (`##"..."##`) if your raw content itself contains a `"#` sequence.
+If your text itself contains `"#`, use more hashes: `##"..."##`.
 
-**Key takeaway:** use `"""` for readable multi-line text, and `#"..."#` any time backslashes or quotes would otherwise force awkward escaping.
+Raw and multiline together are great for JSON in tests:
+
+```swift
+let json = #"""
+    {"name": "Alex", "path": "C:\\Users\\Alex"}
+    """#
+```
+
+**Key takeaway:** use `"""` for readable multi-line text, and `#"..."#` whenever backslashes or quotes would need ugly escaping.
 
 ---
 
-## 1.9 Character, Unicode, and Grapheme Clusters
+## 1.9 Character, Unicode, and Grapheme Clusters 🟡
 
-A Swift `Character` represents a single **extended grapheme cluster** — what a human reads as "one character" on screen, regardless of how many underlying Unicode scalars it takes to encode it.
+A Swift **`Character`** is **one extended grapheme cluster**: what a person sees as **one character** on screen, no matter how many Unicode **scalars** (code points) build it.
 
 ```swift
 let simple: Character = "A"
@@ -440,7 +579,7 @@ let emoji: Character = "🇧🇩"       // a flag — actually two Unicode scala
 let accented: Character = "é"      // could be 1 scalar (precomposed) or 2 (e + combining accent)
 ```
 
-This composed view is why `"Café".count` gives the intuitive answer regardless of how the accented character was encoded:
+This is why `count` gives the answer a person expects, however the text was encoded:
 
 ```swift
 let cafe1 = "Café"                       // é as a single precomposed scalar
@@ -451,7 +590,7 @@ print(cafe2.count)   // 4 — same visual result, same Character count
 print(cafe1 == cafe2) // true — Swift compares grapheme clusters, not raw bytes
 ```
 
-Family emoji are a dramatic example — a single `Character` built from many scalars joined with zero-width joiners:
+A family emoji is an extreme example: **one** `Character`, built from **seven** scalars:
 
 ```swift
 let family: Character = "👨‍👩‍👧‍👦"
@@ -459,7 +598,9 @@ print(family)          // renders as one emoji
 // under the hood: man + ZWJ + woman + ZWJ + girl + ZWJ + boy — 4 people, 1 Character
 ```
 
-Because of this, `String.count` is **not** the same as byte length or UTF-16 length — an important distinction when interfacing with C or Objective-C APIs that count UTF-16 code units:
+(**ZWJ** is the "zero-width joiner", an invisible scalar that glues emoji together.)
+
+So **`count` is not the byte length**, and not the UTF-16 length. Each view of the string counts differently:
 
 ```swift
 let s = "👨‍👩‍👧‍👦"
@@ -469,7 +610,22 @@ s.utf16.count                  // 11 (UTF-16 code units — what NSString.length
 s.utf8.count                   // 25 (UTF-8 bytes)
 ```
 
-You can inspect a string at each of these levels directly:
+| View | Counts | Use it for |
+|---|---|---|
+| `count` | What people see | UI, text limits for users |
+| `unicodeScalars` | Unicode code points | Text processing |
+| `utf16` | 16-bit units | `NSString`, `NSRange`, UIKit text APIs |
+| `utf8` | Bytes | Files, network, C APIs |
+
+This matters in real code. A 10-"character" limit can mean different things:
+
+```swift
+let name = "Zoë 👨‍👩‍👧‍👦"
+name.count          // 5 — what the user sees
+name.utf16.count    // 15 — what an NSString-based limit would count
+```
+
+You can look at each scalar directly:
 
 ```swift
 for scalar in "café".unicodeScalars {
@@ -481,27 +637,36 @@ for scalar in "café".unicodeScalars {
 // é 233   (if precomposed)
 ```
 
-**Key takeaway:** `Character` and `.count` operate at the human-perceived level, which is almost always what you want for display logic — but be aware other views (`.utf8`, `.utf16`, `.unicodeScalars`) exist and report different lengths, which matters when talking to non-Swift APIs.
+`Character` also has handy checks:
+
+```swift
+let ch: Character = "7"
+ch.isNumber        // true
+ch.isLetter        // false
+ch.wholeNumberValue // Optional(7)
+```
+
+**Key takeaway:** `Character` and `count` work at the level a person sees. That is right for UI. But `utf8`, `utf16`, and `unicodeScalars` report **different lengths**, which matters when you talk to non-Swift APIs.
 
 ---
 
-## 1.10 Tuples: Grouping Values Without a Type
+## 1.10 Tuples: Grouping Values Without a Type 🟢
 
-A tuple bundles multiple values into a single compound value without needing to declare a named type. It's the lightest-weight way to return or pass around a handful of related values.
+A **tuple** groups a few values into one value, **without declaring a new type**. It is the lightest way to pass a few related values around.
 
 ```swift
 let coordinate = (2, 3)                       // type: (Int, Int)
 let httpResponse = (200, "OK")                 // type: (Int, String)
 ```
 
-You can access elements positionally:
+Read elements by **position**:
 
 ```swift
 print(coordinate.0)     // 2
 print(coordinate.1)     // 3
 ```
 
-Or, more readably, give the elements names:
+Or, more readable, by **name**:
 
 ```swift
 let person = (name: "Alex", age: 28)
@@ -509,7 +674,7 @@ print(person.name)      // "Alex"
 print(person.age)       // 28
 ```
 
-Tuples shine for **decomposition** via pattern matching:
+**Decompose** a tuple into separate constants:
 
 ```swift
 let (x, y) = coordinate
@@ -520,7 +685,7 @@ let (_, statusMessage) = httpResponse
 print(statusMessage)      // "OK"
 ```
 
-The most common real-world use is returning multiple values from a function without defining a dedicated struct:
+The most common real use: **return several values** from a function, without making a struct:
 
 ```swift
 func minMax(of numbers: [Int]) -> (min: Int, max: Int)? {
@@ -539,7 +704,15 @@ if let bounds = minMax(of: [4, 9, 1, 7, 3]) {
 }
 ```
 
-Tuples also work directly in `switch` statements, which is heavily used in later sections:
+A neat trick: **swap two values** in one line:
+
+```swift
+var a = 1
+var b = 2
+(a, b) = (b, a)   // a == 2, b == 1
+```
+
+Tuples work in `switch` too. You will see this a lot later:
 
 ```swift
 let point = (0, 0)
@@ -555,15 +728,27 @@ default:
 }
 ```
 
-**Limitation to remember:** tuples are meant for small, temporary groupings. If a tuple grows past two or three elements, or you find yourself passing it between many functions, that's a signal to define a proper `struct` instead — tuples have no methods, no computed properties, and no `Codable` conformance out of the box.
+**Know the limits.** Tuples are for **small, short-lived** groups. They have no methods, no computed properties, and no `Codable` support. If a tuple grows past two or three values, or travels through many functions, make a `struct`:
 
-**Key takeaway:** use tuples for quick, local grouping (especially multiple return values); graduate to a `struct` once the grouping becomes a real "thing" in your domain.
+```swift
+// Tuple: fine inside one function
+let result = (title: "Pancakes", minutes: 20)
+
+// Struct: better when it becomes a real "thing" in your app
+struct Recipe: Codable {
+    let title: String
+    let minutes: Int
+    var isQuick: Bool { minutes < 30 }
+}
+```
+
+**Key takeaway:** use tuples for quick, local groups (especially multiple return values). Switch to a `struct` when the group becomes a real concept.
 
 ---
 
-## 1.11 Type Conversion and Initializer Syntax
+## 1.11 Type Conversion and Initializer Syntax 🟢
 
-Swift never converts types implicitly — every conversion is explicit, done through an initializer call that looks like a function call.
+Swift **never converts types by itself**. Every conversion is written out, as an **initializer** that looks like a function call: `TypeName(value)`.
 
 ```swift
 let intValue = 42
@@ -574,7 +759,16 @@ let piString = "3.14"
 let piDouble = Double(piString)        // Optional(3.14) — this can fail!
 ```
 
-Notice that converting *from* a `String` returns an **optional** (`Double?`, `Int?`, etc.), because the string might not represent a valid number:
+Even mixing `Int` and `Double` in math needs a conversion:
+
+```swift
+let count = 3
+let price = 2.5
+let total = price * count          // ❌ error: binary operator '*' cannot be applied to operands of type 'Double' and 'Int'
+let fixed = price * Double(count)  // ✅ 7.5
+```
+
+Converting **from a `String`** gives an **optional** (`Int?`, `Double?`), because the text might not be a valid number:
 
 ```swift
 let valid = Int("42")          // Optional(42)
@@ -586,7 +780,18 @@ if let number = Int("42") {
 }
 ```
 
-Converting between numeric types can lose information, so Swift makes you opt in explicitly rather than silently truncating:
+A typical use: reading a number from a text field.
+
+```swift
+let input = "  12 "
+if let quantity = Int(input.trimmingCharacters(in: .whitespaces)), quantity > 0 {
+    print("Ordering \(quantity)")
+} else {
+    print("Please enter a valid number")
+}
+```
+
+Converting between **number types** can lose data. If the value doesn't fit, a normal conversion **crashes**. Use `exactly:` to get `nil` instead:
 
 ```swift
 let large: Int = 1000
@@ -594,9 +799,10 @@ let small = Int8(large)     // 💥 crash: 1000 doesn't fit in Int8's range (-12
 
 // safer: use the failable initializer
 let safeSmall = Int8(exactly: large)   // nil, no crash
+let clamped = Int8(clamping: large)    // 127 — the closest value that fits
 ```
 
-Going from floating-point to integer truncates the fractional part (it does not round):
+From floating point to integer, the fraction is **cut off**, not rounded:
 
 ```swift
 let pi = 3.99
@@ -605,7 +811,7 @@ let truncated = Int(pi)     // 3, not 4
 let rounded = Int(pi.rounded())   // 4 — round explicitly first if that's what you want
 ```
 
-Custom types get the same call-like initializer syntax by defining an `init`:
+Your own types use the **same syntax**, by writing an `init`:
 
 ```swift
 struct Temperature {
@@ -620,15 +826,15 @@ let boiling = Temperature(fahrenheit: 212)
 print(boiling.celsius)   // 100.0
 ```
 
-This uniform syntax — `TypeName(...)` — is one of Swift's consistency wins: built-in conversions (`Double(someInt)`) and user-defined initializers look and behave the same way.
+Built-in conversions (`Double(someInt)`) and your own initializers **look and work the same way**. That consistency makes Swift code easy to read.
 
-**Key takeaway:** every type conversion in Swift is explicit and spelled as an initializer call; conversions that can fail return an optional (or crash if you use a non-failable initializer with out-of-range input) — check with `if let` rather than assuming success.
+**Key takeaway:** every conversion is explicit, written as `Type(value)`. Conversions that can fail return an optional, so check them with `if let` instead of assuming success.
 
 ---
 
-## 1.12 Comments, Documentation Comments, and `// MARK:`
+## 1.12 Comments, Documentation Comments, and `// MARK:` 🟢
 
-Regular comments use `//` for a single line or `/* ... */` for a block (which, unlike C, can be nested in Swift):
+Normal comments use `//` for one line, or `/* ... */` for a block. Unlike C, block comments **can be nested** in Swift:
 
 ```swift
 // This is a single-line comment
@@ -639,7 +845,7 @@ Regular comments use `//` for a single line or `/* ... */` for a block (which, u
  */
 ```
 
-**Documentation comments** use `///` (triple slash) or `/** ... */`, and Xcode renders them as rich Quick Help when you option-click a symbol or hover over it in an autocomplete list:
+**Documentation comments** use `///` (three slashes). Xcode shows them as **Quick Help** when you Option-click a name, and in autocomplete:
 
 ```swift
 /// Calculates the area of a rectangle.
@@ -652,7 +858,7 @@ func area(width: Double, height: Double) -> Double {
 }
 ```
 
-Common documentation fields include `- Parameters:`, `- Returns:`, `- Throws:`, and you can embed code samples with triple backticks:
+Common fields are `- Parameters:`, `- Returns:`, and `- Throws:`. You can include a code sample, too:
 
 ```swift
 /// Doubles the given value.
@@ -668,7 +874,18 @@ func double(_ value: Int) -> Int {
 }
 ```
 
-`// MARK:` comments don't affect compilation at all — they're a signal to Xcode's jump bar (the dropdown at the top of the editor) to organize your file into navigable sections:
+A documented throwing function:
+
+```swift
+/// Loads the saved settings from disk.
+/// - Throws: `SettingsError.missingFile` if nothing was saved yet.
+/// - Returns: The decoded settings.
+func loadSettings() throws -> Settings { /* ... */ }
+```
+
+Tip: put the cursor on a function and press **Option+Cmd+/** in Xcode. It writes the doc comment skeleton for you.
+
+**`// MARK:`** comments do nothing for the compiler. They only organize your file in Xcode's **jump bar** (the menu at the top of the editor):
 
 ```swift
 // MARK: - Properties
@@ -689,16 +906,16 @@ func viewDidLoad() {
 }
 ```
 
-The leading `-` after `MARK:` adds a visual divider line in the jump bar; without it, you get a plain section label. Two close cousins:
+The `-` after `MARK:` adds a **divider line** in the jump bar. Two close relatives:
 
 ```swift
 // TODO: Replace this with a real network call
 // FIXME: This crashes when the array is empty
 ```
 
-Xcode surfaces `TODO:` and `FIXME:` comments in the jump bar too, with distinct icons, making them useful as lightweight, in-code task tracking that never needs an external tool.
+Xcode shows `TODO:` and `FIXME:` in the jump bar too, with their own icons. They are simple task notes right inside the code.
 
-**Key takeaway:** use `///` for anything another developer (or Quick Help) needs to understand *what* a symbol does and *how* to call it; use `// MARK:` purely for navigation within a file — both cost nothing at runtime.
+**Key takeaway:** use `///` to explain **what** a function does and **how** to call it. Use `// MARK:` only to organize a file. Neither costs anything at runtime.
 
 ---
 
@@ -706,15 +923,15 @@ Xcode surfaces `TODO:` and `FIXME:` comments in the jump bar too, with distinct 
 
 | Topic | One-line takeaway |
 |---|---|
-| `var` vs `let` | Default to `let`; only use `var` when mutation is proven necessary |
-| Type inference | The compiler infers types from literals; annotate when you need a non-default type |
-| Integers | `Int` is 64-bit and traps on overflow; division truncates, doesn't promote to floating point |
+| `var` vs `let` | Use `let` by default; `var` only when the value must change |
+| Type inference | The compiler works out types; annotate when you need a non-default type |
+| Integers | `Int` is 64-bit and crashes on overflow; integer division drops the fraction |
 | Floating point | `Double` is the default; never compare with `==`; use `Decimal` for money |
-| Booleans | No truthy/falsy coercion; `&&`/`\|\|` short-circuit |
-| Strings | Prefer interpolation `\(...)` over concatenation |
-| String indices | No `Int` subscripting — use `String.Index` or convert to `[Character]` |
-| Multiline/raw strings | `"""..."""` for readable multi-line text; `#"..."#` to disable escaping |
-| Character/Unicode | `Character` = grapheme cluster; `.count` differs from `.utf8.count`/`.utf16.count` |
-| Tuples | Lightweight grouping for local use and multiple return values; graduate to `struct` when it grows |
-| Type conversion | Always explicit, always initializer syntax; string-to-number conversions are optional |
-| Comments | `///` for documentation Xcode renders; `// MARK:` for jump-bar navigation only |
+| Booleans | No truthy/falsy conversion; `&&` and `\|\|` short-circuit |
+| Strings | Use interpolation `\(...)` instead of many `+` |
+| String indices | No `Int` subscripts; use `String.Index` or helpers like `prefix` |
+| Multiline/raw strings | `"""..."""` for many lines; `#"..."#` to turn off escapes |
+| Character/Unicode | `Character` = what a person sees; `count` differs from `utf8`/`utf16` counts |
+| Tuples | Small, local groups and multiple return values; use a `struct` when it grows |
+| Type conversion | Always explicit, as `Type(value)`; string-to-number gives an optional |
+| Comments | `///` for docs in Quick Help; `// MARK:` for jump-bar navigation |

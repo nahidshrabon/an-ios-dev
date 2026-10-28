@@ -1,396 +1,820 @@
-## 68.1 Breakpoints: Line, Conditional, and Symbolic
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A line breakpoint pauses execution at a specific source line; a conditional breakpoint only pauses when a specified expression evaluates true, avoiding manually stepping through many irrelevant iterations to reach a specific problematic case; a symbolic breakpoint pauses whenever a named function is called, regardless of where in source that call originates — useful for breaking on system or framework functions without a specific call site in mind.
+Debugging is a **skill**, not luck. This section covers the tools in order of daily use: **breakpoints** and **LLDB**, debugging **async** code, reading the most common **crashes** and **watchdog** kills, the **view** and **memory** debuggers, the **sanitizers** and checkers, **logging** with `Logger`, **symbolication**, **sysdiagnose**, and debugging **extensions**.
+
+---
+
+## 68.1 Breakpoints: Line, Conditional, and Symbolic 🟢
+
+A **line breakpoint** pauses when execution reaches a line (click the line number gutter). Two variations make breakpoints much more useful:
+
+**Conditional**: pause only when a condition is true. Right-click the breakpoint ▸ **Edit Breakpoint** ▸ Condition:
 
 ```swift
-// Conditional breakpoint example: right-click a line breakpoint in Xcode,
-// add condition: index == 47
-for (index, item) in items.enumerated() {
-    process(item)  // breakpoint only pauses when index == 47, skipping the other 46 iterations
+for recipe in recipes {
+    let scaled = recipe.scaled(toServings: servings)   // condition: recipe.id == "pasta-42"
+    results.append(scaled)                             // or: scaled.totalGrams < 0
 }
 ```
 
-Conditional breakpoints are particularly valuable for debugging a bug that only manifests on a specific iteration or specific data value buried within a loop processing many items — rather than manually stepping through (or repeatedly hitting continue on) dozens of irrelevant iterations to reach the one that actually triggers the bug, a condition like `index == 47` or `item.id == "problematic-id"` lets execution pause exactly once, precisely at the iteration that actually matters.
+Instead of pressing Continue 300 times to reach the **one** bad recipe, it stops exactly **there**. ("**Ignore N times**" in the same dialog skips the first N hits.)
+
+**Symbolic**: pause whenever a **function** is called, wherever the call comes from (Breakpoint navigator ▸ **+** ▸ Symbolic Breakpoint). Very useful for **framework** code you can't put a line breakpoint in:
+
+| Symbol / breakpoint type | Stops when |
+|---|---|
+| `UIViewAlertForUnsatisfiableConstraints` | Auto Layout breaks a constraint (36.8) |
+| **Swift Error Breakpoint** (from the **+** menu) | Any Swift `throw` happens |
+| **Exception Breakpoint** | An Objective-C exception is raised: you see the **cause**, not just the crash |
+| `-[UIViewController viewDidLoad]` | Any view controller loads |
+
+Turn on the **Exception** and **Swift Error** breakpoints when hunting a crash: you stop at the **throw site**, with all the local state still there.
+
+A cost to know: a condition is evaluated on **every** hit. In a loop that runs millions of times, it can make the app **very** slow.
 
 ---
 
-## 68.2 Breakpoint Actions and Logging Without Rebuilds
+## 68.2 Breakpoint Actions and Logging Without Rebuilds 🟢
 
-Breakpoint actions (log messages, sound, running a debugger command, executing a shell script) attach behavior to a breakpoint without requiring it to actually stop execution — an "automatically continue" log breakpoint effectively inserts a `print` statement at that line without editing and rebuilding source code, letting a developer add or adjust diagnostic output between debugging runs instantly.
+A breakpoint can **do something** when hit, and then **continue** automatically. That gives you a `print` **without editing code or rebuilding**:
 
-```plaintext
-// A breakpoint action configured as: Log Message "Processing item: @item.name@", Automatically continue: checked
-// behaves like inserting print("Processing item: \(item.name)") at that line,
-// but requires no source edit or rebuild — just adjusting the breakpoint's configuration
+```
+Edit Breakpoint:
+  Action: Log Message   →  "Scaling @recipe.title@ to @servings@ servings"
+  ☑ Automatically continue after evaluating actions
 ```
 
-This capability is genuinely valuable specifically because it decouples adding diagnostic output from the edit-compile-run cycle — for a slow-building project, needing to add a `print` statement, rebuild, observe output, then remove the `print` and rebuild again is meaningfully more time-consuming than simply configuring a log breakpoint's message and toggling it on or off, particularly useful for exploratory debugging sessions where the exact diagnostic information needed isn't known upfront.
+Text between `@…@` is an **expression** evaluated each time. The console then shows a line every time that code runs, like a `print`, but:
+
+- no rebuild (great for slow projects),
+- nothing to **forget** to remove before committing,
+- turn it on and off with one click.
+
+Other actions:
+
+| Action | Example use |
+|---|---|
+| **Debugger Command** | `po items.count` or `bt 5` (the first 5 frames of the call stack) |
+| **Sound** | Hear when a rarely-called path runs, without stopping |
+| **Shell Command** | Run a script with information from the app |
+
+Breakpoints are stored per user by default. Right-click ▸ **Share Breakpoint** to commit a useful one (like the Exception breakpoint) for the whole team.
 
 ---
 
-## 68.3 The Variables View and Stepping Controls
+## 68.3 The Variables View and Stepping Controls 🟢
 
-Xcode's variables view (visible when execution is paused at a breakpoint) shows the current scope's local variables and their values, while stepping controls (step over, step into, step out) let a developer advance execution one statement at a time, choosing whether to enter a called function's own implementation or treat it as a single opaque step.
+When the app is **paused**, the debug area shows the **variables view**: local variables, `self`, and their current values (expand to look inside). Hover over a variable in the editor to see its value too.
+
+Then **step** through the code:
+
+| Control | Shortcut | Does |
+|---|---|---|
+| **Continue** | ⌃⌘Y | Run until the next breakpoint |
+| **Step Over** | F6 | Run the current line; don't go **into** the functions it calls |
+| **Step Into** | F7 | Go **inside** the function called on this line |
+| **Step Out** | F8 | Finish the current function; stop in its caller |
 
 ```swift
-// At a paused breakpoint, the variables view shows current local state, e.g.:
-// items: [Item] (3 elements)
-// index: 1
-// currentItem: Item { name: "Widget", price: 9.99 }
-```
-
-Choosing correctly between "step over" (execute the current line's function call without entering it) and "step into" (descend into the called function's own implementation) is a genuinely practical skill — stepping into every single function call while debugging, including trivial standard library calls or functions already known to be correct, wastes significant time navigating through irrelevant code, while judiciously stepping over well-understood code and stepping into only the specific function actually suspected of containing the bug keeps a debugging session efficiently focused.
-
----
-
-## 68.4 LLDB po, p, and v Compared
-
-LLDB's three primary value-inspection commands serve related but distinct purposes: `po` ("print object") evaluates an expression and calls its `description`/`debugDescription`, `p` ("print") evaluates an expression and prints its raw value using LLDB's type formatters, and `v` ("variable") looks up a variable by name directly without full expression evaluation, making it meaningfully faster.
-
-```plaintext
-(lldb) po user
-User(name: "Ada", age: 30)
-(lldb) p user.age
-(Int) $0 = 30
-(lldb) v user
-(User) user = (name = "Ada", age = 30)
-```
-
-The performance distinction between `v` and `p`/`po` matters in practice — `v` looks up a known variable directly from the current frame without going through LLDB's full expression evaluator, making it noticeably faster for simple variable inspection, while `p` and `po` invoke the complete expression evaluation machinery (necessary for evaluating actual expressions like `user.age` or calling methods, but genuine overhead for the simple case of "just show me this variable's current value").
-
----
-
-## 68.5 expression for Changing State at Runtime
-
-LLDB's `expression` command (often abbreviated `e` or invoked implicitly by typing an assignment directly) doesn't just inspect state — it can genuinely execute arbitrary code within the paused process's context, including reassigning variables, calling methods, or triggering side effects, letting a developer test a hypothesis or work around a bug interactively without restarting the app.
-
-```plaintext
-(lldb) expression user.age = 31
-(lldb) po user.age
-31
-(lldb) expression viewModel.reload()
-```
-
-This runtime state manipulation capability is genuinely powerful for hypothesis testing during a debugging session — rather than editing source code, rebuilding, and re-running to test "what happens if this value were different at this point," `expression` lets a developer directly modify a variable's value or trigger a method call in the currently paused, live process, immediately observing the actual effect without the overhead of a full edit-compile-run cycle.
-
----
-
-## 68.6 Stepping Through Async Code in LLDB 🟠
-
-Debugging `async` code introduces genuine complexity beyond synchronous stepping — because an `await` point can suspend execution and potentially resume on a different thread, naive step-based debugging can behave unexpectedly, and LLDB's async-aware stepping (along with `swift concurrency` LLDB commands) helps navigate suspension points more coherently than raw thread-level stepping would.
-
-```plaintext
-(lldb) thread step-in
-# stepping through an async function may cross a suspension point;
-# LLDB's Swift concurrency support helps present this coherently
-# rather than as a confusing jump to a seemingly unrelated thread
-```
-
-This complexity is a direct consequence of structured concurrency's execution model (recall Part 2) — an `async` function's execution isn't guaranteed to stay on one OS thread across an `await` suspension point, meaning naive thread-based stepping (which assumes sequential, single-thread execution) can produce a genuinely confusing debugging experience without LLDB's specific async-aware support helping present the logical flow of an async function coherently despite its potential thread-hopping.
-
----
-
-## 68.7 Task Backtraces and Concurrency Debugging 🟠
-
-Beyond stepping through a single async function, LLDB (and Xcode's debug navigator) can show task backtraces — the chain of `Task` creation and structured concurrency parent/child relationships (recall `TaskGroup` and task trees from Part 2) — helping understand which task a given piece of suspended code actually belongs to and what spawned it.
-
-```plaintext
-(lldb) swift concurrency task backtrace <task-id>
-# Shows the task's creation point and its position within the broader
-# structured concurrency task tree, not just its own current suspension point
-```
-
-Task backtraces address a genuine debugging need specific to structured concurrency — a deadlock or unexpected behavior involving several concurrently running, hierarchically related tasks (a parent task and several child tasks in a `TaskGroup`) is considerably harder to diagnose from a single task's isolated stack trace alone, and understanding the full task hierarchy (which task spawned which, and where) is often essential to actually understanding a concurrency bug's root cause rather than just its symptom.
-
----
-
-## 68.8 Reading a Crash: Index Out of Range
-
-An "index out of range" crash (typically `Fatal error: Index out of range`) occurs when array (or other collection) subscript access uses an index outside the collection's valid bounds — the crash report/console output identifies the specific line, and the fix requires validating the index (or using a safer access pattern) before subscripting.
-
-```swift
-let items = ["a", "b", "c"]
-let item = items[5]  // crashes: Fatal error: Index out of range
-
-// Safer pattern: validate bounds, or use a safe subscript extension
-if items.indices.contains(5) {
-    let item = items[5]
+func checkout() {
+    let total = cart.total()                  // Step Over: you trust total(); just see the result
+    let discount = pricing.discount(for: total) // Step Into: the bug might be in here
+    charge(total - discount)
 }
 ```
 
-This crash class is a direct, practical consequence of Swift's deliberate design choice to trap on invalid array access rather than silently returning an undefined or garbage value (a design differing from some other languages) — while this crash is disruptive when it occurs, it reflects Swift's broader safety philosophy of failing loudly and immediately at the actual point of an invalid operation, rather than allowing a memory-safety violation to silently corrupt program state and manifest as a much more confusing bug somewhere else entirely, later.
+The skill is choosing **where** to step into. Stepping into **everything** (standard library calls, code you trust) wastes time; step **over** the trusted code and **into** the suspicious function.
+
+Two more helpers:
+
+- **Continue to Here**: right-click a line ▸ run until that line (like a temporary breakpoint).
+- The **call stack** in the Debug navigator: click any frame to see **that** function's variables. It answers "**how did we get here**?"
 
 ---
 
-## 68.9 Reading a Crash: Force-Unwrapped Nil
+## 68.4 LLDB po, p, and v Compared 🟡
 
-A force-unwrap crash (`Fatal error: Unexpectedly found nil while unwrapping an Optional value`) occurs when the `!` operator is applied to an `Optional` that's actually `nil` at that point — the crash report identifies the exact force-unwrap site, and the fix typically involves using `if let`/`guard let` or `#require` (recall section 65.3's testing use of `#require`) instead of an unconditional force-unwrap.
+The **LLDB console** (bottom right, `(lldb)` prompt) lets you inspect anything while paused. Three commands show values:
+
+```
+(lldb) v recipe                        // frame variable: reads memory, runs NO code
+(Recipe) recipe = {
+  title = "Pasta"
+  servings = 2
+}
+(lldb) v recipe.servings
+(Int) recipe.servings = 2
+
+(lldb) p recipe.scaled(toServings: 4).servings   // can evaluate expressions and call methods
+(Int) 4
+
+(lldb) po recipe                       // "print object": uses description / debugDescription
+Recipe(title: "Pasta", servings: 2)
+```
+
+| Command | How it works | Use for |
+|---|---|---|
+| **`v`** | Reads variables straight from memory; **runs no code** | Locals and **stored** properties: fast and safe |
+| **`p`** | Tries `v` first; if needed, **compiles and runs** an expression | Computed properties, method calls, math |
+| **`po`** | Runs code to get the object's **description** | Objects with a nice `description` (and Objective-C objects) |
+
+Since Xcode 15, `p` is smart ("do what I mean"): it uses the fast `v` path when it can. Prefer **`v`** when you only want to **see** a value: it can't trigger side effects, and it works even when expression evaluation fails (which happens in some optimized or complex code).
+
+Make your own types print nicely in the debugger and the variables view with the **`@DebugDescription`** macro:
 
 ```swift
-let user: User? = fetchUser(id: "unknown")
-print(user!.name)  // crashes if fetchUser returned nil
+@DebugDescription
+struct Recipe {
+    var title: String
+    var servings: Int
+    var debugDescription: String { "\(title) (\(servings) servings)" }
+}
+```
 
-// Safer: handle the nil case explicitly
-guard let user else {
-    print("User not found")
+---
+
+## 68.5 expression for Changing State at Runtime 🟡
+
+**`expression`** (short: `e`) doesn't just read: it **runs code** inside the paused app. You can **change** state and test a theory **without** restarting:
+
+```
+(lldb) e servings = 0                       // what if servings were 0 here?
+(lldb) c                                    // continue and watch what happens
+
+(lldb) e viewModel.reload()                 // call a method
+(lldb) e self.view.backgroundColor = .red   // change UI...
+(lldb) e CATransaction.flush()              // ...and push it to the screen while paused (62.6)
+```
+
+Typical uses:
+
+- "**Does the crash go away** if this value is valid?" Set it, continue, see.
+- **Skip** a broken step: `thread return` returns from the current function early (with a value if needed).
+- **Trigger** a hard-to-reach state: call the method that shows an error alert.
+
+It saves full edit → build → run → navigate cycles, which can take minutes each in a big app.
+
+Be careful: changes affect **only this run**, and odd changes can put the app in a state that **can't happen** in real use. Use it to **learn** about the bug, then fix the code.
+
+---
+
+## 68.6 Stepping Through Async Code in LLDB 🔴
+
+Async code makes stepping harder. An `await` can **suspend** the function, and it may **resume on a different thread** (Part 2). A debugger that only thinks in **threads** would jump around confusingly.
+
+```swift
+func loadRecipe(id: Recipe.ID) async throws -> Recipe {
+    let data = try await api.data(for: id)      // suspends here; resumes later, maybe on another thread
+    let recipe = try decoder.decode(Recipe.self, from: data)
+    return recipe
+}
+```
+
+Modern LLDB is **async-aware**:
+
+- **Step Over** on an `await` line waits for the function to **resume** and stops on the **next line** of the **same** function, even if it resumed on another thread.
+- **Step Into** on an `await` call goes into the async function being awaited.
+- The **call stack** shows async frames: the **logical** chain of callers ("loadRecipe ← RecipeView.task"), not just the current thread's raw frames.
+
+Tips:
+
+- Put a breakpoint **after** an `await` instead of stepping across long suspensions (a network call can take seconds).
+- If a step seems to "**jump**", look at the stack: you may now be in a **different task** that hit the same code.
+- Recent LLDB versions add **`language swift task …`** commands to inspect the current task (see `help language swift task` in your Xcode's LLDB).
+
+---
+
+## 68.7 Task Backtraces and Concurrency Debugging 🔴
+
+Concurrency bugs often involve **several** tasks: a parent and its children (18.3), tasks waiting on an actor, a task that **never finishes**. One stack trace shows only **one** task's current position.
+
+The best tool is **Instruments ▸ Swift Concurrency** template (Product ▸ Profile). It shows:
+
+| Track | Shows |
+|---|---|
+| **Swift Tasks** | How many tasks are **running**, **suspended**, or **waiting**, over time |
+| **Task Forest** | The **tree** of tasks: who created whom (parents and children) |
+| **Swift Actors** | Each actor's **queue**: tasks waiting to run on it (contention) |
+| Task details | A task's **creation backtrace**: where it was started |
+
+Common concurrency bugs and how they look:
+
+| Bug | Symptom |
+|---|---|
+| A **continuation never resumed** (18.11) | The task waits forever. The runtime prints `SWIFT TASK CONTINUATION MISUSE: … leaked its continuation` |
+| **Actor contention** | Many tasks queued on one actor; work happens one at a time |
+| **Main actor overloaded** | UI hangs while `@MainActor` work piles up (69.13) |
+| **Unstructured task leak** | `Task {}` objects pile up and never end (e.g. a `for await` loop with no cancellation) |
+
+In the debugger, the Debug navigator's stack also includes the **async** parent frames (68.6), which tells you **which** task you're in and how it was started.
+
+---
+
+## 68.8 Reading a Crash: Index Out of Range 🟢
+
+```
+Fatal error: Index out of range
+```
+
+Swift **checks** every array subscript. A bad index **stops the app** at once, instead of reading random memory:
+
+```swift
+let steps = recipe.steps          // 3 steps: indices 0, 1, 2
+let step = steps[currentStep]     // 💥 if currentStep == 3
+```
+
+In a crash report, Swift runtime traps like this (and force-unwraps, `fatalError`, integer overflow) appear as **`EXC_BREAKPOINT (SIGTRAP)`**, with the crashing line in the top frames of the crashed thread.
+
+The **line** is easy to find. The **reason** the index was wrong takes more thought. Common causes:
+
+| Cause | Example |
+|---|---|
+| **Off by one** | `for i in 0...items.count` (should be `..<`) |
+| **Stale index** | An index saved **before** the array changed (an item was deleted) |
+| **Two sources of truth** | A table view's row count from one array, cells from another |
+| **Data race** | Another thread removed items while you were reading (68.17) |
+
+Fixes, depending on the cause:
+
+```swift
+// Iterate safely: no manual indices
+for (index, step) in steps.enumerated() { /* ... */ }
+
+// When an index may be invalid, check first
+guard steps.indices.contains(currentStep) else { return }
+let step = steps[currentStep]
+
+// Or a safe subscript that returns an optional
+extension Collection {
+    subscript(safe index: Index) -> Element? { indices.contains(index) ? self[index] : nil }
+}
+let step = steps[safe: currentStep]
+```
+
+Don't hide **every** index with `[safe:]`: if an index "can't" be wrong, a crash in testing is **useful** information. Use safe access where an invalid index is a **normal** possibility.
+
+---
+
+## 68.9 Reading a Crash: Force-Unwrapped Nil 🟢
+
+```
+Fatal error: Unexpectedly found nil while unwrapping an Optional value
+```
+
+A **`!`** was used on an optional that was **`nil`**:
+
+```swift
+let recipe = store.recipe(id: id)!       // 💥 if the recipe was deleted
+let url = URL(string: userInput)!        // 💥 if the text isn't a valid URL
+let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as! RecipeCell   // 💥 wrong type: as! crashes too
+```
+
+The crash points to the exact line. The real question: **why** did I believe this could never be `nil`? Usually one of these was wrong:
+
+- "This always exists" → it was **deleted**, not loaded yet, or the server **didn't send** it.
+- "The user always types a valid value" → they **didn't**.
+- "This outlet is always connected" → it was used **before** `viewDidLoad` (implicitly unwrapped `@IBOutlet`s are `nil` until then).
+
+The fix is to **handle** the nil case, not to hide it:
+
+```swift
+guard let recipe = store.recipe(id: id) else {
+    showMessage("This recipe is no longer available.")
     return
 }
-print(user.name)
-```
 
-Force-unwrap crashes are frequently the single most common crash type in a codebase that uses `!` liberally, and diagnosing one is usually a matter of examining what could have caused the specific optional at that exact line to actually be `nil` — was an assumption about a value always being present after some prior check actually incorrect, or was there a code path (an error case, a genuinely absent value) that the force-unwrap simply didn't account for at all.
-
----
-
-## 68.10 Reading a Crash: EXC_BAD_ACCESS
-
-`EXC_BAD_ACCESS` indicates memory access to invalid or deallocated memory — a considerably harder crash to diagnose than the previous two, since the crash's actual symptom (accessing bad memory) often occurs at a point in code far removed from the actual root cause (an object being deallocated prematurely, or corrupted memory from an earlier unsafe operation).
-
-```swift
-// A common cause: accessing an object through a dangling unowned reference
-// after the referenced object has already been deallocated
-class Parent {
-    unowned let child: Child  // if child is deallocated while parent still exists, EXC_BAD_ACCESS on access
+guard let url = URL(string: userInput) else {
+    throw ImportError.invalidURL(userInput)
 }
 ```
 
-Because `EXC_BAD_ACCESS` frequently reflects a use-after-free or dangling-reference bug rather than an error localized to the crashing line itself, diagnosing it often requires tools beyond simply reading the crash's immediate stack trace — the Memory Graph Debugger (68.13) and Address Sanitizer (68.16) specifically exist to help surface the actual root cause of this crash class, since the crash location and the actual bug's location are frequently two genuinely different places in the code.
+`!` is fine when `nil` **really** means a programmer error that should be caught in testing (for example, a URL written as a constant in your code). For anything that comes from **data**, the **network**, or the **user**, unwrap safely.
 
 ---
 
-## 68.11 Watchdog Terminations and Their Codes 🟠
+## 68.10 Reading a Crash: EXC_BAD_ACCESS 🟡
 
-Watchdog terminations occur when the system forcibly kills an app for taking too long during a specific lifecycle phase (launch, resume, background task completion) — distinct exit codes (like `0x8badf00d`, informally read as "ate bad food") identify which specific watchdog timeout was exceeded, pointing toward the general category of the underlying performance problem.
-
-```swift
-// 0x8badf00d specifically indicates a watchdog timeout — the app took too long
-// during a lifecycle transition (e.g., blocking the main thread during launch
-// or backgrounding), and the system terminated it for being unresponsive
+```
+Thread 1: EXC_BAD_ACCESS (code=1, address=0x10)
 ```
 
-Recognizing these specific termination codes is a genuinely practical diagnostic skill, since a watchdog termination's crash report looks meaningfully different from a typical crash (there's no specific crashing line of code — the app was simply too slow) — understanding that `0x8badf00d` points toward a lifecycle-phase performance problem (recall app launch time discussion in section 69.8-69.9) directs debugging effort toward profiling that specific lifecycle phase's performance rather than searching for a conventional logic bug.
+The app tried to use **memory it may not touch**: freed, never allocated, or protected. It's harder than the previous two crashes because the crashing line is often **not** where the bug **is**: the damage happened **earlier**, somewhere else.
 
----
+In Swift code, the common causes are:
 
-## 68.12 The View Hierarchy Debugger
+| Cause | Example |
+|---|---|
+| **Infinite recursion** (stack overflow) | A function or getter that calls **itself** forever |
+| **Unsafe pointers** used after they're valid | A pointer from `withUnsafeBytes` kept and used **outside** the closure |
+| **`unowned(unsafe)`** / `Unmanaged` misuse | Using an object after it was freed, with checks turned off |
+| **Objective-C / C interop** | An `assign` delegate or KVO observer pointing to a freed object |
+| **Data races** corrupting memory | Two threads mutating the same value (68.17) |
 
-Xcode's View Hierarchy Debugger captures a running app's actual current view hierarchy as an interactive, inspectable 3D visualization — letting a developer see the real layered structure of views on screen, inspect individual views' actual frame/constraint/property values, and diagnose layout issues that are difficult to understand purely from reading source code.
-
-```swift
-// Not a Swift API — accessed via Xcode's "Debug View Hierarchy" button
-// while the app is running and paused, revealing the actual runtime
-// layer structure of visible (and hidden/overlapping) views
-```
-
-This tool is particularly valuable for diagnosing exactly the kind of subtle layout bug that's genuinely hard to spot purely by reading Auto Layout constraint code (recall section 36) — an unexpectedly hidden view sitting behind another, a view with an unexpectedly zero-sized frame, or an unintended overlap only becomes obvious once actually visualized in the View Hierarchy Debugger's interactive 3D view, which reveals the *actual* runtime layout rather than requiring a developer to mentally simulate what a set of constraints should theoretically produce.
-
----
-
-## 68.13 The Memory Graph Debugger
-
-The Memory Graph Debugger visualizes an app's actual live object graph at a given moment — every currently allocated object and the reference relationships connecting them — surfacing objects that remain unexpectedly alive (suggesting a retain cycle or leak, recall ARC concepts from section 10) directly as a visual graph rather than requiring inference from indirect symptoms.
+The recursion case is surprisingly common:
 
 ```swift
-// Accessed via Xcode's Memory Graph button (the small graph icon) during a debug session;
-// Xcode specifically flags objects it suspects are involved in a retain cycle
-// with a purple exclamation mark warning icon
-```
-
-Xcode's automatic flagging of suspected retain cycles (the purple warning icon) is a genuinely significant time-saver over manually reasoning through an object graph's reference relationships — rather than needing to trace through code by hand looking for a strong reference cycle (exactly the kind of bug discussed for AI-generated closures in section 61.11), the Memory Graph Debugger can directly point to the specific objects involved, considerably narrowing the search for the actual strong reference that's incorrectly keeping a cycle of objects alive.
-
----
-
-## 68.14 Finding Retain Cycles in the Memory Graph
-
-Building on 68.13, actually diagnosing a specific retain cycle in the Memory Graph Debugger involves selecting a flagged object and examining its "Object Reference" panel, which lists exactly what's holding a strong reference to it — tracing that chain of strong references back typically reveals the specific cycle (often a closure capturing `self` strongly, recall section 61.11, or two objects each holding a strong reference to the other).
-
-```swift
-// Common retain cycle pattern the Memory Graph Debugger would surface:
-class ViewModel {
-    var onUpdate: (() -> Void)?
+struct Recipe {
+    var title: String
+    var displayTitle: String {
+        displayTitle.capitalized       // 💥 calls itself forever → stack overflow → EXC_BAD_ACCESS
+    }                                  // (meant: title.capitalized)
 }
-class ViewController {
-    let viewModel = ViewModel()
-    func setup() {
-        viewModel.onUpdate = { self.refreshUI() }  // strong capture of self — cycle
+```
+
+In the crash's stack, recursion shows as the **same function** repeated hundreds of times. That's the giveaway.
+
+(Note: plain Swift **`unowned`** is checked: using it after the object is gone gives a clear **fatal error**, not `EXC_BAD_ACCESS`, see 10.5.)
+
+For the other causes, use the tools made for this: **Address Sanitizer** (68.16) catches the bad access at the **moment** it happens, **Zombie Objects** (68.15) names the freed Objective-C object, and **Thread Sanitizer** (68.17) finds races.
+
+---
+
+## 68.11 Watchdog Terminations and Their Codes 🟡
+
+Sometimes the system **kills** an app that isn't crashing at all, because it broke a **rule**: it was too slow, or held something it shouldn't. The crash report then has **no** crashing line in your code. Instead, look at the **termination reason** code:
+
+| Code | Read as | Meaning | Typical cause |
+|---|---|---|---|
+| **`0x8badf00d`** | "ate bad food" | **Watchdog timeout**: unresponsive too long | Main thread **blocked** during launch, resume, or a long hang (69.13) |
+| **`0xdead10cc`** | "deadlock" | Held a **file lock** while being suspended | A SQLite / SwiftData / Core Data file in an **App Group** still busy when the app was suspended |
+| **`0xc00010ff`** | "cool off" | Killed for **heat** | The device was too hot; heavy CPU/GPU work |
+| **`0xbaadca11`** | "bad call" | VoIP push without reporting a call | A PushKit VoIP push not reported to **CallKit** |
+
+For **`0x8badf00d`**, the crash report's main-thread stack shows **what** the main thread was doing when it was killed:
+
+```
+Termination Reason: FRONTBOARD 0x8badf00d
+Thread 0 (main):
+  ...
+  RecipeStore.loadAll()            ← synchronous disk read of a big file during launch
+  RecipeApp.init()
+```
+
+So the fix is **performance** work, not a logic fix: move the blocking work **off** the main thread, make launch do **less** (69.9), or load lazily.
+
+For **`0xdead10cc`**: finish or pause database work before the app is suspended (49.2), or ask for a little extra background time to complete it.
+
+---
+
+## 68.12 The View Hierarchy Debugger 🟢
+
+**Debug View Hierarchy** (the button with stacked rectangles in the debug bar) pauses the app and captures its **real** view tree as a **3D** model you can rotate:
+
+```
+What you can see:
+- every view and layer, in 3D layers: what's ON TOP of what
+- hidden views, views with alpha 0, views outside their parent (Editor ▸ Show Clipped Content)
+- each view's frame, constraints, and properties (Size inspector, Object inspector)
+- SwiftUI content, shown inside its hosting views
+- purple runtime warnings: ambiguous or broken Auto Layout
+```
+
+It answers layout questions that are hard to solve by **reading** code:
+
+| Symptom | Often found in the debugger |
+|---|---|
+| "My button doesn't respond to taps" | An **invisible view** on top of it eats the touches |
+| "My label doesn't show" | Its frame is **zero-sized**, or it's behind another view |
+| "The layout is different every time" | **Ambiguous** constraints (purple warning) |
+| "Content is cut off" | A parent with `clipsToBounds`, or a too-small frame |
+
+Select a view, then use the **Size inspector** to see the constraints that position it, and jump to their source. In the LLDB console, `po someView` prints its frame and address, and `e someView.isHidden = true` + `e CATransaction.flush()` lets you test changes live (68.5).
+
+For **SwiftUI** "why does this re-render?" questions, add `let _ = Self._printChanges()` inside a view's `body`: the console then prints **which** property caused each body update.
+
+---
+
+## 68.13 The Memory Graph Debugger 🟡
+
+**Debug Memory Graph** (the button with three connected circles) pauses the app and shows **every live object** and the **references** between them.
+
+Use it when memory keeps growing, or when a screen's objects **stay alive** after you close it:
+
+```
+1. Open a screen, then close it (do this 2–3 times)
+2. Click "Debug Memory Graph"
+3. In the left list, search for the screen's types: ProfileViewModel (3)
+   → 3 instances alive after closing it 3 times = a LEAK
+4. Purple "!" icons mark objects Xcode has detected as leaked
+```
+
+| Panel | Shows |
+|---|---|
+| Left list | All types with **instance counts** (filter by your app's types) |
+| Center graph | The selected object and **who references it** (arrows) |
+| Memory inspector (right) | Size, and with **Malloc Stack Logging** on, **where** it was allocated |
+
+Turn on **Malloc Stack Logging** ("Live Allocations Only") in the scheme's **Diagnostics** tab: then the inspector shows the **stack trace** of each object's creation, which points to the code that made it.
+
+You can also **export** the graph (File ▸ Export Memory Graph) and inspect it on the command line, for example on CI:
+
+```bash
+leaks RecipeApp.memgraph          # lists leaked objects and cycles
+```
+
+---
+
+## 68.14 Finding Retain Cycles in the Memory Graph 🟡
+
+A **retain cycle** (10.3): objects hold **strong** references to each other in a loop, so ARC never frees them. The classic case is a **closure** capturing `self`:
+
+```swift
+@MainActor
+final class RecipeViewModel {
+    private let timer = CookTimer()
+    var remainingText = ""
+
+    init() {
+        timer.onTick = { seconds in
+            self.remainingText = "\(seconds)s"       // ❌ the timer (owned by self) → closure → self
+        }
     }
 }
 ```
 
-The specific diagnostic workflow — select a suspiciously-still-alive object, inspect what's holding a strong reference to it, and trace that chain back to its actual source — is a genuinely systematic, repeatable approach to retain cycle diagnosis, considerably more reliable than attempting to spot a cycle purely by reading source code, especially in a codebase where the cycle spans several files or involves a somewhat indirect chain of ownership that isn't obvious from any single file's code alone.
+How to find it in the memory graph:
 
----
-
-## 68.15 Zombie Objects
-
-Enabling "Zombie Objects" (a diagnostic scheme setting) replaces a deallocated object's memory with a special "zombie" marker instead of genuinely freeing it, causing any subsequent message sent to that deallocated object to produce a clear, immediate crash with a descriptive error rather than silently corrupting memory or crashing mysteriously somewhere unrelated later.
-
-```plaintext
-# With Zombie Objects enabled, accessing a deallocated object produces:
-# *** -[ViewModel refreshUI]: message sent to deallocated instance 0x600002a1b2c0
-# — a clear, actionable error identifying exactly which deallocated object was accessed
+```
+1. Select the object that should be gone (RecipeViewModel)
+2. Look at the arrows pointing TO it: who keeps it alive?
+   RecipeViewModel ◄── closure context ◄── CookTimer.onTick ◄── RecipeViewModel.timer
+3. Follow the arrows until you're back at the start: that's the cycle
+4. Bold arrows = strong references. One of them must become weak.
 ```
 
-This diagnostic setting directly addresses the difficulty described for `EXC_BAD_ACCESS` (68.10) — because a use-after-free bug's actual crash location is often disconnected from its root cause, Zombie Objects trades some runtime performance (deallocated objects aren't actually freed, so memory usage grows during a debug session) for a dramatically clearer, more immediately actionable error message identifying precisely which already-deallocated object was accessed and how, turning a confusing `EXC_BAD_ACCESS` into a specific, readable diagnostic.
-
----
-
-## 68.16 Address Sanitizer
-
-Address Sanitizer (ASan) instruments a debug build to detect memory errors — buffer overflows, use-after-free, use of uninitialized memory — at the exact moment they occur, providing a detailed report including the specific memory error type and both the current and the original allocation's stack traces.
+The fix: break **one** strong link:
 
 ```swift
-// Enabled via the scheme's Diagnostics tab: "Address Sanitizer"
-// ASan catches errors like buffer overflows or use-after-free the instant
-// they occur, rather than allowing them to silently corrupt memory
-// and potentially crash somewhere unrelated much later
+timer.onTick = { [weak self] seconds in
+    self?.remainingText = "\(seconds)s"              // ✅ the closure no longer owns the view model
+}
 ```
 
-ASan's core value is catching memory errors at their actual point of occurrence rather than allowing them to silently corrupt memory that might not visibly manifest as a crash until some later, unrelated point in execution — this "catch it immediately, with full context" approach is meaningfully more diagnostically useful than debugging a crash whose stack trace reflects only where a corrupted memory access finally, visibly failed, rather than where the actual corruption first occurred.
+Two things to know:
+
+- Xcode's purple **"!"** only marks cycles that are **unreachable** from the rest of the app. An object kept alive by a **singleton** or a long-lived cache isn't "leaked" in that sense ("**abandoned memory**"), but it's still wasted. The **instance count** (68.13) finds those.
+- Confirm the fix with a **`deinit`** log (10.10): open and close the screen, and the log should print **every** time.
+
+Other usual suspects: delegates declared without `weak` (10.8), and `Task { }` closures that loop forever while capturing `self` (10.9).
 
 ---
 
-## 68.17 Thread Sanitizer
+## 68.15 Zombie Objects 🟡
 
-Thread Sanitizer (TSan) instruments a debug build specifically to detect data races — concurrent, unsynchronized access to the same memory from multiple threads, at least one of which is a write — directly complementing Swift's compile-time concurrency checking (recall Part 2, and the concurrency review concerns raised for AI-generated code in section 61.10) by catching races that occur at runtime, including ones the compiler's static checking might not catch.
+**Zombie Objects** (scheme ▸ Run ▸ **Diagnostics** ▸ Zombie Objects) changes what happens when an **Objective-C** object is freed: instead of really freeing it, the runtime turns it into a "**zombie**". If anything sends it a message later, you get a **clear** error instead of a random `EXC_BAD_ACCESS`:
+
+```
+*** -[RecipeCellModel respondsToSelector:]: message sent to deallocated instance 0x600002a1b2c0
+```
+
+Now you know **which** class was used after being freed, and the stack shows **who** used it. Combine with Malloc Stack Logging (68.13) to see where it was **created**.
+
+Limits:
+
+| | |
+|---|---|
+| Works for | **Objective-C** objects (`NSObject` subclasses, UIKit and Foundation objects) |
+| Doesn't cover | Pure **Swift** classes, which have their own runtime (use Address Sanitizer, 68.16) |
+| Cost | Freed objects are **never** released: memory grows. Debug sessions only |
+
+In modern Swift apps, zombies usually appear around **UIKit** and **Objective-C** interop: a delegate or data source declared `assign`/`unsafe_unretained` in older code, a KVO observer that outlived its object, or a notification observer that was never removed. Instruments also has a **Zombies** template that shows the object's full retain/release history.
+
+---
+
+## 68.16 Address Sanitizer 🟡
+
+**Address Sanitizer** (ASan; scheme ▸ Diagnostics ▸ Address Sanitizer) adds checks around **every memory access**. When code touches memory it shouldn't, the app stops **at that moment**, with a detailed report:
+
+```
+ERROR: AddressSanitizer: heap-use-after-free on address 0x6020000efb18
+READ of size 8 at 0x6020000efb18 thread T0
+    #0 ImageBuffer.pixel(at:) ImageBuffer.swift:42      ← where the bad READ happened
+freed by thread T0 here:
+    #0 ImageBuffer.deinit ImageBuffer.swift:18           ← where the memory was FREED
+previously allocated by thread T0 here:
+    #0 ImageBuffer.init(width:height:) ImageBuffer.swift:9   ← where it was CREATED
+```
+
+Three stacks: **where** it went wrong, **when** the memory was freed, and **where** it came from. Without ASan, the same bug might crash **minutes later** in unrelated code, or silently corrupt data.
+
+It finds:
+
+| Error | Typical Swift source |
+|---|---|
+| **Heap buffer overflow** | Writing past the end of an `UnsafeMutablePointer` buffer |
+| **Use after free** | Using an unsafe pointer after its memory was released |
+| **Stack use after return** | A pointer to a local variable escaping the function |
+| Errors in **C / C++ / Objective-C** code in your app | Any of the above, in mixed-language projects |
+
+Pure, safe Swift rarely has these bugs: they come from **`Unsafe…`** APIs, `Unmanaged`, and other languages. If your app uses those (image processing, audio buffers, C libraries), run your test suite with ASan **regularly**.
+
+Costs: about **2–3× slower**, and more memory. It can't be combined with Thread Sanitizer; turn on **one** at a time. Never ship it.
+
+---
+
+## 68.17 Thread Sanitizer 🟡
+
+**Thread Sanitizer** (TSan; scheme ▸ Diagnostics ▸ Thread Sanitizer) detects **data races** at runtime: two threads accessing the **same memory** at the same time, without synchronization, and at least one **writing**:
+
+```
+WARNING: ThreadSanitizer: Swift access race
+  Modifying access of Swift variable at 0x7b0800012345 by thread T3:
+    #0 ImageCache.store(_:for:) ImageCache.swift:21
+  Previous read of size 8 by thread T5:
+    #0 ImageCache.image(for:) ImageCache.swift:14
+```
+
+Both threads, both stacks, the exact lines.
+
+Doesn't Swift 6's **strict concurrency** already prevent races? For checked code, **at compile time**, yes. But races still slip in through the **escape hatches** and **unchecked** code:
+
+| Where races hide | Example |
+|---|---|
+| `@unchecked Sendable` types | "I promise this class is thread-safe" (and it isn't) |
+| `nonisolated(unsafe)` | A global or static var marked unsafe |
+| **Legacy** code | GCD-based code, Swift 5 mode modules |
+| Objective-C / C code | Mixed-language parts of the app |
+
+So TSan is the **runtime** safety net for exactly what the compiler can't see.
+
+Practical notes:
+
+- TSan runs in the **Simulator** (and on the Mac), not on iOS devices.
+- It's **slow** (often 5–15×): run it on the **test suite**, for example in a nightly test plan (66.14).
+- Races only show up if the racing code **actually runs concurrently** during the test, so tests that exercise **concurrent** paths (66.2) make TSan far more useful.
+
+---
+
+## 68.18 Main Thread Checker 🟢
+
+UIKit and AppKit must be used **only on the main thread**. Calling them from a background thread can cause anything from a **glitch** (a label that updates seconds later) to a random **crash**.
+
+The **Main Thread Checker** is **on by default** in debug runs (scheme ▸ Diagnostics). It catches violations as they happen:
+
+```
+Main Thread Checker: UI API called on a background thread: -[UILabel setText:]
+PID: 4120, TID: 51234, Thread name: (none), Queue name: com.apple.NSURLSession-delegate
+Backtrace:
+4  RecipeApp  RecipeCell.update(with:) + 112
+5  RecipeApp  closure #1 in ImageLoader.load(_:) + 88
+```
+
+The usual cause: a **completion handler** or **background task** updating the UI directly:
 
 ```swift
-// Enabled via the scheme's Diagnostics tab: "Thread Sanitizer"
-// TSan detects genuine data races at runtime, providing both threads'
-// stack traces at the moment of the conflicting, unsynchronized access
+// ❌ URLSession calls this on a background queue
+URLSession.shared.dataTask(with: url) { data, _, _ in
+    self.titleLabel.text = "Loaded"                  // UI off the main thread
+}.resume()
+
+// ✅ Swift concurrency: isolate UI code to the main actor
+@MainActor
+func refresh() async {
+    let data = try? await URLSession.shared.data(from: url).0
+    titleLabel.text = data == nil ? "Failed" : "Loaded"   // guaranteed main thread
+}
 ```
 
-TSan is a genuinely important complement to Swift's compile-time strict concurrency checking, not a redundant tool — certain data races can still occur despite the compiler's static analysis (particularly around `@unchecked Sendable` usage, or interop with non-Swift, non-checked code), and TSan catches these at actual runtime by observing genuine concurrent memory access patterns, providing a dynamic safety net for exactly the class of bug that compile-time checking, however sophisticated, cannot guarantee to catch in every case.
+With Swift 6, marking UI types **`@MainActor`** turns most of these mistakes into **compile errors**. The checker still catches the rest: older code, completion handlers, and C/Objective-C callbacks. SwiftUI shows a related purple warning: "*Publishing changes from background threads is not allowed*".
+
+Its cost is tiny, so leave it **on**.
 
 ---
 
-## 68.18 Main Thread Checker
+## 68.19 Logger and os_log with Privacy Annotations 🟢
 
-The Main Thread Checker automatically detects and reports UI API calls made from a background thread — a common and often subtle bug, since UIKit and AppKit APIs are generally required to be used only from the main thread, and violating this requirement can produce anything from a silent visual glitch to an outright crash, depending on the specific API misused.
-
-```plaintext
-# Main Thread Checker output example:
-# "UIApplication.shared.keyWindow" must be used from main thread only
-# — reported immediately, with a stack trace showing exactly where the
-# background-thread UI access occurred
-```
-
-This checker addresses a genuinely common category of bug arising directly from the async/concurrency patterns covered throughout Part 2 — a background `Task` or completion handler that inadvertently updates UI state without first hopping back to the main actor (recall `@MainActor`, section 19) is an easy mistake to make, and the Main Thread Checker catches it immediately and specifically, rather than leaving a developer to debug an intermittent, hard-to-reproduce visual glitch or crash whose actual root cause (a background-thread UI update) might otherwise not be obvious at all.
-
----
-
-## 68.19 Logger and os_log with Privacy Annotations
-
-`Logger` (the modern Swift wrapper around `os_log`) provides structured, performant logging with built-in privacy annotation — string interpolations are redacted (`<private>`) by default in released logs unless explicitly marked `.public`, protecting potentially sensitive user data from ending up in logs collected from real devices.
+**`Logger`** (from the `os` framework) writes to Apple's **unified logging system**. It's fast, structured, filterable, and **private by default**. Prefer it over `print`:
 
 ```swift
 import os
 
-let logger = Logger(subsystem: "com.example.app", category: "networking")
+extension Logger {
+    static let sync = Logger(subsystem: "com.example.recipes", category: "sync")
+}
 
-func logRequest(url: URL, userID: String) {
-    logger.info("Fetching \(url, privacy: .public) for user \(userID, privacy: .private)")
-    // in a collected log, this renders as:
-    // "Fetching https://api.example.com/data for user <private>"
+func syncRecipes(for user: User) async {
+    Logger.sync.info("Sync started for user \(user.id, privacy: .private(mask: .hash))")
+
+    do {
+        let count = try await engine.sync()
+        Logger.sync.notice("Sync finished: \(count) recipes")                // numbers: public by default
+    } catch {
+        Logger.sync.error("Sync failed: \(error.localizedDescription, privacy: .public)")
+    }
 }
 ```
 
-This privacy-by-default design reflects a deliberate, meaningful choice — unlike a plain `print` statement (which has no concept of privacy and would include everything verbatim in any captured log), `Logger`'s default redaction of interpolated values means a developer must explicitly opt in to exposing specific values (like a URL, generally safe) while genuinely sensitive data (like a user identifier or personal content) remains redacted by default, protecting user privacy even in diagnostic logs collected from real users' devices without requiring careful, error-prone manual redaction at every individual log call site.
+Privacy rules:
+
+| Interpolated value | Default in collected logs |
+|---|---|
+| **Strings**, objects, most custom values | **Redacted**: shown as `<private>` |
+| Numbers, `Bool` | Shown (public) |
+| `privacy: .public` | Always shown: use only for **non-sensitive** values (error codes, screen names) |
+| `privacy: .private(mask: .hash)` | A **hash**: lets you see "same user as before" without revealing who |
+
+So **personal data** (names, emails, IDs, recipe notes) stays private in logs collected from real devices, unless you deliberately mark it public.
+
+(While your app runs **attached to Xcode's debugger**, private values are shown in full, so you see everything during development.)
+
+Compared with `print`:
+
+| `print` | `Logger` |
+|---|---|
+| Only visible in Xcode's console | Collected in the **system log**: Console.app, sysdiagnose (68.23) |
+| No levels, no filtering | Levels, subsystems, categories |
+| Everything visible | **Private by default** |
+| Builds the string every time | Very cheap; skipped work when the level is off |
 
 ---
 
-## 68.20 Log Levels and Subsystems
+## 68.20 Log Levels and Subsystems 🟢
 
-`Logger` supports distinct log levels (`.debug`, `.info`, `.notice`, `.error`, `.fault`) reflecting increasing severity/persistence, and `subsystem`/`category` parameters let logs be organized and filtered — by convention, `subsystem` is typically the app's bundle identifier and `category` identifies a specific feature area or module.
+Every log message has a **level**. The level decides **whether** the message is **kept**, and how important it looks:
+
+| Level | Use for | Stored? |
+|---|---|---|
+| **`.debug`** | Very detailed developer info | Memory only; usually **not** kept |
+| **`.info`** | Helpful, but not essential | Memory; kept only around errors |
+| **`.notice`** (default) | Important normal events | **Persisted** to disk |
+| **`.error`** | Something failed | **Persisted** |
+| **`.fault`** | A bug: "this should never happen" | **Persisted**, with extra process info |
 
 ```swift
-let networkLogger = Logger(subsystem: "com.example.app", category: "networking")
-let uiLogger = Logger(subsystem: "com.example.app", category: "ui")
-
-networkLogger.debug("Request started")  // low severity, may not persist to disk
-networkLogger.fault("Unrecoverable networking state")  // highest severity, always persisted
+Logger.sync.debug("Request body: \(body, privacy: .private)")     // dev details
+Logger.sync.info("Fetched page \(page)")                           // context
+Logger.sync.notice("Sync finished: \(count) recipes")              // key events
+Logger.sync.error("Server returned \(statusCode)")                 // failures
+Logger.sync.fault("Recipe with nil ID reached the database layer") // bugs
 ```
 
-Choosing the right log level genuinely matters for logs to remain useful at scale — `.debug`-level logs are appropriately verbose for active development but would be excessive noise (and unnecessary storage/performance overhead) if left at that verbosity in a shipped app's production logging, while reserving `.error`/`.fault` for genuinely actionable, higher-severity conditions keeps production log output focused on information actually worth a developer's attention when reviewing logs collected from real usage.
+Because `.debug` and `.info` cost almost nothing when they're not being collected, you can leave them in **release** builds: they're there when you need them (for example, in a sysdiagnose).
+
+**Subsystem** and **category** organize the logs:
+
+- **Subsystem**: usually your **bundle ID** (`com.example.recipes`). Extensions can use their own.
+- **Category**: a feature area: `sync`, `network`, `purchases`, `ui`.
+
+Define loggers in **one place** (like the `extension Logger` in 68.19), so names stay consistent. Then you can filter to "only `com.example.recipes`, only `sync`, only errors": in Xcode 15+'s console, in Console.app, and in `log` commands (68.21).
 
 ---
 
-## 68.21 Console.app and log stream
+## 68.21 Console.app and log stream 🟢
 
-Console.app provides a GUI for viewing both a connected device's live logs and previously collected log archives, with powerful filtering by subsystem, category, process, or free-text search, while `log stream` provides the equivalent live log streaming capability directly from the terminal, useful for scripting or when a GUI tool isn't convenient.
+The unified log contains messages from **every** process on the device. Your app's lines are lost in thousands of system messages unless you **filter**.
+
+**In Xcode** (15+): the debug console shows `Logger` messages with their level and category. Filter by **subsystem**, **category**, or **level**, and click a message to jump to the **source line** that logged it.
+
+**Console.app** (on the Mac): select your **device** (or the Mac) in the sidebar, press **Start**, and filter:
+
+```
+subsystem:com.example.recipes  category:sync
+```
+
+Turn on **Action ▸ Include Info Messages / Include Debug Messages** to see the lower levels. Console.app also opens **log archives** (`.logarchive`), for example from a sysdiagnose (68.23).
+
+**Terminal**, for live streaming or scripts:
 
 ```bash
-# Terminal equivalent of Console.app's live streaming, filtered to a specific subsystem:
-log stream --predicate 'subsystem == "com.example.app"' --level debug
+# Live logs from your app on the Mac (or the booted Simulator via simctl)
+log stream --predicate 'subsystem == "com.example.recipes"' --level debug
+
+xcrun simctl spawn booted log stream --predicate 'subsystem == "com.example.recipes" AND category == "sync"'
+
+# Search what was logged in the last hour
+log show --last 1h --predicate 'subsystem == "com.example.recipes" AND messageType == error'
 ```
 
-Both tools consume the same underlying unified logging system that `Logger`/`os_log` calls write into — Console.app's filtering capability is particularly valuable for isolating relevant log output from an otherwise extremely high-volume system-wide log stream (which includes logs from every running process and the system itself, not just one specific app), letting a developer focus specifically on their own app's `subsystem`-scoped output amid what would otherwise be an overwhelming amount of unrelated log noise.
+Your app can also **read its own logs** with `OSLogStore`, for example to attach them to a "Send feedback" email:
+
+```swift
+let store = try OSLogStore(scope: .currentProcessIdentifier)
+let lastHour = store.position(date: .now.addingTimeInterval(-3600))
+let lines = try store.getEntries(at: lastHour)
+    .compactMap { $0 as? OSLogEntryLog }
+    .filter { $0.subsystem == "com.example.recipes" }
+    .map { "\($0.date) [\($0.category)] \($0.composedMessage)" }
+```
+
+(Private values stay redacted there too, 68.19.)
 
 ---
 
-## 68.22 Symbolication and dSYMs 🟠
+## 68.22 Symbolication and dSYMs 🟡
 
-A crash report captured from a release build initially contains raw memory addresses rather than readable function names and line numbers — symbolication is the process of translating those addresses back into human-readable symbols using a dSYM (debug symbol) file, which must correspond to the *exact* build that actually produced the crash.
+A crash from a **release** build contains raw **addresses**, not function names:
 
-```plaintext
-# Before symbolication: 0x1000a2f34 (unreadable address)
-# After symbolication with the matching dSYM: MyApp`ProfileViewModel.loadProfile() + 124
+```
+Before:  3  RecipeApp   0x0000000100a2f34c  0x1009e8000 + 290636
+After:   3  RecipeApp   RecipeListModel.load() (in RecipeApp) (RecipeListModel.swift:58)
 ```
 
-The requirement that a dSYM correspond to the exact build that crashed is a genuinely strict, easy-to-violate constraint — because addresses in a compiled binary shift between even minor rebuilds (different compiler optimizations, different code changes), a dSYM from a slightly different build than the one that actually crashed will produce either failed symbolication or, worse, subtly *incorrect* symbolication pointing to the wrong function or line entirely, making disciplined dSYM archival (keeping the exact dSYM for every shipped build) a genuine operational requirement for reliably debugging crashes reported from production.
+**Symbolication** turns addresses back into **names and lines**, using the build's **dSYM**: a file of debug symbols created when you build (in the Xcode **archive**).
+
+The strict rule: the dSYM must come from the **exact same build** that crashed. Every build gets a unique **UUID**; even a tiny code change produces a different binary. A dSYM from another build either **fails** to symbolicate or, worse, points to the **wrong** lines.
+
+```bash
+# Check that a dSYM matches a crashed binary: the UUIDs must be equal
+dwarfdump --uuid RecipeApp.app.dSYM
+# The crash report's "Binary Images" section lists the app's UUID too
+
+# Symbolicate one address by hand
+atos -arch arm64 -o RecipeApp.app.dSYM/Contents/Resources/DWARF/RecipeApp \
+     -l 0x1009e8000 0x0000000100a2f34c
+```
+
+In practice:
+
+- **Archive** every build you ship, and **keep** the archives (they contain the dSYMs).
+- Apple's **Xcode Organizer ▸ Crashes** symbolicates automatically when the dSYM is available (uploaded with the App Store build).
+- Third-party crash reporters (Crashlytics, Sentry, …) need the dSYMs **uploaded**: add their upload step to your build or CI.
+- Build setting **Debug Information Format** must be **"DWARF with dSYM File"** for release builds.
 
 ---
 
 ## 68.23 Reading a Sysdiagnose 🔴
 
-A sysdiagnose is a comprehensive, system-wide diagnostic archive (logs, process information, system state) collected from a physical device, appropriate for diagnosing system-level or hard-to-reproduce issues that a simple crash report or app-level log alone doesn't provide enough context to understand — genuinely more heavyweight than app-specific logging, encompassing the device's broader system state at the time of the issue.
+A **sysdiagnose** is a big **system-wide** snapshot of a device: the full unified **log**, running processes, memory and power state, network, crash and jetsam reports, and more. Use it when the problem may be **outside** your app's code, or impossible to reproduce on your desk:
 
-```plaintext
-# A sysdiagnose is triggered via a specific hardware button combination
-# (varies by device) and produces a large archive containing system logs,
-# process states, and diagnostic data far beyond just one app's own logging
+- "The app gets killed in the background" (a memory **jetsam**, 69.14, or a **watchdog**, 68.11),
+- "Sync never runs on this user's phone" (background task budgets, 49.13),
+- "It only happens on cellular" or "after the phone was locked overnight".
+
+**Capture** (iPhone): press **both volume buttons + the side button** together for about a second; the phone **vibrates**. Wait about **10 minutes**, then find it in **Settings ▸ Privacy & Security ▸ Analytics & Improvements ▸ Analytics Data** (`sysdiagnose_…tar.gz`). Users can share it with you from there (AirDrop, Mail).
+
+**Read** it on a Mac:
+
+```
+sysdiagnose_2026.01.12_09-41-03_iPhone/
+├── system_logs.logarchive        ← open in Console.app: the full unified log
+├── crashes_and_spins/            ← crash, jetsam, and hang reports
+├── logs/                         ← per-subsystem logs (power, network, …)
+└── ps.txt, top.txt, …            ← processes and resource use at capture time
 ```
 
-Reaching for a sysdiagnose is appropriate specifically when an issue's root cause plausibly lies outside the app's own code entirely — a system-level resource contention issue, an interaction with another app or system service, or a hard-to-reproduce environmental condition — situations where even comprehensive app-level `Logger` output (68.19) wouldn't capture the necessary broader system context, making a sysdiagnose the appropriate, if heavyweight, escalation for genuinely system-level diagnostic needs.
+1. Ask the user for the **time** the problem happened (as exact as possible).
+2. Open `system_logs.logarchive` in Console.app, jump to that time.
+3. Filter by your **subsystem** (68.20) to see what your app logged, then **widen** the filter to the system around it (`runningboardd` for app lifecycle, `dasd` for background tasks, `nsurlsessiond` for background transfers).
+
+This is where good `Logger` usage pays off: your `.info` and `.debug` lines are **in there**, right next to the system's view of events. For some subsystems, Apple's bug-reporting site offers **logging profiles** that turn on extra logs before capturing.
 
 ---
 
-## 68.24 Debugging Widgets and Extensions 🟠
+## 68.24 Debugging Widgets and Extensions 🟡
 
-Debugging widgets and other app extensions (recall sections 52-53) requires attaching the debugger to the *extension's* own separate process specifically, not the main app's process — Xcode's scheme selector lets a developer choose to run and debug a widget extension target directly, since a widget crash or bug exists within its own distinct process, consistent with the extension sandboxing model discussed in section 53.1.
+Widgets and other extensions run in their **own process** (52.1, 53.1). Breakpoints set while running the **app's** scheme never hit in extension code, because the debugger is attached to the **app**, not the extension.
 
-```swift
-// In Xcode: select the widget extension's own scheme (not the main app's scheme)
-// from the scheme selector, then Run — this launches and attaches the debugger
-// directly to the widget extension's own separate process
+Ways to attach to the **extension**:
+
+```
+1. Run the EXTENSION's scheme
+   - Share / action extension: Xcode asks which HOST app to launch (Photos, Safari).
+     Share something to your extension: breakpoints in it now work.
+   - Widget: the scheme's settings pick the widget kind and family to show.
+
+2. Debug ▸ Attach to Process by PID or Name…
+   - Enter the extension's process name, check "Wait for launch"
+   - Then trigger the extension (open the share sheet, add the widget)
 ```
 
-This requirement directly follows from the extension architecture covered in section 53.1 — because an extension runs as a genuinely separate process from its host app, breakpoints set while debugging only the main app's scheme will never be hit by code running inside a widget or other extension, meaning correctly debugging extension-specific code requires deliberately selecting and running that extension's own scheme, attaching the debugger to the actual process where that code is executing.
+Then the usual tools work: breakpoints, LLDB, the memory graph (watch the extension's **much smaller** memory limit, 53.11).
+
+Logging is especially useful here, because extensions start and stop **on their own**:
+
+```swift
+extension Logger {
+    static let shareExtension = Logger(subsystem: "com.example.recipes.share", category: "import")
+}
+```
+
+Give each extension its own **subsystem** or **category**, and filter for it in Console.app (68.21). Crashes and memory kills of extensions appear in **crash reports** and the **Organizer** under the extension's name, so check there too: an extension killed for **memory** shows a **jetsam** event, not a normal crash.
 
 ---
 
 ## Summary
 
-| Concept | Key Tool | Purpose |
+| Concept | Key tool | Purpose |
 |---|---|---|
-| Targeted pausing | Conditional/symbolic breakpoints | Pause exactly when/where relevant, not every iteration |
-| Rebuild-free diagnostics | Breakpoint actions (log messages) | Adjust diagnostic output without edit-compile-run |
-| State inspection | Variables view, stepping controls | Focused, efficient step-through debugging |
-| Value inspection | `po`, `p`, `v` | Object description vs. raw value vs. fast variable lookup |
-| Live state modification | `expression` | Test hypotheses without restarting the app |
-| Concurrency-aware stepping | Async LLDB support, task backtraces | Coherent navigation despite thread-hopping suspension |
-| Common crash literacy | Index/nil/`EXC_BAD_ACCESS` reading | Diagnosing the platform's most frequent crash types |
-| Lifecycle timeouts | Watchdog codes (e.g., `0x8badf00d`) | Identifying performance problems, not logic bugs |
-| Layout diagnosis | View Hierarchy Debugger | Visualizing actual runtime view structure |
-| Leak diagnosis | Memory Graph Debugger | Visualizing the live object graph and flagged cycles |
-| Cycle tracing | Object Reference panel | Systematic strong-reference chain tracing |
-| Use-after-free clarity | Zombie Objects | Immediate, descriptive errors instead of silent corruption |
-| Memory error detection | Address Sanitizer | Catches corruption at its actual point of occurrence |
-| Data race detection | Thread Sanitizer | Runtime complement to compile-time concurrency checking |
-| UI-thread violations | Main Thread Checker | Catches background-thread UI API misuse immediately |
-| Privacy-aware logging | `Logger`, `os_log` | Redacted-by-default structured logging |
-| Log organization | Subsystems, categories, levels | Filterable, appropriately-verbose production logging |
-| Log viewing | Console.app, `log stream` | GUI and terminal access to the unified logging system |
-| Crash readability | dSYMs, symbolication | Translating addresses into readable function/line info |
-| System-level diagnosis | Sysdiagnose | Broader-than-app-level diagnostic context |
-| Extension debugging | Extension-specific schemes | Attaching to the correct, separate extension process |
+| Breakpoints | Conditional, symbolic, Exception, Swift Error | Stop exactly where it matters |
+| Breakpoint actions | Log messages, auto-continue | `print` without rebuilding |
+| Stepping | Variables view, step over/into/out, call stack | Follow the code efficiently |
+| Inspecting values | `v`, `p`, `po`, `@DebugDescription` | Fast reads vs. expressions vs. descriptions |
+| Changing state | `expression`, `thread return`, `CATransaction.flush()` | Test theories without restarting |
+| Async debugging | Async-aware stepping, async call stacks | Follow a function across `await` |
+| Concurrency | Instruments Swift Concurrency (tasks, actors) | See task trees, waits, and contention |
+| Index crashes | Bounds checks, safe access where valid | Find why the index was wrong |
+| Nil crashes | `guard let` instead of `!` for real data | Handle the case you assumed away |
+| Bad access | Recursion stacks, ASan, Zombies, TSan | The crash site isn't the bug site |
+| Watchdog kills | `0x8badf00d`, `0xdead10cc`, … | Performance and lifecycle fixes, not logic fixes |
+| Layout bugs | View Hierarchy Debugger, `_printChanges()` | See the real view tree |
+| Memory leaks | Memory Graph, Malloc Stack Logging, `leaks` | Find objects that should be gone |
+| Retain cycles | Follow strong references, `[weak self]` | Break one link in the loop |
+| Freed ObjC objects | Zombie Objects | Name the object used after free |
+| Memory errors | Address Sanitizer | Catch unsafe memory access instantly |
+| Data races | Thread Sanitizer | Runtime net under strict concurrency |
+| UI threading | Main Thread Checker, `@MainActor` | UI calls only on the main thread |
+| Logging | `Logger`, privacy, levels, subsystems | Private, filterable, cheap logs |
+| Reading logs | Xcode console, Console.app, `log`, `OSLogStore` | Find your lines in the system log |
+| Symbolication | Matching dSYM (UUID), Organizer, `atos` | Turn addresses into code lines |
+| System-level issues | Sysdiagnose + Console.app | The whole device's story around a bug |
+| Extensions | Extension scheme, attach to process | Debug the right process |

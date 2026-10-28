@@ -1,53 +1,94 @@
-## 51.1 Why App Intents Is Now the Siri Surface
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-App Intents unifies what used to be several separate, framework-specific integration points (SiriKit's `INIntent` for Siri specifically, a separate Shortcuts app integration mechanism, Spotlight indexing) into one Swift-native framework that simultaneously powers Siri, the Shortcuts app, Spotlight suggestions, widgets, and more from a single intent definition.
+**App Intents** is how your app tells the system "**here are things I can do**". Define an action **once**, as a Swift type, and it shows up in **Siri**, the **Shortcuts** app, **Spotlight**, **widgets** and **controls**, the **Action Button**, and more. This section covers intents, parameters, entities, App Shortcuts, snippets, newer features, testing, and moving from the older SiriKit.
 
-```swift
-// One AppIntent definition simultaneously powers Siri requests,
-// Shortcuts automations, Spotlight suggestions, and more —
-// no separate integration code needed per surface.
-```
-
-The core shift from SiriKit is architectural: rather than implementing a separate Intents extension process (a genuinely different, sandboxed target with its own lifecycle) that Siri communicates with via IPC, App Intents live directly in the main app's process as ordinary Swift types conforming to a protocol — a much simpler mental model, and one that naturally extends to every surface that wants to expose "things this app can do" to the system, not just Siri specifically.
+Several lessons cover APIs **new in the iOS 27 SDK** (in their titles). New APIs can change between betas, so check the current documentation before relying on their exact shape.
 
 ---
 
-## 51.2 Your First AppIntent
+## 51.1 Why App Intents Is Now the Siri Surface 🟢
 
-An `AppIntent` conformer describes one specific action the app can perform, with a `perform()` method containing the actual logic — the framework handles presenting it to Siri, Shortcuts, and other surfaces based on this single definition.
+Before App Intents, each system feature had its **own** integration: **SiriKit** (`INIntent`) for Siri, a separate setup for Shortcuts, separate code for Spotlight. **App Intents** (iOS 16+) **unifies** them:
+
+```
+            ┌──► Siri ("Mark a recipe cooked in RecipeApp")
+            ├──► Shortcuts app (build automations)
+AppIntent ──┼──► Spotlight (actions in search results)
+            ├──► Widgets & controls (interactive buttons, 52)
+            ├──► Action Button, Control Center
+            └──► Apple Intelligence & Visual Intelligence
+```
+
+The **architecture** is simpler too:
+
+| | SiriKit `INIntent` (old) | App Intents (new) |
+|---|---|---|
+| Definition | An `.intentdefinition` file + generated code | Plain **Swift** types |
+| Where it runs | A separate **Intents extension** process | Usually **in your app** (or an extension, if you choose) |
+| Surfaces | Mostly Siri | Siri, Shortcuts, Spotlight, widgets, controls, … |
+
+An intent is just a **Swift type** that conforms to a protocol. That's a much simpler mental model, and the same definition works **everywhere** the system wants to know "what can this app do?".
+
+---
+
+## 51.2 Your First AppIntent 🟢
+
+An **`AppIntent`** describes **one action**. Its **`perform()`** method does the work:
 
 ```swift
 import AppIntents
 
 struct MarkRecipeCookedIntent: AppIntent {
-    static var title: LocalizedStringResource = "Mark Recipe as Cooked"
+    static let title: LocalizedStringResource = "Mark Recipe as Cooked"
+    static let description = IntentDescription("Marks a recipe as cooked today.")
 
     @Parameter(title: "Recipe")
-    var recipe: RecipeEntity
+    var recipe: RecipeEntity                         // 51.4
 
-    func perform() async throws -> some IntentResult {
+    @Dependency private var recipeStore: RecipeStore // injected (51.14)
+
+    func perform() async throws -> some IntentResult & ProvidesDialog {
         try await recipeStore.markCooked(recipe.id)
-        return .result()
+        return .result(dialog: "Marked \(recipe.title) as cooked.")   // spoken by Siri / shown in Shortcuts
     }
 }
 ```
 
-`static var title` provides the human-readable name shown throughout the system (Shortcuts app, Siri suggestions), and `perform()` is where the actual action happens — since it's `async throws`, it can naturally call into the same async service/repository layer (section 45.5) the rest of the app already uses, meaning an intent's implementation is typically a thin wrapper around logic the app already has, rather than a parallel, duplicated implementation.
+- **`title`** is the name users see everywhere (Shortcuts, Siri suggestions, Spotlight).
+- **`perform()`** is **`async throws`**: it can call your existing **async** services, just like the rest of the app (45.5).
+- Throwing an error shows a **failure** message to the user.
+
+A good intent is a **thin wrapper**: it **calls** logic the app **already has**, instead of duplicating it. That keeps the app and its intents consistent, and makes intents easy to test.
+
+Register the dependency once at launch:
+
+```swift
+@main
+struct RecipeApp: App {
+    init() {
+        let store = RecipeStore()
+        AppDependencyManager.shared.add(dependency: store)     // available to @Dependency in intents
+    }
+    var body: some Scene { WindowGroup { ContentView() } }
+}
+```
+
+That's all: the intent now appears in the **Shortcuts** app automatically. No registration list, no extension.
 
 ---
 
-## 51.3 IntentParameter and Parameter Summaries
+## 51.3 IntentParameter and Parameter Summaries 🟢
 
-`@Parameter` declares an input an intent needs, and a parameter summary provides a natural-language template showing how the intent (with its filled-in parameters) reads as a coherent sentence throughout Shortcuts and Siri.
+**`@Parameter`** declares an **input**. A **parameter summary** turns the intent into a **readable sentence**:
 
 ```swift
 struct SetCookTimerIntent: AppIntent {
-    static var title: LocalizedStringResource = "Set Cook Timer"
+    static let title: LocalizedStringResource = "Set Cook Timer"
 
     @Parameter(title: "Recipe")
     var recipe: RecipeEntity
 
-    @Parameter(title: "Minutes", default: 10)
+    @Parameter(title: "Minutes", default: 10, inclusiveRange: (1, 240))
     var minutes: Int
 
     static var parameterSummary: some ParameterSummary {
@@ -61,84 +102,152 @@ struct SetCookTimerIntent: AppIntent {
 }
 ```
 
-The `parameterSummary`, built using key-path references to the declared `@Parameter` properties, is what produces the natural-language rendering users see and edit directly within the Shortcuts app's visual editor (e.g., "Set a [10]-minute timer for [Pasta Carbonara]," with the bracketed values individually tappable and editable) — getting this summary right is a genuine UX design task, not just a technical declaration, since it's literally the sentence a user reads and constructs their automation around.
+In the Shortcuts editor, this shows as a sentence with **tappable** blanks:
+
+> Set a **[10]**-minute timer for **[Pasta Carbonara]**
+
+The **`\.$minutes`** syntax refers to the **parameter itself** (its projected value, 12.6), so the editor can make it editable in place.
+
+Parameters can be:
+
+| Type | Example |
+|---|---|
+| Basic values | `String`, `Int`, `Double`, `Bool`, `Date`, `URL` |
+| Fixed choices | An **`AppEnum`** (51.5) |
+| Your app's things | An **`AppEntity`** (51.4) |
+| Optional | `var note: String?`: Siri doesn't ask for it |
+
+If a **required** parameter has no value, Siri or Shortcuts **asks** the user for it ("Which recipe?"). Writing the summary is real **UX writing**: it's the sentence users read when building automations.
 
 ---
 
-## 51.4 AppEntity and EntityQuery
+## 51.4 AppEntity and EntityQuery 🟡
 
-`AppEntity` represents a specific, identifiable "thing" the app knows about (like a specific recipe) that Siri/Shortcuts can reference by name or by resolving a search — paired with `EntityQuery`, which tells the system how to find and resolve entities matching a given search string or set of identifiers.
+An **`AppEntity`** is a **thing** in your app that intents can refer to: a recipe, a playlist, a contact. An **`EntityQuery`** tells the system how to **find** entities:
 
 ```swift
 struct RecipeEntity: AppEntity {
     let id: UUID
     let title: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Recipe"
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(title)") }
-    static var defaultQuery = RecipeEntityQuery()
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Recipe"
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(title)", image: .init(systemName: "fork.knife"))
+    }
+    static let defaultQuery = RecipeEntityQuery()
 }
 
-struct RecipeEntityQuery: EntityQuery {
+struct RecipeEntityQuery: EntityStringQuery {
+    @Dependency private var recipeStore: RecipeStore
+
+    // "Give me the entities with these IDs" (e.g. a recipe saved in a shortcut)
     func entities(for identifiers: [UUID]) async throws -> [RecipeEntity] {
         try await recipeStore.recipes(withIDs: identifiers).map { RecipeEntity(id: $0.id, title: $0.title) }
     }
 
+    // "What should I show before the user types anything?"
     func suggestedEntities() async throws -> [RecipeEntity] {
         try await recipeStore.recentRecipes().map { RecipeEntity(id: $0.id, title: $0.title) }
+    }
+
+    // "The user typed 'carb': what matches?"
+    func entities(matching string: String) async throws -> [RecipeEntity] {
+        try await recipeStore.search(string).map { RecipeEntity(id: $0.id, title: $0.title) }
     }
 }
 ```
 
-This is what powers the "type to search for a specific recipe" experience when a user configures a Shortcut using `MarkRecipeCookedIntent`'s `recipe` parameter (from 51.2) — `entities(for:)` resolves specific known identifiers back into full entity objects (e.g., loading a previously-selected recipe by ID), while `suggestedEntities()` provides a reasonable default list (like recently-viewed recipes) shown before the user has typed anything, both mapping directly onto the app's existing data layer rather than requiring a separate, App-Intents-specific data store.
+| Method | Called when |
+|---|---|
+| `entities(for:)` | The system has **IDs** (from a saved shortcut) and needs the **current** entities |
+| `suggestedEntities()` | Showing a **default list**, before any search |
+| `entities(matching:)` | The user **types** a search (from `EntityStringQuery`) |
+
+This powers the "**pick a recipe**" experience in Shortcuts and Siri's "which recipe?" follow-up.
+
+Keep the entity **small**: an **ID** and what's needed to **show** it. The query loads from your **existing** data layer (SwiftData, 41), so there's no separate store for intents. The **ID must be stable**: shortcuts store it and look the entity up later.
 
 ---
 
-## 51.5 AppEnum for Fixed Options
+## 51.5 AppEnum for Fixed Options 🟢
 
-`AppEnum` represents a parameter with a small, fixed set of choices (rather than an open-ended, searchable entity) — appropriate for something like a sort order or a filter category that has a known, bounded set of valid values.
+For a **small, fixed** set of choices, use **`AppEnum`** instead of an entity:
 
 ```swift
 enum RecipeSortOrder: String, AppEnum {
     case title, cookTime, dateAdded
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Sort Order"
-    static var caseDisplayRepresentations: [RecipeSortOrder: DisplayRepresentation] = [
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Sort Order"
+    static let caseDisplayRepresentations: [RecipeSortOrder: DisplayRepresentation] = [
         .title: "Title",
         .cookTime: "Cook Time",
-        .dateAdded: "Date Added"
+        .dateAdded: DisplayRepresentation(title: "Date Added", image: .init(systemName: "calendar"))
     ]
+}
+
+struct ShowRecipesIntent: AppIntent {
+    static let title: LocalizedStringResource = "Show Recipes"
+    static let openAppWhenRun = true                    // this one opens the app
+
+    @Parameter(title: "Sort By", default: .title)
+    var sortOrder: RecipeSortOrder
+
+    func perform() async throws -> some IntentResult { .result() }
 }
 ```
 
-Unlike `AppEntity`, which requires an `EntityQuery` to resolve arbitrary values by search, `AppEnum` presents its `caseDisplayRepresentations` directly as a fixed picker within Shortcuts/Siri — appropriate for exactly the same kind of bounded, enumerable choice set that would use a plain Swift `enum` elsewhere in the app (recall enum modeling, section 6), just with the additional display-representation metadata App Intents needs to present it as a user-facing picker.
+| Use | When |
+|---|---|
+| `AppEnum` | A **fixed** list known at **compile time**: sort orders, meal types, sizes |
+| `AppEntity` | An **open-ended**, **changing** list from your **data**: recipes, users, files |
+
+An `AppEnum` is shown as a simple **picker**. It needs no query, because the system already knows all the cases. It's a normal Swift enum (6), plus **display names** for the UI.
 
 ---
 
-## 51.6 AppShortcutsProvider and Phrase Design
+## 51.6 AppShortcutsProvider and Phrase Design 🟢
 
-`AppShortcutsProvider` declares a curated set of an app's intents as "App Shortcuts" — pre-packaged, discoverable automations that appear automatically in Spotlight and Siri suggestions without the user needing to manually build them in the Shortcuts app first, each associated with specific trigger phrases.
+**App Shortcuts** are intents your app **offers ready-made**, with **phrases** Siri recognizes. They work **right after install**: the user doesn't have to build anything in the Shortcuts app.
 
 ```swift
 struct RecipeAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: MarkRecipeCookedIntent(),
-            phrases: ["Mark a recipe cooked in \(.applicationName)"],
+            phrases: [
+                "Mark a recipe cooked in \(.applicationName)",
+                "Mark \(\.$recipe) as cooked in \(.applicationName)"       // a phrase with a parameter
+            ],
             shortTitle: "Mark Cooked",
             systemImageName: "checkmark.circle"
+        )
+        AppShortcut(
+            intent: SetCookTimerIntent(),
+            phrases: ["Start a cook timer in \(.applicationName)"],
+            shortTitle: "Cook Timer",
+            systemImageName: "timer"
         )
     }
 }
 ```
 
-App Shortcuts are meaningfully different from ordinary custom Shortcuts a user builds themselves — because they're pre-declared by the app with pre-written phrases, the system can surface them proactively (in Spotlight, in Siri suggestions) *before* a user has ever manually configured anything, dramatically lowering the discovery barrier compared to requiring users to know App Intents exist at all and build their own automation first. Phrase design (crafting a natural-sounding trigger phrase that includes `\(.applicationName)`, required so Siri can disambiguate which app's shortcut is being invoked when phrases might otherwise be ambiguous across apps) is a genuine, user-facing writing task.
+Why App Shortcuts matter: most users will **never** open the Shortcuts app to build an automation. App Shortcuts appear **automatically** in **Spotlight**, in **Siri suggestions**, and in the Shortcuts app's **app section**, so users **discover** them.
+
+Phrase rules and tips:
+
+- Every phrase must include **`\(.applicationName)`**. It tells Siri **which app** you mean ("Start a timer" alone could be any app).
+- A phrase can include **one** entity or enum parameter, like `\(\.$recipe)`: "Mark **Carbonara** as cooked in RecipeApp".
+- Write phrases people would **actually say**. Add a few **variations**.
+- An app can have up to **10** App Shortcuts. Pick your most **useful** actions.
+- When your entities change (new recipes), call `RecipeAppShortcuts.updateAppShortcutParameters()` so Siri learns the new names.
+
+Phrase writing is real **user-facing writing**, not just code.
 
 ---
 
-## 51.7 Localizing Shortcut Phrases
+## 51.7 Localizing Shortcut Phrases 🟡
 
-Shortcut phrases, parameter titles, and entity display names all flow through Xcode's standard localization system (`.xcstrings` catalogs), letting an app's Siri/Shortcuts integration work naturally across every language the app supports, not just the phrases' original authored language.
+Intent titles, parameter names, display representations, and **phrases** are all **`LocalizedStringResource`**s, so they go through Xcode's normal **String Catalog** (`.xcstrings`, 71) like every other string:
 
 ```swift
 static var appShortcuts: [AppShortcut] {
@@ -146,7 +255,7 @@ static var appShortcuts: [AppShortcut] {
         intent: MarkRecipeCookedIntent(),
         phrases: [
             "Mark a recipe cooked in \(.applicationName)",
-            "Mark recipe as done in \(.applicationName)" // an alternate phrasing, also localized
+            "Mark recipe as done in \(.applicationName)"     // more variations = better recognition
         ],
         shortTitle: "Mark Cooked",
         systemImageName: "checkmark.circle"
@@ -154,194 +263,326 @@ static var appShortcuts: [AppShortcut] {
 }
 ```
 
-Because `LocalizedStringResource` (used throughout App Intents' `title`, `phrases`, and display representations) is the same localization mechanism used elsewhere in the app, translated phrase variants are added the same way any other localized string would be — but with an added consideration specific to voice: a phrase that sounds natural and unambiguous in one language may need a genuinely different sentence structure (not just a word-for-word translation) to sound natural when actually spoken aloud to Siri in another language, making shortcut phrase localization a slightly more nuanced task than typical UI string translation.
+Xcode extracts App Shortcut phrases into a separate **`AppShortcuts.xcstrings`** catalog, where translators add each language's phrases.
+
+But **voice** phrases need more care than screen text:
+
+- A word-for-word translation can sound **unnatural** when **spoken**. Translators should write how people **really say** it in that language, even with a different sentence structure.
+- The **app name** may sit in a different **position** in the sentence.
+- Add **several** natural variations per language, not just one.
+- **Test** each language by actually **speaking** to Siri on a device set to that language.
 
 ---
 
-## 51.8 Interactive Snippets and SnippetIntent
+## 51.8 Interactive Snippets and SnippetIntent 🟡
 
-An intent can return a **snippet** — a small, custom SwiftUI view shown directly within the Siri/Shortcuts interface as a visual confirmation or result, rather than just a spoken/text response — via `IntentResult`'s snippet-returning variants or a dedicated `SnippetIntent`.
+An intent can return a **snippet**: a small **SwiftUI** view shown in Siri, Spotlight, or Shortcuts as the **result**, instead of only a spoken sentence:
 
 ```swift
 struct MarkRecipeCookedIntent: AppIntent {
-    // ... title, parameters as before
+    // ... title and parameters as before
 
-    func perform() async throws -> some IntentResult & ShowsSnippetView {
+    func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         try await recipeStore.markCooked(recipe.id)
-        return .result(view: RecipeCookedSnippetView(recipe: recipe))
+        return .result(
+            dialog: "Done!",
+            view: RecipeCookedSnippetView(recipe: recipe)
+        )
     }
 }
 
 struct RecipeCookedSnippetView: View {
     let recipe: RecipeEntity
+
     var body: some View {
-        Label("\(recipe.title) marked as cooked!", systemImage: "checkmark.circle.fill")
-            .padding()
+        HStack {
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title)
+            VStack(alignment: .leading) {
+                Text(recipe.title).font(.headline)
+                Text("Marked as cooked today").font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding()
     }
 }
 ```
 
-`ShowsSnippetView` in the return type signals that this intent provides rich visual feedback, and the snippet itself is ordinary SwiftUI — reusing the same view-building skills from throughout Part 3 rather than requiring a separate UI paradigm specific to Siri — giving users meaningfully better confirmation than a generic spoken "Okay, done" response, especially valuable for intents whose result benefits from visual context (like confirming exactly which recipe and cook time a timer intent configured).
+**`ShowsSnippetView`** in the return type says "this intent returns a view". The snippet is **plain SwiftUI** (Part 3): no new UI system to learn.
+
+From iOS 26, snippets can also be **interactive**: a **`SnippetIntent`** renders a snippet that contains **buttons** (backed by other intents), and the snippet **updates** after each tap. For example, a "cook timer" snippet with **+1 min** and **Stop** buttons, all without opening the app.
+
+Snippets give much better feedback than a generic "OK, done": the user **sees** which recipe and what changed.
 
 ---
 
-## 51.9 RelevantEntities for Contextual Suggestions (iOS 27)
+## 51.9 RelevantEntities for Contextual Suggestions (iOS 27) 🔴
 
-`RelevantEntities` lets an app proactively signal to the system which specific entities are contextually relevant right now (based on the user's current location, time of day, or recent app activity), improving the quality and timeliness of Siri/Spotlight suggestions without the user needing to explicitly search.
+**Suggestions** are best when they appear at the **right moment**: dinner recipes around **dinner time**, the gym playlist **at the gym**. Your app often **knows** what's relevant better than the system can guess.
+
+Since iOS 17, apps can tell the system which **intents** are relevant, and **when**, through **`RelevantIntentManager`**:
 
 ```swift
 func updateRelevantRecipes() async {
-    let dinnerRecipes = try? await recipeStore.recipesForMealType(.dinner)
-    let relevantEntities = (dinnerRecipes ?? []).map {
-        RelevantIntent(MarkRecipeCookedIntent(recipe: RecipeEntity(id: $0.id, title: $0.title)), context: .init())
+    let dinnerRecipes = (try? await recipeStore.recipesForMealType(.dinner)) ?? []
+
+    let relevant = dinnerRecipes.prefix(5).map { recipe in
+        var intent = MarkRecipeCookedIntent()
+        intent.recipe = RecipeEntity(id: recipe.id, title: recipe.title)
+        return RelevantIntent(intent,
+                              widgetKind: "RecipeWidget",
+                              relevance: RelevantContext.date(from: dinnerStart, to: dinnerEnd))
     }
-    await RelevantIntentManager.shared.updateRelevantIntents(relevantEntities)
+    try? await RelevantIntentManager.shared.updateRelevantIntents(Array(relevant))
 }
 ```
 
-Rather than the system needing to guess at relevance purely from general usage patterns, `RelevantEntities` lets the app itself supply specific, timely signals (e.g., "these are dinner recipes, and it's currently dinner time") — this is a proactive push mechanism complementing `EntityQuery`'s `suggestedEntities()` (51.4), which instead responds reactively when the user is actively browsing a parameter's options within Shortcuts.
+The iOS 27 SDK (in the title) extends this idea to **entities**: the app can mark specific **entities** as relevant in a given **context** (time, place, recent activity), improving **Siri** and **Spotlight** suggestions directly.
+
+⚠️ The exact iOS 27 API may differ from older relevance APIs; check the documentation.
+
+The difference from `suggestedEntities()` (51.4):
+
+| | `suggestedEntities()` | Relevance APIs |
+|---|---|---|
+| Direction | **Reactive**: called when the user is **picking** a value | **Proactive**: the app **pushes** hints to the system |
+| When | Only while editing a shortcut / answering Siri | Any time; used to surface suggestions **before** the user asks |
+
+Update relevance when the context **changes** (new data, a new day), and keep it **honest**: suggesting irrelevant things trains users to ignore them.
 
 ---
 
-## 51.10 EntityCollection for Lazy Resolution (iOS 27)
+## 51.10 EntityCollection for Lazy Resolution (iOS 27) 🔴
 
-`EntityCollection` supports lazily-paginated resolution of large entity sets, avoiding the need to eagerly load and return an entire potentially-huge collection (like thousands of recipes) just to satisfy a search that might only need the first handful of matching results.
+Imagine an app with **50,000** recipes. When the user types "pa" in a Shortcuts picker, returning **all** matches at once means loading thousands of entities that will **never be shown**: slow and memory-hungry.
+
+The iOS 27 SDK's **`EntityCollection`** lets a query return results **lazily**, **page by page**, using a **cursor** ("where I stopped last time"):
 
 ```swift
-struct RecipeEntityQuery: EntityQuery {
+// ⚠️ New iOS 27 API: shape shown for illustration; check the documentation
+struct RecipeEntityQuery: EntityStringQuery {
     func entities(matching string: String) async throws -> EntityCollection<RecipeEntity> {
         EntityCollection { cursor in
             let page = try await recipeStore.searchRecipes(matching: string, cursor: cursor)
-            return .init(items: page.items.map { RecipeEntity(id: $0.id, title: $0.title) }, nextCursor: page.nextCursor)
+            return .init(items: page.items.map { RecipeEntity(id: $0.id, title: $0.title) },
+                         nextCursor: page.nextCursor)   // nil = no more pages
         }
     }
 }
 ```
 
-Without lazy pagination, an `EntityQuery` conformer would need to either load an entire large dataset into memory up front (wasteful for a dataset with thousands of entries when the user is only going to see the first handful matching what they've typed so far) or implement ad hoc, manual pagination logic itself — `EntityCollection`'s cursor-based design provides the same underlying pattern as many pagination APIs (including similar concepts from networking, Part 5) directly within the App Intents framework, letting entity search scale gracefully to large datasets.
+The system asks for the **first page**; only if the user **scrolls** does it ask for the **next**, passing the cursor back.
+
+It's the same **cursor pagination** idea used by many server APIs and by CloudKit's query cursors (44.2): never load everything when the user only sees the first screen.
+
+On earlier OS versions, **limit** results yourself (for example, the top 50 matches, best first), which covers most real use.
 
 ---
 
-## 51.11 SyncableEntity for Cross-Device IDs (iOS 27)
+## 51.11 SyncableEntity for Cross-Device IDs (iOS 27) 🔴
 
-`SyncableEntity` addresses a subtle but real problem: if an app's data syncs across devices (via CloudKit, section 44, or SwiftData's CloudKit integration, section 41.18) but entity identifiers aren't consistently synced too, a Shortcut referencing a specific recipe built on one device might fail to resolve that same recipe correctly on another of the user's devices.
+Shortcuts **sync** across the user's devices through iCloud. A shortcut built on the **iPhone** that references "Pasta Carbonara" stores that recipe's **ID**. When the shortcut runs on the **iPad**, the iPad's query looks up **that ID**.
+
+If each device gave the same recipe a **different** ID (for example, one generated locally when the data was first downloaded), the lookup **fails** on the other device.
+
+The iOS 27 SDK's **`SyncableEntity`** makes this expectation **explicit**: entities that conform promise that their **ID is the same on all of the user's devices**:
 
 ```swift
+// ⚠️ New iOS 27 API; check the documentation for its exact requirements
 struct RecipeEntity: AppEntity, SyncableEntity {
-    let id: UUID // must be the SAME identifier across all of the user's devices,
-                 // consistent with how the underlying data itself syncs via CloudKit
+    let id: UUID      // MUST be the same everywhere: e.g. the ID stored in the synced record
+    let title: String
     // ...
 }
 ```
 
-`SyncableEntity` formalizes the expectation that an entity's identifier must remain stable and consistent across the user's devices for a Shortcut to work reliably regardless of which specific device it's ultimately run on — this connects directly back to CloudKit's own record identity model (section 44.1), since an entity ID that's meant to be stable across devices needs to be backed by data that's *actually* synced with that same stable identity, not just locally-generated IDs that happen to coincidentally look similar.
+The real work is in your **data model**: the ID must come from **synced** data, like the record's own identifier in CloudKit (44.1) or a UUID you generate **once** and store in the synced SwiftData model (41.18). Never use something **device-local**, like a database row number or `persistentModelID`.
 
 ---
 
-## 51.12 LongRunningIntent Beyond the 30s Limit (iOS 27)
+## 51.12 LongRunningIntent Beyond the 30s Limit (iOS 27) 🔴
 
-Ordinary `AppIntent`s are expected to complete within a short time budget (similar in spirit to `BGAppRefreshTask`'s strict budget, section 49.10) — `LongRunningIntent` explicitly opts an intent into a longer execution allowance, appropriate for genuinely lengthy operations (like a large data export or an extended timer) that can't reasonably complete within the standard short window.
+Normal intents should **finish quickly**: the system gives them a **short** time budget (around 30 seconds), like background refresh (49.10). But some actions really take longer: exporting all recipes, processing a video, syncing a large library.
+
+The iOS 27 SDK's **`LongRunningIntent`** lets an intent **opt in** to a longer run, with **live progress** in the surface that started it (Siri, Shortcuts):
 
 ```swift
-struct ExportAllRecipesIntent: AppIntent, LongRunningIntent {
-    static var title: LocalizedStringResource = "Export All Recipes"
+// ⚠️ New iOS 27 API; check the documentation for exact requirements
+struct ExportAllRecipesIntent: AppIntent, LongRunningIntent, ProgressReportingIntent {
+    static let title: LocalizedStringResource = "Export All Recipes"
 
     func perform() async throws -> some IntentResult {
-        for await progress in exportAllRecipesWithProgress() {
-            self.progress = progress // updates a live progress indicator in Shortcuts/Siri
+        let recipes = try await recipeStore.allRecipes()
+        progress.totalUnitCount = Int64(recipes.count)
+
+        for recipe in recipes {
+            try Task.checkCancellation()                    // the user can stop it
+            try await exporter.export(recipe)
+            progress.completedUnitCount += 1                // shown live to the user
         }
         return .result()
     }
 }
 ```
 
-This directly parallels `BGContinuedProcessingTask`'s role (section 49.12) for genuinely long user-initiated work — `LongRunningIntent` conformance signals to the system that this specific intent may need meaningfully more time than the default budget allows, and its progress can be surfaced live in the invoking surface (Shortcuts, Siri) rather than the user simply waiting with no feedback until the operation eventually completes or times out.
+**`ProgressReportingIntent`** (available since iOS 16) gives the intent a **`progress`** object to update.
+
+It's the intent version of **`BGContinuedProcessingTask`** (49.12): work the **user** started, that legitimately takes a while, with **visible** progress and a way to **cancel**, instead of silently timing out.
 
 ---
 
-## 51.13 ExecutionTargets — Where an Intent Runs (iOS 27)
+## 51.13 ExecutionTargets — Where an Intent Runs (iOS 27) 🔴
 
-`ExecutionTargets` lets an intent declare which specific process/context it should actually run in — the main app process, a background extension process, or potentially a different device entirely in multi-device scenarios — giving more explicit control than earlier App Intents versions provided over where an intent's `perform()` actually executes.
+**Where** should an intent's `perform()` run?
+
+- A quick data change ("mark cooked") can run in the **background**, without showing the app.
+- "Show my recipes sorted by time" needs the app **on screen**.
+- Some intents might start in the background and only **open the app** if needed (for example, to ask for login).
+
+iOS 26 added **`supportedModes`** to declare this:
 
 ```swift
 struct MarkRecipeCookedIntent: AppIntent {
-    static var supportedExecutionTargets: [ExecutionTarget] { [.foregroundApp, .background] }
+    static let supportedModes: IntentModes = .background       // never opens the app
+
     // ...
+}
+
+struct ShowRecipeIntent: AppIntent {
+    static let supportedModes: IntentModes = .foreground       // always opens the app
+
+    // ...
+}
+
+struct SyncNowIntent: AppIntent {
+    static let supportedModes: IntentModes = [.background, .foreground(.dynamic)]
+
+    func perform() async throws -> some IntentResult {
+        guard await session.isLoggedIn else {
+            try await continueInForeground()                   // open the app only when needed
+            return .result()
+        }
+        try await syncEngine.sync()
+        return .result()
+    }
 }
 ```
 
-This matters because different intents have genuinely different execution needs — a simple, quick data mutation like marking a recipe cooked can reasonably run in the background without ever launching the app's UI, while an intent whose result depends on rendering a rich SwiftUI snippet (51.8), or that needs to interact with UI-specific state, may need to run with the app's UI process actually available — `ExecutionTargets` makes this requirement an explicit, declared part of the intent's definition rather than an implicit assumption the system has to guess at.
+(Older code used **`openAppWhenRun = true`** for "always foreground".)
+
+The iOS 27 SDK's **`ExecutionTargets`** (in the title) takes this further, letting an intent declare which **processes or contexts** it can run in (the app, an extension, and more).
+
+⚠️ Check the current documentation for the exact iOS 27 API.
+
+The idea in both: make "**where does this run?**" an **explicit** part of the intent, instead of something the system has to guess.
 
 ---
 
-## 51.14 Testing with the AppIntentsTesting Framework (iOS 27)
+## 51.14 Testing with the AppIntentsTesting Framework (iOS 27) 🟡
 
-`AppIntentsTesting` provides dedicated testing utilities for invoking an `AppIntent`'s `perform()` method directly in a test target, with helpers for constructing parameter values and asserting on the resulting `IntentResult` — extending the same dependency-injection-driven testability principles from section 47 to this specific framework.
+A well-built intent is a **thin wrapper** around app logic (51.2), so testing it is mostly the **same** as testing the rest of the app (65): inject **fake** dependencies, call the code, check the results.
+
+You can already test intents **today** by creating one and calling **`perform()`** directly:
 
 ```swift
-import AppIntentsTesting
+import Testing
+import AppIntents
+@testable import RecipeApp
 
 @Test
 func markingRecipeCookedUpdatesStore() async throws {
-    let intent = MarkRecipeCookedIntent()
-    intent.recipe = RecipeEntity(id: testRecipeID, title: "Test Recipe")
+    let store = InMemoryRecipeStore(recipes: [.sample])        // a fake store
+    AppDependencyManager.shared.add(dependency: store as RecipeStore)
 
-    let result = try await intent.perform()
+    var intent = MarkRecipeCookedIntent()
+    intent.recipe = RecipeEntity(id: Recipe.sample.id, title: Recipe.sample.title)
 
-    #expect(await recipeStore.isCooked(testRecipeID))
+    _ = try await intent.perform()
+
+    #expect(await store.isCooked(Recipe.sample.id))
 }
 ```
 
-Because a well-designed `AppIntent`'s `perform()` method is typically a thin wrapper delegating to the app's existing, already-injectable service layer (51.2), testing an intent largely reuses the same dependency substitution techniques from section 47 — the framework's specific contribution is making it straightforward to construct intent instances with test parameter values and invoke `perform()` directly, without needing to actually route a request through Siri or Shortcuts to exercise the intent's logic in a test.
+The iOS 27 SDK adds an **`AppIntentsTesting`** framework (in the title) with helpers for building intents with test **parameter** values, running them like the system would, and checking the **result** (dialog, snippet, value).
+
+⚠️ It's new; check the documentation for its API.
+
+Also test the **queries** (51.4): `entities(for:)` with unknown IDs (should return fewer, not crash), and `entities(matching:)` with odd input. And try your App Shortcuts by **voice** on a real device.
 
 ---
 
-## 51.15 Action Button and Control Center Entry Points
+## 51.15 Action Button and Control Center Entry Points 🟢
 
-The iPhone's Action Button (and Control Center, more broadly) can be configured to directly trigger a specific `AppIntent`, giving users a genuinely fast, one-press path to a frequently-used app action without opening the app or invoking Siri at all.
+The **Action Button** (iPhone 15 Pro and later) and **Control Center** give users a **one-press** way to run your app's actions, without opening the app or talking to Siri.
+
+**Action Button**: the user can assign it to a **Shortcut**, and your **App Shortcuts** (51.6) appear in that list. Every intent you offer as an App Shortcut is therefore **one setting away** from a hardware button.
+
+**Control Center, Lock Screen, and the Action Button's "Controls"** (iOS 18) use **controls**: small widgets that run an intent. You build them in your **widget extension** (52):
 
 ```swift
-// The same MarkRecipeCookedIntent (or any AppIntent) is automatically
-// eligible for Action Button / Control Center assignment — no
-// additional, separate declaration is needed beyond the intent itself
-// being a well-formed AppIntent with a clear title.
+import WidgetKit
+import SwiftUI
+
+struct StartTimerControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "com.example.myapp.start-timer") {
+            ControlWidgetButton(action: StartDefaultTimerIntent()) {     // the SAME kind of AppIntent
+                Label("Cook Timer", systemImage: "timer")
+            }
+        }
+        .displayName("Cook Timer")
+    }
+}
 ```
 
-This is a direct, practical payoff of App Intents' unified design (51.1) — because the framework was built from the start to power multiple system surfaces from one shared intent definition, an intent originally created for Siri/Shortcuts automatically becomes available for Action Button and Control Center assignment too, with no additional per-surface integration work required, in sharp contrast to the older SiriKit model where each new surface (had it existed) would likely have needed its own separate integration path.
+This is App Intents' **unified design** (51.1) paying off: the **same** intent type that powers Siri and Shortcuts also powers the Action Button and controls. You write the **action** once; each new surface needs, at most, a small declaration like the control above.
 
 ---
 
 ## 51.16 Visual Intelligence Integration 🔴
 
-Visual Intelligence lets the system (and, by extension, App Intents) reason about on-screen or camera-captured visual content and route relevant actions to apps that have registered intents capable of handling that specific kind of visual context — a genuinely advanced, still-maturing integration point at the intersection of App Intents and on-device visual understanding.
+**Visual Intelligence** (iOS 26, on Apple Intelligence devices) lets users point the **camera** at something, or use a **screenshot**, and ask the system about what's **visible**. Apps can join in: when the user looks at a **dish**, your recipe app can offer **matching recipes**.
+
+The integration uses App Intents types. The app provides a query that receives a **description of the visual content** and returns **matching entities**:
 
 ```swift
-// Conceptual: an intent can declare eligibility to handle visual
-// content matching certain criteria (e.g., "an image containing
-// recognizable food/recipe content"), becoming a candidate action
-// the system offers when relevant visual content is on screen or captured
+// iOS 26: shape for illustration; see the Visual Intelligence documentation for details
+import VisualIntelligence
+
+struct RecipeVisualSearchQuery: IntentValueQuery {
+    func values(for input: SemanticContentDescriptor) async throws -> [RecipeEntity] {
+        // input describes what the system saw (e.g. labels like "pasta", "tomato")
+        try await recipeStore.recipes(matchingLabels: input.labels)
+            .map { RecipeEntity(id: $0.id, title: $0.title) }
+    }
+}
 ```
 
-This represents the newest, most exploratory edge of the App Intents surface area — rather than the user explicitly invoking an app action by name (via Siri phrase or manual Shortcuts configuration), Visual Intelligence integration lets the system proactively suggest a relevant app action based purely on *what's visually present* (a photographed dish, an on-screen product), extending App Intents' reach from "things the user explicitly asks for" toward "things the system proactively suggests based on visual context," representing where this framework's capabilities are actively still expanding.
+The system shows your results next to other apps'. Tapping one opens your app on that recipe (with an `OpenIntent` for the entity).
+
+This is the newest, still-growing edge of App Intents. Instead of the user **asking** by name ("open Carbonara in RecipeApp"), the system **suggests** your app based on what the user **sees**. It works **because** your app already describes its content as **entities** (51.4): the same building blocks, reused for a new surface.
 
 ---
 
-## 51.17 Migrating from SiriKit INIntent 🟠
+## 51.17 Migrating from SiriKit INIntent 🟡
 
-Apps with an existing SiriKit `INIntent`-based integration face a genuine migration decision — App Intents and `INIntent` are architecturally distinct systems (a separate extension process versus in-process Swift types), meaning migration is a deliberate rewrite of the integration layer rather than a simple find-and-replace, though the underlying app logic being exposed typically doesn't need to change at all.
+Apps with an older **SiriKit** integration (`INIntent`, an Intents extension, an `.intentdefinition` file) can move to App Intents. The two systems are **different** (a separate extension process vs. Swift types in the app), so it's a **rewrite of the integration layer**, but **not** of the app's logic.
 
-```plaintext
-Migration approach, roughly:
-1. Identify each existing INIntent and the app logic it ultimately calls
-2. Reimplement each as an AppIntent, typically as a thin wrapper around
-   that SAME existing app logic (the actual business logic layer, section
-   45.5, generally doesn't need to change)
-3. Add AppShortcutsProvider declarations for proactive discoverability
-   (51.6), which the older SiriKit model didn't offer in the same way
-4. Remove the old Intents extension target once migration is verified
+```
+Migration steps:
+1. List each INIntent, and the app code it ends up calling.
+2. Write an AppIntent for each, as a thin wrapper around that SAME code (45.5).
+   Xcode can generate a starting point: open the .intentdefinition file and
+   choose "Convert to App Intent".
+3. Add an AppShortcutsProvider (51.6) for phrases and discovery: something
+   the old model didn't offer in the same way.
+4. Test on devices that ran the old version: existing user shortcuts should
+   keep working (keep the old intents until the new ones are proven).
+5. Remove the Intents extension and .intentdefinition file.
 ```
 
-Because a well-architected app already separates business logic from its specific integration surface (echoing section 45's foundational separation principle), migrating from `INIntent` to `AppIntent` is primarily about rewriting the thin integration/wrapper layer, not the underlying logic itself — this is precisely the kind of architectural payoff that disciplined separation of concerns is meant to provide, letting a significant framework-level migration touch a comparatively small, well-isolated slice of the overall codebase.
+A few **specific** SiriKit **domains** (like messaging, calling, and workouts) still use their own SiriKit intents for deep system integration, so check whether your use case is one of them.
+
+Why it's usually **not** painful: in a well-structured app, the **business logic** lives in services, separate from any one **surface** (45). Siri was just one more way to **call** that logic. Changing the "Siri adapter" from SiriKit to App Intents touches a **small, isolated** part of the codebase. That's exactly the payoff of good separation of concerns: a big framework change, but a small code change.
 
 ---
 
@@ -349,20 +590,20 @@ Because a well-architected app already separates business logic from its specifi
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Unified framework | `AppIntent` protocol | One definition powers Siri, Shortcuts, Spotlight, and more |
-| Basic action | `AppIntent`, `perform()` | An app action exposed to the system |
-| Input & natural language | `@Parameter`, `parameterSummary` | Typed inputs with a readable sentence template |
-| Searchable entities | `AppEntity`, `EntityQuery` | Reference specific app data by search/identifier |
-| Fixed choices | `AppEnum` | Bounded, enumerable picker-style parameters |
-| Proactive discovery | `AppShortcutsProvider`, phrases | Pre-packaged, system-surfaced automations |
-| Voice localization | `LocalizedStringResource` | Natural-sounding phrases across languages |
-| Rich visual feedback | Snippets, `ShowsSnippetView` | SwiftUI-based results within Siri/Shortcuts |
-| Proactive relevance | `RelevantEntities` (iOS 27) | Push contextually relevant entities to the system |
-| Scalable search | `EntityCollection` (iOS 27) | Lazy, paginated entity resolution |
-| Cross-device consistency | `SyncableEntity` (iOS 27) | Stable identifiers across a user's synced devices |
-| Extended time budget | `LongRunningIntent` (iOS 27) | Genuinely lengthy operations with live progress |
-| Execution location | `ExecutionTargets` (iOS 27) | Explicit control over where `perform()` runs |
-| Testability | `AppIntentsTesting` (iOS 27) | Direct, injectable testing of intent logic |
-| Fast system access | Action Button, Control Center | One-press access with no additional integration work |
-| Emerging surface | Visual Intelligence | Proactive suggestions from visual context |
-| Legacy migration | SiriKit `INIntent` → `AppIntent` | Rewrite the thin integration layer, not the business logic |
+| Unified framework | `AppIntent` protocol | One definition for Siri, Shortcuts, Spotlight, widgets, and more |
+| Basic action | `perform()`, `@Dependency` | A thin wrapper around existing app logic |
+| Input & natural language | `@Parameter`, `parameterSummary` | Typed inputs, shown as an editable sentence |
+| Searchable entities | `AppEntity`, `EntityQuery`, `EntityStringQuery` | Your app's things, found by ID or search |
+| Fixed choices | `AppEnum` | Picker-style parameters from an enum |
+| Proactive discovery | `AppShortcutsProvider`, phrases | Ready-made actions with `\(.applicationName)` phrases |
+| Voice localization | `LocalizedStringResource`, `AppShortcuts.xcstrings` | Natural spoken phrases per language |
+| Rich visual feedback | Snippets, `ShowsSnippetView`, `SnippetIntent` | SwiftUI results, even interactive ones |
+| Proactive relevance | `RelevantIntentManager`, relevant entities (iOS 27) | Tell the system what matters now |
+| Scalable search | `EntityCollection` (iOS 27) | Page through big result sets lazily |
+| Cross-device consistency | `SyncableEntity` (iOS 27) | Same entity IDs on all devices |
+| Extended time budget | `LongRunningIntent` (iOS 27), `ProgressReportingIntent` | Long user-started work with live progress |
+| Execution location | `supportedModes`, `ExecutionTargets` (iOS 27) | Declare where `perform()` runs |
+| Testability | Call `perform()` with fakes; `AppIntentsTesting` (iOS 27) | Test intents like any other code |
+| Fast system access | Action Button, `ControlWidget` | One-press actions from the same intents |
+| Emerging surface | Visual Intelligence | Suggestions from what the user sees |
+| Legacy migration | SiriKit `INIntent` → `AppIntent` | Rewrite the thin adapter, not the logic |

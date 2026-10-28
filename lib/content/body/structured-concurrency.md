@@ -1,6 +1,10 @@
-## 18.1 What "Structured" Means and Why It Matters
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-"Structured" concurrency means a child task's lifetime is strictly bounded by the scope that created it — a parent function cannot return (or otherwise complete) until all the child tasks it spawned have either finished or been cancelled and unwound. This is a deliberate contrast to `Task.detached` (recall 17.9) or older, unstructured mechanisms like a bare `DispatchQueue.async` call, where a spawned unit of work has no enforced relationship to its creator's lifetime at all.
+## 18.1 What "Structured" Means and Why It Matters 🟢
+
+**Structured concurrency** means a **child task** can't live longer than the **scope that created it**. A parent function **can't return** until all its child tasks have **finished** (or were cancelled and cleaned up).
+
+Compare with **unstructured** work: `Task.detached` (17.9), or an old `DispatchQueue.async` call. That work has **no link** to whoever started it.
 
 ```swift
 func loadDashboard() async {
@@ -13,13 +17,26 @@ func loadDashboard() async {
 }
 ```
 
-This structural guarantee is what makes error propagation, cancellation, and reasoning about a task's lifetime tractable — a parent's cancellation automatically propagates down to every structured child, and there's never a "leaked," orphaned task with no relationship to anything that spawned it, unlike careless use of manually-managed threads or dispatch queues.
+```plaintext
+loadDashboard()  ─────────────────────────────────┐
+   ├─ child: fetchUser()   ───────┐                │
+   └─ child: fetchPosts()  ──────────────┐         │
+                                  done   done   returns
+```
+
+**Why this matters:**
+
+- **Cancellation flows down.** Cancel the parent, and all its children are cancelled too.
+- **Errors flow up.** A child's error reaches the parent, like a normal function call.
+- **No leaks.** A child task can never be "forgotten" and keep running after its parent is gone.
+
+It's the same idea as structured code with `if` and `for`: a block finishes before the code after it runs. Here it applies to concurrent work.
 
 ---
 
-## 18.2 `async let` for Parallel Work
+## 18.2 `async let` for Parallel Work 🟢
 
-`async let` starts a child task immediately, running concurrently with the rest of the function, and lets you `await` its result later — ideal for a small, fixed number of independent async operations you want to run in parallel rather than sequentially.
+**`async let`** starts a **child task right away**. It runs **at the same time** as the rest of your function, and you `await` its result **later**. It's ideal for a **small, fixed** number of independent operations:
 
 ```swift
 func fetchUserData() async throws -> String { "User data" }
@@ -34,7 +51,7 @@ func loadEverything() async throws {
 }
 ```
 
-Compare this to sequential `await`s, which would run one after the other, taking the *sum* of both durations rather than roughly the *maximum* of the two:
+Compare with plain `await`s **one after another**. The total time is the **sum**, instead of about the **longest one**:
 
 ```swift
 // Sequential — slower: total time ≈ fetchUserData's time + fetchSettingsData's time
@@ -47,11 +64,36 @@ async let settingsP = fetchSettingsData()
 let (u, s) = try await (userP, settingsP)
 ```
 
+```plaintext
+Sequential:  [ user: 1s ][ settings: 1s ]           = 2s
+async let:   [ user: 1s ]
+             [ settings: 1s ]                        = 1s
+```
+
+Rules to know:
+
+- Use `async let` only when the operations are **independent**. If B needs A's result, they must run in order.
+- If you **never await** an `async let`, Swift **cancels** it and waits for it when the scope ends. So it can't leak.
+- The `try` goes at the **`await`**, not at the `async let` line.
+
+A real screen that needs three things at once:
+
+```swift
+@MainActor
+func loadProfileScreen(id: Int) async throws {
+    async let profile = api.profile(id: id)
+    async let posts = api.posts(userID: id)
+    async let followers = api.followerCount(userID: id)
+
+    self.screen = try await ProfileScreen(profile: profile, posts: posts, followers: followers)
+}
+```
+
 ---
 
-## 18.3 `withTaskGroup` Basics
+## 18.3 `withTaskGroup` Basics 🟡
 
-`async let` works well for a small, fixed number of parallel operations known at compile time, but for a **dynamic** number of parallel operations (e.g. one per item in an array whose size isn't known until runtime), `withTaskGroup` is the tool — it creates a scope in which you can add any number of child tasks, then iterate over their results as they complete.
+`async let` is for a **fixed** number of tasks, known when you write the code. For a **dynamic** number (one per item in an array whose size you only know at runtime), use **`withTaskGroup`**. Inside it, you add any number of child tasks, then read their results as they finish:
 
 ```swift
 func fetchTitles(for ids: [Int]) async -> [String] {
@@ -73,13 +115,43 @@ func fetchTitles(for ids: [Int]) async -> [String] {
 func fetchTitle(for id: Int) async -> String { "Title \(id)" }
 ```
 
-`withTaskGroup` follows the same structured concurrency rule as `async let`: the function doesn't return until every child task added to the group has completed — you can't "leak" a task group child outside the closure's scope.
+The same **structured** rule applies: `withTaskGroup` doesn't return until **every** child task has finished. Children can't escape the closure.
+
+| | `async let` | Task group |
+|---|---|---|
+| Number of tasks | Fixed, written in code | Any number, decided at runtime |
+| Result types | Each can differ | All the same type |
+| Best for | "Load these 3 things" | "Load one thing per item" |
+
+**Limit how many run at once** when the list is big, so you don't start 1,000 downloads together:
+
+```swift
+func downloadAll(_ urls: [URL], maxConcurrent: Int = 4) async -> [Data] {
+    await withTaskGroup(of: Data?.self) { group in
+        var results: [Data] = []
+        var iterator = urls.makeIterator()
+
+        for _ in 0..<maxConcurrent {                     // start the first few
+            if let url = iterator.next() {
+                group.addTask { try? await URLSession.shared.data(from: url).0 }
+            }
+        }
+        for await data in group {                        // each time one finishes...
+            if let data { results.append(data) }
+            if let url = iterator.next() {               // ...start the next one
+                group.addTask { try? await URLSession.shared.data(from: url).0 }
+            }
+        }
+        return results
+    }
+}
+```
 
 ---
 
-## 18.4 `withThrowingTaskGroup` and Error Propagation
+## 18.4 `withThrowingTaskGroup` and Error Propagation 🟡
 
-`withThrowingTaskGroup` is the throwing variant, used when child tasks might fail — if any child task throws, that error propagates out of the group (and the remaining, still-running child tasks are automatically cancelled):
+**`withThrowingTaskGroup`** is the version for child tasks that can **fail**:
 
 ```swift
 func fetchAllTitles(for ids: [Int]) async throws -> [String] {
@@ -104,13 +176,34 @@ func fetchTitleOrThrow(for id: Int) async throws -> String {
 }
 ```
 
-This "first error cancels the rest" behavior mirrors `async let`'s own error propagation: if either concurrent operation in an `async let` pair throws, awaiting the pair propagates that error and implicitly cancels whichever sibling hadn't finished yet — structured concurrency ensures a failure doesn't leave orphaned, still-running work behind.
+How the error travels:
+
+1. A child throws. Its error waits in the group.
+2. `for try await` receives it and **rethrows** it.
+3. The error leaves the group's closure, so the group **cancels all remaining children**, waits for them to stop, and then rethrows the error to the caller.
+
+**"First error cancels the rest."** `async let` works the same way: when an error leaves the scope, unfinished siblings are cancelled. A failure never leaves orphaned work running.
+
+If you'd rather **keep going** when one item fails, catch errors **inside** each child:
+
+```swift
+let titles = await withTaskGroup(of: String?.self) { group in
+    for id in ids {
+        group.addTask { try? await fetchTitleOrThrow(for: id) }   // a failure becomes nil
+    }
+    var results: [String] = []
+    for await title in group {
+        if let title { results.append(title) }
+    }
+    return results          // all the titles that worked
+}
+```
 
 ---
 
-## 18.5 Collecting Task Group Results in Order
+## 18.5 Collecting Task Group Results in Order 🟡
 
-A task group's `for await`/`for try await` loop yields results in **completion order**, not the order tasks were added — if preserving the original order matters, you need to explicitly track and re-sort by an index or identifier:
+A task group gives results in **completion order**: whichever finishes **first** comes first. That's usually **not** the order you added them. If order matters, **tag** each result with its index and **sort** at the end:
 
 ```swift
 func fetchTitlesInOrder(for ids: [Int]) async -> [String] {
@@ -131,13 +224,29 @@ func fetchTitlesInOrder(for ids: [Int]) async -> [String] {
 }
 ```
 
-This is a common, easy-to-miss gotcha: unlike `async let`'s tuple-based `await (user, settings)`, which preserves each binding's own identity, a task group's completions arrive in whatever order the underlying work actually finishes — usually *not* the order you added them, especially when individual tasks take varying amounts of time.
+```plaintext
+Added:     id 1 (slow)   id 2 (fast)   id 3 (medium)
+Finished:  id 2   →   id 3   →   id 1        ← the order `for await` gives you
+Sorted:    id 1,  id 2,  id 3                ← after sorting by index
+```
+
+A dictionary works too, when items have IDs:
+
+```swift
+var byID: [Int: String] = [:]
+for await (id, title) in group {
+    byID[id] = title
+}
+let ordered = ids.compactMap { byID[$0] }
+```
+
+This is an easy bug to miss: in testing, tasks often finish in order **by chance**, and the bug only appears with real network delays. `async let` doesn't have this problem, because each result has its **own name**.
 
 ---
 
-## 18.6 `DiscardingTaskGroup`
+## 18.6 `DiscardingTaskGroup` 🔴
 
-`DiscardingTaskGroup` (and its throwing counterpart, `ThrowingDiscardingTaskGroup`) is a variant for when you need to run many child tasks concurrently purely for their **side effects**, with no results to actually collect — it avoids the memory overhead of buffering child task results you'd never consume anyway.
+**`withDiscardingTaskGroup`** (and the throwing version, `withThrowingDiscardingTaskGroup`) is for running many child tasks **only for their side effects**, with **no results** to collect. It **frees each child as soon as it finishes**, instead of keeping results you'll never read.
 
 ```swift
 func processAllItems(_ items: [Item]) async {
@@ -152,13 +261,27 @@ func processAllItems(_ items: [Item]) async {
 }
 ```
 
-A regular `withTaskGroup` still technically supports `Void`-returning tasks, but `DiscardingTaskGroup` is specifically optimized for exactly this pattern — many fire-and-forget-style concurrent operations — discarding each task's completion immediately rather than retaining any bookkeeping for a result that will never be read.
+It shines for **long-running** loops that keep adding tasks, like a server handling connections forever. A normal task group would keep a record of every finished child until you read it; that memory would grow and grow.
+
+```swift
+func runServer(listener: Listener) async throws {
+    try await withThrowingDiscardingTaskGroup { group in
+        for try await connection in listener.connections {
+            group.addTask {
+                try await handle(connection)    // each finished connection is freed right away
+            }
+        }
+    }
+}
+```
+
+In the **throwing** discarding group, if any child throws, the group **cancels the others** and rethrows, even though you never iterate results.
 
 ---
 
-## 18.7 Cancellation Is Cooperative
+## 18.7 Cancellation Is Cooperative 🟢
 
-Task cancellation in Swift Concurrency is **cooperative**, not preemptive — calling `task.cancel()` (or a parent task being cancelled, which propagates to its structured children) merely *marks* the task as cancelled; it does not forcibly stop its execution. The task itself must actively check for cancellation and choose to stop.
+Cancellation in Swift concurrency is **cooperative**. Calling `task.cancel()` (or cancelling a parent, which reaches its children) only **marks** the task as cancelled. It does **not** stop the task by force. The task's own code must **check** and **choose** to stop.
 
 ```swift
 func longRunningWork() async {
@@ -172,13 +295,29 @@ func longRunningWork() async {
 func performStep(_ i: Int) { }
 ```
 
-This is a deliberate design choice: forcibly, preemptively terminating a task mid-execution (as some other cancellation models do) risks leaving shared state in a corrupted, half-updated condition. Cooperative cancellation instead trusts the task's own code to notice the cancellation flag and unwind cleanly at a safe point — which means cancellation only actually *works* if code is written to check for it (see 18.8).
+**Why not stop tasks by force?** Killing a task in the middle of its work could leave data **half-updated** and broken. Cooperative cancellation lets the task stop at a **safe point**, and clean up properly.
+
+The flip side: cancellation **only works if your code checks for it** (18.8).
+
+What cancels a task:
+
+```swift
+let task = Task { await longRunningWork() }
+task.cancel()                       // 1. you call cancel()
+
+// 2. the parent is cancelled → all its structured children are cancelled
+// 3. SwiftUI's .task modifier cancels when the view disappears
+// 4. A throwing task group cancels the rest when one child fails (18.4)
+```
 
 ---
 
-## 18.8 `Task.isCancelled` and `checkCancellation()`
+## 18.8 `Task.isCancelled` and `checkCancellation()` 🟢
 
-Two APIs let a task's own code respond to cancellation: `Task.isCancelled` is a simple boolean check you can inspect at any convenient point (useful inside a loop, to break out gracefully); `Task.checkCancellation()` throws a `CancellationError` immediately if the task has been cancelled, useful in `throws` contexts where propagating that error upward is the natural response.
+Two ways for a task to **react** to cancellation:
+
+- **`Task.isCancelled`**: a `Bool`. Check it anywhere, and stop in your own way (return early, return partial results).
+- **`try Task.checkCancellation()`**: **throws** `CancellationError` if cancelled. Natural in `throws` functions: the error flows up like any other.
 
 ```swift
 func longRunningWork() async {
@@ -199,38 +338,63 @@ func longRunningThrowingWork() async throws {
 }
 ```
 
-Many standard-library async APIs (like `Task.sleep`, recall 17.6) already check cancellation internally and throw automatically — but any custom long-running work you write yourself needs one of these two checks sprinkled at reasonable intervals (inside loops, between major steps) to actually honor cancellation requests rather than silently ignoring them.
+Many system async APIs **already check** for you, and throw when cancelled: `Task.sleep` (17.6), `URLSession`'s async methods, and more. But your **own** long-running work needs these checks, in loops and between big steps.
+
+**Don't show cancellation as an error** to the user. The user (or the system) asked to stop; that's not a failure:
+
+```swift
+do {
+    results = try await search(query)
+} catch is CancellationError {
+    // the user typed again or left the screen: do nothing
+} catch {
+    errorMessage = "Search failed."
+}
+```
+
+(`URLSession` reports cancellation as `URLError(.cancelled)`. Handle that too.)
 
 ---
 
-## 18.9 `withTaskCancellationHandler`
+## 18.9 `withTaskCancellationHandler` 🔴
 
-`withTaskCancellationHandler` lets you register a synchronous closure that runs **immediately** the moment cancellation occurs — useful for wrapping non-async, non-cancellation-aware work (like a callback-based API) with cleanup logic that fires right away, rather than waiting for the wrapped operation's own code to eventually notice `Task.isCancelled`.
+**`withTaskCancellationHandler`** registers an `onCancel` closure that runs **immediately** when the task is cancelled. That's useful for work that **doesn't check** `Task.isCancelled` itself, like an old callback-based API with its own `cancel()` method.
 
 ```swift
-func fetchWithCancellationSupport() async throws -> String {
-    try await withTaskCancellationHandler {
+final class LegacyRequestBox: Sendable {
+    let request = Mutex<LegacyRequest?>(nil)     // onCancel runs on another thread, so protect it
+}
+
+func download(_ url: URL) async throws -> Data {
+    let box = LegacyRequestBox()
+
+    return try await withTaskCancellationHandler {
         try await withCheckedThrowingContinuation { continuation in
-            let request = startLegacyNetworkRequest { result in
-                continuation.resume(with: result)
+            let request = LegacyDownloader.start(url) { result in
+                continuation.resume(with: result)        // the legacy API reports success or failure
             }
-            // if cancellation happens, onCancel fires immediately, even while
-            // the legacy request is still technically in flight
+            box.request.withLock { $0 = request }
         }
     } onCancel: {
-        // runs synchronously and immediately upon cancellation — cancel the underlying legacy request here
-        print("Cancelling the underlying legacy request")
+        // runs right away when the task is cancelled, even mid-download
+        box.request.withLock { $0?.cancel() }            // the legacy request then fails with an error
     }
 }
 ```
 
-This is especially valuable when bridging to callback-based APIs (see 18.11) that have no native concept of Swift Concurrency's cancellation at all — `onCancel` gives you a reliable hook to translate a `Task`'s cancellation into whatever cancellation mechanism the underlying legacy API actually provides (like calling its own `.cancel()` method).
+Notes:
+
+- `onCancel` can run **at the same time** as your other code, on another thread. Anything it touches must be **thread-safe** (here, a `Mutex`, 14.21).
+- If the task was **already** cancelled, `onCancel` runs **immediately**, before the main closure even starts.
+- `onCancel` should be **quick**: just tell the underlying work to stop.
+
+This is the bridge between Swift's cancellation and **whatever cancellation the old API has** (its `.cancel()` method). Together with continuations (18.11), you can wrap old APIs into **fully cancellable** async functions.
 
 ---
 
-## 18.10 Task-Local Values with `@TaskLocal`
+## 18.10 Task-Local Values with `@TaskLocal` 🔴
 
-`@TaskLocal` provides values that are implicitly available to a task and all of its structured children, without needing to be threaded explicitly through every function's parameter list — conceptually similar to thread-local storage, but scoped to Swift Concurrency's task hierarchy instead of an OS thread.
+**`@TaskLocal`** gives a value that is **automatically available** to a task and **all its child tasks**, without passing it through every function's parameters. It's like thread-local storage, but follows the **task tree** instead of an OS thread.
 
 ```swift
 enum RequestContext {
@@ -252,13 +416,33 @@ func processRequest() async {
 }
 ```
 
-A common real use is threading a request ID or trace identifier through a deeply-nested chain of async calls (for logging or diagnostics) without needing to add an explicit parameter to every single function signature along the way — the value is automatically inherited by structured child tasks created within the `withValue` scope (recall this contrasts with `Task.detached`, which does *not* inherit task-local values, as noted in section 17.9).
+The value is set **only inside** `withValue { }`. Outside, it goes back to the old value:
+
+```swift
+await handleRequest()     // logs "[abc-123] Processing"
+logMessage("After")       // logs "[no-id] After"
+```
+
+Who sees the value:
+
+| | Inherits task-local values? |
+|---|---|
+| Child tasks (`async let`, task groups) | ✅ Yes |
+| `Task { }` | ✅ Yes (copied when created) |
+| `Task.detached { }` | ❌ No (17.9) |
+
+A typical use: a **request ID** or **trace ID** for logs, through a deep chain of async calls (see distributed tracing, 80.9), without adding a parameter to every function.
+
+**Don't overuse it.** Hidden inputs make code harder to follow. For normal dependencies, pass them explicitly (section 47).
 
 ---
 
-## 18.11 Bridging Callbacks with `withCheckedContinuation`
+## 18.11 Bridging Callbacks with `withCheckedContinuation` 🟡
 
-Not all APIs are async-native — many older, completion-handler-based APIs (especially from Objective-C-based frameworks) need to be bridged into async/await. `withCheckedContinuation` (for non-throwing callbacks) and `withCheckedThrowingContinuation` (for callbacks that can produce an error) wrap exactly one callback invocation into a single `await`-able call.
+Not every API is async. Many older APIs use **completion handlers**. A **continuation** turns **one callback** into **one `await`**:
+
+- **`withCheckedContinuation`**: for callbacks that **can't fail**.
+- **`withCheckedThrowingContinuation`**: for callbacks that can return an **error**.
 
 ```swift
 func legacyFetchUser(id: Int, completion: @escaping (String?, Error?) -> Void) {
@@ -280,13 +464,29 @@ func fetchUser(id: Int) async throws -> String {
 }
 ```
 
-The "checked" in the name means Swift performs a runtime check ensuring `resume` is called *exactly once* — this is precisely the safety net protecting against the misuse patterns covered next in 18.12, at a small runtime cost; `withUnsafeContinuation`/`withUnsafeThrowingContinuation` skip that check entirely for a small performance gain, at the cost of losing that safety net.
+```plaintext
+fetchUser(id:)  →  suspends at withChecked...Continuation
+                     legacyFetchUser runs, calls back later
+                   continuation.resume(...)  →  fetchUser continues with the value or error
+```
+
+If the API already uses `Result`, it's one line:
+
+```swift
+continuation.resume(with: result)    // Result<Value, Error> → value or thrown error
+```
+
+**"Checked"** means Swift checks **at runtime** that you call `resume` **exactly once** (18.12). The `withUnsafeContinuation` versions skip that check for a tiny speed gain. Use the **checked** ones unless you've measured a real need.
+
+A continuation fits **one-time** callbacks. For callbacks that fire **many times** (location updates, progress), use an `AsyncStream` instead (section 21).
 
 ---
 
-## 18.12 Continuation Misuse: Double Resume and Leaks
+## 18.12 Continuation Misuse: Double Resume and Leaks 🔴
 
-A continuation's contract is strict: `resume` must be called **exactly once** — never zero times, never more than once. Violating this produces one of two failure modes, both of which the "checked" continuation variants actively detect and report (typically as a runtime warning or crash, rather than silent corruption).
+A continuation has a strict rule: call **`resume` exactly once**. Never zero times, never twice.
+
+**Twice** is a crash. The checked continuation stops the app with a clear message:
 
 ```swift
 func brokenDoubleResume(completion: @escaping (Int?, Error?) -> Void) {
@@ -297,14 +497,45 @@ func brokenDoubleResume(completion: @escaping (Int?, Error?) -> Void) {
 func fetchValue() async -> Int? {
     await withCheckedContinuation { continuation in
         brokenDoubleResume { value, _ in
-            continuation.resume(returning: value)   // 💥 runtime warning: "SWIFT TASK CONTINUATION MISUSE" —
-                                                        // resume() called more than once
+            continuation.resume(returning: value)   // 💥 crash on the 2nd call:
+                                                    // "SWIFT TASK CONTINUATION MISUSE ... tried to resume its continuation more than once"
         }
     }
 }
 ```
 
-Calling `resume` **zero times** is just as serious a bug, though less immediately obvious: the awaiting task simply hangs forever, suspended indefinitely, waiting for a resume that will never come — a **task leak** with no crash or warning to signal it, only a silently stuck task. This is exactly why `withCheckedContinuation`'s runtime double-resume detection is valuable during development: it's one of the few safety nets available for a fundamentally manual, easy-to-get-wrong bridging pattern, making it critical to trace every possible completion path of the wrapped legacy API (success, failure, and any early-return/cancellation paths) to guarantee `resume` fires exactly once on all of them.
+**Zero times** is just as bad, but quieter. The waiting task **hangs forever**: it's suspended, waiting for a `resume` that never comes. This is a **task leak**. A checked continuation prints a warning (`"... leaked its continuation"`) when it's thrown away without being resumed, but nothing crashes, and the screen just keeps spinning.
+
+The usual cause is a **forgotten path**:
+
+```swift
+legacyFetchUser(id: id) { user, error in
+    if let user {
+        continuation.resume(returning: user)
+    } else if let error {
+        continuation.resume(throwing: error)
+    }
+    // ❌ user == nil && error == nil → no resume → the task hangs forever
+}
+```
+
+**How to stay safe:**
+
+1. Trace **every** path of the callback: success, failure, "neither", cancellation.
+2. End with an `else` that **always** resumes (as in 18.11).
+3. If the API might call back **more than once**, guard against it, or use `AsyncStream`.
+
+```swift
+// Guard for APIs that may call back more than once
+var didResume = false
+legacyAPI { value in
+    guard !didResume else { return }
+    didResume = true
+    continuation.resume(returning: value)
+}
+```
+
+(That simple flag is only safe if the API always calls back on the **same** thread or queue. Otherwise, protect it with a lock.)
 
 ---
 
@@ -312,15 +543,15 @@ Calling `resume` **zero times** is just as serious a bug, though less immediatel
 
 | Topic | One-line takeaway |
 |---|---|
-| Structured concurrency | A child task's lifetime is strictly bounded by its creating scope — no orphaned, unstructured work |
-| `async let` | Starts a fixed, small number of child tasks immediately, running in parallel rather than sequentially |
-| `withTaskGroup` | Dynamic-count parallel child tasks; the function can't return until all group children finish |
-| `withThrowingTaskGroup` | Throwing variant — one child's error propagates out and cancels the remaining siblings |
-| Ordering task group results | Completions arrive in finish order, not add order — tag with an index to preserve original order |
-| `DiscardingTaskGroup` | Optimized for many fire-and-forget child tasks whose results are never actually read |
-| Cooperative cancellation | `cancel()` only marks a task — it doesn't forcibly stop it; the task must check and respond itself |
-| `Task.isCancelled`/`checkCancellation()` | The two APIs for responding to cancellation — boolean check vs. throwing check |
-| `withTaskCancellationHandler` | Registers an immediate, synchronous callback that fires the instant cancellation occurs |
-| `@TaskLocal` | Implicitly-inherited values across a task's structured children, without explicit parameter threading |
-| `withCheckedContinuation` | Bridges a single legacy callback invocation into one `await`-able call, with runtime misuse detection |
-| Continuation misuse | `resume` must fire exactly once — zero times leaks a hung task, more than once triggers a runtime warning |
+| Structured concurrency | Children can't outlive their parent; cancellation flows down, errors flow up |
+| `async let` | A few independent tasks in parallel; total time ≈ the slowest one |
+| `withTaskGroup` | Any number of child tasks; limit how many run at once for big lists |
+| `withThrowingTaskGroup` | A rethrown child error cancels the rest; catch inside a child to keep going |
+| Ordering task group results | Results come in finish order; tag with an index to restore order |
+| `DiscardingTaskGroup` | For side-effect-only children; frees each one as it finishes |
+| Cooperative cancellation | `cancel()` only marks the task; your code must check and stop |
+| `Task.isCancelled`/`checkCancellation()` | Check with a `Bool`, or throw `CancellationError` |
+| `withTaskCancellationHandler` | Runs `onCancel` right away; connect it to an old API's `cancel()` |
+| `@TaskLocal` | Values inherited by child tasks, like a request ID for logs |
+| `withCheckedContinuation` | Turn one callback into one `await` |
+| Continuation misuse | Resume exactly once: twice crashes, zero times hangs forever |

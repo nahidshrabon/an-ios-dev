@@ -1,299 +1,690 @@
-## 64.1 RealityKit Entities and Components
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-RealityKit models a scene as a collection of `Entity` objects, each composed of `Component`s that attach specific data or behavior — a `ModelComponent` for visual geometry, a `PhysicsBodyComponent` for physics simulation, a `CollisionComponent` for hit-testing — following the Entity-Component-System (ECS) pattern rather than a traditional class-hierarchy-based scene graph.
+This section covers **3D and spatial** apps. **RealityKit** renders 3D content (on iPhone, iPad, Mac, and Vision Pro). **ARKit** understands the **real world** through the camera and sensors. **visionOS** adds windows, volumes, and immersive spaces you can walk around in. We go from entities and components, through AR tracking, to visionOS input and performance.
+
+---
+
+## 64.1 RealityKit Entities and Components 🟢
+
+A RealityKit scene is made of **entities**. An entity on its own is **empty**: what it **is** and **does** comes from its **components**.
 
 ```swift
 import RealityKit
 
-let entity = Entity()
-entity.components.set(ModelComponent(mesh: .generateBox(size: 0.1), materials: [SimpleMaterial(color: .blue, isMetallic: false)]))
-entity.components.set(CollisionComponent(shapes: [.generateBox(size: [0.1, 0.1, 0.1])]))
+// A plate: a visible mesh + a shape for taps and physics
+let plate = Entity()
+plate.components.set(ModelComponent(
+    mesh: .generateCylinder(height: 0.02, radius: 0.12),          // meters!
+    materials: [SimpleMaterial(color: .white, roughness: 0.3, isMetallic: false)]
+))
+plate.components.set(CollisionComponent(shapes: [.generateBox(size: [0.24, 0.02, 0.24])]))
+plate.position = [0, 0, -0.5]                                      // 50 cm in front
+
+// ModelEntity is a shortcut: an Entity that already has a ModelComponent
+let tomato = ModelEntity(mesh: .generateSphere(radius: 0.03),
+                         materials: [SimpleMaterial(color: .red, isMetallic: false)])
+plate.addChild(tomato)                                             // entities form a tree
 ```
 
-This component-based composition is a meaningfully different design from the inheritance-based scene graphs common in older 3D frameworks — rather than an entity's capabilities being determined by which class it inherits from, an entity's actual behavior and appearance emerge entirely from which components have been attached to it, letting the same generic `Entity` type represent a static decoration, a physics-simulated object, or an interactive, collidable object purely based on its component composition.
+| Component | Gives the entity |
+|---|---|
+| `ModelComponent` | A **mesh** and **materials**: something you can see |
+| `CollisionComponent` | A **shape** for hit testing and collisions |
+| `PhysicsBodyComponent` | **Physics**: gravity, forces, bouncing |
+| `InputTargetComponent` | Can receive **gestures** (with a collision shape) |
+| `Transform` | Position, rotation, scale (every entity has one) |
+
+This is the **Entity–Component–System** (ECS) design. Instead of a class hierarchy (`class PhysicsTomato: Tomato: Vegetable`), you **compose**: any entity can become visible, physical, or tappable just by **adding** components.
+
+You can define **your own** components. They're just data:
+
+```swift
+struct SpinComponent: Component {
+    var radiansPerSecond: Float = 1
+}
+
+SpinComponent.registerComponent()                 // once, at app start
+plate.components.set(SpinComponent(radiansPerSecond: 0.5))
+```
+
+Components are **structs** (values). To change one, read it, modify it, and **set it back**.
 
 ---
 
-## 64.2 The ECS Model: Systems and Updates
+## 64.2 The ECS Model: Systems and Updates 🟡
 
-Complementing entities and components, RealityKit `System`s implement the "S" in ECS — logic that runs each frame, querying for entities with a specific combination of components and updating them accordingly, keeping behavioral logic separate from the data components themselves.
+If components are **data**, **systems** are the **behavior**. A system runs **every frame**, finds all entities with certain components, and updates them:
 
 ```swift
-struct RotationSystem: System {
-    static let query = EntityQuery(where: .has(RotationComponent.self))
+import RealityKit
+
+struct SpinSystem: System {
+    private static let query = EntityQuery(where: .has(SpinComponent.self))
+
+    init(scene: RealityKit.Scene) {}                   // required
 
     func update(context: SceneUpdateContext) {
+        let dt = Float(context.deltaTime)              // seconds since the last frame
         for entity in context.entities(matching: Self.query, updatingSystemWhen: .rendering) {
-            guard let rotation = entity.components[RotationComponent.self] else { continue }
-            entity.transform.rotation *= simd_quatf(angle: rotation.speed, axis: [0, 1, 0])
+            guard let spin = entity.components[SpinComponent.self] else { continue }
+            let angle = spin.radiansPerSecond * dt     // by TIME, not by frame (like 62.5)
+            entity.transform.rotation *= simd_quatf(angle: angle, axis: [0, 1, 0])
         }
     }
 }
+
+SpinSystem.registerSystem()                            // once, at app start
 ```
 
-This separation of data (components) from behavior (systems) is the defining characteristic of the ECS pattern — a `RotationComponent` itself holds no logic, just data describing how fast an entity should rotate, while a separate `RotationSystem` queries for all entities having that component and applies the actual rotation behavior each frame, a design that scales cleanly as scenes grow more complex, since new behaviors are added as new systems rather than requiring changes to entity class hierarchies.
+| ECS part | Holds | Example |
+|---|---|---|
+| **Entity** | Just an identity + a list of components | "the plate" |
+| **Component** | **Data** only | `SpinComponent(radiansPerSecond: 0.5)` |
+| **System** | **Logic**, applied to every matching entity | `SpinSystem` rotates everything with a `SpinComponent` |
+
+Why it scales: a new **behavior** is a new **system**. Want things to bob up and down? Add a `BobComponent` and a `BobSystem`. You never touch existing classes, and **any** entity can opt in.
+
+Keep systems **fast**: they run up to 90 times a second on Vision Pro. Don't allocate or do heavy work in `update`.
 
 ---
 
-## 64.3 RealityView in SwiftUI
+## 64.3 RealityView in SwiftUI 🟢
 
-`RealityView` is SwiftUI's native integration point for RealityKit content — a view that hosts a RealityKit scene directly within a SwiftUI view hierarchy, with a closure-based setup for adding initial content and an optional update closure for responding to SwiftUI state changes.
+**`RealityView`** puts RealityKit content inside a SwiftUI view. It has a **make** closure (runs **once**) and an optional **update** closure (runs when SwiftUI state it reads **changes**):
 
 ```swift
-struct ARSceneView: View {
-    @State private var rotationSpeed: Float = 1.0
+import SwiftUI
+import RealityKit
+
+struct DishView: View {
+    @State private var showGarnish = false
 
     var body: some View {
         RealityView { content in
-            let box = ModelEntity(mesh: .generateBox(size: 0.1))
-            content.add(box)
+            // MAKE: runs once. Load and add content here (it's async).
+            if let dish = try? await Entity(named: "Pasta") {
+                dish.name = "dish"
+                content.add(dish)
+            }
         } update: { content in
-            // react to SwiftUI state changes, updating RealityKit entities accordingly
+            // UPDATE: runs when showGarnish changes. Only adjust existing entities here.
+            content.entities.first?.findEntity(named: "Garnish")?.isEnabled = showGarnish
+        }
+        .gesture(
+            TapGesture()
+                .targetedToAnyEntity()                       // which entity was tapped?
+                .onEnded { value in
+                    value.entity.scale *= 1.1
+                }
+        )
+        .toolbar {
+            Toggle("Garnish", isOn: $showGarnish)
         }
     }
 }
 ```
 
-`RealityView`'s update closure provides the same declarative, state-driven update pattern SwiftUI uses elsewhere (recall the general SwiftUI reactivity model from Part 3) applied to a RealityKit scene — rather than manually and imperatively mutating entities in response to state changes scattered throughout the app, changes to observed state trigger the update closure, which then reconciles the RealityKit scene's actual entities to match the current state, consistent with SwiftUI's broader declarative philosophy.
+It's SwiftUI's **declarative** model, applied to a 3D scene: change **state**, and the `update` closure brings the scene in line.
+
+Rules:
+
+- **Create** entities in `make`, not in `update`: `update` can run **many** times.
+- Tappable entities need **`InputTargetComponent`** + **`CollisionComponent`** (64.1).
+- On **visionOS**, `RealityView` can also hold **attachments**: SwiftUI views placed in 3D space next to your entities. On **iOS 18+**, `RealityView` can show AR content through the camera with `.camera(.spatialTracking)`.
 
 ---
 
-## 64.4 Loading USDZ Assets
+## 64.4 Loading USDZ Assets 🟢
 
-USDZ (Universal Scene Description, zipped) is the standard 3D asset format for RealityKit content — a single, self-contained file bundling geometry, materials, textures, and animations, loadable directly into a RealityKit scene via `Entity.load` or `ModelEntity`'s async loading APIs.
+**USDZ** is the standard 3D file format on Apple platforms. One file holds **geometry**, **materials**, **textures**, and **animations**. It's based on **USD** (Universal Scene Description), an open format created by Pixar and used across the 3D industry.
 
 ```swift
-func loadModel() async throws -> Entity {
-    let entity = try await Entity(named: "Chair", in: nil)
-    return entity
+import RealityKit
+
+// From the app bundle
+let chair = try await Entity(named: "Chair")
+
+// From a downloaded file
+let downloaded = try await Entity(contentsOf: fileURL)
+
+// Play an animation stored in the file
+if let animation = chair.availableAnimations.first {
+    chair.playAnimation(animation.repeat())
 }
 ```
 
-USDZ's self-contained, standardized nature (an open format, not Apple-proprietary) is what enables it to serve as a genuine interchange format across the broader 3D content ecosystem — assets authored in professional 3D tools (Blender, Cinema 4D, Reality Composer Pro) can be exported to USDZ and loaded directly into a RealityKit scene, and the same USDZ file can also be viewed directly by the system's own AR Quick Look feature outside of any custom app entirely, a meaningful interoperability advantage over a proprietary, app-specific asset format.
+On visionOS, the simplest way to **show** a model is the SwiftUI **`Model3D`** view, with no RealityView setup:
+
+```swift
+Model3D(named: "Chair") { model in
+    model.resizable().scaledToFit()
+} placeholder: {
+    ProgressView()
+}
+```
+
+Why USDZ matters:
+
+- Artists can export it from **Blender**, Maya, Cinema 4D, and other tools; Reality Composer Pro (64.5) works with USD directly.
+- The **same** file opens in the system's **AR Quick Look** (in Files, Messages, Safari, or `QLPreviewController`), with no custom app code.
+- You can **create** USDZ models from photos with **Object Capture** (`PhotogrammetrySession`).
+
+Keep models **light**: fewer polygons and smaller textures load faster and render more smoothly (64.17).
 
 ---
 
-## 64.5 Reality Composer Pro Workflow
+## 64.5 Reality Composer Pro Workflow 🟢
 
-Reality Composer Pro is Apple's dedicated authoring tool for RealityKit content — assembling scenes visually (positioning entities, configuring components, building particle effects and shader graph materials) and exporting the result as a `.reality` file or Swift package content bundle, referenced from app code rather than constructed purely programmatically.
+**Reality Composer Pro** (Xcode ▸ Open Developer Tool) is a **visual editor** for RealityKit scenes. You place models, set up components, build **particle** effects and **shader graph** materials (64.6), and add **audio**, without writing code for each detail.
+
+Your project gets a Swift **package** (by default named `RealityKitContent`) that holds the scenes as `.usda` files. Load them in code:
 
 ```swift
-// Content authored in Reality Composer Pro is typically loaded via a generated
-// Swift accessor, similar in spirit to Xcode's Core ML model code generation (59.2):
-let scene = try await Entity(named: "MyScene", in: realityKitContentBundle)
+import RealityKit
+import RealityKitContent                        // the generated package
+
+RealityView { content in
+    if let kitchen = try? await Entity(named: "Kitchen", in: realityKitContentBundle) {
+        content.add(kitchen)
+
+        // Find an entity the designer named in the editor
+        if let oven = kitchen.findEntity(named: "Oven") {
+            oven.components.set(InputTargetComponent())
+        }
+    }
+}
 ```
 
-This visual authoring workflow parallels other visual-tool-plus-generated-code patterns seen elsewhere in this curriculum — much like a `.storekit` configuration file (section 56.13) or a Core ML `.mlpackage` (section 59.2) lets non-code configuration be authored visually and then referenced from Swift, Reality Composer Pro lets complex 3D scene composition happen in a purpose-built visual tool rather than requiring every entity position, material, and effect to be hand-written as raw Swift code.
+The split of work:
+
+| Reality Composer Pro (visual) | Swift code |
+|---|---|
+| Layout, materials, lights, particles | **Behavior**: systems, gestures, game logic |
+| Custom **components** with values set per entity | Reading those components and acting on them |
+| Previewing the scene, also on a device | State, data, and SwiftUI UI |
+
+It's the same idea as a `.storekit` file (56.13) or a Core ML model in Xcode (59.2): **configure visually**, then **use from Swift**. Designers can change the look without touching code.
 
 ---
 
 ## 64.6 Shader Graph Materials 🔴
 
-Beyond RealityKit's built-in material types (`SimpleMaterial`, `PhysicallyBasedMaterial`), shader graph materials — authored visually in Reality Composer Pro as a node graph connecting inputs, math operations, and texture samples — enable custom, procedural surface appearance (animated patterns, complex reflectivity, procedural textures) without writing raw shader code directly.
+RealityKit's built-in materials cover the common cases:
+
+| Material | Look |
+|---|---|
+| `SimpleMaterial` | A basic color, metallic or not |
+| `PhysicallyBasedMaterial` | Realistic: base color, roughness, metalness, normal maps, … |
+| `UnlitMaterial` | No lighting: always the same color (good for UI-like elements) |
+
+For **custom** effects (animated glow, procedural patterns, water, "sizzle" on a pan), build a **shader graph** in Reality Composer Pro: a **node graph** of inputs, math, and texture samples. It's based on the **MaterialX** standard. Then load it in code:
 
 ```swift
-// Shader graph materials are authored visually, then loaded and applied like any material:
-if let customMaterial = try? await ShaderGraphMaterial(named: "IridescentSurface", from: "MyScene", in: realityKitContentBundle) {
-    entity.components[ModelComponent.self]?.materials = [customMaterial]
+import RealityKit
+import RealityKitContent
+
+func applySizzle(to pan: ModelEntity) async throws {
+    var material = try await ShaderGraphMaterial(
+        named: "/Root/SizzleMaterial",              // the material's path inside the scene
+        from: "Materials.usda",
+        in: realityKitContentBundle
+    )
+    try material.setParameter(name: "Heat", value: .float(0.8))   // an input you exposed in the graph
+    pan.model?.materials = [material]
 }
 ```
 
-Shader graph materials occupy a middle ground between RealityKit's simple built-in materials and Metal's fully manual shader programming (section 63.4) — providing much of custom shader programming's visual flexibility (procedural effects, complex material behavior) through a visual node-based authoring interface rather than requiring hand-written Metal Shading Language, appropriate for achieving sophisticated visual effects without the full complexity of raw GPU shader programming.
+Where it sits:
+
+```
+SimpleMaterial ──► PhysicallyBasedMaterial ──► Shader graph ──► Metal shaders (63.4)
+   easiest              realistic                 custom, visual      full control, most work
+```
+
+On **iOS** and **macOS**, RealityKit also offers **`CustomMaterial`** with Metal surface shaders. On **visionOS**, shader graphs are the way to make custom materials. They give you most of the power of shader code, without writing MSL.
 
 ---
 
-## 64.7 ARKit World Tracking
+## 64.7 ARKit World Tracking 🟡
 
-ARKit's world tracking (`ARWorldTrackingConfiguration`) uses the device's camera and motion sensors together to establish and continuously track the device's position and orientation within real-world 3D space, forming the foundation that lets virtual content appear anchored to a stable, consistent position in the physical world as the device moves.
+**World tracking** lets an iPhone or iPad know **where it is** and **which way it faces** in a room, all the time. That's what keeps a virtual object **fixed** to a spot as you walk around it.
+
+It works by **visual-inertial odometry**: combining **camera** images (it tracks feature points: edges, corners, texture) with **motion sensor** data (57.5). Each sensor alone drifts or jumps; together they're **stable**.
+
+```swift
+import ARKit
+import RealityKit
+
+final class ARViewController: UIViewController {
+    private let arView = ARView(frame: .zero)
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard ARWorldTrackingConfiguration.isSupported else { return }   // needs A9+ (not Simulator)
+
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = [.horizontal, .vertical]            // 64.8
+        configuration.environmentTexturing = .automatic                    // realistic reflections
+        arView.session.run(configuration)                                  // NSCameraUsageDescription
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        arView.session.pause()                                             // stop the camera
+    }
+}
+```
+
+Tracking quality changes with the environment. Watch `camera.trackingState`:
+
+| State | Common reason | Tell the user |
+|---|---|---|
+| `.normal` | — | Nothing |
+| `.limited(.initializing)` | Just started | "Move your phone slowly" |
+| `.limited(.insufficientFeatures)` | A blank wall, darkness | "Point at a textured surface" |
+| `.limited(.excessiveMotion)` | Moving too fast | "Slow down" |
+
+**`ARCoachingOverlayView`** shows Apple's standard instructions for you. Use it: users don't know how AR tracking works.
+
+On **iOS 18+**, you can also run AR inside SwiftUI with `RealityView` and `.camera(.spatialTracking)`. On **visionOS**, tracking is always on and handled by the system.
+
+---
+
+## 64.8 Plane Detection and Anchoring 🟡
+
+With plane detection on, ARKit finds **flat surfaces**: floors, tables (horizontal), walls (vertical). Each one becomes an **`ARPlaneAnchor`**, with a position, a size, and often a **classification** (floor, table, wall, seat).
+
+In RealityKit, the easiest way is an **`AnchorEntity`** that waits for a matching plane:
+
+```swift
+// "Put the dish on the first table-like surface, at least 30 × 30 cm"
+let tableAnchor = AnchorEntity(.plane(.horizontal,
+                                      classification: .table,
+                                      minimumBounds: [0.3, 0.3]))
+tableAnchor.addChild(try await Entity(named: "Pasta"))
+arView.scene.addAnchor(tableAnchor)
+```
+
+**Tap to place** with a **raycast** from the screen point onto real surfaces:
+
+```swift
+@objc func handleTap(_ gesture: UITapGestureRecognizer) {
+    let point = gesture.location(in: arView)
+    guard let hit = arView.raycast(from: point,
+                                   allowing: .estimatedPlane,
+                                   alignment: .horizontal).first else { return }
+
+    let anchor = AnchorEntity(world: hit.worldTransform)       // a fixed spot on that surface
+    anchor.addChild(dishModel.clone(recursive: true))
+    arView.scene.addAnchor(anchor)
+}
+```
+
+Why anchor to **real surfaces**? A model placed at a random point in space **floats**. A model anchored to a detected table **sits** on it, and ARKit keeps adjusting the anchor as it **learns** more about the table. That's the difference between "a 3D model on top of a video" and "a dish on my table".
+
+---
+
+## 64.9 Image and Object Tracking 🟡
+
+Plane detection finds **any** flat surface. **Image** and **object** tracking find **specific, known** things, and attach content to **them**.
+
+**Image tracking**: add reference images (with their **real size**) to an **AR Resources** group in the asset catalog:
+
+```swift
+guard let recipeCards = ARReferenceImage.referenceImages(inGroupNamed: "AR Resources",
+                                                         bundle: nil) else { return }
+
+// Only images (fast; follows a moving card):
+let configuration = ARImageTrackingConfiguration()
+configuration.trackingImages = recipeCards
+configuration.maximumNumberOfTrackedImages = 2
+
+// Or: world tracking + image detection (images in a fixed place, like a poster)
+let world = ARWorldTrackingConfiguration()
+world.detectionImages = recipeCards
+```
+
+In RealityKit:
+
+```swift
+let cardAnchor = AnchorEntity(.image(group: "AR Resources", name: "carbonara-card"))
+cardAnchor.addChild(stepByStepVideoPanel)          // the video sits ON the printed card
+```
+
+| Tracking | Finds | Example |
+|---|---|---|
+| Plane detection (64.8) | **Any** flat surface | Put furniture on the floor |
+| **Image** tracking | A **known** 2D image | A recipe card shows a cooking video |
+| **Object** tracking | A **known** 3D object | Instructions float over a coffee machine |
+
+The image's **known size and shape** also give ARKit its exact **orientation**, so content lines up precisely. Good reference images have **lots of detail** and contrast; plain logos track badly. Xcode warns about weak images in the asset catalog.
+
+---
+
+## 64.10 Scene Reconstruction and Occlusion 🟡
+
+**Occlusion** means real things **hide** virtual things behind them. Without it, a virtual cat "behind" your sofa is still drawn **on top** of the sofa, which breaks the illusion at once.
+
+Two kinds:
+
+| Occlusion | Hides virtual content behind | Needs |
+|---|---|---|
+| **People occlusion** | **People** (hands, bodies) | A12 chip or later |
+| **Scene reconstruction** | **Everything**: furniture, walls | A **LiDAR** scanner (Pro iPhones and iPads) |
+
+```swift
+let configuration = ARWorldTrackingConfiguration()
+
+// People occlusion
+if ARWorldTrackingConfiguration.supportsFrameSemantics(.personSegmentationWithDepth) {
+    configuration.frameSemantics.insert(.personSegmentationWithDepth)
+}
+
+// Full scene mesh (LiDAR only)
+if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+    configuration.sceneReconstruction = .mesh
+    arView.environment.sceneUnderstanding.options.insert(.occlusion)   // real mesh hides virtual
+    arView.environment.sceneUnderstanding.options.insert(.physics)     // virtual balls bounce off real tables
+}
+
+arView.session.run(configuration)
+```
+
+With **scene reconstruction**, LiDAR builds a live 3D **mesh** of the room. RealityKit uses it for occlusion, **physics** against real objects, and even lighting.
+
+Always **check support** and fall back gracefully: without LiDAR, the experience still works, with less realism. On **visionOS**, the same data comes from `SceneReconstructionProvider` (in an immersive space).
+
+---
+
+## 64.11 Face and Body Tracking 🟡
+
+**Face tracking** (front **TrueDepth** camera) gives a 3D face mesh and **blend shapes**: about 50 named expressions, each a number from **0** (neutral) to **1** (fully expressed).
 
 ```swift
 import ARKit
 
-let configuration = ARWorldTrackingConfiguration()
-configuration.planeDetection = [.horizontal, .vertical]
-let session = ARSession()
-session.run(configuration)
+final class FaceTracker: NSObject, ARSessionDelegate {
+    func start(session: ARSession) {
+        guard ARFaceTrackingConfiguration.isSupported else { return }
+        session.delegate = self
+        session.run(ARFaceTrackingConfiguration())
+    }
+
+    func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        guard let face = anchors.compactMap({ $0 as? ARFaceAnchor }).first else { return }
+
+        let smile = face.blendShapes[.mouthSmileLeft]?.floatValue ?? 0     // 0...1
+        let jawOpen = face.blendShapes[.jawOpen]?.floatValue ?? 0
+        let browUp = face.blendShapes[.browInnerUp]?.floatValue ?? 0
+
+        avatar.setExpression(smile: smile, mouthOpen: jawOpen, surprise: browUp)  // drive a character
+    }
+}
 ```
 
-World tracking's core technical achievement is visual-inertial odometry — fusing camera imagery with motion sensor data (recall Core Motion, section 57.5) to continuously estimate device position with much greater accuracy and stability than either sensor source could achieve alone — this fused tracking is precisely what makes a virtual object appear to stay fixed in place in the real world as the user physically walks around it, rather than drifting or jittering relative to the real environment.
+**Body tracking** (rear camera, A12+) estimates a person's **skeleton**: joint positions for the head, arms, spine, and legs. RealityKit's **`BodyTrackedEntity`** can move a rigged 3D character with it.
+
+| Tracking | Raw input | Structured output |
+|---|---|---|
+| Face | TrueDepth camera | Blend shapes (expression values) + face mesh |
+| Body | Rear camera | A **skeleton** of joint transforms |
+
+Both turn a complex real signal into **simple numbers** an app can use: an animated avatar, a fitness form check, a game controlled by your face.
+
+Face data is **sensitive**. App Review rules forbid using it for advertising or marketing, and your privacy policy must explain how you use it.
 
 ---
 
-## 64.8 Plane Detection and Anchoring
+## 64.12 visionOS: Windows, Volumes, Immersive Spaces 🟢
 
-Building on world tracking, plane detection identifies flat surfaces (horizontal, like a table or floor; vertical, like a wall) within the tracked environment, with `ARPlaneAnchor` providing the detected plane's position, extent, and classification — the foundation for placing virtual content realistically on real-world surfaces.
+visionOS has **three** kinds of scenes:
+
+| Scene | Content | Example |
+|---|---|---|
+| **Window** | **2D** SwiftUI, in a glass panel | Recipe list, settings |
+| **Volume** | **3D** content in a **bounded box** you can look around | A dish model on your table |
+| **Immersive space** | **Unbounded** content all around you | A virtual kitchen, a cooking game |
 
 ```swift
-func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-    for anchor in anchors {
-        if let planeAnchor = anchor as? ARPlaneAnchor {
-            print("Detected \(planeAnchor.alignment == .horizontal ? "horizontal" : "vertical") plane, extent: \(planeAnchor.planeExtent)")
+import SwiftUI
+
+@main
+struct RecipeVisionApp: App {
+    @State private var immersionStyle: ImmersionStyle = .mixed
+
+    var body: some Scene {
+        WindowGroup {                                         // a window
+            RecipeListView()
+        }
+
+        WindowGroup(id: "dish-viewer", for: Recipe.ID.self) { $recipeID in   // a volume
+            DishVolumeView(recipeID: recipeID)
+        }
+        .windowStyle(.volumetric)
+        .defaultSize(width: 0.4, height: 0.3, depth: 0.4, in: .meters)
+
+        ImmersiveSpace(id: "kitchen") {                       // an immersive space
+            KitchenImmersiveView()
+        }
+        .immersionStyle(selection: $immersionStyle, in: .mixed, .progressive, .full)
+    }
+}
+```
+
+Open them from your views:
+
+```swift
+struct RecipeDetailView: View {
+    let recipe: Recipe
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+
+    var body: some View {
+        Button("View Dish in 3D") { openWindow(id: "dish-viewer", value: recipe.id) }
+        Button("Cook in the Virtual Kitchen") {
+            Task { _ = await openImmersiveSpace(id: "kitchen") }    // only ONE can be open at a time
         }
     }
 }
 ```
 
-Anchoring virtual content to a detected `ARPlaneAnchor` (rather than to an arbitrary, fixed point in space) is what makes an AR object appear to genuinely rest on a real surface — a virtual object placed relative to a detected horizontal plane anchor will appear to sit convincingly on the actual table or floor it was placed on, updating its apparent position appropriately if ARKit refines its estimate of that plane's exact position and extent as tracking continues.
+| Immersion style | Your surroundings |
+|---|---|
+| `.mixed` | Still visible; your content is **added** to the room |
+| `.progressive` | Partly replaced; the user turns the **Digital Crown** to adjust |
+| `.full` | Completely replaced |
+
+Pick the scene by the **content**, not by "more immersive = better". Most features belong in a **window**. Use a volume for 3D **objects**, and an immersive space for **experiences**, and let users leave them easily.
 
 ---
 
-## 64.9 Image and Object Tracking
+## 64.13 visionOS: Ornaments and Hover Effects 🟢
 
-Beyond generic plane detection, ARKit can track specific, pre-registered reference images (`ARImageTrackingConfiguration`, `ARReferenceImage`) or 3D reference objects (`ARReferenceObject`) — recognizing a specific known image or physical object in the camera feed and anchoring virtual content relative to its detected position and orientation.
-
-```swift
-guard let referenceImages = ARReferenceImage.referenceImages(inGroupNamed: "AR Resources", bundle: nil) else { return }
-let configuration = ARImageTrackingConfiguration()
-configuration.trackingImages = referenceImages
-configuration.maximumNumberOfTrackedImages = 1
-```
-
-Image tracking is well suited to use cases where a specific, known visual marker exists in the real world — a product package, a poster, a printed marker — that virtual content should attach to and track relative to, distinct from plane detection's more general "find any flat surface" approach; recognizing a specific reference image also provides orientation information directly from the image's own known geometry, rather than requiring a generic flat surface to be detected first.
-
----
-
-## 64.10 Scene Reconstruction and Occlusion
-
-On devices with a LiDAR scanner, ARKit's scene reconstruction (`ARWorldTrackingConfiguration.sceneReconstruction`) builds a detailed 3D mesh of the real environment in real time, enabling realistic occlusion — virtual objects correctly appearing hidden behind real-world objects that are actually in front of them from the camera's perspective, rather than always rendering on top regardless of real depth.
+An **ornament** is a piece of UI attached to the **edge** of a window, like a floating toolbar below it. It moves **with** the window but doesn't take space **inside** it:
 
 ```swift
-if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-    configuration.sceneReconstruction = .mesh
-}
-```
-
-Occlusion is what separates a genuinely convincing AR experience from one where virtual content obviously "floats" unrealistically in front of everything regardless of actual depth — with an accurate real-time mesh of the environment, ARKit can correctly determine that a virtual character walking behind a real couch should have the couch rendered in front of it, a meaningfully more immersive and physically plausible result that depends entirely on LiDAR-equipped hardware being available to build that detailed real-time mesh.
-
----
-
-## 64.11 Face and Body Tracking
-
-ARKit's face tracking (`ARFaceTrackingConfiguration`, on TrueDepth-camera-equipped devices) provides detailed facial geometry and blend shape coefficients (tracking specific facial expressions like eyebrow raises or smiles), while body tracking (`ARBodyTrackingConfiguration`) estimates a person's full-body skeletal joint positions from the camera feed.
-
-```swift
-let faceConfiguration = ARFaceTrackingConfiguration()
-// In the delegate: access anchor.blendShapes[.mouthSmileLeft], .browInnerUp, etc.
-// for driving expression-responsive content (like an animated avatar)
-```
-
-Face tracking's blend shape coefficients provide a standardized, numeric representation of specific facial expressions (a value from 0 to 1 for each of dozens of defined expression categories), which is precisely the kind of structured data needed to drive an animated avatar's expression convincingly in real time — this parallels body tracking's skeletal joint output conceptually, both reducing a genuinely complex real-world signal (a face's or body's actual configuration) into structured, actionable data an app can use to drive its own content.
-
----
-
-## 64.12 visionOS: Windows, Volumes, Immersive Spaces
-
-visionOS apps present content through three distinct scene types: windows (traditional, bounded 2D SwiftUI content, familiar from other Apple platforms), volumes (bounded 3D content with real depth, appropriate for displaying a 3D object users can view from different angles), and immersive spaces (unbounded content that can partially or fully replace the user's view of their physical surroundings).
-
-```swift
-@main
-struct MyVisionApp: App {
-    var body: some Scene {
-        WindowGroup { ContentView() }
-        WindowGroup(id: "product-viewer") { ProductVolumeView() }
-            .windowStyle(.volumetric)
-        ImmersiveSpace(id: "immersive-experience") { ImmersiveView() }
-    }
-}
-```
-
-Choosing the right scene type is a genuine design decision reflecting how immersive a given piece of content should actually be — a settings screen is naturally a window (bounded, familiar, 2D), a 3D product model a user wants to examine from all angles is naturally a volume (bounded but genuinely three-dimensional), and a fully immersive game or environment is appropriately an immersive space, with the right choice depending on the content's actual nature rather than immersive spaces being automatically "better" for every use case.
-
----
-
-## 64.13 visionOS: Ornaments and Hover Effects
-
-Ornaments are auxiliary UI elements attached to a window's edge (like a toolbar floating just below a window) that remain associated with the window's position without occupying its main content area, while hover effects provide visual feedback (a subtle highlight) as a user's gaze targets an interactive element, before an actual selection gesture occurs.
-
-```swift
-struct ContentView: View {
+struct RecipeListView: View {
     var body: some View {
-        VStack { /* main content */ }
+        List(recipes) { recipe in RecipeRow(recipe: recipe) }
             .ornament(attachmentAnchor: .scene(.bottom)) {
-                HStack { Button("Action") {} }
-                    .padding()
-                    .glassBackgroundEffect()
+                HStack {
+                    Button("Shuffle", systemImage: "shuffle") { shuffle() }
+                    Button("Timer", systemImage: "timer") { startTimer() }
+                }
+                .padding()
+                .glassBackgroundEffect()                   // the standard visionOS glass
             }
     }
 }
-
-Button("Tap Me") {}
-    .hoverEffect(.highlight)
 ```
 
-Hover effects serve a genuinely important role specific to visionOS's gaze-and-pinch interaction model (64.14) — since there's no cursor or touch contact point providing continuous visual feedback the way a mouse pointer or a finger on a touchscreen would, the hover effect is what confirms to the user that their gaze is currently targeting a specific interactive element, before they commit to an actual pinch selection gesture.
+(A `toolbar` in a `TabView` or `NavigationStack` also becomes an ornament automatically.)
+
+**Hover effects** show the user what they're **looking at**: a soft highlight on the button under their eyes, before they pinch. Standard controls (`Button`, `Toggle`, list rows) have them **automatically**. Custom views need one:
+
+```swift
+RecipeCard(recipe: recipe)
+    .contentShape(.hoverEffect, .rect(cornerRadius: 16))   // the shape that lights up
+    .hoverEffect()                                        // default highlight
+```
+
+For **3D entities**, add a **`HoverEffectComponent`** (plus `InputTargetComponent` and `CollisionComponent`).
+
+Why hover effects matter so much: there's **no cursor** and no finger on glass. The highlight is the **only** feedback that says "you're about to select **this**". Without it, users pinch and **hope**.
+
+Privacy detail: the system draws hover effects **outside** your app. Your app **never learns** where the user is looking, only what they finally **select**.
 
 ---
 
-## 64.14 visionOS: Gaze and Pinch Input
+## 64.14 visionOS: Gaze and Pinch Input 🟢
 
-visionOS's primary interaction model combines gaze (where the user is looking, used to determine what's being targeted) with a pinch gesture (thumb and index finger touching, functioning as the equivalent of a tap or click) — a fundamentally different input paradigm from touch or mouse-based interaction, requiring no direct contact with any physical surface.
+The main input on Vision Pro is **look and pinch**:
 
-```swift
-Button("Select") {
-    // triggered by gaze targeting this button, followed by a pinch gesture —
-    // standard SwiftUI Button and gesture APIs work largely unchanged;
-    // visionOS handles the gaze+pinch-to-tap translation automatically
-}
+```
+1. LOOK at a button        → the system highlights it (hover effect, 64.13)
+2. PINCH thumb + index     → the system sends a "tap" to that button
+                           (hands can rest in your lap: no need to reach)
 ```
 
-A genuinely convenient aspect of this interaction model is that standard SwiftUI interactive elements (`Button`, tap gestures) largely work unchanged on visionOS — the platform handles translating gaze-plus-pinch into the equivalent of a standard tap event automatically, meaning much existing SwiftUI interaction code written with touch or click in mind requires little to no modification to function correctly under visionOS's fundamentally different gaze-and-pinch input model.
+Users can also **touch** content **directly** when it's within arm's reach (direct touch), and use a keyboard, trackpad, or game controller.
+
+The good news: **standard SwiftUI** just works. A look + pinch arrives as a normal **tap**:
+
+```swift
+Button("Start Cooking") { startCooking() }        // no visionOS-specific code
+
+RecipeCard(recipe: recipe)
+    .onTapGesture { select(recipe) }              // also works
+```
+
+Drag, magnify, and rotate gestures work too: pinch and **move** your hand. For **3D entities**, target the gestures at entities:
+
+```swift
+RealityView { content in /* ... */ }
+    .gesture(
+        DragGesture()
+            .targetedToAnyEntity()
+            .onChanged { value in
+                // move the entity with the hand, in scene coordinates
+                value.entity.position = value.convert(value.location3D, from: .local, to: value.entity.parent!)
+            }
+    )
+```
+
+Design tips for eyes:
+
+- Make targets **big enough**: at least **60 points** apart, center to center.
+- Avoid UI that needs **precise** or **long** looking.
+- Keep important content **in front** of the user, not far to the sides.
 
 ---
 
 ## 64.15 visionOS: Hand Tracking 🔴
 
-Beyond the standard gaze-and-pinch interaction model, ARKit's hand tracking APIs (`HandTrackingProvider`) provide detailed, per-joint hand skeleton data for both hands — appropriate for more sophisticated hand-interaction experiences (custom gesture recognition, direct manipulation of virtual objects) beyond the standard system-provided pinch-to-select gesture.
+Look-and-pinch covers most apps. For **custom gestures** or **direct hand interaction** (squeeze dough, catch a flying ingredient), ARKit's **`HandTrackingProvider`** gives you the full **skeleton** of both hands: about 27 joints each.
+
+Requirements: an **immersive space** must be **open** (64.12), and the user must allow it (**`NSHandsTrackingUsageDescription`** in Info.plist).
 
 ```swift
 import ARKit
+import RealityKit
 
-let session = ARKitSession()
-let handTracking = HandTrackingProvider()
+@MainActor
+final class HandTracker {
+    private let session = ARKitSession()
+    private let handTracking = HandTrackingProvider()
 
-func startHandTracking() async throws {
-    try await session.run([handTracking])
-    for await update in handTracking.anchorUpdates {
-        let handAnchor = update.anchor
-        // access individual joint transforms, e.g. handAnchor.handSkeleton?.joint(.indexFingerTip)
+    func run(fingertipMarker: Entity) async {
+        guard HandTrackingProvider.isSupported else { return }
+        do {
+            try await session.run([handTracking])            // asks for permission
+        } catch {
+            return
+        }
+
+        for await update in handTracking.anchorUpdates {
+            let hand = update.anchor
+            guard hand.isTracked,
+                  hand.chirality == .right,
+                  let tip = hand.handSkeleton?.joint(.indexFingerTip),
+                  tip.isTracked else { continue }
+
+            // joint position in world space = hand origin × joint offset
+            let worldTransform = hand.originFromAnchorTransform * tip.anchorFromJointTransform
+            fingertipMarker.setTransformMatrix(worldTransform, relativeTo: nil)
+        }
     }
 }
 ```
 
-Reaching for raw hand tracking data is appropriate specifically when an experience genuinely needs custom gesture recognition or direct hand-object interaction beyond what the standard, system-handled pinch gesture (64.14) already provides — much like reaching for Core Bluetooth's peripheral role (section 57.7) or a custom `CIKernel` (section 62.11) represents a deliberate escalation to lower-level, more specialized capability when a standard, higher-level abstraction genuinely isn't sufficient for the specific interaction being built.
+For **simple** cases, RealityKit can do the anchoring for you (visionOS 2+): `AnchorEntity(.hand(.right, location: .indexFingerTip))` with a `SpatialTrackingSession`.
+
+Use raw hand tracking **only** when the standard gestures can't do it. It's a step **down** to a lower level, like the Bluetooth peripheral role (57.7) or a custom `CIKernel` (62.11): more power, more work, and more ways to make interactions that feel **tiring**. Custom gestures must be easy to discover and comfortable to repeat.
 
 ---
 
 ## 64.16 Spatial Video and Photo Capture 🔴
 
-Vision Pro-compatible devices (and recent iPhones) support capturing spatial video and photos — stereoscopic capture using two slightly offset camera views, producing content with genuine, viewable depth when played back on Vision Pro, distinct from a standard flat photo or video.
+**Spatial** videos and photos are **stereoscopic**: two images from two cameras a little apart, like your two eyes. On Vision Pro, they play with **real depth**.
+
+Vision Pro captures them, and so do recent iPhones (iPhone 15 Pro and later), using **two** rear cameras side by side. Your own camera app can record spatial video with **AVFoundation** (55.4, 55.6), iOS 18+:
 
 ```swift
-// Spatial capture is configured through AVCaptureDevice/AVCaptureSession
-// (recall section 55.4) with a spatial-capable format selected:
-if let spatialFormat = device.formats.first(where: { $0.isSpatialVideoCaptureSupported }) {
+import AVFoundation
+
+func configureSpatialVideo(session: AVCaptureSession, movieOutput: AVCaptureMovieFileOutput) throws {
+    // Spatial capture uses the dual-wide camera pair
+    guard let device = AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back),
+          let format = device.formats.first(where: { $0.isSpatialVideoCaptureSupported }) else {
+        throw CaptureError.spatialNotSupported
+    }
+
+    session.beginConfiguration()
+    defer { session.commitConfiguration() }
+
     try device.lockForConfiguration()
-    device.activeFormat = spatialFormat
+    device.activeFormat = format                       // a format that can record both views
     device.unlockForConfiguration()
+
+    if movieOutput.isSpatialVideoCaptureSupported {
+        movieOutput.isSpatialVideoCaptureEnabled = true
+    }
 }
 ```
 
-Spatial capture builds directly on the standard `AVCaptureSession` foundation covered in section 55.4, simply configured with a spatial-capable format that captures the two offset views needed for stereoscopic depth — the resulting spatial video or photo, when viewed on Vision Pro, provides a genuine sense of depth and presence that a standard flat capture cannot convey, a capability increasingly available on recent iPhone hardware even for content ultimately intended for Vision Pro playback.
+The result is an **MV-HEVC** video: two views in one file, which still plays as a normal **2D** video on devices without stereo display. ⚠️ Spatial capture APIs are fairly new; check the documentation for the exact requirements on your target OS and devices.
+
+To **show** spatial media in a visionOS app, the system viewers (Quick Look, `AVPlayerViewController`) already handle it. That's usually the best choice: the system adds the right framing and comfort features.
 
 ---
 
 ## 64.17 Performance Budgets on Vision Pro 🔴
 
-Vision Pro's rendering requirements are genuinely more demanding than a typical iPhone or iPad app — rendering at high resolution per eye, at a high frame rate, with strict latency requirements to avoid user discomfort — meaning performance budgeting (profiling with the tools from sections 62 and 63, being deliberate about polygon counts, texture sizes, and shader complexity) matters even more critically than for typical 2D app performance.
+Vision Pro is **demanding**: it renders a high-resolution image for **each eye**, at **90 Hz** or more, with very **low latency** between head movement and the image. On iPhone, a dropped frame is a small glitch. On a headset, slow or late frames can cause real **discomfort**.
 
-```swift
-// Performance-conscious RealityKit content decisions for visionOS:
-// - Prefer simpler geometry/lower polygon counts where visual fidelity allows
-// - Use LOD (level of detail) techniques for complex models viewed at varying distances
-// - Profile actual on-device performance with Instruments rather than assuming
-//   simulator performance is representative of real Vision Pro hardware
-```
+Every frame must fit in about **11 ms** (at 90 Hz), and the system needs part of that for itself.
 
-The stakes for missing Vision Pro's performance budget are meaningfully higher than a typical iPhone app's — where iPhone frame drops are merely a visible quality issue, failing to maintain Vision Pro's required frame rate and latency can produce genuine user discomfort (a well-documented consequence of inadequate frame rate/latency in immersive headset experiences), making the profiling discipline from sections 62.7 (offscreen rendering costs) and 63.9 (Metal frame capture) not merely a polish concern but a genuine requirement for a comfortable, usable visionOS experience.
+What costs the most, and what to do:
+
+| Cost | Do this |
+|---|---|
+| **Polygons** | Use simpler meshes; **LOD** (level of detail): a simpler model when it's **far** away |
+| **Textures** | Smaller sizes; compressed formats (ASTC); share textures |
+| **Transparency** (overdraw) | Avoid stacking many see-through layers; prefer opaque materials |
+| **Unique materials and meshes** | **Reuse** them: identical meshes can be drawn together (instancing) |
+| **Dynamic lights and shadows** | Use few; bake lighting into textures where possible |
+| **Heavy `System.update` code** (64.2) | No allocations or big loops per frame |
+| **Many separate windows/volumes** | Each one costs; close what's not needed |
+
+Measure on the **device**: the Simulator uses your Mac's GPU and isn't representative.
+
+| Tool | Shows |
+|---|---|
+| **Instruments ▸ RealityKit Trace** | Frame time, render cost, and where time goes, per frame |
+| **Xcode's RealityKit debugger** | The entity tree and components of the running app |
+| **Metal frame capture** (63.9) | Individual draw calls and shader cost |
+
+The same rules as 62.7 and 63.9 apply: **measure, don't guess**. On Vision Pro, good performance isn't polish; it's what makes the app **comfortable** to use.
 
 ---
 
@@ -301,20 +692,20 @@ The stakes for missing Vision Pro's performance budget are meaningfully higher t
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Scene composition | `Entity`, `Component` | Data-driven, composition-based scene modeling |
-| Per-frame logic | `System`, `EntityQuery` | Behavior separated from data, scaling cleanly with complexity |
-| SwiftUI integration | `RealityView` | Declarative, state-driven RealityKit scene hosting |
-| Asset format | USDZ, `Entity.load`/`Entity(named:)` | Standardized, interoperable 3D asset interchange |
-| Visual authoring | Reality Composer Pro | Non-code scene/material authoring referenced from Swift |
-| Custom materials | Shader graph materials | Visual, node-based procedural surface authoring |
-| Device tracking | `ARWorldTrackingConfiguration` | Visual-inertial odometry for stable world tracking |
-| Surface detection | `ARPlaneAnchor` | Realistic anchoring of content to real surfaces |
-| Marker tracking | `ARImageTrackingConfiguration`, `ARReferenceObject` | Tracking specific known images/objects |
-| Depth realism | Scene reconstruction, LiDAR mesh | Correct occlusion of virtual content by real objects |
-| Expression/pose data | Face/body tracking, blend shapes | Structured data for driving avatars and character rigs |
-| visionOS scene types | Windows, volumes, immersive spaces | Matching immersion level to content's actual nature |
-| Auxiliary UI | Ornaments, hover effects | Window-attached controls and gaze feedback |
-| Primary input | Gaze + pinch | Contactless interaction, largely compatible with standard SwiftUI |
-| Advanced input | `HandTrackingProvider` | Per-joint hand data for custom gesture interaction |
-| Immersive capture | Spatial video/photo | Stereoscopic capture for depth-viewable Vision Pro playback |
-| Performance discipline | Vision Pro profiling | Higher-stakes budgeting to avoid user discomfort |
+| Entities and components | `Entity`, `ModelEntity`, `Component` | Build objects by composing data |
+| Systems | `System`, `EntityQuery`, `deltaTime` | Per-frame behavior for matching entities |
+| SwiftUI host | `RealityView` (make + update), entity gestures | Declarative 3D scenes |
+| 3D assets | USDZ, `Entity(named:)`, `Model3D` | One standard file for models and animations |
+| Visual authoring | Reality Composer Pro, `realityKitContentBundle` | Scenes and materials built visually |
+| Custom materials | `ShaderGraphMaterial`, `setParameter` | Node-based effects without writing MSL |
+| World tracking | `ARWorldTrackingConfiguration`, coaching overlay | Camera + motion = stable position in the room |
+| Planes and anchors | `AnchorEntity(.plane(...))`, raycasts | Content that sits on real surfaces |
+| Images and objects | `ARReferenceImage`, `AnchorEntity(.image(...))` | Content attached to known things |
+| Occlusion | People occlusion, LiDAR scene mesh | Real objects hide virtual ones |
+| Face and body | `ARFaceAnchor.blendShapes`, body skeleton | Simple numbers that drive avatars |
+| visionOS scenes | Window, volume, `ImmersiveSpace` | Match immersion to the content |
+| Ornaments and hover | `.ornament`, `.hoverEffect()` | Attached controls; gaze feedback (private) |
+| Input | Look + pinch, `targetedToAnyEntity()` | Standard SwiftUI gestures just work |
+| Hand tracking | `HandTrackingProvider`, hand skeleton | Custom hand interactions in immersive spaces |
+| Spatial capture | Dual-camera spatial video (MV-HEVC) | Stereo media with real depth |
+| Performance | LOD, reuse, RealityKit Trace | Fit every frame: comfort depends on it |

@@ -1,6 +1,12 @@
-## 41.1 @Model and Your First Persisted Type
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-`@Model` transforms an ordinary Swift class into a persisted, SwiftData-managed type — no separate schema file or code generation step required, unlike Core Data's `.xcdatamodeld`.
+**SwiftData** (iOS 17+) is Apple's modern framework for **saving app data on the device**: notes, recipes, workouts, anything with structure. You write normal Swift classes, mark them with **`@Model`**, and SwiftData stores them (in SQLite, under the hood), keeps SwiftUI views **in sync**, and can **sync to iCloud**. It's built on the same engine as Core Data (42), with a much more Swift-friendly API.
+
+---
+
+## 41.1 @Model and Your First Persisted Type 🟢
+
+Put **`@Model`** on a class, and SwiftData can **save** it. No separate schema file, no code generation:
 
 ```swift
 import SwiftData
@@ -10,6 +16,7 @@ final class Recipe {
     var title: String
     var minutesToCook: Int
     var isFavorite: Bool = false
+    var createdAt: Date = Date.now
 
     init(title: String, minutesToCook: Int) {
         self.title = title
@@ -18,13 +25,21 @@ final class Recipe {
 }
 ```
 
-`@Model` is a Swift macro (recall macros, section 13) that expands `Recipe` at compile time, adding the storage and change-tracking machinery SwiftData needs, while leaving the type looking like an ordinary Swift class with stored properties and a normal initializer. This is SwiftData's core design philosophy: persistence should feel like writing regular Swift model types, not learning a separate object-graph API layered on top of your actual domain model.
+`@Model` is a **macro** (13). At compile time, it adds everything SwiftData needs: storage, **change tracking**, and **`@Observable`**-style observation, so SwiftUI views update when a property changes. Your code still looks like a **plain class**.
+
+Rules to know:
+
+- It must be a **class** (not a struct): saved objects have **identity**, and SwiftData tracks changes to the same object over time.
+- Stored properties are saved automatically: `String`, numbers, `Bool`, `Date`, `Data`, `URL`, `UUID`, **enums** and **structs** that are `Codable`, optionals, arrays, and other `@Model` types (relationships, 41.7).
+- **Computed** properties aren't saved. Use **`@Transient`** for a stored property you **don't** want saved.
+
+That's SwiftData's idea: **persistence should feel like writing normal Swift**.
 
 ---
 
-## 41.2 ModelContainer and App Setup
+## 41.2 ModelContainer and App Setup 🟢
 
-A `ModelContainer` owns the underlying storage (schema, database file, and configuration) for one or more `@Model` types, and is typically attached at the app's root via `.modelContainer()`.
+A **`ModelContainer`** owns the **storage**: the schema (your model types) and the database file. Attach one at the **root** of the app:
 
 ```swift
 @main
@@ -38,17 +53,35 @@ struct RecipeApp: App {
 }
 ```
 
-`.modelContainer(for:)` sets up the container and, critically, injects a `modelContext` (41.5) into the SwiftUI environment automatically, making it available to every view in the hierarchy without manual passing. For apps with several model types, `.modelContainer(for: [Recipe.self, Ingredient.self])` registers them together in one shared container, since related model types generally need to share the same underlying store to support relationships (41.7) between them.
+**`.modelContainer(for:)`** does two things:
+
+1. Creates (or opens) the **store** for those model types.
+2. Puts a **`ModelContext`** (the object you use to insert, delete, and save; 41.5) into the SwiftUI **environment**, so **every** view below can use it.
+
+List **all** your model types. Related types (41.7) must live in the **same** container:
+
+```swift
+.modelContainer(for: [Recipe.self, Ingredient.self, Tag.self])
+```
+
+For **previews** and **tests**, use an **in-memory** container: nothing is written to disk, and each run starts empty:
+
+```swift
+#Preview {
+    RecipeListView()
+        .modelContainer(for: Recipe.self, inMemory: true)
+}
+```
 
 ---
 
-## 41.3 @Query to Fetch and Display
+## 41.3 @Query to Fetch and Display 🟢
 
-`@Query` is a property wrapper that declares a live, automatically-updating fetch of persisted model instances directly within a SwiftUI view — the SwiftData analog of `@FetchRequest` from Core Data's SwiftUI integration.
+**`@Query`** fetches saved objects **inside a view**, and keeps the result **live**:
 
 ```swift
 struct RecipeListView: View {
-    @Query private var recipes: [Recipe]
+    @Query(sort: \Recipe.title) private var recipes: [Recipe]
 
     var body: some View {
         List(recipes) { recipe in
@@ -58,17 +91,34 @@ struct RecipeListView: View {
 }
 ```
 
-Once declared, `recipes` behaves like an ordinary array for display purposes, but SwiftData keeps it automatically synchronized with the underlying store — insertions, deletions, or edits to any `Recipe` (from anywhere in the app) are reflected in this view's `body` re-evaluation without any manual refetching or notification handling, closely mirroring how `@State`-driven views automatically reflect local state changes (section 25).
+`recipes` works like a normal **array** in `body`. But SwiftData keeps it **in sync** with the store: when **any** code **inserts**, **deletes**, or **edits** a `Recipe`, this view **updates automatically**. No refetching, no notifications.
+
+It's like `@State` (25.1), but the data lives in the **database**. It's the SwiftData version of Core Data's `@FetchRequest` (42.11).
+
+`@Query` can **filter**, **sort**, and **limit**:
+
+```swift
+@Query(filter: #Predicate<Recipe> { $0.isFavorite },           // 41.9
+       sort: [SortDescriptor(\Recipe.createdAt, order: .reverse)])
+private var favorites: [Recipe]
+
+@Query(FetchDescriptor<Recipe>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)],
+                               fetchLimit: 5))                   // only the 5 newest
+private var recent: [Recipe]
+```
+
+`@Query` only works **inside SwiftUI views**. Elsewhere, fetch with **`modelContext.fetch(FetchDescriptor<Recipe>())`**.
 
 ---
 
-## 41.4 Inserting and Deleting Objects
+## 41.4 Inserting and Deleting Objects 🟢
 
-New model instances are inserted into a `modelContext`, and existing ones removed via `delete()` — both operations are simple, direct method calls rather than requiring separate "create request"/"delete request" object types.
+**Create** an object, then **`insert`** it into a context. **`delete`** removes one:
 
 ```swift
 struct AddRecipeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @State private var title = ""
 
     var body: some View {
@@ -76,62 +126,96 @@ struct AddRecipeView: View {
             TextField("Title", text: $title)
             Button("Save") {
                 let recipe = Recipe(title: title, minutesToCook: 30)
-                modelContext.insert(recipe)
+                modelContext.insert(recipe)       // now SwiftData tracks it
+                dismiss()
             }
+            .disabled(title.isEmpty)
         }
     }
 }
 
-struct DeleteExampleView: View {
+struct RecipeListView: View {
     @Environment(\.modelContext) private var modelContext
-    let recipe: Recipe
+    @Query private var recipes: [Recipe]
 
     var body: some View {
-        Button("Delete", role: .destructive) {
-            modelContext.delete(recipe)
+        List {
+            ForEach(recipes) { Text($0.title) }
+                .onDelete { offsets in
+                    for index in offsets {
+                        modelContext.delete(recipes[index])   // swipe to delete (26.6)
+                    }
+                }
         }
     }
 }
 ```
 
-`@Environment(\.modelContext)` reads the context injected automatically by `.modelContainer()` (41.2) — `modelContext.insert(recipe)` registers a newly-created instance for persistence, and `modelContext.delete(recipe)` marks an existing instance for removal. Neither call immediately writes to disk by itself; that's the role of saving, covered next.
+**`@Environment(\.modelContext)`** reads the context that `.modelContainer()` put in the environment (41.2).
+
+- **`insert`** registers a **new** object with the context.
+- **`delete`** marks an object to be **removed**.
+- **Editing** needs no call at all: just change a property (`recipe.title = "Pasta"`). The context **notices** automatically.
+
+None of these write to **disk** immediately. They're **pending changes** until the context **saves** (41.5). But `@Query` views update **right away**, so the UI feels instant.
 
 ---
 
-## 41.5 modelContext and Saving
+## 41.5 modelContext and Saving 🟢
 
-`ModelContext` tracks pending changes (inserts, deletes, and property mutations on already-persisted objects) in memory, and `save()` commits those pending changes to the underlying store — though SwiftData also autosaves at reasonable intervals and lifecycle points by default.
+A **`ModelContext`** keeps track of **pending changes**: inserts, deletes, and edits. **`save()`** writes them to the store:
 
 ```swift
 struct EditRecipeView: View {
     @Environment(\.modelContext) private var modelContext
-    @Bindable var recipe: Recipe
+    @Bindable var recipe: Recipe          // @Model types are observable, so @Bindable works
 
     var body: some View {
         Form {
-            TextField("Title", text: $recipe.title)
+            TextField("Title", text: $recipe.title)          // edits are tracked immediately
+            Stepper("Minutes: \(recipe.minutesToCook)", value: $recipe.minutesToCook, in: 1...240)
+            Toggle("Favorite", isOn: $recipe.isFavorite)
+
             Button("Save Now") {
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    print("Save failed: \(error)")
+                }
             }
         }
     }
 }
 ```
 
-`@Bindable` (recall from `@Observable` material, section 25) lets `recipe`'s properties be bound directly to form controls — since `@Model` types are automatically `@Observable`-conformant, edits to `recipe.title` here are tracked by the context immediately, and mutating a persisted object's property is sufficient on its own to mark it as needing to be saved. Calling `save()` explicitly is appropriate when an immediate, guaranteed write is important (like right before navigating away), though for many everyday interactions, SwiftData's automatic autosave behavior means an explicit `save()` call isn't strictly required.
+**`@Bindable`** (25.5) lets you bind form controls straight to the model's properties: `@Model` classes are **observable**, like `@Observable` ones.
+
+**Do you need to call `save()`?** Often **no**. The **main** context (from `.modelContainer`) **autosaves**: after changes, at reasonable intervals, and when the app goes to the **background**. Call `save()` yourself when you need the write to happen **now**:
+
+- Right before something that **reads the file** separately (a widget, a share extension).
+- After a big **import**.
+- In **background** contexts (41.15), which **don't** autosave.
+
+| Context | Autosaves? |
+|---|---|
+| `container.mainContext` / `@Environment(\.modelContext)` | ✅ Yes |
+| A context you create, or one in a `@ModelActor` | ❌ No: call `save()` |
+
+To **undo** edits (like a Cancel button), use **`modelContext.rollback()`**, or turn on the context's **undo manager** (`.modelContainer(for:isUndoEnabled: true)`), which also enables **⌘Z** and shake to undo.
 
 ---
 
-## 41.6 @Attribute Options
+## 41.6 @Attribute Options 🟡
 
-`@Attribute` customizes how a specific property is persisted — common uses include enforcing uniqueness and controlling external storage for large binary data.
+**`@Attribute`** changes **how** one property is stored:
 
 ```swift
 @Model
 final class User {
     @Attribute(.unique) var email: String
     @Attribute(.externalStorage) var profileImageData: Data?
-    var displayName: String
+    @Attribute(originalName: "name") var displayName: String     // renamed from "name" (41.17)
+    @Transient var isSelected = false                            // not saved at all
 
     init(email: String, displayName: String) {
         self.email = email
@@ -140,19 +224,50 @@ final class User {
 }
 ```
 
-`@Attribute(.unique)` enforces a uniqueness constraint at the storage level — attempting to insert a second `User` with an already-existing `email` value updates the existing record rather than creating a duplicate, useful for natural identifiers like an email address or external API ID. `@Attribute(.externalStorage)` hints to SwiftData that large binary data (like an image) should be stored as a separate file referenced by the database rather than inline within it, improving performance for the common case of occasionally-large blob properties mixed in with otherwise small, frequently-queried model data.
+| Option | Effect |
+|---|---|
+| `.unique` | No two objects can have the same value |
+| `.externalStorage` | Store big data (images, files) as a **separate file**, not inside the database |
+| `originalName:` | The property was **renamed**; find the old data under the old name |
+| `.preserveValueOnDeletion` | Keep this value in the history after delete (iOS 18) |
+
+**`.unique`** works as an **"upsert"** (update or insert): inserting a second `User` with an **existing** email **updates** the existing record instead of creating a duplicate. Great for data that comes from a **server**, keyed by the server's ID:
+
+```swift
+@Model
+final class Article {
+    @Attribute(.unique) var serverID: Int     // re-importing the feed updates, never duplicates
+    var title: String
+    init(serverID: Int, title: String) { self.serverID = serverID; self.title = title }
+}
+```
+
+From iOS 18, the **`#Unique`** macro makes a **combination** of properties unique, and **`#Index`** adds **indexes** for faster filtering and sorting on big tables:
+
+```swift
+@Model
+final class Booking {
+    #Unique<Booking>([\.roomNumber, \.date])     // one booking per room per day
+    #Index<Booking>([\.date])                    // fast "bookings on this date" queries
+    var roomNumber: Int
+    var date: Date
+    init(roomNumber: Int, date: Date) { self.roomNumber = roomNumber; self.date = date }
+}
+```
+
+**`.externalStorage`** is a **hint**: SwiftData stores large values in separate files, so the main database stays **small and fast** for the queries that don't need the image.
 
 ---
 
-## 41.7 @Relationship and Delete Rules
+## 41.7 @Relationship and Delete Rules 🟡
 
-`@Relationship` declares and configures a connection between two `@Model` types, including a delete rule governing what happens to related objects when the "parent" side of the relationship is deleted.
+When one model **refers** to another, that's a **relationship**. Just use the other `@Model` type (or an array of it) as a property. **`@Relationship`** sets **options**, like the **delete rule**:
 
 ```swift
 @Model
 final class Recipe {
     var title: String
-    @Relationship(deleteRule: .cascade) var ingredients: [Ingredient] = []
+    @Relationship(deleteRule: .cascade) var ingredients: [Ingredient] = []   // one recipe → many ingredients
 
     init(title: String) {
         self.title = title
@@ -169,15 +284,29 @@ final class Ingredient {
         self.quantity = quantity
     }
 }
+
+// Usage
+let pasta = Recipe(title: "Pasta")
+modelContext.insert(pasta)
+pasta.ingredients.append(Ingredient(name: "Spaghetti", quantity: "200 g"))   // saved with the recipe
 ```
 
-`deleteRule: .cascade` means deleting a `Recipe` automatically deletes all of its associated `Ingredient` objects too, since ingredients with no owning recipe wouldn't be meaningful on their own — other options include `.nullify` (clear the relationship reference but leave the related object intact) and `.deny` (prevent deletion of the parent while related objects still exist). Choosing the correct delete rule per relationship is a real modeling decision, directly parallel to foreign key `ON DELETE` behavior in traditional relational databases.
+The **delete rule** says what happens to **related** objects when you delete **this** one:
+
+| Rule | When a `Recipe` is deleted… | Use when |
+|---|---|---|
+| `.cascade` | Its ingredients are **deleted too** | The children **belong** to the parent and mean nothing alone |
+| `.nullify` (default) | Ingredients **stay**; their link to the recipe is cleared | The related objects can live on their own |
+| `.deny` | The delete is **refused** while ingredients exist | You must remove children first |
+| `.noAction` | Nothing happens to the others | Rare; you clean up yourself |
+
+Choosing the rule is a real **modeling** decision. A recipe's ingredients → **cascade**. A recipe's **tags** (shared by many recipes) → **nullify**: deleting one recipe shouldn't delete the "Vegan" tag. It's the same idea as `ON DELETE CASCADE` in SQL databases.
 
 ---
 
-## 41.8 Inverse Relationships
+## 41.8 Inverse Relationships 🟡
 
-When two `@Model` types reference each other in both directions (a `Recipe` has `ingredients`, and each `Ingredient` optionally knows its owning `recipe`), SwiftData needs the inverse relationship declared so it can keep both sides consistent automatically.
+Often both sides **point at each other**: a recipe has `ingredients`, and each ingredient knows its `recipe`. Tell SwiftData they're **one** relationship with **`inverse:`**:
 
 ```swift
 @Model
@@ -192,19 +321,42 @@ final class Recipe {
 @Model
 final class Ingredient {
     var name: String
-    var recipe: Recipe?
+    var recipe: Recipe?          // the other side: optional, since it may be unset for a moment
 
+    init(name: String) { self.name = name }
+}
+
+// Set ONE side; SwiftData sets the other
+let salt = Ingredient(name: "Salt")
+pasta.ingredients.append(salt)
+print(salt.recipe?.title)       // "Pasta": filled in automatically
+```
+
+**`inverse: \Ingredient.recipe`** says: "`Recipe.ingredients` and `Ingredient.recipe` are the **two ends** of the **same** link". Then changing **one** side **updates the other** automatically. Without it, they could be treated as **two separate** relationships, and get **out of sync**.
+
+SwiftData can sometimes **guess** the inverse, but declaring it **explicitly** is clearer and avoids surprises. Put `@Relationship(inverse:)` on **one** side only.
+
+Many-to-many works the same way, with arrays on **both** sides:
+
+```swift
+@Model final class Recipe {
+    var title: String
+    @Relationship(inverse: \Tag.recipes) var tags: [Tag] = []
+    init(title: String) { self.title = title }
+}
+
+@Model final class Tag {
+    var name: String
+    var recipes: [Recipe] = []
     init(name: String) { self.name = name }
 }
 ```
 
-The `inverse:` parameter (using a key path, `\Ingredient.recipe`) tells SwiftData that `Recipe.ingredients` and `Ingredient.recipe` are two sides of the *same* logical relationship, not two independent ones — this means appending an `Ingredient` to `recipe.ingredients` automatically sets that ingredient's `.recipe` back-reference too, without needing to manually keep both sides in sync by hand. Declaring the inverse explicitly (rather than letting SwiftData guess) is the recommended, unambiguous approach whenever a bidirectional relationship exists.
-
 ---
 
-## 41.9 #Predicate for Filtering
+## 41.9 #Predicate for Filtering 🟢
 
-`#Predicate` is a Swift macro for expressing type-safe, compile-time-checked filter conditions, usable both with `@Query`'s `filter:` parameter and with manually-constructed `FetchDescriptor`s.
+**`#Predicate`** describes a **filter** in normal, **type-checked** Swift:
 
 ```swift
 struct QuickRecipesView: View {
@@ -219,44 +371,94 @@ struct QuickRecipesView: View {
 }
 ```
 
-`#Predicate<Recipe> { $0.minutesToCook <= 20 }` looks like an ordinary Swift closure, but the macro actually captures and translates this expression into a query executed by the underlying store — writing filter logic as genuine, type-checked Swift code (rather than a stringly-typed predicate format, as Core Data's older `NSPredicate` traditionally required) is one of SwiftData's most significant ergonomic improvements over its predecessor.
+It looks like a closure, but the macro **turns it into a database query**. The filtering happens **in the database**, not by loading everything and filtering in Swift.
 
----
-
-## 41.10 #Predicate Limitations and Compile Errors
-
-Because `#Predicate` expressions must be translatable into the underlying store's actual query language, not every valid Swift expression is permitted inside one — certain operations (like calling arbitrary custom functions, or some string/collection operations) produce compile-time errors rather than silently failing at runtime.
+Compare with Core Data's old **string** predicates:
 
 ```swift
-// This will NOT compile — arbitrary custom function calls aren't
-// translatable into a query the persistence store can execute:
-//
-// #Predicate<Recipe> { customValidation($0.title) }
+// Core Data: a string; typos and wrong types only fail at RUN time
+NSPredicate(format: "minutesToCok <= %d", 20)          // typo in the key → crash
 
-// Supported instead: expressing the same logic using operations
-// #Predicate can actually translate
-#Predicate<Recipe> { $0.title.count > 0 && $0.minutesToCook < 60 }
+// SwiftData: real Swift; typos fail at COMPILE time
+#Predicate<Recipe> { $0.minutesToCook <= 20 }
 ```
 
-This compile-time restriction is a deliberate design trade-off: rather than allowing arbitrary Swift code inside a predicate and having it fail unpredictably or silently at runtime when the store can't execute it, `#Predicate`'s macro implementation rejects unsupported expressions immediately at compile time, giving a clear, actionable error rather than a confusing runtime failure — understanding which operations are and aren't supported (a set that has expanded across SwiftData releases) is a practical skill for anyone writing non-trivial predicates.
+More examples:
+
+```swift
+// Combine conditions
+#Predicate<Recipe> { $0.isFavorite && $0.minutesToCook < 30 }
+
+// Text search (case- and accent-insensitive, the way users expect)
+let search = searchText                                 // copy to a local constant first
+#Predicate<Recipe> { $0.title.localizedStandardContains(search) }
+
+// Through a relationship
+#Predicate<Recipe> { recipe in
+    recipe.ingredients.contains { $0.name == "Garlic" }
+}
+
+// Optionals
+#Predicate<Ingredient> { $0.recipe?.isFavorite == true }
+```
+
+⚠️ Use **local constants** for outside values (`let search = searchText`). Referring to a property of `self` inside the predicate (like `self.searchText`) isn't allowed.
 
 ---
 
-## 41.11 Sort Descriptors and Dynamic Sorting
+## 41.10 #Predicate Limitations and Compile Errors 🟡
 
-`@Query`'s `sort:` parameter (or a `SortDescriptor` passed to a `FetchDescriptor`) controls result ordering, and can be driven dynamically by app state for user-controllable sorting.
+A predicate must be **translated** into the store's query language (SQL). So **not every** Swift expression is allowed: only operations SwiftData knows how to translate.
+
+```swift
+// ❌ Won't compile: the database can't run YOUR Swift function
+#Predicate<Recipe> { customValidation($0.title) }
+
+// ✅ Use operations the predicate CAN translate
+#Predicate<Recipe> { !$0.title.isEmpty && $0.minutesToCook < 60 }
+```
+
+Many unsupported things are caught at **compile time**, with an error like "*The \_ function is not supported in this predicate*". That's the design goal: fail **early**, with a clear message.
+
+But **not everything** is caught early. Some expressions **compile** fine, but the store can't run them, and you get a **run-time** error when fetching (for example, certain `String` methods, or some operations on computed properties). So:
+
+- **Test** every non-trivial predicate (a quick unit test with an in-memory container, 41.2).
+- Prefer the **known-good** operations: comparisons, `&&`/`||`/`!`, `contains`, `localizedStandardContains`, `starts(with:)`, optional checks, and `contains(where:)` on relationships.
+- Filter on **stored** properties, not computed ones (the database only knows stored ones).
+
+If you **really** need custom Swift logic, fetch a **narrowed** set with a simple predicate, then filter the rest **in Swift**:
+
+```swift
+let candidates = try modelContext.fetch(FetchDescriptor<Recipe>(
+    predicate: #Predicate { $0.minutesToCook < 60 }       // the database does the heavy filtering
+))
+let valid = candidates.filter { customValidation($0.title) }   // Swift does the special part
+```
+
+The list of supported operations **grows** with each release, so check the docs for your minimum OS.
+
+---
+
+## 41.11 Sort Descriptors and Dynamic Sorting 🟡
+
+`@Query(sort:)` sets the **order**. But `@Query`'s settings are fixed **when the view is created**. To let the user **change** the sort (or a search filter), give the query to a **child view** that builds it in **`init`**:
 
 ```swift
 struct SortableRecipeListView: View {
-    @State private var sortOrder: [SortDescriptor<Recipe>] = [SortDescriptor(\.title)]
+    @State private var sortOrder = [SortDescriptor(\Recipe.title)]
+    @State private var searchText = ""
 
     var body: some View {
-        VStack {
-            Picker("Sort", selection: $sortOrder) {
-                Text("Title").tag([SortDescriptor(\Recipe.title)])
-                Text("Cook Time").tag([SortDescriptor(\Recipe.minutesToCook)])
-            }
-            RecipeListContent(sortOrder: sortOrder)
+        NavigationStack {
+            RecipeListContent(sortOrder: sortOrder, searchText: searchText)
+                .searchable(text: $searchText)
+                .toolbar {
+                    Picker("Sort", selection: $sortOrder) {
+                        Text("Title").tag([SortDescriptor(\Recipe.title)])
+                        Text("Cook Time").tag([SortDescriptor(\Recipe.minutesToCook)])
+                        Text("Newest").tag([SortDescriptor(\Recipe.createdAt, order: .reverse)])
+                    }
+                }
         }
     }
 }
@@ -264,8 +466,11 @@ struct SortableRecipeListView: View {
 struct RecipeListContent: View {
     @Query private var recipes: [Recipe]
 
-    init(sortOrder: [SortDescriptor<Recipe>]) {
-        _recipes = Query(sort: sortOrder)
+    init(sortOrder: [SortDescriptor<Recipe>], searchText: String) {
+        _recipes = Query(
+            filter: #Predicate { searchText.isEmpty || $0.title.localizedStandardContains(searchText) },
+            sort: sortOrder
+        )
     }
 
     var body: some View {
@@ -274,26 +479,35 @@ struct RecipeListContent: View {
 }
 ```
 
-Because `@Query`'s configuration (including `sort:`) must be set at initialization time, driving dynamic sort order requires the pattern shown — a parent view holds the current `sortOrder` as `@State`, and a child view re-initializes its own `@Query` with that sort order via a custom `init`, causing SwiftUI to recreate the child (and its query) whenever the parent's sort selection changes.
+How it works:
+
+1. The **parent** keeps the user's choices (`sortOrder`, `searchText`) in `@State`.
+2. When they change, the parent's `body` runs and creates a **new** `RecipeListContent` with the new values.
+3. The child's **`init`** builds a **new** `Query` (assigned to `_recipes`, the wrapper itself), so the list is fetched with the new sort and filter.
+
+You can't just change a property on an existing `@Query`; there's no setter. Building it in `init` is the standard pattern.
 
 ---
 
-## 41.12 Section Fetches in @Query (iOS 27)
+## 41.12 Section Fetches in @Query (iOS 27) 🟡
 
-Newer SwiftData supports section-grouped fetches directly through `@Query`, returning results already organized into named groups (like a contacts list grouped alphabetically) without manual client-side grouping logic.
+Many lists are **grouped**: contacts by letter, transactions by month, recipes by category. Today, you usually fetch a **flat** list and **group it yourself**:
 
 ```swift
 struct GroupedRecipeListView: View {
     @Query(sort: \Recipe.title) private var recipes: [Recipe]
 
-    // Section-aware query variant (iOS 27) groups results server-side:
-    // @Query(sort: \Recipe.title, groupBy: \Recipe.category) private var groupedRecipes
+    private var sections: [(letter: String, recipes: [Recipe])] {
+        Dictionary(grouping: recipes) { String($0.title.prefix(1)).uppercased() }
+            .map { (letter: $0.key, recipes: $0.value) }
+            .sorted { $0.letter < $1.letter }
+    }
 
     var body: some View {
         List {
-            ForEach(Dictionary(grouping: recipes, by: { String($0.title.prefix(1)) }).sorted(by: { $0.key < $1.key }), id: \.key) { letter, items in
-                Section(letter) {
-                    ForEach(items) { Text($0.title) }
+            ForEach(sections, id: \.letter) { section in
+                Section(section.letter) {
+                    ForEach(section.recipes) { Text($0.title) }
                 }
             }
         }
@@ -301,13 +515,19 @@ struct GroupedRecipeListView: View {
 }
 ```
 
-Prior to native section-fetch support, grouping query results (like the alphabetical `Dictionary(grouping:by:)` shown as a fallback) had to be done manually on the client side after fetching a flat array — the newer grouped `@Query` variant pushes this grouping down to the underlying store itself, which can be considerably more efficient for large datasets, since the store can leverage its own indexing rather than the app re-sorting and re-grouping an already-fetched flat result set in memory.
+This works on every version, but it **regroups** the whole array in Swift every time `body` runs. For **big** lists, that's wasted work.
+
+The iOS 27 SDK (in the title) adds **section-aware** queries: the **store** groups the results, using its own sorting and indexes, and hands you ready-made sections. That's more efficient for large data sets, and the code gets shorter.
+
+⚠️ This is a **new API**, and its exact form (parameter names, result types) may differ from what you'd guess. Check the current SwiftData documentation before using it, and keep the manual version above for earlier OS versions.
+
+If you group manually on big lists, at least **sort by the grouping key** in the query, and compute sections **once per change** (for example, in a model), not on every `body` run.
 
 ---
 
-## 41.13 @Attribute(.codable) for Explicit Storage (iOS 27)
+## 41.13 @Attribute(.codable) for Explicit Storage (iOS 27) 🟡
 
-`@Attribute(.codable)` explicitly directs SwiftData to persist a property using its `Codable` conformance (serialized, e.g., as JSON) rather than attempting to map it to native store column types — useful for complex value types that don't map cleanly onto SwiftData's default storage representations.
+You can store **`Codable` structs** in a model property. By default, SwiftData decides **how**: it may **flatten** the struct's fields into separate columns, which makes them **queryable**, but the exact behavior depends on the type's shape and the OS version.
 
 ```swift
 struct NutritionInfo: Codable {
@@ -318,19 +538,45 @@ struct NutritionInfo: Codable {
 @Model
 final class Recipe {
     var title: String
-    @Attribute(.codable) var nutrition: NutritionInfo?
+    @Attribute(.codable) var nutrition: NutritionInfo?     // iOS 27 SDK: stored as encoded data
 
     init(title: String) { self.title = title }
 }
 ```
 
-Without this explicit directive, SwiftData's automatic handling of complex nested value types can vary by version and type shape — `@Attribute(.codable)` removes the ambiguity, explicitly opting a property into `Codable`-based serialization, which trades some query-ability (you generally can't write a `#Predicate` filtering on fields *inside* a codable-serialized blob) for the ability to persist arbitrary `Codable` structures without needing to model them as their own separate `@Model` types.
+The iOS 27 SDK adds an **explicit** option: **`@Attribute(.codable)`** says "store this value **as encoded data**, using its `Codable` conformance". No guessing.
+
+⚠️ As with other new APIs in this course, confirm the exact spelling in the current documentation.
+
+The **trade-off**:
+
+| | Separate `@Model` type or flattened fields | Stored as a `Codable` blob |
+|---|---|---|
+| Filter/sort by inner fields in `#Predicate` | ✅ Yes | ❌ No: the database sees one opaque value |
+| Modeling effort | More: another type, a relationship | Less: any `Codable` struct |
+| Good for | Data you **search** or **sort** by | Data you only **load and show** (settings, metadata) |
+
+Rule of thumb: if you'll ever write `#Predicate { $0.nutrition.calories < 500 }`, **don't** store it as a blob.
 
 ---
 
-## 41.14 ResultsObserver Outside SwiftUI Views (iOS 27) 🟠
+## 41.14 ResultsObserver Outside SwiftUI Views (iOS 27) 🔴
 
-`@Query` is inherently a SwiftUI-specific mechanism — `ResultsObserver` (and related APIs) provide an equivalent live-updating observation capability for non-SwiftUI contexts, like a plain Swift class or a background service that needs to react to data changes without being a `View`.
+**`@Query`** only works inside **SwiftUI views**. But other code also needs **live** data: a **view model**, a **UIKit** view controller, a background **service**, a widget's timeline code.
+
+Before iOS 27, the usual options were:
+
+```swift
+// 1. Fetch once (not live)
+let recipes = try modelContext.fetch(FetchDescriptor<Recipe>(sortBy: [SortDescriptor(\.title)]))
+
+// 2. Re-fetch when the store changes, by listening for save notifications
+for await _ in NotificationCenter.default.notifications(named: ModelContext.didSave) {
+    recipes = try modelContext.fetch(FetchDescriptor<Recipe>())
+}
+```
+
+The iOS 27 SDK adds **`ResultsObserver`**: the same **"stay in sync with the store"** behavior as `@Query`, for **any** class:
 
 ```swift
 @Observable
@@ -340,19 +586,23 @@ final class RecipeMonitor {
 
     func startObserving(context: ModelContext) {
         observer = ResultsObserver(context: context, descriptor: FetchDescriptor<Recipe>()) { [weak self] results in
-            self?.recipes = results
+            self?.recipes = results                   // called again whenever matching data changes
         }
     }
 }
 ```
 
-This fills a real gap — plenty of legitimate app logic (a widget's timeline provider, a background-processing coordinator, a UIKit view controller per section 38.8's model-sharing pattern) needs live data observation without being a SwiftUI `View` that could use `@Query` directly. `ResultsObserver` provides that same "stay automatically in sync with the store" behavior through a class-based API usable anywhere in the app, not just within SwiftUI's view body evaluation cycle.
+⚠️ This is a **new API**; check the current documentation for its exact shape before relying on this code.
+
+It fills a real **gap**: logic that isn't a `View`, like a view model shared with UIKit (38.5) or a service that reacts to data changes, can now watch the store **without** hand-written notification code. Keep a **reference** to the observer (here, a property) for as long as you want updates.
 
 ---
 
-## 41.15 Background Work with ModelActor 🟠
+## 41.15 Background Work with ModelActor 🔴
 
-`ModelActor` provides an actor-isolated (recall actors, section 19) `ModelContext` for performing potentially expensive persistence work off the main thread, without risking the data races that would result from sharing a single `ModelContext` across concurrent tasks.
+A **`ModelContext`** isn't thread-safe. The main one (`@Environment(\.modelContext)`) belongs to the **main actor**. Using it from a background task causes **data races** (20).
+
+For heavy work (importing thousands of records, a big cleanup), use **`@ModelActor`**: an **actor** (19) with its **own** context:
 
 ```swift
 @ModelActor
@@ -362,121 +612,265 @@ actor RecipeImporter {
             let recipe = Recipe(title: dto.title, minutesToCook: dto.cookTime)
             modelContext.insert(recipe)
         }
+        try modelContext.save()              // background contexts don't autosave
+    }
+
+    func markAllFavorite(_ ids: [PersistentIdentifier]) throws {
+        for id in ids {
+            if let recipe = self[id, as: Recipe.self] {   // look up by ID in THIS context
+                recipe.isFavorite = true
+            }
+        }
         try modelContext.save()
     }
 }
+
+// Usage: create it with the container, call it with await
+let importer = RecipeImporter(modelContainer: container)
+try await importer.importRecipes(from: downloadedDTOs)
 ```
 
-`@ModelActor` (a macro, like `@Model` itself) generates an actor-isolated `modelContext` specific to this actor instance, ensuring all access to it is automatically serialized by Swift's actor isolation guarantees — this is the correct, safe way to perform a large batch import or other expensive persistence operation without blocking the main thread, since a plain `ModelContext` (like the one from `@Environment(\.modelContext)`) is tied to the main actor and unsafe to access concurrently from a background task.
+**`@ModelActor`** (a macro) gives the actor a **`modelContext`** and an `init(modelContainer:)`. All access to that context goes through the actor, **one call at a time**, off the main thread, so the UI stays smooth.
+
+When the actor **saves**, the main context **sees** the changes, and `@Query` views update.
+
+⚠️ **Model objects are not `Sendable`**: a `Recipe` from the main context must **not** be passed into the actor (or back out). Pass its **`persistentModelID`** instead, and look it up **inside** the other context, as `markAllFavorite` does:
+
+```swift
+let ids = selectedRecipes.map(\.persistentModelID)     // IDs are Sendable
+try await importer.markAllFavorite(ids)
+```
 
 ---
 
-## 41.16 Schema Versioning with VersionedSchema 🟠
+## 41.16 Schema Versioning with VersionedSchema 🔴
 
-As an app evolves, its `@Model` types inevitably need to change — `VersionedSchema` formally captures a specific version of the model schema, providing the foundation for SwiftData to understand how to migrate existing user data from an older schema version to a newer one.
+Apps change. Version 2 adds a property, renames another, splits a model in two. But users already have **version 1 data** on their devices. **Migration** turns old data into the new shape.
+
+First, describe **each version** of your models with a **`VersionedSchema`**. Each version holds its **own copy** of the model types, frozen as they were:
 
 ```swift
 enum RecipeSchemaV1: VersionedSchema {
-    static var versionIdentifier: Schema.Version = .init(1, 0, 0)
+    static let versionIdentifier = Schema.Version(1, 0, 0)
     static var models: [any PersistentModel.Type] { [Recipe.self] }
+
+    @Model
+    final class Recipe {
+        var title: String
+        var minutes: Int
+        init(title: String, minutes: Int) { self.title = title; self.minutes = minutes }
+    }
 }
 
 enum RecipeSchemaV2: VersionedSchema {
-    static var versionIdentifier: Schema.Version = .init(2, 0, 0)
+    static let versionIdentifier = Schema.Version(2, 0, 0)
     static var models: [any PersistentModel.Type] { [Recipe.self] }
+
+    @Model
+    final class Recipe {
+        var title: String
+        @Attribute(originalName: "minutes") var minutesToCook: Int   // renamed
+        var difficulty: Int = 1                                     // new, with a default
+        init(title: String, minutesToCook: Int) { self.title = title; self.minutesToCook = minutesToCook }
+    }
 }
+
+// The rest of the app uses the latest version
+typealias Recipe = RecipeSchemaV2.Recipe
 ```
 
-Each `VersionedSchema` conformer represents a frozen snapshot of what the model layer looked like at a specific point — as the app's actual `@Model` definitions evolve over releases, these version markers give SwiftData (via a `SchemaMigrationPlan`, working alongside 41.17's migration types) a clear before-and-after picture to reason about when a user upgrades from an app version using an older schema to one using a newer one.
+Each schema is a **snapshot**: "this is what the models looked like in that release". SwiftData compares the **stored** data's version with the **current** one, and uses a **migration plan** (41.17) to get from one to the other.
+
+Start versioning **before** your first App Store release. Adding it later works, but it's easier when version 1 is captured from the beginning.
 
 ---
 
-## 41.17 Lightweight vs. Custom Migrations 🟠
+## 41.17 Lightweight vs. Custom Migrations 🔴
 
-SwiftData distinguishes between lightweight migrations (simple, automatically-inferred changes like adding an optional property) and custom migrations (requiring explicit transformation logic, like renaming a property or restructuring a relationship) via a `SchemaMigrationPlan`.
+A **`SchemaMigrationPlan`** lists the schema versions in order, and **how** to move between them:
 
 ```swift
 enum RecipeMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [RecipeSchemaV1.self, RecipeSchemaV2.self] }
-
-    static var stages: [MigrationStage] {
-        [.custom(
-            fromVersion: RecipeSchemaV1.self,
-            toVersion: RecipeSchemaV2.self,
-            willMigrate: nil,
-            didMigrate: { context in
-                // e.g., populate a new required field with a computed default
-            }
-        )]
+    static var schemas: [any VersionedSchema.Type] {
+        [RecipeSchemaV1.self, RecipeSchemaV2.self, RecipeSchemaV3.self]
     }
+
+    static var stages: [MigrationStage] { [v1ToV2, v2ToV3] }
+
+    // Simple changes: SwiftData figures it out
+    static let v1ToV2 = MigrationStage.lightweight(
+        fromVersion: RecipeSchemaV1.self,
+        toVersion: RecipeSchemaV2.self
+    )
+
+    // Changes that need YOUR logic
+    static let v2ToV3 = MigrationStage.custom(
+        fromVersion: RecipeSchemaV2.self,
+        toVersion: RecipeSchemaV3.self,
+        willMigrate: { context in
+            // runs on the OLD schema: e.g., remove duplicates before adding a unique constraint
+        },
+        didMigrate: { context in
+            // runs on the NEW schema: e.g., fill in a new field from existing data
+            let recipes = try context.fetch(FetchDescriptor<RecipeSchemaV3.Recipe>())
+            for recipe in recipes {
+                recipe.difficulty = recipe.minutesToCook > 60 ? 3 : 1
+            }
+            try context.save()
+        }
+    )
 }
+
+// Use the plan when creating the container
+let container = try ModelContainer(for: Recipe.self, migrationPlan: RecipeMigrationPlan.self)
 ```
 
-Lightweight migrations (adding a new optional property, for instance) SwiftData can typically infer and apply automatically with no explicit migration stage needed at all. Custom migrations, as shown, require an explicit `MigrationStage.custom` with `willMigrate`/`didMigrate` closures — necessary whenever the transformation from old to new schema isn't a simple structural addition, such as needing to compute a new field's initial value from existing data, or restructuring how a relationship is represented.
+| Migration | Handles | Your code |
+|---|---|---|
+| **Lightweight** | Adding properties (optional or with a default), removing properties, renaming with `originalName:`, adding models | None |
+| **Custom** | Computing new values from old data, splitting or merging models, removing duplicates before adding `.unique` | `willMigrate` / `didMigrate` closures |
+
+- **`willMigrate`** runs **before** the change, with the **old** models.
+- **`didMigrate`** runs **after**, with the **new** models.
+
+⚠️ Test migrations with **real old data**: install the previous version of the app, create data, then install the new one. A failed migration can mean the store **won't open**, which is the worst bug an app can ship.
 
 ---
 
-## 41.18 SwiftData with CloudKit Sync 🟠
+## 41.18 SwiftData with CloudKit Sync 🟡
 
-SwiftData integrates with CloudKit (section 44) to provide automatic multi-device sync of persisted data, enabled largely through configuration rather than manual sync code — though it comes with specific modeling constraints (covered next, 41.19) that CloudKit's own data model imposes.
+SwiftData can **sync** your data across the user's devices through **iCloud** (CloudKit, 44), mostly by **configuration**:
 
 ```swift
 let configuration = ModelConfiguration(cloudKitDatabase: .automatic)
 let container = try ModelContainer(for: Recipe.self, configurations: configuration)
 ```
 
-`cloudKitDatabase: .automatic` opts a `ModelContainer` into CloudKit-backed sync with minimal additional code — SwiftData handles translating local model changes into CloudKit record operations and vice versa, giving an app "iCloud sync across the user's devices" largely as a configuration choice rather than requiring hand-written sync logic, which is a substantial simplification compared to CloudKit integration built directly on Core Data (`NSPersistentCloudKitContainer`, section 42.12) or raw CloudKit APIs.
+**`.automatic`** uses the **private** CloudKit database of the iCloud container set up for the app. SwiftData then turns local changes into CloudKit records, and records from other devices into local changes, **for you**. You write **no** sync code.
+
+Setup steps in Xcode:
+
+1. Add the **iCloud** capability, check **CloudKit**, and pick or create a **container**.
+2. Add the **Background Modes** capability with **Remote notifications** (so the device hears about changes from other devices).
+3. Make the models **CloudKit-compatible** (41.19).
+
+Good to know:
+
+- Sync is **eventually consistent**: changes arrive after a short delay, not instantly, and need the user to be signed in to iCloud.
+- It syncs to the user's **private** database: **their** data, on **their** devices. Sharing with other users needs more (44).
+- Compared to doing this with Core Data (`NSPersistentCloudKitContainer`, 42.12) or raw CloudKit (44), it's **much** less code.
 
 ---
 
-## 41.19 SwiftData Constraints Under CloudKit 🟠
+## 41.19 SwiftData Constraints Under CloudKit 🟡
 
-CloudKit's own data model imposes real constraints on what a SwiftData schema can look like when CloudKit sync is enabled — most notably, all properties must be optional (or have a default value) and unique constraints (`@Attribute(.unique)`, 41.6) aren't supported, since CloudKit's own record model doesn't enforce uniqueness the same way a local SQL-backed store can.
+CloudKit's data model is **different** from a local SQLite database, so models that sync must follow some **rules**:
+
+| Rule | Why |
+|---|---|
+| Every property is **optional** or has a **default value** | A record may arrive **partially**, or from an **older** app version that didn't have that field |
+| **No `.unique`** attributes | CloudKit can't enforce uniqueness across devices that edit **offline** |
+| All **relationships** are **optional** | Related records may sync in any **order** |
+| No `.deny` delete rule | Can't be enforced across devices |
 
 ```swift
-// Under CloudKit sync, this WON'T work (unique constraint unsupported):
-// @Attribute(.unique) var email: String
+// ❌ Not CloudKit-compatible
+@Model final class User {
+    @Attribute(.unique) var email: String          // unique: not supported
+    var name: String                               // no default
+}
 
-// Instead, CloudKit-compatible modeling requires either:
-// - dropping the uniqueness requirement and handling duplicates in app logic, or
-// - using a non-CloudKit-synced local-only container for data with true uniqueness needs
-var email: String = ""
+// ✅ CloudKit-compatible
+@Model final class User {
+    var email: String = ""                         // defaults everywhere
+    var name: String = ""
+    var recipes: [Recipe]? = []                    // optional relationship
+    init() {}
+}
 ```
 
-These constraints exist because CloudKit's record-based sync model fundamentally differs from a local relational store's guarantees — CloudKit doesn't provide the kind of transactional, store-level uniqueness enforcement that a local SQLite-backed `ModelContainer` can, and every property needing a sensible default/optional value reflects CloudKit's eventually-consistent, multi-device nature, where a record might sync in a partially-populated state from an older app version. Designing a SwiftData schema with CloudKit sync in mind from the outset avoids painful retrofitting later.
+Since there's no `.unique`, **duplicates** can appear (two devices create the "same" item while offline). Handle them in **app logic**: detect and merge duplicates after sync, keyed by a value you control (like a UUID you assign).
+
+If some data **must** be unique and **doesn't** need syncing, keep it in a **second, local-only** configuration in the same container.
+
+Design for CloudKit **from the start**. Making an existing schema CloudKit-compatible later means a migration, and possibly data cleanup.
 
 ---
 
-## 41.20 Sharing a Container with Widgets and Extensions 🟠
+## 41.20 Sharing a Container with Widgets and Extensions 🟡
 
-For a widget, share extension, or other app extension to read/write the same persisted data as the main app, the `ModelContainer` must be configured with a shared App Group container location (recall App Groups, previewed further in section 43.2) rather than each target using its own isolated default storage location.
+A **widget** or **share extension** is a **separate program**, with its **own** sandbox. By default, it can't see the main app's database. To share it, put the store in an **App Group** container: a folder that all your targets can access (43.2).
 
 ```swift
+// The simple way (iOS 17): name the App Group in the configuration
+let configuration = ModelConfiguration(groupContainer: .identifier("group.com.example.myapp"))
+let container = try ModelContainer(for: Recipe.self, configurations: configuration)
+
+// Or with an explicit file URL inside the group folder
 let sharedURL = FileManager.default
     .containerURL(forSecurityApplicationGroupIdentifier: "group.com.example.myapp")!
-    .appendingPathComponent("SharedRecipes.sqlite")
-
-let configuration = ModelConfiguration(url: sharedURL)
-let container = try ModelContainer(for: Recipe.self, configurations: configuration)
+    .appending(path: "SharedRecipes.store")
+let configuration2 = ModelConfiguration(url: sharedURL)
 ```
 
-By default, each app target (the main app, a widget extension, and so on) has its own separate sandboxed storage location — explicitly pointing the `ModelConfiguration` at a URL within a shared App Group container is what lets multiple targets genuinely read and write the same underlying SwiftData store, essential for a widget that needs to display live data the main app has persisted, like today's recipe suggestions.
+Steps:
+
+1. Add the **App Groups** capability to **both** the app and the extension, with the **same** group ID.
+2. Create the container with that group **in both targets** (put the setup code in a file shared by both).
+
+Then the widget can show **today's recipe** from the same store the app writes to.
+
+After the app changes data that a widget shows, **save**, and ask the widget to **reload** (52):
+
+```swift
+try modelContext.save()
+WidgetCenter.shared.reloadAllTimelines()
+```
+
+If the app **already shipped** with the store in its own sandbox, moving to an App Group means **copying** the old store file to the new location on first launch.
 
 ---
 
 ## 41.21 Debugging SwiftData Performance 🔴
 
-SwiftData performance issues typically trace back to over-fetching (retrieving more data or more relationships than a given screen actually needs) or excessive main-thread work — Xcode's Core Data/SwiftData Instruments template and SQL debug logging are the primary diagnostic tools, since SwiftData's underlying storage is, in most configurations, still backed by the same SQLite engine as Core Data.
+Slow SwiftData usually comes from **fetching too much**, or doing **heavy work on the main thread**. The tools come from Core Data, since the engine is the same.
 
-```swift
-// Launch argument for verbose SQL logging (added via Xcode scheme, Arguments tab):
-// -com.apple.CoreData.SQLDebug 1
-//
-// This logs every actual SQL statement SwiftData's underlying store executes,
-// letting you inspect exactly what's being queried and how often.
+**1. See the SQL.** Add this **launch argument** (Xcode → Product → Scheme → Edit Scheme → Run → Arguments):
+
+```
+-com.apple.CoreData.SQLDebug 1
 ```
 
-Enabling SQL debug logging surfaces the raw SQL statements underlying every `@Query` and `FetchDescriptor` execution — a very effective way to spot, for instance, an unexpectedly expensive query running far more often than intuition suggests (a body-invalidation-storm-adjacent problem, conceptually similar to the SwiftUI performance diagnostics from section 31.12–31.13, but at the persistence layer instead of the view layer). Common fixes once a problem is identified include narrowing a `@Query`'s `#Predicate` to fetch only what's actually displayed, and using `FetchDescriptor`'s `fetchLimit`/`propertiesToFetch` to avoid retrieving entire object graphs when only a few fields are actually needed.
+Every SQL statement SwiftData runs is printed in the console, with timing. You'll spot problems quickly: the same query running **hundreds** of times, or a fetch loading **thousands** of rows for a screen that shows ten.
+
+Also useful while developing: `-com.apple.CoreData.ConcurrencyDebug 1` **crashes** immediately when a context is used from the **wrong thread**, instead of corrupting data quietly.
+
+**2. Fix what you find:**
+
+```swift
+// Only fetch what the screen shows
+var descriptor = FetchDescriptor<Recipe>(
+    predicate: #Predicate { $0.isFavorite },                 // filter in the database
+    sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+)
+descriptor.fetchLimit = 20                                   // first page only
+descriptor.propertiesToFetch = [\.title, \.createdAt]        // skip big fields like image data
+descriptor.relationshipKeyPathsForPrefetching = [\.ingredients]   // load related data in ONE query
+
+// Just need a number? Count without loading objects
+let favoriteCount = try modelContext.fetchCount(FetchDescriptor<Recipe>(predicate: #Predicate { $0.isFavorite }))
+```
+
+| Problem | Fix |
+|---|---|
+| Loading everything, filtering in Swift | Filter with `#Predicate` in the query |
+| Long lists load slowly | `fetchLimit` + paging; lazy lists (26.13) |
+| Big blobs loaded for every row | `.externalStorage`; `propertiesToFetch` |
+| One query per row for related data ("N+1") | `relationshipKeyPathsForPrefetching` |
+| Slow filters on big tables | `#Index` on the filtered properties (41.6) |
+| Big imports freeze the UI | Do them in a `@ModelActor` (41.15) |
+
+**3. Profile.** Instruments has **Core Data** and **SwiftData** tools (69) that show fetches and saves over time. It's the persistence version of the SwiftUI instrument (31.13).
 
 ---
 
@@ -484,22 +878,22 @@ Enabling SQL debug logging surfaces the raw SQL statements underlying every `@Qu
 
 | Concept | Key API | Purpose |
 |---|---|---|
-| Persisted model | `@Model` | Turn a Swift class into a persisted type |
-| Storage setup | `ModelContainer`, `.modelContainer()` | Own schema/storage; inject context into SwiftUI |
-| Live fetching | `@Query` | Auto-updating query results in a view |
-| Mutating data | `modelContext.insert()`/`.delete()` | Register new/removed objects |
-| Committing changes | `modelContext.save()` | Explicit write; autosave also occurs by default |
-| Column-level customization | `@Attribute(.unique/.externalStorage)` | Uniqueness constraints, large blob storage |
-| Object connections | `@Relationship(deleteRule:inverse:)` | Bidirectional, delete-rule-governed relationships |
-| Type-safe filtering | `#Predicate` | Compile-checked query conditions |
-| Result ordering | `SortDescriptor`, `@Query(sort:)` | Static and dynamically-driven sorting |
-| Grouped results | Section-aware `@Query` (iOS 27) | Store-side grouping vs. client-side grouping |
-| Complex value storage | `@Attribute(.codable)` (iOS 27) | Codable-based serialization for non-native shapes |
-| Non-SwiftUI observation | `ResultsObserver` (iOS 27) | Live data observation outside `View` bodies |
-| Safe background work | `@ModelActor` | Actor-isolated context for off-main-thread work |
-| Schema evolution | `VersionedSchema`, `SchemaMigrationPlan` | Formal before/after schema snapshots |
-| Migration logic | Lightweight vs. `.custom` stages | Automatic inference vs. explicit transformation |
-| Multi-device sync | `ModelConfiguration(cloudKitDatabase:)` | Automatic CloudKit-backed sync |
-| CloudKit modeling limits | Optional properties, no unique constraints | Reflects CloudKit's record-based sync model |
-| Extension data sharing | App Group `ModelConfiguration(url:)` | Shared store across app and widget/extension targets |
-| Performance diagnosis | SQL debug logging | Spot over-fetching and expensive queries |
+| Persisted model | `@Model` | A normal Swift class that SwiftData saves and observes |
+| Storage setup | `ModelContainer`, `.modelContainer()` | The store; puts a context in the environment |
+| Live fetching | `@Query` | Auto-updating results inside views |
+| Mutating data | `modelContext.insert()`/`.delete()` | Add and remove; edits are tracked automatically |
+| Committing changes | `modelContext.save()` | The main context autosaves; background ones don't |
+| Column-level customization | `@Attribute(.unique/.externalStorage)`, `#Unique`, `#Index` | Upserts, big data in files, indexes |
+| Object connections | `@Relationship(deleteRule:inverse:)` | Links with delete rules; inverses stay in sync |
+| Type-safe filtering | `#Predicate` | Compile-checked filters run by the database |
+| Result ordering | `SortDescriptor`, `@Query` built in `init` | Dynamic sort and search via a child view |
+| Grouped results | Section-aware `@Query` (iOS 27) | Store-side grouping; check the new API's docs |
+| Complex value storage | `@Attribute(.codable)` (iOS 27) | Store as a blob; can't filter inside it |
+| Non-SwiftUI observation | `ResultsObserver` (iOS 27) | Live results outside views |
+| Safe background work | `@ModelActor`, `persistentModelID` | Off-main-thread work; pass IDs, not objects |
+| Schema evolution | `VersionedSchema` | Frozen snapshots of each model version |
+| Migration logic | `.lightweight` vs. `.custom` stages | Automatic for simple changes; code for the rest |
+| Multi-device sync | `ModelConfiguration(cloudKitDatabase:)` | iCloud sync with almost no code |
+| CloudKit modeling limits | Optionals/defaults, no `.unique` | Fits CloudKit's eventually consistent model |
+| Extension data sharing | App Group `ModelConfiguration` | One store for the app, widgets, and extensions |
+| Performance diagnosis | SQL debug log, `fetchLimit`, prefetching | Fetch only what the screen needs |

@@ -1,6 +1,8 @@
-## 9.1 The `Error` Protocol and Custom Error Enums
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Any type can represent an error by conforming to the empty `Error` protocol — in practice, this is almost always an enum, since errors naturally form a finite, related set of cases, optionally carrying associated data (recall 6.17):
+## 9.1 The `Error` Protocol and Custom Error Enums 🟢
+
+In Swift, any type can be an **error** by conforming to the **`Error`** protocol. In practice, errors are almost always **enums**: there is a fixed list of things that can go wrong, and each case can carry extra data (see 6.17):
 
 ```swift
 enum NetworkError: Error {
@@ -11,13 +13,32 @@ enum NetworkError: Error {
 }
 ```
 
-`Error` itself declares no requirements — conforming is purely a marker that lets a type participate in Swift's `throw`/`try`/`catch` machinery. Associated values let each error case carry exactly the context relevant to diagnosing it, like the `statusCode` above.
+`Error` has **no requirements** at all. Conforming just **marks** the type as something you can `throw`.
+
+**Associated values** carry the details you need to understand the problem, like the `statusCode` above:
+
+```swift
+let error = NetworkError.serverError(statusCode: 503)
+
+if case .serverError(let code) = error, code >= 500 {
+    print("The server is having trouble (\(code))")
+}
+```
+
+Structs can be errors too. This is useful when every error needs the same extra details:
+
+```swift
+struct APIError: Error {
+    let statusCode: Int
+    let path: String
+}
+```
 
 ---
 
-## 9.2 `throws` and `throw`
+## 9.2 `throws` and `throw` 🟢
 
-A function that can fail is marked `throws` in its signature, right before the return arrow, and uses `throw` to actually raise an error at the point of failure:
+A function that **can fail** is marked **`throws`**, before the `->`. Inside, **`throw`** raises an error at the point where things go wrong:
 
 ```swift
 enum ValidationError: Error {
@@ -36,13 +57,37 @@ func validate(username: String) throws -> String {
 }
 ```
 
-A `throws` function *must* be called with `try` (see 9.4) — the compiler enforces this at every call site, making error-producing calls visible wherever they occur, unlike exceptions in some other languages that can silently propagate unnoticed.
+`throw` **ends the function immediately**, like `return`. Code after it doesn't run.
+
+Every call to a `throws` function **must** be marked with **`try`** (see 9.4). The compiler checks this at every call:
+
+```swift
+let name = validate(username: "ab")
+// ❌ error: call can throw but is not marked with 'try'
+```
+
+**Why this is good:** you can **see** every line that might fail. In some other languages, exceptions can jump out of any line with no visible sign.
+
+Initializers can throw too:
+
+```swift
+struct Email {
+    let value: String
+
+    init(_ value: String) throws {
+        guard value.contains("@") else { throw ValidationError.tooShort }
+        self.value = value
+    }
+}
+
+let email = try Email("alex@example.com")
+```
 
 ---
 
-## 9.3 `do` / `catch` and Catch Patterns
+## 9.3 `do` / `catch` and Catch Patterns 🟢
 
-`do`/`catch` is how you actually handle a thrown error — code that might throw goes in the `do` block, prefixed with `try`, and `catch` blocks handle specific errors (or all errors, as a fallback):
+**`do`/`catch`** is how you **handle** a thrown error. Put the risky calls (with `try`) in the `do` block. The `catch` blocks handle specific errors, or all of them:
 
 ```swift
 do {
@@ -58,23 +103,43 @@ do {
 // "Username is too short"
 ```
 
-`catch` patterns work just like `switch` case patterns (recall section 2) — you can match specific cases, bind associated values, or fall back to a catch-all `catch { }` block, which implicitly binds the thrown value to a local constant named `error`.
+When an error is thrown, the rest of the `do` block is **skipped**, and Swift jumps to the **first matching** `catch`.
+
+`catch` patterns work like `switch` patterns (section 2). You can match cases, bind associated values, and add `where`:
 
 ```swift
 do {
-    // ...
-} catch let error as ValidationError {
-    print("Validation failed: \(error)")
+    try fetchProfile()
+} catch NetworkError.serverError(let code) where code >= 500 {
+    print("Server down (\(code)), retry later")
+} catch let error as NetworkError {
+    print("Other network problem: \(error)")
 } catch {
     print("Some other error: \(error)")
 }
 ```
 
+A plain **`catch { }`** catches **everything**. Inside it, the error is automatically named **`error`**.
+
+You can catch several cases in one clause:
+
+```swift
+do {
+    try validate(username: input)
+} catch ValidationError.tooShort, ValidationError.tooLong {
+    print("Please choose a username with 3 to 20 characters")
+} catch {
+    print(error)
+}
+```
+
 ---
 
-## 9.4 `try`, `try?`, and `try!`
+## 9.4 `try`, `try?`, and `try!` 🟢
 
-`try` is the standard form — it propagates the error upward if the call throws, requiring the surrounding context to either be inside a `do`/`catch` or itself be a `throws` function:
+There are three ways to call a throwing function:
+
+**`try`** is the normal form. If the call throws, the error **moves up** to the caller. So the code must be inside a `do`/`catch`, or inside a function that is itself `throws`:
 
 ```swift
 func loadUser() throws -> String {
@@ -82,26 +147,41 @@ func loadUser() throws -> String {
 }
 ```
 
-`try?` converts the result into an **optional** — `nil` if the call threw, or the successful value wrapped in `Optional` otherwise, discarding the specific error entirely:
+**`try?`** turns the result into an **optional**: the value if it worked, **`nil`** if it threw. The **specific error is thrown away**:
 
 ```swift
 let result = try? validate(username: "ab")
 print(result)   // nil — the error is swallowed, only success/failure survives
 ```
 
-`try!` force-unwraps the result, asserting the call will **never** throw — if it does anyway, the app crashes immediately, exactly like force-unwrapping a `nil` optional (recall 4.7):
+It pairs nicely with `if let`, `guard let`, and `??`:
+
+```swift
+let data = (try? Data(contentsOf: cacheURL)) ?? Data()      // empty if the file is missing
+guard let user = try? decoder.decode(User.self, from: data) else { return }
+```
+
+**`try!`** says: "this **will never** throw." If it does, the app **crashes**, just like force-unwrapping `nil` (4.7):
 
 ```swift
 let name = try! validate(username: "alice")   // fine here, but crashes if validation ever fails
 ```
 
-**Guidance:** use `try` with `do`/`catch` (or propagate further with `throws`) as the default; reserve `try?` for cases where you genuinely don't care *why* something failed, only *whether* it did; treat `try!` with the same caution as `!` on optionals — only for cases with a genuine, structural guarantee of success.
+| Form | On success | On error | Use when |
+|---|---|---|---|
+| `try` | The value | Error goes up / to `catch` | **Default.** You want to handle or pass on the error |
+| `try?` | `Optional(value)` | `nil` | You only care **whether** it failed, not **why** |
+| `try!` | The value | **Crash** | Failure is truly impossible (e.g. a bundled resource) |
+
+**Be careful with `try?`.** It hides **why** something failed. If users report "it just doesn't work", a silent `try?` is a common cause. When in doubt, use `do`/`catch` and log the error.
 
 ---
 
-## 9.5 `rethrows`
+## 9.5 `rethrows` 🟡
 
-`rethrows` marks a function that **itself doesn't throw directly**, but calls a closure parameter that might throw — the function only throws if that closure actually does. This precisely describes many higher-order functions, like a custom `map` that accepts a throwing transform:
+**`rethrows`** marks a function that **doesn't throw by itself**, but calls a **closure parameter** that might. It throws **only if that closure throws**.
+
+This fits higher-order functions, like your own `map` with a transform that may fail:
 
 ```swift
 func customMap<T, U>(_ items: [T], _ transform: (T) throws -> U) rethrows -> [U] {
@@ -122,13 +202,22 @@ let converted = try customMap(["1", "2", "abc"]) { (str) -> Int in
 }
 ```
 
-`rethrows` is more precise than plain `throws` for this exact pattern — it tells callers "I only throw if you gave me a closure that throws," letting them skip `try` entirely when they pass a non-throwing closure, which a plain `throws` function wouldn't allow.
+`rethrows` is more precise than `throws`. It tells callers: "**I only throw if your closure throws.**" So with a non-throwing closure, the caller needs **no `try`**. With plain `throws`, every call would need `try`, even `customMap([1, 2, 3]) { $0 * 2 }`.
+
+The standard library's `map`, `filter`, `sorted(by:)`, and `first(where:)` all use `rethrows`. That's why this works:
+
+```swift
+let numbers = try ["1", "2"].map { text -> Int in
+    guard let n = Int(text) else { throw ValidationError.tooShort }
+    return n
+}
+```
 
 ---
 
-## 9.6 Typed Throws: `throws(MyError)`
+## 9.6 Typed Throws: `throws(MyError)` 🔴
 
-Since Swift 6, a function can declare **exactly which error type** it throws, rather than the implicit `any Error` that ordinary `throws` uses — written `throws(SpecificErrorType)`:
+Normally, `throws` can throw **any** error (the error type is `any Error`). Since Swift 6, a function can say **exactly which error type** it throws: **`throws(SomeError)`**.
 
 ```swift
 enum ParsingError: Error {
@@ -144,6 +233,7 @@ func parse(_ input: String) throws(ParsingError) -> Int {
 
 do {
     let value = try parse("abc")
+    print(value)
 } catch {
     // "error" here is statically known to be of type ParsingError, not "any Error"
     switch error {
@@ -153,13 +243,28 @@ do {
 }
 ```
 
-The benefit is precision: callers of a typed-throws function get compile-time exhaustiveness checking on the specific error type in their `catch` block, and don't pay the (small) overhead of boxing an arbitrary `any Error` existential. Plain `throws` remains the right default for most code — typed throws is most valuable in performance-sensitive contexts or libraries wanting to expose a precise, closed error contract.
+**Benefits:**
+
+- In `catch`, `error` has the **exact type**. The `switch` is **checked for completeness**: add a case to `ParsingError`, and the compiler shows every place to update.
+- No boxing into `any Error`, which helps in **performance-sensitive** code and **Embedded Swift**.
+
+**Costs:** the function can **never throw any other error** type without changing its signature. That makes APIs harder to change later.
+
+```swift
+func parseAll(_ inputs: [String]) throws(ParsingError) -> [Int] {
+    try inputs.map { try parse($0) }    // OK: only ParsingError can come out
+}
+```
+
+**Rule:** plain `throws` is still the right **default** for most app code. Use typed throws for small, closed modules (like a parser), or where performance really matters.
 
 ---
 
-## 9.7 `Result` Type and Converting To/From `throws`
+## 9.7 `Result` Type and Converting To/From `throws` 🟡
 
-`Result<Success, Failure: Error>` is an enum with two cases, `.success(Success)` and `.failure(Failure)` — a way to represent the outcome of an operation as a plain **value** rather than via the `throws`/`try`/`catch` control-flow mechanism, useful for storing an outcome, passing it across an async boundary, or returning it from a completion handler.
+**`Result<Success, Failure>`** is an enum with two cases, **`.success(value)`** and **`.failure(error)`**. It stores the outcome of an operation as a **value**, instead of using `throw`.
+
+That's useful when you need to **store** an outcome, or **pass** it somewhere, for example to a completion handler:
 
 ```swift
 enum NetworkError: Error {
@@ -184,7 +289,10 @@ case .failure(let error):
 // "Error: notFound"
 ```
 
-`Result` converts to and from `throws` code directly: `Result`'s `get()` method throws its wrapped error (or returns its success value), and `Result(catching:)` builds a `Result` from a throwing closure:
+`Result` converts **to and from** throwing code easily:
+
+- **`get()`** returns the value, or **throws** the error.
+- **`Result { ... }`** (`Result(catching:)`) runs throwing code and stores the outcome.
 
 ```swift
 // throws -> Result
@@ -197,13 +305,36 @@ func useResult() throws -> String {
 }
 ```
 
-`Result` also supports `map`/`flatMap`/`mapError`, mirroring the optional/collection transformation APIs from sections 3–4, for composing operations without unwrapping early.
+`Result` also has `map`, `flatMap`, and `mapError` (to change the error type), like optionals and collections (sections 3–4):
+
+```swift
+let upper = fetchUser(id: 1).map { $0.uppercased() }   // .success("ALICE")
+let missing = fetchUser(id: 2).map { $0.uppercased() } // .failure(.notFound) — map is skipped
+```
+
+The classic use is a **completion handler**:
+
+```swift
+func loadAvatar(completion: @escaping (Result<Data, NetworkError>) -> Void) {
+    // ... later:
+    completion(.failure(.notFound))
+}
+
+loadAvatar { result in
+    switch result {
+    case .success(let data): print("Got \(data.count) bytes")
+    case .failure(let error): print("Failed: \(error)")
+    }
+}
+```
+
+With `async`/`await` (section 17), you usually just write `async throws` instead. `Result` is still handy for **storing** an outcome, like the last load attempt in a view model.
 
 ---
 
-## 9.8 Designing an Error Taxonomy for an App
+## 9.8 Designing an Error Taxonomy for an App 🟡
 
-As an app grows, a single flat error enum with dozens of unrelated cases becomes unwieldy. A common, more maintainable pattern is **layered error types** — one error enum per subsystem (networking, persistence, validation), often composed together at a higher level:
+As an app grows, **one big error enum** with dozens of unrelated cases gets messy. A cleaner pattern is **layered error types**: one error enum **per part** of the app (networking, storage, validation), combined at the top:
 
 ```swift
 enum NetworkError: Error {
@@ -232,13 +363,44 @@ func loadData() throws {
 }
 ```
 
-This layering keeps each subsystem's errors focused and independently testable, while still letting the top level of the app handle a single, unified `AppError` type in one place — e.g. a single `catch` block at the UI layer that maps every case to a user-facing message, without needing to know about every low-level error type each subsystem might produce.
+```plaintext
+              AppError                ← the UI only needs to know this one
+          ┌──────┴───────┐
+   NetworkError    PersistenceError   ← each layer has its own focused errors
+```
+
+**Benefits:**
+
+- Each layer's errors stay **small and focused**, and easy to test.
+- The **UI layer** handles **one type**, `AppError`, in one place. It doesn't need to know every low-level error.
+
+A small helper converts any error into an `AppError`:
+
+```swift
+extension AppError {
+    init(_ error: Error) {
+        switch error {
+        case let error as AppError:         self = error
+        case let error as NetworkError:     self = .network(error)
+        case let error as PersistenceError: self = .persistence(error)
+        default:                            self = .unknown(underlying: error)
+        }
+    }
+}
+
+// In a view model:
+do {
+    try await repository.refresh()
+} catch {
+    self.error = AppError(error)
+}
+```
 
 ---
 
-## 9.9 Surfacing Errors in the UI Without Leaking Internals
+## 9.9 Surfacing Errors in the UI Without Leaking Internals 🟢
 
-A critical, easy-to-miss principle: the *internal* error a function throws (a stack trace, a raw server error string, a SQL error message) is rarely appropriate to show directly to an end user — it can be confusing, unhelpful, or even a security/privacy concern (e.g. leaking internal server details, file paths, or database schema).
+An important rule: the **internal** error (a raw server message, a SQL error, a file path) is usually **not fit for users**. It confuses them, doesn't help them, and can be a **security or privacy risk** (it may reveal server details or your database structure).
 
 ```swift
 enum AppError: Error {
@@ -270,7 +432,41 @@ func handle(_ error: AppError) {
 }
 ```
 
-The pattern: maintain a clear separation between the **detailed internal error** (logged for debugging, crash reporting, or analytics — see section 80) and a **curated, safe, user-facing message** derived from it. Never string-interpolate a raw caught `error` directly into UI text without first mapping it through something like `userFacingMessage`.
+**The pattern:**
+
+| For | What to use |
+|---|---|
+| **Users** | A short, friendly, **localized** message, with a next step ("try again") |
+| **Developers** | The **full** error, sent to logs or crash reporting (section 80) |
+
+Apple's **`LocalizedError`** protocol is the standard way to attach the user message. Many APIs, like SwiftUI alerts, read its `errorDescription`:
+
+```swift
+extension AppError: LocalizedError {
+    var errorDescription: String? { userFacingMessage }
+}
+```
+
+Showing it in SwiftUI:
+
+```swift
+struct ProfileView: View {
+    @State private var error: AppError?
+
+    var body: some View {
+        Button("Save") { save() }
+            .alert(isPresented: showingError, error: error) {
+                Button("OK") { }
+            }
+    }
+
+    private var showingError: Binding<Bool> {
+        Binding(get: { error != nil }, set: { if !$0 { error = nil } })
+    }
+}
+```
+
+**Never** put a raw caught `error` straight into UI text, like `Text("\(error)")`. Always map it to a safe message first.
 
 ---
 
@@ -278,12 +474,12 @@ The pattern: maintain a clear separation between the **detailed internal error**
 
 | Topic | One-line takeaway |
 |---|---|
-| `Error` protocol | An empty marker protocol; custom errors are almost always enums with associated data |
-| `throws`/`throw` | Marks a function that can fail; `throw` raises a specific error value |
-| `do`/`catch` | Handles thrown errors with switch-like patterns; a bare `catch` binds the error as `error` |
-| `try` / `try?` / `try!` | Propagate normally / convert to optional, discarding the error / force-unwrap and crash on failure |
-| `rethrows` | Marks a function that only throws because a passed-in closure might throw |
-| Typed throws | `throws(SpecificError)` gives callers a precise, exhaustive error type instead of `any Error` |
-| `Result` | A value-based alternative to `throws`; converts via `get()` and `Result(catching:)` |
-| Error taxonomy | Layer per-subsystem error enums, composed into one top-level app error type |
-| User-facing errors | Never show raw internal errors to users — map to a curated message, log the details separately |
+| `Error` protocol | An empty marker; custom errors are usually enums with associated data |
+| `throws`/`throw` | Mark a function that can fail; `throw` stops it with an error |
+| `do`/`catch` | Handle errors with switch-like patterns; a plain `catch` names it `error` |
+| `try` / `try?` / `try!` | Pass it on / turn it into `nil` / crash on failure |
+| `rethrows` | Throws only if the passed-in closure throws |
+| Typed throws | `throws(SpecificError)`: an exact error type; use for small, closed modules |
+| `Result` | An outcome as a value; convert with `get()` and `Result { }` |
+| Error taxonomy | One error enum per layer, wrapped in one app-level error |
+| User-facing errors | Show a friendly message; log the full details separately |

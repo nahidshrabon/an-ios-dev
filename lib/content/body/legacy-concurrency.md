@@ -1,6 +1,10 @@
-## 22.1 GCD: Queues and `DispatchQueue.async`
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-Grand Central Dispatch (GCD) is Apple's original, lower-level concurrency system, built around **queues** — you submit closures (work items) to a queue, and the system manages a pool of threads to actually execute them. `DispatchQueue.async` submits work without waiting for it to finish, returning immediately, much like `Task { }` (recall section 17.5) does for Swift Concurrency.
+These are the concurrency tools that came **before** Swift concurrency: GCD, OperationQueue, locks, and Combine. You'll still meet them **all the time**, in existing apps, third-party libraries, and Apple's documentation. This section helps you **read** that code, and **move it** to async/await step by step.
+
+## 22.1 GCD: Queues and `DispatchQueue.async` 🟢
+
+**Grand Central Dispatch (GCD)** is Apple's older, lower-level concurrency system. It's built on **queues**: you put closures (**work items**) on a queue, and the system runs them on a pool of threads. **`async`** adds work **without waiting** for it, much like `Task { }` (17.5):
 
 ```swift
 DispatchQueue.global().async {
@@ -11,13 +15,34 @@ DispatchQueue.global().async {
 }
 ```
 
-Queues are either **serial** (one work item at a time, in order — useful for protecting shared state, similar in spirit to an actor) or **concurrent** (multiple work items may run simultaneously). `DispatchQueue.main` is a serial queue tied to the main thread — this "do work in the background, then dispatch back to `.main` for UI updates" pattern is exactly what `@MainActor` (section 19.5) now handles at the type-system level instead of through manual, easy-to-forget queue hops.
+Two kinds of queues:
+
+| Queue | Runs | Like |
+|---|---|---|
+| **Serial** | One work item at a time, in order | An actor (protects shared state) |
+| **Concurrent** | Several work items at once | The cooperative pool |
+
+```swift
+let serial = DispatchQueue(label: "com.example.cache")                         // serial by default
+let concurrent = DispatchQueue(label: "com.example.io", attributes: .concurrent)
+```
+
+**`DispatchQueue.main`** is a **serial** queue on the **main thread**. The pattern "work in the background, then `DispatchQueue.main.async` for the UI" is exactly what **`@MainActor`** (19.5) now does **in the type system**, so you can't forget the hop.
+
+`sync` vs `async`:
+
+```swift
+queue.async { print("A") }   // adds the work and returns right away
+queue.sync  { print("B") }   // adds the work and WAITS until it's done (blocks the caller)
+```
+
+`sync` **blocks** the calling thread. Use it rarely, and never on the main thread with a slow queue (see deadlocks, 22.6).
 
 ---
 
-## 22.2 GCD: Quality of Service Classes
+## 22.2 GCD: Quality of Service Classes 🟢
 
-GCD queues carry a **quality of service (QoS)** class, hinting to the system how to prioritize the work relative to other queued work — conceptually similar to Swift Concurrency's task priority (recall section 17.10), but predating it.
+GCD work has a **quality of service (QoS)** class. It tells the system **how important** the work is. It's the older version of task priority (17.10):
 
 ```swift
 DispatchQueue.global(qos: .userInitiated).async {
@@ -29,13 +54,20 @@ DispatchQueue.global(qos: .background).async {
 }
 ```
 
-The standard QoS levels, roughly highest to lowest priority: `.userInteractive` (UI-blocking work, like animations), `.userInitiated` (work the user is actively waiting for a result from), `.utility` (longer-running work with a visible progress indicator), and `.background` (invisible maintenance work with no urgency). Choosing the right QoS helps the system make good scheduling trade-offs, especially around power/thermal management on battery-powered devices.
+| QoS | Use for | Task priority equivalent |
+|---|---|---|
+| `.userInteractive` | UI work: animations, scrolling | `.high` (and the main actor) |
+| `.userInitiated` | A result the user is **waiting** for | `.userInitiated` |
+| `.utility` | Longer work with a progress bar | `.utility` |
+| `.background` | Invisible maintenance (cleanup, prefetch) | `.background` |
+
+The right QoS helps the system balance **speed, battery, and heat**. `.background` work may run much later, or slower, when the device is busy or in Low Power Mode.
 
 ---
 
-## 22.3 `DispatchGroup` and Barriers
+## 22.3 `DispatchGroup` and Barriers 🟡
 
-`DispatchGroup` lets you track the completion of multiple independent, asynchronously-dispatched work items and be notified once *all* of them finish — conceptually similar to what `withTaskGroup` (section 18.3) provides in structured concurrency, but manual and unstructured.
+**`DispatchGroup`** tracks several async work items, and tells you when **all** of them are done. It's like `withTaskGroup` (18.3), but **manual** and **unstructured**:
 
 ```swift
 let group = DispatchGroup()
@@ -51,13 +83,40 @@ group.notify(queue: .main) {
 }
 ```
 
-A **barrier** (`DispatchQueue.async(flags: .barrier)`) is a special work item on a *concurrent* queue that waits for all previously-submitted work to finish, runs exclusively (no other work runs alongside it), and blocks subsequent work until it completes — a common, manual pattern for implementing a thread-safe "readers-writers" data structure, where reads can happen concurrently but a write needs exclusive access (a pattern actors now handle automatically and more safely).
+The rule: every `enter()` needs **exactly one** `leave()`. Too few, and `notify` **never** fires. Too many, and the app **crashes**. (Sound familiar? It's the same problem as continuations in 18.12.)
+
+A **barrier** is a special work item on a **concurrent** queue. It **waits** for earlier work to finish, then runs **alone**, and later work waits for it. This was the classic way to build a **readers–writer** cache: many reads at once, but writes alone:
+
+```swift
+final class LegacyCache {
+    private let queue = DispatchQueue(label: "cache", attributes: .concurrent)
+    private var storage: [String: Data] = [:]
+
+    func value(for key: String) -> Data? {
+        queue.sync { storage[key] }                       // reads can run in parallel
+    }
+
+    func store(_ data: Data, for key: String) {
+        queue.async(flags: .barrier) { self.storage[key] = data }   // writes run alone
+    }
+}
+```
+
+Today, an **actor** does the same job, with safety **checked by the compiler**:
+
+```swift
+actor Cache {
+    private var storage: [String: Data] = [:]
+    func value(for key: String) -> Data? { storage[key] }
+    func store(_ data: Data, for key: String) { storage[key] = data }
+}
+```
 
 ---
 
-## 22.4 `OperationQueue` and Dependencies
+## 22.4 `OperationQueue` and Dependencies 🟡
 
-`OperationQueue` is a higher-level abstraction over GCD, built around `Operation` objects (rather than bare closures) that can express explicit **dependencies** between units of work — "don't start Operation B until Operation A has finished" — something GCD's queues don't directly support without manual `DispatchGroup` choreography.
+**`OperationQueue`** is a higher-level layer on top of GCD. It works with **`Operation`** objects instead of plain closures, and supports **dependencies**: "don't start B until A is done". Plain GCD queues can't do that without manual `DispatchGroup` work.
 
 ```swift
 let queue = OperationQueue()
@@ -75,13 +134,31 @@ processOperation.addDependency(downloadOperation)   // won't start until downloa
 queue.addOperations([downloadOperation, processOperation], waitUntilFinished: false)
 ```
 
-`OperationQueue` also supports cancellation (`operation.cancel()`, checked cooperatively via `isCancelled` inside the operation's own code — directly analogous to Swift Concurrency's cooperative cancellation from section 18.7), priority levels, and limiting `maxConcurrentOperationCount` to cap how many operations run simultaneously.
+Other features:
+
+```swift
+queue.maxConcurrentOperationCount = 2      // at most 2 operations at once
+downloadOperation.queuePriority = .high
+downloadOperation.cancel()                 // marks it cancelled
+```
+
+Cancellation is **cooperative**, just like in Swift concurrency (18.7): the operation's code must check `isCancelled` and stop itself.
+
+The modern equivalent is usually plain **sequential `await`s** (dependencies), and a **task group** with a limit (18.3):
+
+```swift
+let data = try await download()       // "B depends on A" is just: await A, then do B
+let result = process(data)
+```
 
 ---
 
-## 22.5 Locks: `NSLock` and `os_unfair_lock`
+## 22.5 Locks: `NSLock` and `os_unfair_lock` 🟡
 
-Before actors, protecting shared mutable state accessed from multiple threads required manual locking — `NSLock` is Foundation's general-purpose mutual-exclusion lock; `os_unfair_lock` is a lower-level, lighter-weight primitive from the OS itself, generally faster but with a stricter, less forgiving usage contract.
+Before actors, protecting shared mutable state meant **manual locking**:
+
+- **`NSLock`**: Foundation's general-purpose lock.
+- **`os_unfair_lock`**: a lower-level, faster lock from the OS, with stricter rules. In Swift, use it through **`OSAllocatedUnfairLock`** (iOS 16+), which handles its memory safely.
 
 ```swift
 final class ThreadSafeCounter {
@@ -96,13 +173,33 @@ final class ThreadSafeCounter {
 }
 ```
 
-This is exactly the manual synchronization technique underlying the `@unchecked Sendable` example from section 20.4 — every access to the protected state must consistently go through the lock, with no exceptions, or the protection is silently incomplete. Modern Swift code increasingly reaches for actors (which provide equivalent protection, enforced by the compiler rather than developer discipline) or the `Mutex` type from section 14.21 instead of raw `NSLock`/`os_unfair_lock`, reserving manual locks primarily for legacy code or very specific low-level performance needs.
+```swift
+import os
+
+final class Stats {
+    private let state = OSAllocatedUnfairLock(initialState: [String: Int]())
+
+    func record(_ event: String) {
+        state.withLock { $0[event, default: 0] += 1 }   // the lock owns the state
+    }
+}
+```
+
+This is the same technique as the `@unchecked Sendable` example in 20.4. **Every** access must go through the lock, or the protection silently fails.
+
+| Tool | Checked by the compiler? | Use today |
+|---|---|---|
+| `NSLock`, `os_unfair_lock` | ❌ | Legacy code, very specific needs |
+| `OSAllocatedUnfairLock`, `Mutex` (14.21) | ✅ The state lives inside the lock | Small, fast synchronous protection |
+| Actors | ✅ | The default for shared mutable state |
+
+**Never hold a lock across an `await`.** The task may resume on a different thread, and the lock may never be released correctly.
 
 ---
 
-## 22.6 Recognizing Deadlock and Priority Inversion
+## 22.6 Recognizing Deadlock and Priority Inversion 🔴
 
-A **deadlock** occurs when two or more threads each wait on a resource the other holds, with neither able to proceed — a classic case is a thread synchronously waiting on `.main` while already running on `.main` itself (`DispatchQueue.main.sync { }` called from the main thread deadlocks immediately, since the main queue is serial and the calling thread is already occupying it).
+A **deadlock** happens when threads **wait on each other forever**. The classic GCD case: calling **`DispatchQueue.main.sync`** while **already on the main thread**. The main queue is serial and busy running **your** code, so the new work can never start, and your code waits for it forever:
 
 ```swift
 // Calling this from the main thread deadlocks the app immediately:
@@ -111,13 +208,43 @@ DispatchQueue.main.sync {
 }
 ```
 
-**Priority inversion** is a subtler problem: a high-priority thread ends up waiting on a lock held by a lower-priority thread, which itself gets starved of CPU time by other, unrelated medium-priority work — effectively "inverting" the intended priority ordering. Recognizing these patterns in stack traces (a thread waiting on a lock or a `.sync` call that never returns) is a key debugging skill for legacy GCD-based code, and both largely motivated Swift Concurrency's structured, compiler-enforced approach — actors and structured task hierarchies make many classes of deadlock structurally much harder to write by accident.
+The same happens with **any serial queue** that calls `sync` on **itself**:
+
+```swift
+let queue = DispatchQueue(label: "com.example.data")
+queue.async {
+    queue.sync {          // 💥 deadlock (often a crash: "dispatch_sync called on queue already owned by current thread")
+        print("never")
+    }
+}
+```
+
+**Priority inversion** is subtler: a **high-priority** thread waits for a lock held by a **low-priority** thread, and that low-priority thread can't run because **medium-priority** work keeps taking the CPU. The priorities end up **upside down**.
+
+```plaintext
+High:    waiting for lock ......................... (stuck)
+Medium:  ████████████████████████████████          (keeps the CPU busy)
+Low:     holds the lock, but never gets to run to release it
+```
+
+How they show up in practice:
+
+- The app **freezes** (often reported as a **hang**, 80.7).
+- In the debugger, a thread's stack shows it **waiting** in `lock`, `sync`, or `semaphore.wait` that never returns.
+- Xcode's **Thread Performance Checker** warns about priority inversions.
+
+These problems are a big reason for Swift concurrency's design. Actors and structured tasks **don't block threads**, which makes many deadlocks **much harder** to write by accident.
 
 ---
 
-## 22.7 Combine: Publishers and Subscribers
+## 22.7 Combine: Publishers and Subscribers 🟡
 
-Combine (introduced in 2019, predating async/await) is Apple's reactive-programming framework, built around **publishers** (types that emit a stream of values over time) and **subscribers** (types that receive and react to those emitted values) — conceptually related to `AsyncSequence` (section 21.1), but using a push-based, callback-registration model rather than `for await`'s pull-based consumption.
+**Combine** (2019, before async/await) is Apple's **reactive** framework. It's built on:
+
+- **Publishers**: emit a stream of values over time.
+- **Subscribers**: receive the values and react.
+
+It's related to `AsyncSequence` (21.1), but **push-based** (you register a callback), instead of pulled with `for await`.
 
 ```swift
 import Combine
@@ -127,21 +254,43 @@ let publisher = Just(42)   // a publisher that emits exactly one value, then fin
 let cancellable = publisher.sink { value in
     print("Received: \(value)")
 }
+```
 
-@Published var count = 0   // a property whose changes can be observed as a publisher (see 22.9)
+`@Published` turns a class property into a publisher, reachable with `$`:
 
-let subscription = $count.sink { newValue in
+```swift
+final class Settings {
+    @Published var count = 0   // a property whose changes can be observed as a publisher (see 22.9)
+}
+
+let settings = Settings()
+let subscription = settings.$count.sink { newValue in
     print("count changed to \(newValue)")
+}
+settings.count = 5             // prints "count changed to 5"
+```
+
+The **cancellable** keeps the subscription alive. When it's released, the subscription **stops**. That's why you see a `Set<AnyCancellable>` in so many classes:
+
+```swift
+final class ProfileViewModel {
+    private var cancellables = Set<AnyCancellable>()
+
+    init(settings: Settings) {
+        settings.$count
+            .sink { print("count: \($0)") }
+            .store(in: &cancellables)      // lives as long as the view model
+    }
 }
 ```
 
-Combine remains heavily present in existing codebases (especially ones built between 2019 and the widespread adoption of async/await and `@Observable`), and in Apple's own frameworks in places predating full Swift Concurrency adoption — recognizing its core vocabulary (publisher, subscriber, `sink`, cancellable) is valuable for reading and maintaining that code, even in new projects favoring async/await.
+Combine is everywhere in code written from about **2019 to 2023**, and in parts of Apple's frameworks. Know its vocabulary: **publisher, subscriber, `sink`, cancellable**.
 
 ---
 
-## 22.8 Combine: Common Operators
+## 22.8 Combine: Common Operators 🟡
 
-Combine provides a large library of operators transforming a publisher's emitted values — directly parallel in spirit to swift-async-algorithms' operators from section 21.7–21.9, since Combine predates and partly inspired that package's design.
+Combine has many **operators** that transform a publisher's values. They're very similar to the swift-async-algorithms operators (21.7–21.9); Combine came first and partly inspired that package.
 
 ```swift
 import Combine
@@ -159,13 +308,37 @@ let searchPublisher = searchTextSubject
     .sink { query in performSearch(query) }
 ```
 
-The naming and conceptual overlap between Combine's operators and both `Sequence`'s operators (section 3) and swift-async-algorithms' operators (section 21) isn't a coincidence — Combine established much of the reactive-operator vocabulary (`map`, `filter`, `debounce`, `merge`, `zip`, `combineLatest`) that later async-native tools adopted directly.
+A typical "search as you type" pipeline, with networking:
+
+```swift
+$query
+    .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+    .removeDuplicates()
+    .map { query in
+        URLSession.shared.dataTaskPublisher(for: searchURL(query))
+            .map(\.data)
+            .decode(type: [Recipe].self, decoder: JSONDecoder())
+            .replaceError(with: [])
+    }
+    .switchToLatest()                     // cancel the old request when a new query arrives
+    .receive(on: DispatchQueue.main)      // deliver results on the main thread
+    .assign(to: &$results)
+```
+
+| Combine | Sequence (3) | async-algorithms (21) |
+|---|---|---|
+| `map`, `filter` | `map`, `filter` | `map`, `filter` |
+| `debounce` | — | `debounce` |
+| `merge`, `zip`, `combineLatest` | `zip` | `merge`, `zip`, `combineLatest` |
+| `receive(on:)` | — | (use actors instead) |
+
+The shared names aren't a coincidence: Combine set much of the vocabulary that later async tools reused.
 
 ---
 
-## 22.9 Combine: `@Published` and `ObservableObject`
+## 22.9 Combine: `@Published` and `ObservableObject` 🟢
 
-Before `@Observable` (section 13.5/25.4), SwiftUI's original data-binding mechanism was Combine-based: `ObservableObject` plus `@Published` properties, which automatically emit through a synthesized `objectWillChange` publisher whenever a `@Published` property changes.
+Before `@Observable` (13.5, 25.4), SwiftUI's data binding was built on Combine: **`ObservableObject`** plus **`@Published`** properties. Each `@Published` change fires the object's **`objectWillChange`** publisher.
 
 ```swift
 class OldStyleViewModel: ObservableObject {
@@ -174,13 +347,31 @@ class OldStyleViewModel: ObservableObject {
 }
 ```
 
-This pairing is covered in depth for legacy literacy in section 25.12, since it remains extremely common in existing SwiftUI codebases — every `@Published` property change triggers `objectWillChange` to fire, which SwiftUI observes (via `@StateObject`/`@ObservedObject`) to know when to re-render a view, a coarser-grained mechanism than `@Observable`'s per-property tracking (recall the comparison in section 14.20/25.13).
+SwiftUI listens to `objectWillChange` (through `@StateObject` or `@ObservedObject`) to know when to **re-render**:
+
+```swift
+struct OldStyleView: View {
+    @StateObject private var viewModel = OldStyleViewModel()
+
+    var body: some View {
+        TextField("Name", text: $viewModel.username)
+    }
+}
+```
+
+| | `ObservableObject` + `@Published` | `@Observable` |
+|---|---|---|
+| Notifies | On **any** `@Published` change | Only for properties a view **read** |
+| View wrappers | `@StateObject`, `@ObservedObject`, `@EnvironmentObject` | `@State`, plain property, `@Environment` |
+| Based on | Combine | The Observation module |
+
+This is covered in depth in 25.12, because it's still **very common** in existing SwiftUI apps. The key difference: `objectWillChange` is **coarse** (any change re-renders every observing view), while `@Observable` tracks **per property** (14.20, 25.13).
 
 ---
 
-## 22.10 Migrating Combine Code to Async/Await
+## 22.10 Migrating Combine Code to Async/Await 🟡
 
-Combine publishers can be bridged into async/await using the `values` property, which exposes a publisher as an `AsyncSequence` — letting you gradually migrate Combine-based code to `for await` without rewriting the underlying publisher chain all at once.
+A Combine publisher can be read as an **`AsyncSequence`** through its **`values`** property. That lets you move code to `for await` **step by step**, without rewriting the publisher chain at once:
 
 ```swift
 import Combine
@@ -195,13 +386,50 @@ func fetchData() async throws -> Data {
 }
 ```
 
-For simpler cases — a single `@Published` property you want to observe with `for await` rather than `.sink` — the same `.values` bridge applies directly: `for await value in viewModel.$username.values { ... }`. This bridging is a common, practical stepping stone during incremental migration away from Combine, letting new code consume existing Combine publishers idiomatically without a disruptive, all-at-once rewrite.
+The same works for a `@Published` property:
+
+```swift
+for await name in viewModel.$username.values {
+    print("username is now \(name)")
+}
+```
+
+Common one-to-one replacements:
+
+| Combine | Modern Swift |
+|---|---|
+| `dataTaskPublisher(for:)` | `try await URLSession.shared.data(from:)` |
+| `ObservableObject` + `@Published` | `@Observable` |
+| `$property.sink { }` | `Observations { model.property }` (21.10) |
+| `.debounce(...)` | `.debounce(for:)` (async-algorithms) or `.task(id:)` + `Task.sleep` |
+| `.receive(on: DispatchQueue.main)` | `@MainActor` |
+| `Future { promise in ... }` | `withCheckedThrowingContinuation` (18.11) |
+
+The search pipeline from 22.8, in modern form:
+
+```swift
+@MainActor
+@Observable
+final class SearchModel {
+    var query = ""
+    var results: [Recipe] = []
+
+    func search() async {
+        try? await Task.sleep(for: .milliseconds(300))      // debounce
+        guard !Task.isCancelled else { return }               // a newer query replaced this one
+        results = (try? await api.search(query)) ?? []
+    }
+}
+
+// In the view:
+.task(id: model.query) { await model.search() }               // restarts (and cancels) on each change
+```
 
 ---
 
-## 22.11 Migrating GCD Code to Structured Concurrency
+## 22.11 Migrating GCD Code to Structured Concurrency 🟡
 
-Migrating GCD-based code follows a fairly direct mapping onto Swift Concurrency's equivalents, letting you replace manual, unstructured patterns with their structured counterparts largely one-to-one:
+Moving GCD code to Swift concurrency is mostly a **direct mapping**:
 
 ```swift
 // GCD: background work, then hop back to main
@@ -212,16 +440,20 @@ DispatchQueue.global().async {
     }
 }
 
-// Structured concurrency equivalent:
-Task {
-    let result = await Task.detached {
-        performExpensiveComputation()
-    }.value
-    await MainActor.run {
-        updateUI(with: result)
-    }
+// Swift concurrency equivalent:
+@concurrent
+func compute() async -> ComputationResult {
+    performExpensiveComputation()            // runs off the main actor (17.9, 19.12)
 }
 
+@MainActor
+func refresh() async {
+    let result = await compute()
+    updateUI(with: result)                   // back on the main actor automatically
+}
+```
+
+```swift
 // GCD: waiting for multiple independent operations
 let group = DispatchGroup()
 group.enter(); fetchUser { _ in group.leave() }
@@ -234,7 +466,19 @@ async let settings = fetchSettings()
 let (loadedUser, loadedSettings) = await (user, settings)
 ```
 
-The broader pattern across this whole migration: GCD's manual thread/queue management and `DispatchGroup`'s manual enter/leave bookkeeping become largely unnecessary once replaced with `Task`, `async let`, task groups, and actors — the same underlying goals (background work, coordinated waiting, mutual exclusion) are achieved with compiler-enforced structure instead of manual discipline, which is precisely the throughline connecting this entire section back to sections 17–20.
+| GCD / old tool | Swift concurrency |
+|---|---|
+| `DispatchQueue.global().async` | `Task { }`, or a `@concurrent` function |
+| `DispatchQueue.main.async` | `@MainActor` / `await MainActor.run { }` |
+| Serial queue protecting state | An `actor` |
+| `DispatchGroup` | `async let` or a task group |
+| `asyncAfter(deadline:)` | `try await Task.sleep(for:)` |
+| Completion handler | `async` function (wrap old ones with continuations, 18.11) |
+| `DispatchSemaphore` to limit work | A task group that adds tasks as others finish (18.3) |
+
+**The big picture:** GCD's manual queue management and `DispatchGroup` bookkeeping become unnecessary. You reach the **same goals** (background work, waiting for several things, protecting state) with **compiler-checked structure** instead of discipline. That's the thread connecting this whole Part, sections 17 to 22.
+
+**Migrate gradually.** Start at the **edges** (wrap old callback APIs with continuations), then move inward. Old and new code can live side by side for a long time.
 
 ---
 
@@ -242,16 +486,16 @@ The broader pattern across this whole migration: GCD's manual thread/queue manag
 
 | Topic | One-line takeaway |
 |---|---|
-| GCD queues | Serial vs. concurrent; `.main` is the serial queue tied to the main thread, now largely superseded by `@MainActor` |
-| QoS classes | GCD's priority hint system, conceptually predating Swift Concurrency's task priority |
-| `DispatchGroup`/barriers | Manual multi-task completion tracking and exclusive-access work items — `withTaskGroup`/actors now do this more safely |
-| `OperationQueue` | Higher-level GCD abstraction supporting explicit dependencies between units of work |
-| `NSLock`/`os_unfair_lock` | Manual mutual exclusion — actors and `Mutex` are the modern, safer replacements |
-| Deadlock/priority inversion | Classic GCD failure modes; structured concurrency makes many of them structurally harder to write |
-| Combine publishers/subscribers | Push-based reactive streams predating `AsyncSequence`; `sink` receives emitted values |
-| Combine operators | `map`/`filter`/`debounce` and more — the vocabulary async-algorithms later adopted directly |
-| `@Published`/`ObservableObject` | SwiftUI's original Combine-based observation mechanism, predating `@Observable` |
-| Migrating Combine | `.values` bridges a publisher into an `AsyncSequence`, enabling gradual, incremental migration |
-| Migrating GCD | `Task`/`async let`/task groups/actors largely replace manual queue and `DispatchGroup` choreography |
+| GCD queues | Serial vs concurrent; `.main` is the main-thread queue, now mostly `@MainActor` |
+| QoS classes | GCD's priority hints; the older version of task priority |
+| `DispatchGroup`/barriers | Manual "wait for all" and exclusive writes; task groups and actors replace them |
+| `OperationQueue` | Operations with dependencies, limits, and cooperative cancellation |
+| `NSLock`/`os_unfair_lock` | Manual locks; prefer actors, `Mutex`, or `OSAllocatedUnfairLock` |
+| Deadlock/priority inversion | `sync` on your own serial queue freezes; async/await avoids blocking |
+| Combine publishers/subscribers | Push-based streams; keep cancellables alive |
+| Combine operators | `map`, `filter`, `debounce`, `switchToLatest`: the vocabulary async tools reuse |
+| `@Published`/`ObservableObject` | The old SwiftUI observation; coarser than `@Observable` |
+| Migrating Combine | `.values` bridges publishers to `for await`; replace piece by piece |
+| Migrating GCD | `Task`, `async let`, task groups, actors, and `@MainActor` replace queues |
 
 **This concludes Part 2 — Concurrency (Sections 17–22).**

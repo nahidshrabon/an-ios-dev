@@ -1,6 +1,8 @@
-## 19.1 The Data Race Problem Actors Solve
+**Difficulty:** 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced
 
-A data race occurs when two threads access the same mutable memory concurrently, with at least one of them writing, and no synchronization coordinating the two — a notoriously difficult class of bug, since the outcome is nondeterministic and often doesn't reproduce reliably.
+## 19.1 The Data Race Problem Actors Solve 🟢
+
+A **data race** happens when two threads use the **same memory at the same time**, at least one of them **writes**, and **nothing coordinates** them. The result is unpredictable, and the bug often **won't reproduce** when you try to debug it.
 
 ```swift
 class Counter {
@@ -15,13 +17,24 @@ let counter = Counter()
 // silently losing increments — a classic, hard-to-reproduce data race.
 ```
 
-Before Swift Concurrency, avoiding this required manual discipline — locks (`NSLock`, recall section 10.5), serial dispatch queues, or careful, error-prone reasoning about which thread touches what. **Actors** move this responsibility into the type system itself: an actor's mutable state can only be accessed through the actor, one operation at a time, with the compiler enforcing this at compile time rather than trusting a developer to remember to lock correctly every single time.
+Why `+= 1` isn't safe:
+
+```plaintext
+value = 5
+Thread A: read 5 ...............  write 6
+Thread B:        read 5 .................. write 6
+Result: 6, but two increments happened. One was lost.
+```
+
+Before Swift concurrency, you avoided this by **discipline**: locks (`NSLock`, section 22), serial dispatch queues, and careful thinking about which thread touches what. One forgotten lock was enough for a bug.
+
+**Actors** move this job into the **type system**. An actor's mutable state can only be used **through the actor**, **one operation at a time**, and the **compiler checks** this. You can't forget to lock.
 
 ---
 
-## 19.2 Declaring and Using an Actor
+## 19.2 Declaring and Using an Actor 🟢
 
-An actor looks almost identical to a class — properties, methods, initializers — but the compiler automatically serializes access to its mutable state, and any access from *outside* the actor must go through `await`, since it might need to wait its turn:
+An **actor** looks almost like a class: properties, methods, initializers. The difference: Swift makes sure only **one** piece of code uses its mutable state **at a time**. From **outside**, you must use **`await`**, because you might have to **wait your turn**:
 
 ```swift
 actor Counter {
@@ -38,13 +51,46 @@ func useCounter() async {
 }
 ```
 
-Internally, an actor processes one call at a time — if two callers both call `await counter.increment()` concurrently, the actor runs them one after another (never simultaneously), which is precisely what eliminates the data race from 19.1: there's no way for two `+= 1` operations to interleave, because the actor itself guarantees mutual exclusion automatically.
+If two callers call `await counter.increment()` at once, the actor runs them **one after the other**, never together. So two `+= 1` operations can **never interleave**: the data race from 19.1 is gone.
+
+**Inside** the actor, no `await` is needed. You're already "inside the room":
+
+```swift
+actor Counter {
+    var value = 0
+    func increment() { value += 1 }
+    func incrementTwice() {
+        increment()      // no await: same actor
+        increment()
+    }
+}
+```
+
+The compiler **stops** unsafe access from outside:
+
+```swift
+let counter = Counter()
+counter.value = 10      // ❌ error: actor-isolated property 'value' can not be mutated from outside the actor
+```
+
+Actors are **reference types**, like classes, but they **can't be subclassed**.
+
+A realistic example: a cache that many tasks can use safely:
+
+```swift
+actor ImageCache {
+    private var images: [URL: Data] = [:]
+
+    func image(for url: URL) -> Data? { images[url] }
+    func store(_ data: Data, for url: URL) { images[url] = data }
+}
+```
 
 ---
 
-## 19.3 Actor Reentrancy and the Interleaving Surprise
+## 19.3 Actor Reentrancy and the Interleaving Surprise 🔴
 
-A subtlety that catches many developers off guard: actors are **reentrant** — while an actor method is suspended at an `await` point (waiting on some other async call), the actor is free to process *other* incoming calls in the meantime, rather than blocking everything else until the original call fully finishes.
+This surprises many developers: actors are **reentrant**. While an actor method is **paused at an `await`**, the actor can **run other calls** in the meantime. It doesn't block everything until the first call is completely done.
 
 ```swift
 actor BankAccount {
@@ -52,19 +98,53 @@ actor BankAccount {
 
     func withdraw(_ amount: Int) async {
         guard balance >= amount else { return }
-        await Task.sleep(for: .seconds(1))   // suspension point — actor is free to interleave other work here!
+        try? await Task.sleep(for: .seconds(1))   // suspension point — actor is free to interleave other work here!
         balance -= amount   // by the time we resume, balance might have changed due to another call
     }
 }
 ```
 
-If two concurrent calls to `withdraw(100)` both check `balance >= amount` before either has suspended at the `sleep`, both could pass the guard, then both proceed to subtract — potentially overdrawing the account, *despite* being inside an actor. This is not a bug in actors; it's a fundamental consequence of `await` being a genuine suspension point (recall 17.3) — the fix is to avoid awaiting in the middle of a critical, state-dependent sequence, or to re-validate state immediately after resuming from any `await`.
+What can happen with two calls to `withdraw(100)`:
+
+```plaintext
+Call 1: guard 100 >= 100 ✓  → await (paused)
+Call 2:                         guard 100 >= 100 ✓  → await (paused)
+Call 1:                                                resumes → balance = 0
+Call 2:                                                resumes → balance = -100   😱
+```
+
+Both passed the check **before** either subtracted. This isn't a bug in actors. It comes from `await` being a **real pause point** (17.3).
+
+**Fix 1:** change state **before** any `await`, so the check and the change happen together:
+
+```swift
+func withdraw(_ amount: Int) async throws {
+    guard balance >= amount else { throw BankError.insufficientFunds }
+    balance -= amount                         // reserve the money first, no await in between
+    do {
+        try await bankServer.confirm(amount)  // now it's safe to wait
+    } catch {
+        balance += amount                     // undo if the server says no
+        throw error
+    }
+}
+```
+
+**Fix 2:** **check again** after every `await`, because the state may have changed:
+
+```swift
+try await Task.sleep(for: .seconds(1))
+guard balance >= amount else { return }      // re-check after resuming
+balance -= amount
+```
+
+**Rule:** inside an actor, treat every `await` as a place where **other code may change your state**.
 
 ---
 
-## 19.4 `isolated` Parameters
+## 19.4 `isolated` Parameters 🔴
 
-An `isolated` parameter lets a plain (non-actor) function explicitly declare that it runs *within* a specific actor's isolation, without needing to be a method defined directly on that actor — useful for writing free functions or extension methods that still need guaranteed access to actor-protected state.
+An **`isolated` parameter** lets a normal function (not a method of the actor) run **inside a specific actor's isolation**. That's handy for free functions or helpers that need direct access to an actor's state:
 
 ```swift
 actor DataStore {
@@ -81,13 +161,23 @@ func useStore() async {
 }
 ```
 
-Notice that inside `addItem` itself, no `await` is needed to touch `store.items` — the `isolated` parameter tells the compiler this function's body already runs on that actor's isolation domain, exactly as if it were a method defined directly on `DataStore`. The `await` only appears at the call site, where control actually transfers into that isolation.
+Inside `addItem`, there's **no `await`** to touch `store.items`: the function body already runs **on that actor**, just like a method of `DataStore`. The `await` is at the **call site**, where control **enters** the actor.
+
+This is useful to do **several steps** on an actor **without** a pause between them (avoiding the reentrancy problem from 19.3):
+
+```swift
+func moveFirstItem(in store: isolated DataStore) {
+    guard !store.items.isEmpty else { return }
+    let item = store.items.removeFirst()
+    store.items.append(item)         // both steps run together, no other call can sneak in
+}
+```
 
 ---
 
-## 19.5 Global Actors and `@MainActor`
+## 19.5 Global Actors and `@MainActor` 🟢
 
-A **global actor** is a singleton actor-like isolation domain shared across an entire app, rather than a per-instance actor you create yourself — `@MainActor`, tied to the main thread, is by far the most commonly used one, since UIKit and SwiftUI both require UI updates to happen on the main thread.
+A **global actor** is **one shared isolation domain for the whole app**, instead of an actor instance you create. The most important one is **`@MainActor`**, which runs on the **main thread**. UIKit and SwiftUI require UI updates on the main thread.
 
 ```swift
 @MainActor
@@ -105,13 +195,51 @@ func loadData() async {
 }
 ```
 
-`@MainActor` can annotate an entire type (isolating every member), an individual method/property, or a function — it's the standard, enforced replacement for the old convention of remembering to dispatch UI updates back to the main thread manually (`DispatchQueue.main.async { ... }`), now checked by the compiler instead of trusted to developer discipline.
+You can put `@MainActor` on:
+
+```swift
+@MainActor class ScreenModel { }            // a whole type: every member
+class Mixed {
+    @MainActor var title = ""               // one property
+    @MainActor func updateUI() { }          // one method
+}
+@MainActor func showAlert() { }             // a free function
+Task { @MainActor in /* ... */ }            // one closure
+```
+
+It replaces the old habit of **remembering** to write `DispatchQueue.main.async { ... }`. Now the **compiler checks** it:
+
+```swift
+// Before: easy to forget, and nothing warned you
+URLSession.shared.dataTask(with: url) { data, _, _ in
+    DispatchQueue.main.async { self.label.text = "Done" }
+}.resume()
+
+// Now: the compiler knows `label` is main-actor state
+@MainActor
+func load() async throws {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    label.text = "Loaded \(data.count) bytes"   // guaranteed to be on the main thread
+}
+```
+
+To jump onto the main actor briefly from other code, use `MainActor.run`:
+
+```swift
+await MainActor.run {
+    viewModel.isLoading = false
+}
+```
 
 ---
 
-## 19.6 `@MainActor` Inference Rules
+## 19.6 `@MainActor` Inference Rules 🟡
 
-Swift infers `@MainActor` isolation automatically in several common situations, reducing the need to annotate every single member explicitly: any type conforming to a `@MainActor`-isolated protocol becomes `@MainActor` itself, and (notably) most UIKit/SwiftUI base classes and protocols (like `UIViewController`, or SwiftUI's `View`) are themselves `@MainActor`-isolated, so subclasses and conformers inherit that isolation automatically without needing the attribute written out.
+Swift **infers** `@MainActor` in many common cases, so you don't write it everywhere:
+
+- A type that conforms to a **`@MainActor` protocol** becomes `@MainActor`.
+- A **subclass** of a `@MainActor` class is `@MainActor`.
+- Most UIKit and SwiftUI types and protocols (`UIViewController`, `UIView`, SwiftUI's `View`) **are** `@MainActor`.
 
 ```swift
 // UIViewController itself is @MainActor-isolated in modern SwiftUI/UIKit,
@@ -123,13 +251,39 @@ class MyViewController: UIViewController {
 }
 ```
 
-This inference is exactly what section 16.5's "approachable concurrency" effort built on — since the overwhelming majority of UI-related code genuinely *should* be main-actor-isolated, having the compiler infer it automatically in these common cases substantially reduces the sheer number of `@MainActor` annotations a typical SwiftUI-based app needs to write out by hand.
+```swift
+struct ProfileView: View {          // View is @MainActor, so this struct is too
+    @State private var name = ""
+
+    var body: some View { Text(name) }
+
+    func reset() { name = "" }      // main actor, no annotation needed
+}
+```
+
+Inference has **limits**. A plain class that a view **uses** is not main-actor automatically:
+
+```swift
+class ProfileModel {                 // ⚠️ not inferred: nothing makes it @MainActor
+    var name = ""
+}
+
+@MainActor                           // ✅ say it explicitly (or use defaultIsolation, 19.13)
+@Observable
+final class ProfileModel2 {
+    var name = ""
+}
+```
+
+These rules are the base of "approachable concurrency" (16.5). Most UI code **should** be on the main actor, so letting the compiler infer it removes many annotations.
 
 ---
 
-## 19.7 `MainActor.assumeIsolated`
+## 19.7 `MainActor.assumeIsolated` 🔴
 
-Occasionally, code that's *actually* running on the main thread doesn't statically type-check as being `@MainActor`-isolated — for example, inside a callback from an older, non-Swift-Concurrency-aware API that happens to always invoke its callback on the main thread, but has no way to express that guarantee to the type system. `MainActor.assumeIsolated` bridges this gap by asserting (with a runtime check) that the current context genuinely is the main actor.
+Sometimes code **really is** on the main thread, but the **compiler can't know it**. A typical case: a callback from an older API that **always** calls back on the main thread, but has no way to say so in its types.
+
+**`MainActor.assumeIsolated`** bridges this. It **checks at runtime** that you're on the main actor, and lets you use main-actor state inside:
 
 ```swift
 func legacyMainThreadCallback(completion: @escaping () -> Void) {
@@ -153,13 +307,19 @@ class ViewModel {
 }
 ```
 
-This is explicitly an escape hatch, not a routine tool — if the assertion turns out to be wrong (the closure actually runs on some other thread), the runtime check traps, similar in spirit to force-unwrapping an optional you were wrong about. Use it only when you have a genuine, verified guarantee the surrounding code really does run on the main thread, typically when bridging older APIs that predate Swift Concurrency's isolation model.
+**It's an escape hatch, not a normal tool.** If you're wrong and the code runs on another thread, the app **crashes**, like force-unwrapping a `nil`. Use it only when you **know for sure** the code runs on the main thread (often documented by the old API).
+
+| | `await MainActor.run { }` | `MainActor.assumeIsolated { }` |
+|---|---|---|
+| Needs `async` | Yes | No (synchronous) |
+| If not on the main thread | Hops to it (waits) | **Crashes** |
+| Use when | You might be elsewhere | You're certain you're on main |
 
 ---
 
-## 19.8 Writing a Custom Global Actor
+## 19.8 Writing a Custom Global Actor 🔴
 
-Beyond `@MainActor`, you can define your own global actor for isolating a specific category of shared state that isn't UI-related but still needs the same "one shared isolation domain across the whole app" treatment — declared with `@globalActor` on a type conforming to the `GlobalActor` protocol.
+Besides `@MainActor`, you can define **your own** global actor. Use it for shared state that **isn't UI**, but needs **one isolation domain for the whole app**. Mark an actor with **`@globalActor`** and give it a `shared` instance:
 
 ```swift
 @globalActor
@@ -178,13 +338,35 @@ class DatabaseManager {
 }
 ```
 
-A custom global actor is appropriate when several otherwise-unrelated types across a codebase all need to share *one single* isolation domain (rather than each having their own separate, independent actor instance) — for example, isolating all database access across an app to a single dedicated actor, ensuring database operations from anywhere in the codebase are automatically serialized against each other.
+Now **any** type or function in the app can join that same domain:
+
+```swift
+@DatabaseActor
+final class MigrationRunner {
+    func run(using db: DatabaseManager) {
+        _ = db.query("ALTER TABLE ...")    // same actor: no await needed
+    }
+}
+
+@MainActor
+func refreshScreen(db: DatabaseManager) async {
+    let rows = await db.query("SELECT * FROM recipes")   // from another actor: await
+}
+```
+
+| | A normal actor | A global actor |
+|---|---|---|
+| Isolation | One per **instance** | One for the **whole app** |
+| Shared by | Only that object | Any type marked with it |
+| Example | `ImageCache` | All database access in the app |
+
+Use a custom global actor when **several unrelated types** must all be serialized **against each other**, like all database access. For one self-contained piece of state, a normal actor is simpler.
 
 ---
 
-## 19.9 `nonisolated` Members
+## 19.9 `nonisolated` Members 🟡
 
-`nonisolated` explicitly opts a specific member of an actor (or `@MainActor`-isolated type) *out* of that isolation — appropriate for members that don't touch the actor's mutable state at all, like a `let` constant or a pure function that only depends on its own parameters.
+**`nonisolated`** takes one member **out** of the actor's isolation (or out of a `@MainActor` type). Use it for members that **don't touch mutable state**: a `let` constant, or a pure function that only uses its parameters.
 
 ```swift
 actor Temperature {
@@ -206,13 +388,38 @@ func useTemperature() {
 }
 ```
 
-A common, specific use is exposing a `nonisolated` computed property for a `let` constant an actor stores (like an identifier that never changes after initialization) — since it never touches genuinely mutable, isolation-requiring state, marking it `nonisolated` lets external code read it without needing `await` at all, which can meaningfully simplify calling code.
+A `nonisolated` member **can't** read mutable state. The compiler checks:
+
+```swift
+nonisolated func current() -> Double {
+    celsius            // ❌ error: actor-isolated property 'celsius' can not be referenced from a nonisolated context
+}
+```
+
+`let` constants of `Sendable` type can be read **without `await`**, since they never change:
+
+```swift
+actor Session {
+    let id = UUID()              // immutable and Sendable
+}
+
+let session = Session()
+print(session.id)                // no await needed
+```
+
+A common use: conforming to protocols with **synchronous** requirements, like `CustomStringConvertible` or `Hashable`, using only immutable data:
+
+```swift
+extension Session: CustomStringConvertible {
+    nonisolated var description: String { "Session \(id)" }
+}
+```
 
 ---
 
-## 19.10 `nonisolated(unsafe)` and Its Contract
+## 19.10 `nonisolated(unsafe)` and Its Contract 🔴
 
-`nonisolated(unsafe)` is a stronger, riskier variant — it opts a *stored, mutable* property out of actor isolation entirely, which the compiler cannot verify is actually safe. It's an assertion, backed by the developer's own manual guarantee (often via some other synchronization mechanism, like a `Mutex` from section 14.21), that concurrent access to this specific property is safe despite bypassing the compiler's normal checking.
+**`nonisolated(unsafe)`** is a **stronger and riskier** version. It takes a **mutable stored property** out of isolation completely, and the compiler **can't check** that it's safe. It's **your promise** that access is safe anyway, usually because something else (like a `Mutex`, 14.21) protects it.
 
 ```swift
 actor Logger {
@@ -224,31 +431,78 @@ actor Logger {
 }
 ```
 
-This should be treated with the same level of caution as `@unchecked Sendable` (covered in section 20.4) — it's a deliberate opt-out of compiler-verified safety, appropriate only when you have a specific, verified reason the compiler's default checking is too conservative for your actual situation (e.g. the property is only ever mutated via a lock-protected path elsewhere), not a general-purpose way to silence inconvenient compiler errors.
+Treat it like **`@unchecked Sendable`** (20.4): a deliberate opt-out of compiler-checked safety. Use it **only** with a specific, verified reason, never just to **silence** an error.
 
----
-
-## 19.11 `nonisolated(nonsending)` Explained
-
-`nonisolated(nonsending)` (a newer, more refined isolation-control tool) marks a function as `nonisolated` while still preserving the **calling context's** isolation for its execution, rather than hopping onto a separate, actor-agnostic execution context the way plain `nonisolated` normally would. In practice, this lets a function stay flexible about which isolation domain calls it from, without introducing an actual context switch (and its associated overhead) for the common case where the caller and the function's execution can simply share the same isolation.
+Often there's a **safe** alternative:
 
 ```swift
-actor Worker {
-    nonisolated(nonsending) func logAction(_ message: String) {
-        // runs using whatever isolation context the caller already has,
-        // rather than switching to a separate, isolated-from-everything execution context
+import Synchronization
+
+final class Logger: Sendable {
+    private let count = Mutex(0)                    // protected, and the compiler knows it
+
+    func log(_ message: String) {
+        count.withLock { $0 += 1 }
         print(message)
     }
 }
 ```
 
-This is a subtler, more specialized tool than plain `nonisolated` — it exists specifically to avoid unnecessary actor-hopping overhead for functions that genuinely don't need dedicated isolation of their own, but would otherwise force a context switch under the older, simpler `nonisolated` semantics.
+A legitimate use is a global that is set **once** at startup, before any concurrency begins, and only **read** after that:
+
+```swift
+nonisolated(unsafe) var apiBaseURL = URL(string: "https://api.example.com")!
+// Set in main() before any tasks start; only read afterwards.
+```
+
+Even here, a `let` (if possible) is better.
 
 ---
 
-## 19.12 `@concurrent` — Opting Out of Caller Isolation
+## 19.11 `nonisolated(nonsending)` Explained 🔴
 
-`@concurrent` (introduced as part of the broader isolation-ergonomics refinements alongside `nonisolated(nonsending)`) explicitly marks a function as running on the general cooperative thread pool, deliberately opting *out* of whatever isolation its caller happens to have — the inverse intent of `nonisolated(nonsending)`'s "stay with the caller's context" behavior.
+**`nonisolated(nonsending)`** (Swift 6.2) is for **async** functions. It makes the function `nonisolated` (it doesn't belong to any actor), but it **runs on the caller's actor**. So there's **no hop** to another thread, and the caller's non-`Sendable` values can be passed in **without** errors.
+
+Without it, a plain `nonisolated async` function (in Swift 6.0/6.1) **always hops** to the cooperative pool, even if the caller was on the main actor:
+
+```swift
+class Formatter {                                  // not Sendable
+    func format(_ value: Int) -> String { "\(value)" }
+}
+
+// Swift 6.0 behavior: hops off the caller's actor
+nonisolated func render(_ formatter: Formatter) async -> String {
+    formatter.format(42)
+}
+
+@MainActor
+func show(formatter: Formatter) async {
+    let text = await render(formatter)
+    // ❌ (6.0) error: sending 'formatter' risks causing data races —
+    //    it would cross from the main actor to the pool
+}
+```
+
+With `nonisolated(nonsending)`, the function stays on the caller's actor, so nothing crosses a boundary:
+
+```swift
+nonisolated(nonsending) func render(_ formatter: Formatter) async -> String {
+    formatter.format(42)        // runs on the main actor when called from there
+}
+```
+
+```plaintext
+plain nonisolated async (6.0):    caller's actor ──hop──► cooperative pool ──hop back──►
+nonisolated(nonsending) async:    stays on the caller's actor the whole time
+```
+
+With Swift 6.2's **approachable concurrency** settings, this becomes the **default** for `nonisolated async` functions. You'll mostly see the explicit keyword in libraries that must support both behaviors.
+
+---
+
+## 19.12 `@concurrent` — Opting Out of Caller Isolation 🟡
+
+**`@concurrent`** (Swift 6.2) says the opposite: "**always** run this async function on the **cooperative pool**, off **any** actor, including the caller's."
 
 ```swift
 @MainActor
@@ -262,13 +516,38 @@ class ViewModel {
 }
 ```
 
-This is useful for explicitly carving out genuinely CPU-heavy work from an otherwise `@MainActor`-isolated type, ensuring it doesn't tie up the main actor (and, by extension, the UI) while it runs — without needing to move that method into an entirely separate, non-isolated type just to escape the enclosing class's default isolation.
+Use it to move **CPU-heavy** work off the main actor, so the **UI stays smooth**, without creating a separate type:
+
+```swift
+@MainActor
+@Observable
+final class PhotoEditorModel {
+    var preview: CGImage?
+
+    func applyFilter(to image: CGImage) async {
+        preview = await Self.render(image)        // main actor waits; UI stays responsive
+    }
+
+    @concurrent
+    private static func render(_ image: CGImage) async -> CGImage {
+        // heavy pixel work on the pool
+        image
+    }
+}
+```
+
+A `@concurrent` function **can't** touch the main actor's state directly. Pass in what it needs, and return a result:
+
+| Keyword | Where the async function runs |
+|---|---|
+| `nonisolated(nonsending)` | On the **caller's** actor (stays put) |
+| `@concurrent` | On the **cooperative pool** (always leaves) |
 
 ---
 
-## 19.13 Main-Actor-by-Default (`defaultIsolation`) Mode
+## 19.13 Main-Actor-by-Default (`defaultIsolation`) Mode 🟡
 
-Building on section 16.5's introduction, `defaultIsolation` is a target-level setting that makes `@MainActor` the *implicit* isolation for all code in that target unless explicitly stated otherwise — inverting Swift's earlier default (where code was `nonisolated`/unspecified unless explicitly marked `@MainActor`).
+As introduced in 16.5, **`defaultIsolation`** is a **per-target** setting that makes **`@MainActor` the default** for all code in that target, unless you say otherwise. Before, code had **no** isolation unless you wrote `@MainActor`.
 
 ```swift
 // With defaultIsolation set to MainActor for this target's build settings:
@@ -283,13 +562,36 @@ func backgroundWork() async {
 }
 ```
 
-This mode directly addresses the reality that most SwiftUI-based app code is inherently UI-adjacent and main-actor-isolated anyway — rather than requiring `@MainActor` written on nearly every type, `defaultIsolation` flips the default, requiring explicit opt-out (via `@concurrent`, or a custom global actor) only for the smaller subset of code that genuinely needs to run off the main actor.
+Turning it on:
+
+```swift
+// Package.swift
+.target(name: "AppUI", swiftSettings: [.defaultIsolation(MainActor.self)])
+
+// Xcode: Build Settings → Default Actor Isolation → MainActor (the default for new apps in Xcode 26+)
+```
+
+Ways to **opt out**, for the code that shouldn't be on the main actor:
+
+```swift
+nonisolated struct Parser {           // a whole type, off the main actor
+    func parse(_ data: Data) -> [Item] { [] }
+}
+
+@concurrent func compress(_ data: Data) async -> Data { data }   // one async function, on the pool
+
+actor DownloadQueue { }               // actors are always their own isolation
+```
+
+**Why it fits most apps:** almost all SwiftUI code is **UI code** and belongs on the main actor anyway. Instead of writing `@MainActor` nearly everywhere, you mark only the **small** part that should run elsewhere.
+
+A good split: turn it on for **app/UI** targets, and leave it off for **library** targets (networking, parsing), which should not assume the main actor.
 
 ---
 
-## 19.14 Custom Actor Executors
+## 19.14 Custom Actor Executors 🔴
 
-By default, every actor (and the main actor) is scheduled by Swift Concurrency's own built-in executor — but actors can specify a **custom executor**, letting you control precisely which underlying thread/queue an actor's work actually runs on, which matters for interoperating with existing serial-queue-based subsystems that predate Swift Concurrency.
+By default, Swift's runtime decides **where** an actor's work runs. An actor can instead provide a **custom executor**, to run its work on a **specific queue or thread**. That matters when you connect to an **existing** system that already uses its own **serial `DispatchQueue`**.
 
 ```swift
 actor LegacySystemBridge {
@@ -303,13 +605,53 @@ actor LegacySystemBridge {
 }
 ```
 
-Custom executors are a genuinely advanced, narrow tool — primarily useful when migrating a large, existing codebase built around a specific serial `DispatchQueue` (or similar existing serialization mechanism) into actors gradually, letting the actor's isolation guarantee line up with an already-established queue, rather than introducing an entirely separate, competing serialization mechanism during the transition.
+A working version, using a `DispatchSerialQueue` (iOS 17+), which can act as an executor directly:
+
+```swift
+actor DatabaseBridge {
+    private let queue = DispatchSerialQueue(label: "com.example.database")
+
+    nonisolated var unownedExecutor: UnownedSerialExecutor {
+        queue.asUnownedSerialExecutor()          // all of this actor's work runs on `queue`
+    }
+
+    func save(_ row: String) {
+        // runs on "com.example.database", the same queue the old code already uses
+        dispatchPrecondition(condition: .onQueue(queue))
+    }
+}
+```
+
+Now old code that does `queue.async { ... }` and new actor code are serialized **on the same queue**, so they can't race with each other.
+
+This is an **advanced, narrow** tool, mainly for **gradually** moving a big queue-based codebase to actors, without having **two** competing ways of serializing the same data.
 
 ---
 
-## 19.15 Isolated Conformances and Isolated `deinit`
+## 19.15 Isolated Conformances and Isolated `deinit` 🔴
 
-Two more specialized isolation refinements: an **isolated conformance** lets a type satisfy a protocol requirement specifically *while remaining actor-isolated*, rather than being forced to implement that requirement as `nonisolated` (which was previously often required for protocol conformance, even when it didn't make logical sense for the isolated type). An **isolated `deinit`** similarly allows a `deinit` (recall section 6.8) to run on the actor's own isolation domain rather than always running in a `nonisolated` context, letting cleanup code safely touch the actor's isolated state directly during teardown.
+Two newer refinements fix awkward gaps in the isolation model.
+
+**Isolated conformances** (Swift 6.2): a `@MainActor` type can conform to a **normal** protocol **while staying main-actor isolated**. Before, the protocol's methods had to be `nonisolated`, which often meant they couldn't touch the type's state:
+
+```swift
+@MainActor
+final class Person {
+    var name = ""
+}
+
+// Before: the requirement had to be nonisolated, so it couldn't read `name`.
+// Now: conform as @MainActor; the conformance is only usable on the main actor.
+extension Person: @MainActor Equatable {
+    static func == (lhs: Person, rhs: Person) -> Bool {
+        lhs.name == rhs.name          // ✅ reads main-actor state
+    }
+}
+```
+
+The compiler makes sure the conformance is only **used** on the main actor.
+
+**Isolated `deinit`**: normally, a `deinit` runs **nonisolated**, on whatever thread drops the last reference. So it can't safely touch the actor's state. An **`isolated deinit`** runs **on the actor's own isolation**:
 
 ```swift
 actor DataCache {
@@ -323,7 +665,20 @@ actor DataCache {
 }
 ```
 
-Both refinements exist to close awkward gaps in the actor isolation model where correctness previously required either genuinely unsafe workarounds (`nonisolated(unsafe)`) or restructuring code specifically to avoid touching isolated state in contexts that were forced to be `nonisolated` — letting more code honestly reflect its true isolation requirements without fighting the type system.
+It works for `@MainActor` classes too, which helps when cleanup must touch UI state:
+
+```swift
+@MainActor
+final class PlayerController {
+    let view = UIView()
+
+    isolated deinit {
+        view.removeFromSuperview()     // safe: runs on the main actor
+    }
+}
+```
+
+Both features let code **honestly** state its isolation, instead of using unsafe workarounds like `nonisolated(unsafe)`.
 
 ---
 
@@ -331,18 +686,18 @@ Both refinements exist to close awkward gaps in the actor isolation model where 
 
 | Topic | One-line takeaway |
 |---|---|
-| The data race problem | Concurrent, unsynchronized access to shared mutable state produces nondeterministic, hard-to-reproduce bugs |
-| Actors | Automatically serialize access to their mutable state; external access requires `await` |
-| Reentrancy | An actor can interleave other calls during a suspended method's `await` — state can change mid-method |
-| `isolated` parameters | Let a plain function run within a specific actor's isolation without being one of its own methods |
-| `@MainActor` | The most common global actor, tied to the main thread, replacing manual `DispatchQueue.main.async` |
-| `@MainActor` inference | Automatically inherited from `@MainActor`-isolated base classes/protocols like `UIViewController`/`View` |
-| `MainActor.assumeIsolated` | A runtime-checked escape hatch asserting code genuinely runs on the main actor already |
-| Custom global actors | Share one isolation domain across otherwise-unrelated types, for a specific shared concern |
-| `nonisolated` | Opts a specific member out of actor isolation, for members that don't touch mutable actor state |
-| `nonisolated(unsafe)` | Opts a mutable property out of isolation entirely — an unverified safety assertion, used sparingly |
-| `nonisolated(nonsending)` | Stays nonisolated while preserving the caller's isolation context, avoiding unnecessary context switches |
-| `@concurrent` | Explicitly opts a function out of its enclosing type's isolation, running on the general cooperative pool |
-| `defaultIsolation` | Target-level setting making `@MainActor` the implicit default, requiring explicit opt-out instead of opt-in |
-| Custom actor executors | Let an actor run on a specific existing queue/thread, useful for gradual legacy-system migration |
-| Isolated conformances/deinit | Let protocol conformance and `deinit` safely run on an actor's own isolation instead of forced `nonisolated` |
+| The data race problem | Unsynchronized shared mutable state gives random, hard-to-reproduce bugs |
+| Actors | One operation at a time on their state; `await` from outside |
+| Reentrancy | Other calls can run during an `await`; change state before awaiting, or re-check after |
+| `isolated` parameters | A free function that runs inside a given actor |
+| `@MainActor` | The main-thread global actor; replaces `DispatchQueue.main.async` |
+| `@MainActor` inference | Inherited from `UIViewController`, `View`, and `@MainActor` protocols |
+| `MainActor.assumeIsolated` | A runtime-checked "I know I'm on main"; crashes if wrong |
+| Custom global actors | One shared isolation domain for several types, like all database access |
+| `nonisolated` | Members that don't touch mutable state; no `await` needed |
+| `nonisolated(unsafe)` | An unchecked promise; prefer `Mutex` or `let` |
+| `nonisolated(nonsending)` | An async function that stays on the caller's actor |
+| `@concurrent` | An async function that always runs on the cooperative pool |
+| `defaultIsolation` | Main actor by default for a target; opt out with `nonisolated`, `@concurrent`, actors |
+| Custom actor executors | Run an actor on an existing serial queue |
+| Isolated conformances/deinit | Conformances and `deinit` that stay on the actor's isolation |
