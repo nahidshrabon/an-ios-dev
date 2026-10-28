@@ -20287,15 +20287,15 @@ var body: some View {
       },
       {
         id: "q6",
-        prompt: "Which Fluent property wrapper models \"many posts belong to one user\"?",
+        prompt: "In a Vapor route, what is `req` for?",
         options: [
-          { id: "a", text: "`@Children` on the post" },
-          { id: "b", text: "`@Parent` on the post" },
-          { id: "c", text: "`@Siblings` on both types" },
-          { id: "d", text: "`@Field` with a string key" },
+          { id: "a", text: "Reading the URL path and nothing else" },
+          { id: "b", text: "Reaching the database, body, and logger" },
+          { id: "c", text: "Sending push notifications to iOS apps" },
+          { id: "d", text: "Keeping state shared by every request" },
         ],
         correctOptionId: "b",
-        explanation: "`@Parent` stores the foreign key to one user. The user side can use `@Children` to list its posts.",
+        explanation: "`req` is your way to everything: `req.db`, the body, the route parameters, and the logger.",
       },
       {
         id: "q7",
@@ -20335,15 +20335,15 @@ var body: some View {
       },
       {
         id: "q10",
-        prompt: "How do you use an old `EventLoopFuture` from `async` code?",
+        prompt: "What runs underneath both Vapor and Hummingbird?",
         options: [
-          { id: "a", text: "Call `try await future.get()`" },
-          { id: "b", text: "Wrap it in a `DispatchGroup`" },
-          { id: "c", text: "Convert it with `Task.detached`" },
-          { id: "d", text: "Futures cannot be used with async code" },
+          { id: "a", text: "SwiftNIO and its event loops" },
+          { id: "b", text: "URLSession, as in iOS apps" },
+          { id: "c", text: "Node.js, through a bridge" },
+          { id: "d", text: "The main dispatch queue" },
         ],
         correctOptionId: "a",
-        explanation: "`get()` bridges a future to `async`/`await`, so you can keep writing linear code.",
+        explanation: "Both frameworks are built on SwiftNIO. Today you write `async`/`await` on top of it.",
       },
       {
         id: "q11",
