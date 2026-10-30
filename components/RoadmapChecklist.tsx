@@ -15,8 +15,10 @@ import {
   ChevronRightIcon,
   FlagIcon,
   InfoIcon,
+  StarIcon,
 } from "@/components/Icons";
 import { TestIcon } from "@/components/HowItWorksIcons";
+import { ImportanceStars } from "@/components/ImportanceStars";
 import { PageHeader } from "@/components/PageHeader";
 import { ProgressRing } from "@/components/ProgressRing";
 
@@ -160,6 +162,18 @@ export function RoadmapChecklist({
               Read
             </span>
             .
+          </span>
+        </p>
+        <p className="flex items-start gap-1.5">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Stars{" "}
+            <StarIcon
+              className="inline size-4 align-text-bottom text-amber-500 dark:text-amber-400"
+              filled
+            />{" "}
+            show how important a section is for a working iOS developer, from
+            1 (niche) to 5 (essential).
           </span>
         </p>
         <p className="flex items-start gap-1.5">
@@ -327,6 +341,10 @@ export function RoadmapChecklist({
                               {done && (
                                 <CheckIcon className="ml-1 inline size-4 align-text-bottom text-emerald-700 opacity-70 dark:text-emerald-400" />
                               )}
+                              <ImportanceStars
+                                importance={sec.importance}
+                                className="ml-2 align-middle"
+                              />
                             </span>
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-3 text-xs text-zinc-500">
@@ -364,6 +382,10 @@ export function RoadmapChecklist({
                         />
                         <span className="font-heading">
                           {sec.number}. {sec.title}
+                          <ImportanceStars
+                            importance={sec.importance}
+                            className="ml-2 align-middle"
+                          />
                         </span>
                       </span>
                       <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs text-zinc-500 dark:bg-white/10 dark:text-zinc-400">
